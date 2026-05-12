@@ -51,13 +51,26 @@ export function ResultPane({
         </div>
       </div>
       <div className="result-actions">
-        <button className="btn" onClick={onOpenInMaps}>
+        <button
+          className="btn"
+          onClick={onOpenInMaps}
+          title="Open Google Maps walking directions in a new tab"
+        >
           Open in Maps
         </button>
-        <button className="btn ghost" onClick={onReroll} disabled={spinning}>
+        <button
+          className="btn ghost"
+          onClick={onReroll}
+          disabled={spinning}
+          title="Spin the wheel again with the same filters"
+        >
           Reroll
         </button>
-        <button className="btn ghost" onClick={onClear}>
+        <button
+          className="btn ghost"
+          onClick={onClear}
+          title="Drop the current pick and reset the wheel"
+        >
           Clear
         </button>
       </div>

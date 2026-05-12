@@ -14,7 +14,11 @@ export function Header({ weather, onShare }: Props) {
         <span className="tag" style={{ marginRight: 8 }}>
           {weather}
         </span>
-        <button className="btn ghost" onClick={onShare}>
+        <button
+          className="btn ghost"
+          onClick={onShare}
+          title="Copy a link that restores your current filters and pick"
+        >
           Share
         </button>
       </div>

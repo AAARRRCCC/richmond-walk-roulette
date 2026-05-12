@@ -75,7 +75,11 @@ export function Controls({
         <RangeSlider range={range} onChange={onRangeChange} />
       </div>
 
-      <div className="control" style={{ alignItems: "flex-start" }}>
+      <div
+        className="control"
+        style={{ alignItems: "flex-start" }}
+        title="When ON, the distance range counts the out-and-back total. When OFF, it's one-way."
+      >
         <span className="label">Round trip</span>
         <label className="toggle" style={{ marginTop: 4 }}>
           <input
@@ -90,7 +94,10 @@ export function Controls({
         </label>
       </div>
 
-      <div className="control">
+      <div
+        className="control"
+        title="Pick one. 'Any' keeps both flat and hilly destinations eligible."
+      >
         <span className="label">Difficulty</span>
         <ChipGroup
           ariaLabel="Difficulty"
@@ -104,7 +111,10 @@ export function Controls({
         />
       </div>
 
-      <div className="control">
+      <div
+        className="control"
+        title="Pick any combination. A destination matches if it has at least one selected tag. With nothing selected, all tags are allowed."
+      >
         <span className="label">Vibe</span>
         <ChipGroup<Vibe>
           ariaLabel="Vibe"
