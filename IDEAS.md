@@ -92,3 +92,4 @@ by priority. Top-down order is rough preference, not strict.
 - `ec27613` — aria-live announcement on pick + aria-busy on wheel
 - `6eb1018` — Code-split MapLibre (main bundle 273→54 KB gzipped)
 - `d02b8b4` — Real <label> pairing for Start dropdown
+- `b47b6c3` — Group label (role=group + aria-labelledby) for range slider
