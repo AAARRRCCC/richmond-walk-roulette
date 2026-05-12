@@ -75,3 +75,4 @@ by priority. Top-down order is rough preference, not strict.
 - `60e63fe` — Screen-reader POI list (keyboard equivalent of map clicks)
 - `c9ffde5` — Extract <MapPane> sub-component (App.tsx 455→432 lines)
 - `c51a957` — Verified MAP label / attribution overlap is not a real bug
+- `6d1f429` — Verified result-pane action stack is not actually ugly
