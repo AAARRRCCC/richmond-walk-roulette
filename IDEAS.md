@@ -96,3 +96,4 @@ by priority. Top-down order is rough preference, not strict.
 - `20267f1` — Collapse filter state into a reducer (score 96→97)
 - `b1c7822` — Subtle 1px chrome rule under pane labels
 - `830d459` — Start-pick restyled as a chip-pill
+- `ec27613` — aria-live announcement on pick + aria-busy on wheel
