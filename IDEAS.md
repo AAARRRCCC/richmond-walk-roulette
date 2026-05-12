@@ -78,3 +78,4 @@ by priority. Top-down order is rough preference, not strict.
 - `011ef8c` — Bound the walking-route cache (LRU, limit 50)
 - `6e318fc` — Open in Maps uses precise lat/lng instead of name geocoding
 - `0cf83b2` — Dedupe share-state payload (3 inline literals → 1 builder)
+- `716e060` — Clear walkingRoute eagerly to avoid stale-route flash
