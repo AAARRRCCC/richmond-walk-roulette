@@ -22,10 +22,6 @@ by priority. Top-down order is rough preference, not strict.
 
 ### Polish — desktop
 
-- [ ] **Result-pane action stack is ugly when the pane is short.**
-      "Open in Maps / Reroll / Clear" are stacked vertically with
-      200px min-width. On wide screens, an inline row with smaller
-      buttons would feel tighter. On narrow screens, keep stacked.
 
 ### Polish — mobile
 
