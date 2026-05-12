@@ -44,10 +44,6 @@ by priority. Top-down order is rough preference, not strict.
 
 ### Performance + quality
 
-- [ ] **`no-cascading-set-state`** still flagged in RichmondMap
-      feature-state useEffect (3 setStates). After the layer-sync
-      refactor in a future iter, may need to be folded into one
-      effect with computed state.
 - [ ] **`rerender-state-only-in-handlers`** flag in RichmondMap on
       the `loaded` flag — false positive (it IS read in dependent
       hooks, not in JSX). If react-doctor adds a way to suppress

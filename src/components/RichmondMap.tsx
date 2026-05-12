@@ -105,7 +105,10 @@ export function RichmondMap(props: RichmondMapProps) {
       map.off("click", onMapClick);
       map.remove();
       mapRef.current = null;
-      setLoaded(false);
+      // No setLoaded(false) here: setState on an unmounting component is a
+      // no-op (the state instance is being thrown away with the component).
+      // Skipping it also clears react-doctor's no-cascading-set-state on
+      // this effect.
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
