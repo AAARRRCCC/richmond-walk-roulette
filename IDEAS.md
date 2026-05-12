@@ -102,3 +102,4 @@ by priority. Top-down order is rough preference, not strict.
 - `d0b0e17` — Wheel-edge label fade
 - `efb0447` — Remove unused isRoutesApiConfigured export
 - `3168734` — Toast position no longer occludes result-pane stats
+- `20267f1` — Collapse filter state into a reducer (score 96→97)
