@@ -39,14 +39,16 @@ export function Controls({
   return (
     <div className="controls">
       <div className="control">
-        <span className="label">Start</span>
+        <label className="label" htmlFor="start-select">
+          Start
+        </label>
         <select
+          id="start-select"
           value={customStart ? "__custom" : startId}
           onChange={(e) => {
             if (e.target.value === "__custom") return;
             onStartChange(e.target.value);
           }}
-          aria-label="Start location"
         >
           {starts.map((s) => (
             <option key={s.id} value={s.id}>

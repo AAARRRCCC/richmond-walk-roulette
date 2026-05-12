@@ -55,9 +55,6 @@ by priority. Top-down order is rough preference, not strict.
       equivalent. The wheel itself is technically the keyboard
       version of picking, but the map's POI dots should at least
       be skip-linked.
-- [ ] **The Start dropdown has no associated `<label>` element** —
-      uses an `aria-label` on the select, which is OK, but a real
-      label would be better for the form-control pairing.
 - [ ] **Color contrast on `.ink-soft` (#4a4843) against `--paper`**
       reads at ~9:1 which is fine, but the dim variants used in
       ineligible POI strokes (#c4bcaa on #faf7ee) are below 3:1.
