@@ -26,11 +26,6 @@ by priority. Top-down order is rough preference, not strict.
       "Open in Maps / Reroll / Clear" are stacked vertically with
       200px min-width. On wide screens, an inline row with smaller
       buttons would feel tighter. On narrow screens, keep stacked.
-- [ ] **Map "MAP" label overlaps attribution** on tall narrow panes
-      (the OpenFreeMap attribution sits bottom-right; not actually
-      colliding most of the time, but the muted gray of the
-      attribution gets visually busy near the pane chrome). Verify
-      and adjust z-order/positioning.
 
 ### Polish — mobile
 
