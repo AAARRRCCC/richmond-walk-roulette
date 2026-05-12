@@ -111,4 +111,4 @@ by priority. Top-down order is rough preference, not strict.
 
 - `fbac414` — Vendor audit skills from Owl-Listener/designer-skills
 - `c5d864e` — Seed IDEAS.md backlog
-- (next) — Focus styles + keyboard-operable toggle
+- `e3bf098` — Focus styles + keyboard-operable toggle
