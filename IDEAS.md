@@ -72,3 +72,4 @@ by priority. Top-down order is rough preference, not strict.
 - `fec7db5` — Extract <WheelPane> sub-component (App.tsx 432→409 lines)
 - `f055f0b` — Drop dead setLoaded(false) in RichmondMap unmount (score 97→98)
 - `43e3219` — Mobile breakpoint pass (pane min-heights, 1-col controls)
+- `5d92ba6` — Discoverability title attrs on ambiguous controls
