@@ -378,12 +378,11 @@ export default function App() {
     [],
   );
 
-  // Empty-state "Clear filters" action: reset everything that can
-  // exclude POIs (difficulty, tags, range), keep start location.
+  // Empty-state "Clear filters" action: single reducer call resets
+  // difficulty, tags, and range atomically (one render, one reducer
+  // pass). Start location is preserved — it's an anchor, not a filter.
   const onClearFilters = useCallback(() => {
-    dispatch({ type: "SET_DIFFICULTY", value: "any" });
-    dispatch({ type: "SET_TAGS", tags: new Set() });
-    dispatch({ type: "SET_RANGE", range: [0, 8] });
+    dispatch({ type: "CLEAR_FILTERS" });
   }, []);
 
   return (

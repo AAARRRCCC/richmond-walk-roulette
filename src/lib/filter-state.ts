@@ -17,7 +17,8 @@ export type FilterAction =
   | { type: "SET_RANGE"; range: Range }
   | { type: "SET_ROUND_TRIP"; value: boolean }
   | { type: "SET_DIFFICULTY"; value: "any" | Difficulty }
-  | { type: "SET_TAGS"; tags: Set<Vibe> };
+  | { type: "SET_TAGS"; tags: Set<Vibe> }
+  | { type: "CLEAR_FILTERS" };
 
 const INITIAL_FILTER_STATE: FilterState = {
   startId: "monroe",
@@ -43,6 +44,15 @@ export function filterReducer(state: FilterState, action: FilterAction): FilterS
       return { ...state, difficulty: action.value };
     case "SET_TAGS":
       return { ...state, tags: action.tags };
+    case "CLEAR_FILTERS":
+      // Reset everything that can exclude POIs. Start location is preserved
+      // (it's an anchor, not a filter).
+      return {
+        ...state,
+        range: [0, 8],
+        difficulty: "any",
+        tags: new Set<Vibe>(),
+      };
   }
 }
 
