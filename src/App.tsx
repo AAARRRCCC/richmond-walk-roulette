@@ -35,10 +35,26 @@ export default function App() {
   const [pickingStart, setPickingStart] = useState(false);
   const [walkingRoute, setWalkingRoute] = useState<WalkingRoute | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
   const showToast = useCallback((msg: string) => {
+    // Cancel any in-flight clear timer so a re-trigger doesn't get its
+    // toast cut short by the previous trigger's setTimeout.
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
     setToast(msg);
-    window.setTimeout(() => setToast(null), 1800);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 1800);
   }, []);
+  // Cleanup the toast timer if the component unmounts mid-display.
+  useEffect(
+    () => () => {
+      if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    },
+    [],
+  );
 
   const startLocation = useMemo(
     () => findStart(startId, customStart, START_LOCATIONS),
