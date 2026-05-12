@@ -43,10 +43,6 @@ by priority. Top-down order is rough preference, not strict.
       colliding most of the time, but the muted gray of the
       attribution gets visually busy near the pane chrome). Verify
       and adjust z-order/positioning.
-- [ ] **Wheel labels appear/disappear abruptly** at the edges of the
-      visible arc (`VISIBLE_HALF = 28°`). Fade them in over the last
-      ~6° using opacity = `min(1, (VISIBLE_HALF - |theta|) / 6)`.
-      Makes the wheel feel less janky as labels enter/exit.
 - [ ] **Start-pick "or pick on map" link feels disconnected from the
       select** — it's small, dashed, off to the left. Consider an
       inline icon button beside the dropdown, or a "pick" mode chip.
@@ -112,3 +108,4 @@ by priority. Top-down order is rough preference, not strict.
 - `fbac414` — Vendor audit skills from Owl-Listener/designer-skills
 - `c5d864e` — Seed IDEAS.md backlog
 - `e3bf098` — Focus styles + keyboard-operable toggle
+- 27eee57 — Wheel-edge label fade

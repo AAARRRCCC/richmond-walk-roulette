@@ -69,11 +69,16 @@ export function Wheel({ pois, rotation, pickedId }: Props) {
         const isSelected = i === bestEntry;
         const charW = isSelected ? 13 : 11;
         const textW = entry.poi.name.length * charW + 22;
+        // Fade labels in/out smoothly over the last EDGE_FADE degrees of the
+        // visible arc so they don't pop on/off when entering/leaving the window.
+        const EDGE_FADE = 8;
+        const opacity = Math.min(1, (VISIBLE_HALF - Math.abs(theta)) / EDGE_FADE);
 
         return (
           <g
             key={`${entry.srcIndex}-${entry.rep}`}
             transform={`translate(${x}, ${y}) rotate(${theta})`}
+            opacity={opacity}
           >
             {isSelected && (
               <rect
