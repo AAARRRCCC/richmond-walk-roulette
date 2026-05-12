@@ -81,3 +81,4 @@ by priority. Top-down order is rough preference, not strict.
 - `716e060` — Clear walkingRoute eagerly to avoid stale-route flash
 - `b22d3c5` — Error boundary around the lazy map chunk
 - `5846fff` — Cancel previous toast clear-timer on re-trigger
+- `f95fd8b` — Single CLEAR_FILTERS reducer action (was 3 dispatches)
