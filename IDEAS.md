@@ -80,3 +80,4 @@ by priority. Top-down order is rough preference, not strict.
 - `0cf83b2` — Dedupe share-state payload (3 inline literals → 1 builder)
 - `716e060` — Clear walkingRoute eagerly to avoid stale-route flash
 - `b22d3c5` — Error boundary around the lazy map chunk
+- `5846fff` — Cancel previous toast clear-timer on re-trigger
