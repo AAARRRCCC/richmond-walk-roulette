@@ -46,11 +46,15 @@ function getApiKey(): string | undefined {
 
 /**
  * Fetch a walking route from Google Routes API. Returns null if not configured
- * or on any failure — caller should fall back to a stylized line.
+ * or on any failure — caller should fall back to a stylized line. Pass an
+ * AbortSignal to cancel the in-flight request if the caller no longer cares
+ * about the result (e.g. destination changed); cancelled requests also return
+ * null without logging.
  */
 export async function fetchWalkingRoute(
   origin: LngLat,
   destination: LngLat,
+  signal?: AbortSignal,
 ): Promise<WalkingRoute | null> {
   const apiKey = getApiKey();
   if (!apiKey) return null;
@@ -83,6 +87,7 @@ export async function fetchWalkingRoute(
         polylineQuality: "HIGH_QUALITY",
         polylineEncoding: "ENCODED_POLYLINE",
       }),
+      signal,
     });
 
     if (!res.ok) {
@@ -108,6 +113,10 @@ export async function fetchWalkingRoute(
     cachePut(key, result);
     return result;
   } catch (err) {
+    // AbortError is a normal caller-initiated cancellation, not a failure.
+    // Quietly return null so the console isn't spammed by rapid destination
+    // changes.
+    if (err instanceof DOMException && err.name === "AbortError") return null;
     console.warn("[walk-roulette] Routes API request errored:", err);
     return null;
   }

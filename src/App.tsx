@@ -115,18 +115,18 @@ export default function App() {
   // the duration of the fetch (~100–500ms), producing a visible route/marker
   // mismatch. Clearing first lets the map fall back to its stylized Bezier
   // placeholder during the fetch, then upgrade to the real polyline on resolve.
+  // AbortController cancels the in-flight HTTP request (not just the result)
+  // when destination changes again — saves bandwidth and billed API calls.
   useEffect(() => {
     setWalkingRoute(null);
     if (!destination) return;
-    let cancelled = false;
-    fetchWalkingRoute(toLngLat(startLocation), toLngLat(destination)).then(
+    const ctrl = new AbortController();
+    fetchWalkingRoute(toLngLat(startLocation), toLngLat(destination), ctrl.signal).then(
       (route) => {
-        if (!cancelled) setWalkingRoute(route);
+        if (!ctrl.signal.aborted) setWalkingRoute(route);
       },
     );
-    return () => {
-      cancelled = true;
-    };
+    return () => ctrl.abort();
   }, [destination, startLocation]);
 
   // Full roulette spin: 4–6 turns, random destination, ~4.2s deceleration.
