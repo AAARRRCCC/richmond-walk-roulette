@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { POIS, START_LOCATIONS, type Difficulty, type POI, type StartLocation, type Vibe } from "./data/pois";
-import { distanceTo, eligiblePoiIds, findStart, toLngLat, type MileXY, type Range } from "./lib/geo";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { POIS, START_LOCATIONS, type POI } from "./data/pois";
+import { distanceTo, eligiblePoiIds, findStart, toLngLat, type MileXY } from "./lib/geo";
 import { wheelLayout, normalizeAngle } from "./lib/wheel-layout";
 import { readShareState, writeShareState } from "./lib/url-state";
 import { fetchWalkingRoute, type WalkingRoute } from "./lib/route";
+import { filterReducer, filterStateFromShare } from "./lib/filter-state";
 import { Header } from "./components/Header";
 import { Controls } from "./components/Controls";
 import { Wheel } from "./components/Wheel";
@@ -14,16 +15,21 @@ const DEFAULT_WEATHER = "Get out — the air is doing nothing dramatic";
 const SPIN_DURATION_MS = 4200;
 
 export default function App() {
-  const [startId, setStartId] = useState<string>("monroe");
-  const [customStart, setCustomStart] = useState<StartLocation | null>(null);
-  const [range, setRange] = useState<Range>([2, 4]);
-  const [roundTrip, setRoundTrip] = useState(true);
-  const [difficulty, setDifficulty] = useState<"any" | Difficulty>("any");
-  const [tags, setTags] = useState<Set<Vibe>>(new Set<Vibe>());
+  // Filter state lives in a single reducer so URL-restore can land
+  // everything in one dispatch (was 7 cascading setStates) and filter
+  // updates remain atomic. Initial value is computed lazily from the
+  // URL hash so there's no startup effect-chain.
+  const [filters, dispatch] = useReducer(filterReducer, null, () =>
+    filterStateFromShare(readShareState()),
+  );
+  const { startId, customStart, range, roundTrip, difficulty, tags } = filters;
 
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // selectedId is also restored from URL hash on mount (lazy initial).
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => readShareState()?.pick ?? null,
+  );
   const animFrameRef = useRef<number | null>(null);
 
   const [pickingStart, setPickingStart] = useState(false);
@@ -34,20 +40,7 @@ export default function App() {
     window.setTimeout(() => setToast(null), 1800);
   }, []);
 
-  // Restore state from URL hash on mount
-  useEffect(() => {
-    const s = readShareState();
-    if (!s) return;
-    if (s.start) setStartId(s.start);
-    if (s.custom) setCustomStart(s.custom);
-    if (s.range) setRange(s.range);
-    if (typeof s.rt === "boolean") setRoundTrip(s.rt);
-    if (s.diff) setDifficulty(s.diff);
-    if (s.tags) setTags(new Set<Vibe>(s.tags as Vibe[]));
-    if (s.pick) setSelectedId(s.pick);
-  }, []);
-
-  const startLocation = useMemo<StartLocation>(
+  const startLocation = useMemo(
     () => findStart(startId, customStart, START_LOCATIONS),
     [startId, customStart],
   );
@@ -177,11 +170,14 @@ export default function App() {
 
   // User chose a custom start by clicking on the map (only fires while pickingStart)
   const onPickStart = useCallback((miles: MileXY) => {
-    setCustomStart({
-      id: "custom",
-      name: `Custom (${miles.x.toFixed(1)}, ${miles.y.toFixed(1)})`,
-      x: miles.x,
-      y: miles.y,
+    dispatch({
+      type: "SET_CUSTOM_START",
+      start: {
+        id: "custom",
+        name: `Custom (${miles.x.toFixed(1)}, ${miles.y.toFixed(1)})`,
+        x: miles.x,
+        y: miles.y,
+      },
     });
     setSelectedId(null);
     setRotation(0);
@@ -323,11 +319,29 @@ export default function App() {
   }, []);
 
   const onStartChange = useCallback((id: string) => {
-    setCustomStart(null);
-    setStartId(id);
+    // SET_START_ID reducer action already clears customStart atomically.
+    dispatch({ type: "SET_START_ID", id });
     setSelectedId(null);
     setRotation(0);
   }, []);
+
+  // Thin dispatch wrappers for the Controls component (it expects per-field setters).
+  const onRangeChange = useCallback(
+    (next: typeof range) => dispatch({ type: "SET_RANGE", range: next }),
+    [],
+  );
+  const onRoundTripChange = useCallback(
+    (value: boolean) => dispatch({ type: "SET_ROUND_TRIP", value }),
+    [],
+  );
+  const onDifficultyChange = useCallback(
+    (value: typeof difficulty) => dispatch({ type: "SET_DIFFICULTY", value }),
+    [],
+  );
+  const onTagsChange = useCallback(
+    (next: typeof tags) => dispatch({ type: "SET_TAGS", tags: next }),
+    [],
+  );
 
   return (
     <div className="app">
@@ -341,13 +355,13 @@ export default function App() {
         pickingStart={pickingStart}
         onTogglePickingStart={togglePickingStart}
         range={range}
-        onRangeChange={setRange}
+        onRangeChange={onRangeChange}
         roundTrip={roundTrip}
-        onRoundTripChange={setRoundTrip}
+        onRoundTripChange={onRoundTripChange}
         difficulty={difficulty}
-        onDifficultyChange={setDifficulty}
+        onDifficultyChange={onDifficultyChange}
         tags={tags}
-        onTagsChange={setTags}
+        onTagsChange={onTagsChange}
       />
 
       <div className={"main" + (spinning ? " spinning" : "")}>

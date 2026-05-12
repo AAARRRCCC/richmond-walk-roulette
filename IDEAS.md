@@ -17,13 +17,12 @@ by priority. Top-down order is rough preference, not strict.
       the JS bundle. Code-split it so the header, controls, and wheel
       can paint before MapLibre arrives. Suspense fallback on the map
       pane while it streams in.
-- [ ] **App.tsx is 410 lines + 12 `useState` calls.** react-doctor's
-      `no-giant-component` and `prefer-useReducer`. Group the filter
-      state (`startId`, `customStart`, `range`, `roundTrip`,
-      `difficulty`, `tags`) into one `useReducer({type, payload})`
-      with a RESTORE action that the URL-hash-restore effect can
-      dispatch in one shot. Knocks out the `no-cascading-set-state`
-      warning too.
+- [ ] **App.tsx still 423 lines** even after the filter-reducer
+      pass. `prefer-useReducer` is still flagged (6 remaining useState
+      for animation + UI state). To fully clear, either extract a
+      sub-component (e.g. `<WheelPane>` owns rotation/spinning/etc.)
+      or fold animation state into a second reducer. Lower priority
+      than the perf/a11y items.
 
 ### Polish — desktop
 
@@ -80,11 +79,10 @@ by priority. Top-down order is rough preference, not strict.
 
 ### Performance + quality
 
-- [ ] **`no-effect-chain` warning** in App.tsx: a useEffect drops
-      `selectedId` when filters invalidate it. Could be folded into
-      the filter setters (after the useReducer refactor lands).
-- [ ] **`no-cascading-set-state`** in App.tsx URL-restore effect:
-      7 setStates in one effect. useReducer with a RESTORE action.
+- [ ] **`no-cascading-set-state`** still flagged in RichmondMap
+      feature-state useEffect (3 setStates). After the layer-sync
+      refactor in a future iter, may need to be folded into one
+      effect with computed state.
 - [ ] **`rerender-state-only-in-handlers`** flag in RichmondMap on
       the `loaded` flag — false positive (it IS read in dependent
       hooks, not in JSX). If react-doctor adds a way to suppress
