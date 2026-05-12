@@ -60,8 +60,9 @@ export function Controls({
           className={"start-pick-link" + (pickingStart ? " active" : "")}
           onClick={onTogglePickingStart}
           aria-pressed={pickingStart}
+          title={pickingStart ? "Click anywhere on the map (Esc to cancel)" : "Pick a custom start by clicking the map"}
         >
-          {pickingStart ? "click on map (esc to cancel)" : "or pick on map"}
+          {pickingStart ? "click map · esc to cancel" : "pick on map"}
         </button>
       </div>
 

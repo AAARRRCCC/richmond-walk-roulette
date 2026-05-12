@@ -201,32 +201,34 @@ button {
   display: none;
 }
 
+/* Start-pick affordance: a chip-pill that matches the Difficulty / Vibe
+   chip vocabulary, so it doesn't feel like a stray text link below the
+   dropdown. Active state fills with --highlight to telegraph that the
+   map is now in "pick" mode. */
 .start-pick-link {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
-  color: var(--ink-soft);
+  padding: 3px 8px;
+  border: 1px solid var(--rule);
   background: transparent;
-  border: none;
-  padding: 0;
-  text-align: left;
-  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-radius: 999px;
   cursor: pointer;
+  text-transform: uppercase;
   align-self: flex-start;
-  border-bottom: 1px dashed var(--rule);
-  padding-bottom: 1px;
-  transition: color 0.12s ease, border-color 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
-.start-pick-link:hover {
+.start-pick-link:hover:not(.active) {
+  border-color: var(--ink);
   color: var(--ink);
-  border-bottom-color: var(--ink);
 }
 
 .start-pick-link.active {
-  color: var(--highlight);
-  border-bottom-color: var(--highlight);
-  border-bottom-style: solid;
+  background: var(--highlight);
+  border-color: var(--highlight);
+  color: #fff;
 }
 
 .chips {

@@ -35,9 +35,6 @@ by priority. Top-down order is rough preference, not strict.
       colliding most of the time, but the muted gray of the
       attribution gets visually busy near the pane chrome). Verify
       and adjust z-order/positioning.
-- [ ] **Start-pick "or pick on map" link feels disconnected from the
-      select** — it's small, dashed, off to the left. Consider an
-      inline icon button beside the dropdown, or a "pick" mode chip.
 
 ### Polish — mobile
 
