@@ -19,10 +19,6 @@ function getApiKey(): string | undefined {
   return import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 }
 
-export function isRoutesApiConfigured(): boolean {
-  return !!getApiKey();
-}
-
 /**
  * Fetch a walking route from Google Routes API. Returns null if not configured
  * or on any failure — caller should fall back to a stylized line.

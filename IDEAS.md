@@ -24,9 +24,6 @@ by priority. Top-down order is rough preference, not strict.
       with a RESTORE action that the URL-hash-restore effect can
       dispatch in one shot. Knocks out the `no-cascading-set-state`
       warning too.
-- [ ] **`isRoutesApiConfigured` is unused.** Either delete it or
-      surface in the UI (e.g. a small "real routes" indicator on the
-      map pane when configured). Minor cleanup.
 
 ### Polish — desktop
 
