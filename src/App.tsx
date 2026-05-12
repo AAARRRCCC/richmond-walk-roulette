@@ -8,7 +8,7 @@ import { filterReducer, filterStateFromShare } from "./lib/filter-state";
 import { Header } from "./components/Header";
 import { Controls } from "./components/Controls";
 import { Wheel } from "./components/Wheel";
-import { DeferredMap } from "./components/DeferredMap";
+import { MapPane } from "./components/MapPane";
 import { ResultPane } from "./components/ResultPane";
 
 const DEFAULT_WEATHER = "Get out — the air is doing nothing dramatic";
@@ -407,42 +407,19 @@ export default function App() {
         </div>
 
         <div className="right-col">
-          <div className="map-pane">
-            <span className="pane-label">Map</span>
-            <span className="pane-meta">
-              <span>{startLocation.name.toUpperCase()}</span>
-              {destination && <span>→ {destination.name.toUpperCase()}</span>}
-            </span>
-            <DeferredMap
-              pois={POIS}
-              eligibleIds={eligibleIds}
-              startLocation={startLocation}
-              destination={destination}
-              walkRange={range}
-              roundTrip={roundTrip}
-              showRoute={!!destination}
-              walkingRoute={walkingRoute}
-              pickingStart={pickingStart}
-              onPickStart={onPickStart}
-              onPoiClick={onPoiClick}
-            />
-            {/* Keyboard / screen-reader equivalent of clicking POI dots on
-                the map. Visually hidden; participates in tab order so SR
-                users can pick a destination by name + distance. */}
-            <ul className="sr-only" aria-label="Map destinations">
-              {wheelPois.map((p) => {
-                const trip = (roundTrip ? 2 : 1) * distanceTo(startLocation, p);
-                return (
-                  <li key={p.id}>
-                    <button type="button" onClick={() => onPoiClick(p.id)}>
-                      {p.name}, {fmtMiles(trip)}{" "}
-                      {roundTrip ? "round trip" : "one way"}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+          <MapPane
+            pois={POIS}
+            wheelPois={wheelPois}
+            eligibleIds={eligibleIds}
+            startLocation={startLocation}
+            destination={destination}
+            walkRange={range}
+            roundTrip={roundTrip}
+            walkingRoute={walkingRoute}
+            pickingStart={pickingStart}
+            onPickStart={onPickStart}
+            onPoiClick={onPoiClick}
+          />
 
           <ResultPane
             destination={destination}
