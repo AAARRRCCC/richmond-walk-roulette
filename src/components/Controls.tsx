@@ -68,8 +68,8 @@ export function Controls({
         </button>
       </div>
 
-      <div className="control">
-        <span className="label">
+      <div className="control" role="group" aria-labelledby="distance-label">
+        <span id="distance-label" className="label">
           Distance ({roundTrip ? "round-trip" : "one-way"}, miles)
         </span>
         <RangeSlider range={range} onChange={onRangeChange} />
