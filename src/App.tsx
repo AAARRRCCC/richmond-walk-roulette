@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "r
 import { POIS, START_LOCATIONS, type POI } from "./data/pois";
 import { distanceTo, eligiblePoiIds, findStart, fmtMiles, fmtMinutes, toLngLat, type MileXY } from "./lib/geo";
 import { wheelLayout, normalizeAngle } from "./lib/wheel-layout";
-import { readShareState, writeShareState } from "./lib/url-state";
+import { readShareState, writeShareState, type ShareState } from "./lib/url-state";
 import { fetchWalkingRoute, type WalkingRoute } from "./lib/route";
 import { filterReducer, filterStateFromShare } from "./lib/filter-state";
 import { Header } from "./components/Header";
@@ -111,6 +111,23 @@ export default function App() {
   }, [destination, startLocation]);
 
   // Full roulette spin: 4–6 turns, random destination, ~4.2s deceleration.
+  // Single source of truth for the share-state payload — used by spin
+  // (with the just-picked POI), rotateTo (with its target POI), and the
+  // Share button (with whatever's currently selected). Keeping this in
+  // one place ensures the three callers stay in sync.
+  const buildShareState = useCallback(
+    (pickId: string | null): ShareState => ({
+      start: customStart ? null : startId,
+      custom: customStart,
+      range,
+      rt: roundTrip,
+      diff: difficulty,
+      tags: Array.from(tags),
+      pick: pickId,
+    }),
+    [customStart, startId, range, roundTrip, difficulty, tags],
+  );
+
   // Used by the Spin button and Reroll. POI clicks use rotateTo() instead.
   const spin = useCallback(() => {
     if (spinning || wheelPois.length === 0) return;
@@ -153,20 +170,12 @@ export default function App() {
         const picked = wheelPois[targetIdx];
         if (picked) {
           setSelectedId(picked.id);
-          writeShareState({
-            start: customStart ? null : startId,
-            custom: customStart,
-            range,
-            rt: roundTrip,
-            diff: difficulty,
-            tags: Array.from(tags),
-            pick: picked.id,
-          });
+          writeShareState(buildShareState(picked.id));
         }
       }
     };
     animFrameRef.current = requestAnimationFrame(tick);
-  }, [spinning, wheelPois, rotation, customStart, startId, range, roundTrip, difficulty, tags]);
+  }, [spinning, wheelPois, rotation, buildShareState]);
 
   // Cleanup pending animation on unmount
   useEffect(
@@ -247,20 +256,12 @@ export default function App() {
           setRotation(-targetBase);
           setSpinning(false);
           setSelectedId(targetPoiId);
-          writeShareState({
-            start: customStart ? null : startId,
-            custom: customStart,
-            range,
-            rt: roundTrip,
-            diff: difficulty,
-            tags: Array.from(tags),
-            pick: targetPoiId,
-          });
+          writeShareState(buildShareState(targetPoiId));
         }
       };
       animFrameRef.current = requestAnimationFrame(tick);
     },
-    [spinning, wheelPois, rotation, customStart, startId, range, roundTrip, difficulty, tags],
+    [spinning, wheelPois, rotation, buildShareState],
   );
 
   // User clicked a POI dot on the map → rotate the wheel over to that POI.
@@ -301,22 +302,14 @@ export default function App() {
 
   // Share
   const copyShare = useCallback(async () => {
-    writeShareState({
-      start: customStart ? null : startId,
-      custom: customStart,
-      range,
-      rt: roundTrip,
-      diff: difficulty,
-      tags: Array.from(tags),
-      pick: selectedId,
-    });
+    writeShareState(buildShareState(selectedId));
     try {
       await navigator.clipboard.writeText(window.location.href);
       showToast("Link copied");
     } catch {
       showToast("Couldn't copy");
     }
-  }, [customStart, startId, range, roundTrip, difficulty, tags, selectedId, showToast]);
+  }, [buildShareState, selectedId, showToast]);
 
   // Open in Google Maps walking directions
   const openInMaps = useCallback(() => {
