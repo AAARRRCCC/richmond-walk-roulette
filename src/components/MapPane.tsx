@@ -15,7 +15,7 @@ type Props = {
   roundTrip: boolean;
   walkingRoute: WalkingRoute | null;
   pickingStart: boolean;
-  onPickStart: (miles: MileXY) => void;
+  onPickStart: (miles: MileXY, name?: string) => void;
   onPoiClick: (poiId: string) => void;
 };
 

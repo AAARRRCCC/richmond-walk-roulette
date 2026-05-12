@@ -220,13 +220,16 @@ export default function App() {
     }
   }, [wheelPois]);
 
-  // User chose a custom start by clicking on the map (only fires while pickingStart)
-  const onPickStart = useCallback((miles: MileXY) => {
+  // User chose a custom start by clicking on the map (only fires while
+  // pickingStart). If the click landed on a POI dot, RichmondMap forwards
+  // the POI name so the start label reads as the place instead of a
+  // generic coord pair.
+  const onPickStart = useCallback((miles: MileXY, name?: string) => {
     dispatch({
       type: "SET_CUSTOM_START",
       start: {
         id: "custom",
-        name: `Custom (${miles.x.toFixed(1)}, ${miles.y.toFixed(1)})`,
+        name: name ?? `Custom (${miles.x.toFixed(1)}, ${miles.y.toFixed(1)})`,
         x: miles.x,
         y: miles.y,
       },

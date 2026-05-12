@@ -34,7 +34,10 @@ export type RichmondMapProps = {
   /** Real walking route from Google Routes API, when configured. Falls back to a stylized Bezier if null. */
   walkingRoute: WalkingRoute | null;
   pickingStart: boolean;
-  onPickStart: (miles: MileXY) => void;
+  /** Called when user clicks the map in pickingStart mode. If the click
+   *  landed on a POI dot, `name` is the POI's display name; caller can
+   *  use it instead of the generic coordinate label. */
+  onPickStart: (miles: MileXY, name?: string) => void;
   onPoiClick: (poiId: string) => void;
 };
 
@@ -84,9 +87,17 @@ export function RichmondMap(props: RichmondMapProps) {
 
     const onMapClick = (e: maplibregl.MapMouseEvent) => {
       const ll = e.lngLat;
-      // Picking-start mode: any click sets the custom start, including on POIs
+      // Picking-start mode: any click sets the custom start, including
+      // on POIs. If the click DID land on a POI dot, forward its name
+      // so the start label is "<POI name>" instead of generic coords.
       if (pickingStartRef.current) {
-        onPickStartRef.current(fromLngLat({ lng: ll.lng, lat: ll.lat }));
+        const features = map.queryRenderedFeatures(e.point, { layers: [POI_LAYER] });
+        const hit = features[0];
+        const name =
+          hit && hit.properties && typeof hit.properties.name === "string"
+            ? hit.properties.name
+            : undefined;
+        onPickStartRef.current(fromLngLat({ lng: ll.lng, lat: ll.lat }), name);
         return;
       }
       // Otherwise: only POI clicks do anything (empty-map clicks are ignored)
