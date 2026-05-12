@@ -100,3 +100,4 @@ by priority. Top-down order is rough preference, not strict.
 - `efb0447` — Remove unused isRoutesApiConfigured export
 - `3168734` — Toast position no longer occludes result-pane stats
 - `20267f1` — Collapse filter state into a reducer (score 96→97)
+- `b1c7822` — Subtle 1px chrome rule under pane labels
