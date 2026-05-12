@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { POIS, START_LOCATIONS, type POI } from "./data/pois";
-import { distanceTo, eligiblePoiIds, findStart, toLngLat, type MileXY } from "./lib/geo";
+import { distanceTo, eligiblePoiIds, findStart, fmtMiles, fmtMinutes, toLngLat, type MileXY } from "./lib/geo";
 import { wheelLayout, normalizeAngle } from "./lib/wheel-layout";
 import { readShareState, writeShareState } from "./lib/url-state";
 import { fetchWalkingRoute, type WalkingRoute } from "./lib/route";
@@ -282,6 +282,15 @@ export default function App() {
   const oneWay = destination ? distanceTo(startLocation, destination) : 0;
   const totalDist = roundTrip ? oneWay * 2 : oneWay;
 
+  // Screen-reader announcement: fires whenever a pick is locked in (after a
+  // spin or POI click), tells assistive tech what landed. Derived, no extra
+  // state — the aria-live region reads its text from this memo.
+  const announcement = useMemo(() => {
+    if (spinning || !selectedId || !destination) return "";
+    const trip = roundTrip ? "round trip" : "one way";
+    return `Picked ${destination.name}. ${fmtMiles(totalDist)} ${trip}, about ${fmtMinutes(totalDist)} walk.`;
+  }, [spinning, selectedId, destination, totalDist, roundTrip]);
+
   // Share
   const copyShare = useCallback(async () => {
     writeShareState({
@@ -365,7 +374,7 @@ export default function App() {
       />
 
       <div className={"main" + (spinning ? " spinning" : "")}>
-        <div className="wheel-pane">
+        <div className="wheel-pane" aria-busy={spinning}>
           <span className="pane-label">Destinations</span>
           <span className="pane-meta">
             <span>
@@ -434,6 +443,13 @@ export default function App() {
       </div>
 
       {toast && <div className="toast">{toast}</div>}
+
+      {/* Visually-hidden live region. Announces picks to screen readers
+          once the spin animation completes. aria-atomic="true" makes
+          assistive tech read the whole sentence, not just the diff. */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
     </div>
   );
 }

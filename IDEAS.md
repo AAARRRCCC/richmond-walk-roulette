@@ -54,9 +54,6 @@ by priority. Top-down order is rough preference, not strict.
 
 ### Accessibility
 
-- [ ] **Wheel SVG has no accessible name or live region.** When a
-      spin completes, screen readers get nothing. Add `aria-live`
-      announcement of the picked POI to the wheel pane.
 - [ ] **Map has no keyboard-only path to "pick a destination."**
       Mouse users can click POI dots; keyboard users have no
       equivalent. The wheel itself is technically the keyboard
