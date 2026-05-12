@@ -93,12 +93,15 @@ export default function App() {
     }
   }, [eligibleIds, selectedId]);
 
-  // Fetch a real walking route from Google Routes API when a destination is picked
+  // Fetch a real walking route from Google Routes API when a destination is picked.
+  // Eagerly clear walkingRoute on every dependency change: otherwise the previous
+  // destination's polyline would render on the new destination's dot/callout for
+  // the duration of the fetch (~100–500ms), producing a visible route/marker
+  // mismatch. Clearing first lets the map fall back to its stylized Bezier
+  // placeholder during the fetch, then upgrade to the real polyline on resolve.
   useEffect(() => {
-    if (!destination) {
-      setWalkingRoute(null);
-      return;
-    }
+    setWalkingRoute(null);
+    if (!destination) return;
     let cancelled = false;
     fetchWalkingRoute(toLngLat(startLocation), toLngLat(destination)).then(
       (route) => {
