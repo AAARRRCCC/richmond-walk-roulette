@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { POIS, START_LOCATIONS, type POI } from "./data/pois";
 import { distanceTo, eligiblePoiIds, findStart, fmtMiles, fmtMinutes, toLngLat, type MileXY } from "./lib/geo";
 import { wheelLayout, normalizeAngle } from "./lib/wheel-layout";
@@ -8,14 +8,8 @@ import { filterReducer, filterStateFromShare } from "./lib/filter-state";
 import { Header } from "./components/Header";
 import { Controls } from "./components/Controls";
 import { Wheel } from "./components/Wheel";
+import { DeferredMap } from "./components/DeferredMap";
 import { ResultPane } from "./components/ResultPane";
-
-// Lazy-load the map. MapLibre is ~270 KB gzipped — defer it so the
-// header, controls, wheel, and result pane render to first-paint
-// without waiting for the map bundle.
-const RichmondMap = lazy(() =>
-  import("./components/RichmondMap").then((m) => ({ default: m.RichmondMap })),
-);
 
 const DEFAULT_WEATHER = "Get out — the air is doing nothing dramatic";
 const SPIN_DURATION_MS = 4200;
@@ -419,23 +413,19 @@ export default function App() {
               <span>{startLocation.name.toUpperCase()}</span>
               {destination && <span>→ {destination.name.toUpperCase()}</span>}
             </span>
-            <Suspense
-              fallback={<div className="map-loading" aria-label="Loading map" />}
-            >
-              <RichmondMap
-                pois={POIS}
-                eligibleIds={eligibleIds}
-                startLocation={startLocation}
-                destination={destination}
-                walkRange={range}
-                roundTrip={roundTrip}
-                showRoute={!!destination}
-                walkingRoute={walkingRoute}
-                pickingStart={pickingStart}
-                onPickStart={onPickStart}
-                onPoiClick={onPoiClick}
-              />
-            </Suspense>
+            <DeferredMap
+              pois={POIS}
+              eligibleIds={eligibleIds}
+              startLocation={startLocation}
+              destination={destination}
+              walkRange={range}
+              roundTrip={roundTrip}
+              showRoute={!!destination}
+              walkingRoute={walkingRoute}
+              pickingStart={pickingStart}
+              onPickStart={onPickStart}
+              onPoiClick={onPoiClick}
+            />
           </div>
 
           <ResultPane

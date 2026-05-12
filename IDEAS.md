@@ -66,10 +66,6 @@ by priority. Top-down order is rough preference, not strict.
       the `loaded` flag — false positive (it IS read in dependent
       hooks, not in JSX). If react-doctor adds a way to suppress
       per-rule, do that; otherwise live with it.
-- [ ] **MapLibre is downloaded on every page load** even when the
-      map is off-screen on narrow viewports. After the code-split
-      lands, defer the import behind an IntersectionObserver on the
-      map pane.
 
 ## Done
 

@@ -23,7 +23,7 @@ const POI_LAYER = "pois-circle";
 const START_SRC = "start";
 const START_LAYER = "start-circle";
 
-type Props = {
+export type RichmondMapProps = {
   pois: readonly POI[];
   eligibleIds: ReadonlySet<string>;
   startLocation: StartLocation;
@@ -38,7 +38,7 @@ type Props = {
   onPoiClick: (poiId: string) => void;
 };
 
-export function RichmondMap(props: Props) {
+export function RichmondMap(props: RichmondMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MaplibreMap | null>(null);
   const onPickStartRef = useRef(props.onPickStart);
@@ -233,7 +233,7 @@ function installLayers(
 function useMapLayerSync(
   mapRef: React.MutableRefObject<MaplibreMap | null>,
   loaded: boolean,
-  props: Props,
+  props: RichmondMapProps,
 ) {
   const calloutRef = useRef<Popup | null>(null);
   const { pois, eligibleIds, startLocation, destination, walkRange, roundTrip, showRoute, walkingRoute } = props;
