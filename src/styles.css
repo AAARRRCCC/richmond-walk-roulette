@@ -564,6 +564,14 @@ button {
   display: block;
 }
 
+/* Suspense fallback while the MapLibre chunk loads. Same paper-toned
+   background as the loaded map container so there's no flash. */
+.map-loading {
+  width: 100%;
+  height: 100%;
+  background: var(--paper);
+}
+
 /* MapLibre attribution: tighten so it doesn't visually crowd the pane chrome */
 .map-pane .maplibregl-ctrl-attrib {
   font-family: var(--font-mono);

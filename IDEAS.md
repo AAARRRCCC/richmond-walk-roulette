@@ -13,10 +13,6 @@ by priority. Top-down order is rough preference, not strict.
 
 ### High impact
 
-- [ ] **Bundle size.** MapLibre is ~970 KB / 273 KB gzipped, dominating
-      the JS bundle. Code-split it so the header, controls, and wheel
-      can paint before MapLibre arrives. Suspense fallback on the map
-      pane while it streams in.
 - [ ] **App.tsx still 423 lines** even after the filter-reducer
       pass. `prefer-useReducer` is still flagged (6 remaining useState
       for animation + UI state). To fully clear, either extract a
