@@ -82,3 +82,4 @@ by priority. Top-down order is rough preference, not strict.
 - `b398cd0` — Touch tap-target sizes via @media (pointer: coarse)
 - `f33f283` — Defer MapLibre chunk via IntersectionObserver
 - `60e63fe` — Screen-reader POI list (keyboard equivalent of map clicks)
+- `c9ffde5` — Extract <MapPane> sub-component (App.tsx 455→432 lines)
