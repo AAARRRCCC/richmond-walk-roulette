@@ -9,10 +9,35 @@ export type WalkingRoute = {
   durationSeconds: number;
 };
 
+// Bounded LRU cache for fetched walking routes. Map iteration order is
+// insertion order, so on overflow we delete the first key (the oldest).
+// 50 is plenty for a single session: ~34 POIs × a handful of distinct
+// starts per visit, hits the steady state quickly.
+const CACHE_LIMIT = 50;
 const cache = new Map<string, WalkingRoute>();
 
 function cacheKey(origin: LngLat, destination: LngLat): string {
   return `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}|${destination.lat.toFixed(5)},${destination.lng.toFixed(5)}`;
+}
+
+function cachePut(key: string, value: WalkingRoute): void {
+  // LRU: bump the entry to most-recent by re-inserting at the end.
+  if (cache.has(key)) cache.delete(key);
+  cache.set(key, value);
+  if (cache.size > CACHE_LIMIT) {
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
+}
+
+function cacheGet(key: string): WalkingRoute | undefined {
+  const hit = cache.get(key);
+  if (hit) {
+    // Touch on read so a frequently-used route doesn't get evicted.
+    cache.delete(key);
+    cache.set(key, hit);
+  }
+  return hit;
 }
 
 function getApiKey(): string | undefined {
@@ -31,7 +56,7 @@ export async function fetchWalkingRoute(
   if (!apiKey) return null;
 
   const key = cacheKey(origin, destination);
-  const cached = cache.get(key);
+  const cached = cacheGet(key);
   if (cached) return cached;
 
   try {
@@ -80,7 +105,7 @@ export async function fetchWalkingRoute(
       distanceMeters: route.distanceMeters ?? 0,
       durationSeconds: parseDurationSeconds(route.duration),
     };
-    cache.set(key, result);
+    cachePut(key, result);
     return result;
   } catch (err) {
     console.warn("[walk-roulette] Routes API request errored:", err);
