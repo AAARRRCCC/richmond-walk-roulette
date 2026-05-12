@@ -2,8 +2,11 @@ node_modules
 dist
 dist-ssr
 *.local
-.env.local
-.env.*.local
+
+# Environment files — never commit. .env.example IS allowed (no secrets).
+.env
+.env.*
+!.env.example
 
 .vscode/*
 !.vscode/extensions.json
