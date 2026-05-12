@@ -8,6 +8,7 @@ type Props = {
   selectedId: string | null;
   spinning: boolean;
   onSpin: () => void;
+  onClearFilters: () => void;
 };
 
 export function WheelPane({
@@ -17,6 +18,7 @@ export function WheelPane({
   selectedId,
   spinning,
   onSpin,
+  onClearFilters,
 }: Props) {
   return (
     <div className="wheel-pane" aria-busy={spinning}>
@@ -30,7 +32,14 @@ export function WheelPane({
       {wheelPois.length === 0 ? (
         <div className="empty-wheel">
           <div className="big">No matches</div>
-          <div className="small">widen the range or clear filters</div>
+          <div className="small">no destinations fit these filters</div>
+          <button
+            type="button"
+            className="btn ghost empty-wheel-clear"
+            onClick={onClearFilters}
+          >
+            Clear filters
+          </button>
         </div>
       ) : (
         <Wheel pois={wheelPois} rotation={rotation} pickedId={selectedId} />

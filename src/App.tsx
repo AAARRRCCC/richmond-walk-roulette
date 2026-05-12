@@ -352,6 +352,14 @@ export default function App() {
     [],
   );
 
+  // Empty-state "Clear filters" action: reset everything that can
+  // exclude POIs (difficulty, tags, range), keep start location.
+  const onClearFilters = useCallback(() => {
+    dispatch({ type: "SET_DIFFICULTY", value: "any" });
+    dispatch({ type: "SET_TAGS", tags: new Set() });
+    dispatch({ type: "SET_RANGE", range: [0, 8] });
+  }, []);
+
   return (
     <div className="app">
       <Header weather={DEFAULT_WEATHER} onShare={copyShare} />
@@ -381,6 +389,7 @@ export default function App() {
           selectedId={selectedId}
           spinning={spinning}
           onSpin={spin}
+          onClearFilters={onClearFilters}
         />
 
         <div className="right-col">

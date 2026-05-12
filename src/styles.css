@@ -541,6 +541,10 @@ button {
   text-transform: uppercase;
 }
 
+.empty-wheel-clear {
+  margin-top: 8px;
+}
+
 /* ---------- Right column ---------- */
 
 .right-col {
