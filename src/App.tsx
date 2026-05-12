@@ -58,9 +58,17 @@ export default function App() {
     [eligibleIds],
   );
 
-  // Resolve the destination shown in the result pane:
+  // Resolve the destination shown in the result pane AND the map:
   // - if a pick is locked in (post-spin), use it
   // - else if not spinning, use the entry currently closest to the indicator
+  //
+  // The "closest-to-indicator" idle fallback is deliberate: it gives the
+  // result pane + map a meaningful preview state instead of being empty
+  // before the user spins. The right-column UI tracks whatever's at the
+  // indicator — same POI the wheel visually highlights, same route the
+  // user would commit to if they spun and happened to land there. The
+  // Spin button label ("Spin" vs "Spin Again") is the source of truth
+  // for whether anything is actually committed.
   const destination = useMemo<POI | null>(() => {
     if (selectedId) return POIS.find((p) => p.id === selectedId) ?? null;
     if (spinning || wheelPois.length === 0) return null;
