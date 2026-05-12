@@ -108,4 +108,4 @@ by priority. Top-down order is rough preference, not strict.
 - `fbac414` — Vendor audit skills from Owl-Listener/designer-skills
 - `c5d864e` — Seed IDEAS.md backlog
 - `e3bf098` — Focus styles + keyboard-operable toggle
-- 27eee57 — Wheel-edge label fade
+- `d0b0e17` — Wheel-edge label fade
