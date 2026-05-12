@@ -25,14 +25,11 @@ by priority. Top-down order is rough preference, not strict.
 
 ### Polish — mobile
 
-- [ ] **<900px breakpoint is half-baked.** Stacks wheel + map but
-      doesn't re-tune anything: wheel pane is cramped, chips wrap
-      awkwardly, controls bar is too tall (it stacks 5 cells into
-      2 columns × 3 rows). A real mobile pass:
-      - Controls bar collapses to a drawer/sheet behind a button
-      - Wheel becomes a tap-friendly vertical picker OR keeps SVG
-        but at a fixed height that doesn't squeeze
-      - Result pane stays full-width at the bottom
+- [ ] **Controls drawer/sheet on mobile** (future). Iter 22 fixed
+      the worst squeeze (panes have min-heights, single-col controls
+      at <600px) but didn't redesign the controls UI itself. A real
+      mobile pass would hide the controls behind a "Filter" button
+      and show them in a slide-up sheet.
 
 ### Accessibility
 

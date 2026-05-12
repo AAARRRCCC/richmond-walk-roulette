@@ -859,7 +859,11 @@ button {
   }
 }
 
-/* small screens — let it stack but keep usable */
+/* Small screens — let the page stack and scroll, but give each pane a
+   usable height so the wheel + map aren't squeezed into half-viewport
+   slivers on a 600px-tall phone. The wheel needs enough vertical room
+   for readable labels + the spin button; the map needs enough for the
+   POI dots + radius rings to be useful. */
 @media (max-width: 900px) {
   .app {
     height: auto;
@@ -876,10 +880,30 @@ button {
   }
   .main {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: auto auto;
   }
   .wheel-pane {
     border-right: none;
     border-bottom: 1px solid var(--rule);
+    min-height: 460px;
+  }
+  .right-col {
+    grid-template-rows: auto auto;
+  }
+  .map-pane,
+  .map-pane .map-container,
+  .map-loading {
+    min-height: 320px;
+  }
+}
+
+/* Phone-narrow: single-column controls so each cell gets full width
+   and the chip groups can lay out on one row. */
+@media (max-width: 600px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+  .spin-btn-wrap {
+    bottom: 16px;
   }
 }
