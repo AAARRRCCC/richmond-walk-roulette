@@ -84,3 +84,4 @@ by priority. Top-down order is rough preference, not strict.
 - `f95fd8b` — Single CLEAR_FILTERS reducer action (was 3 dispatches)
 - `7b0c833` — Cancel in-flight spin when filters change mid-animation
 - `ae24e4a` — Pick-on-map uses POI name when clicking a dot
+- `fd7a8a6` — AbortController on fetchWalkingRoute (cancels HTTP, not just result)
