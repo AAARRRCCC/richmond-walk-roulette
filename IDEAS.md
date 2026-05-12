@@ -76,3 +76,4 @@ by priority. Top-down order is rough preference, not strict.
 - `f821155` — Empty-wheel Clear Filters action button
 - `ad12d4c` — Document idle-state destination tracking as intentional
 - `011ef8c` — Bound the walking-route cache (LRU, limit 50)
+- `6e318fc` — Open in Maps uses precise lat/lng instead of name geocoding
