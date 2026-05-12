@@ -42,11 +42,6 @@ by priority. Top-down order is rough preference, not strict.
       - Wheel becomes a tap-friendly vertical picker OR keeps SVG
         but at a fixed height that doesn't squeeze
       - Result pane stays full-width at the bottom
-- [ ] **Tap targets are too small.** Chips are 3px × 8px padding
-      (probably ~22px tall total). iOS HIG / WCAG 2.5.5 want ≥ 44px.
-      Bump on touch devices via `(pointer: coarse)`.
-- [ ] **Range slider thumbs are 14px** — fine on desktop, hard to
-      grab on touch. Increase to 22px on coarse pointers.
 
 ### Accessibility
 

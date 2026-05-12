@@ -829,6 +829,36 @@ button {
   outline-offset: 3px;
 }
 
+/* ---------- Touch input ---------- */
+
+/* Bump tap targets toward ~44px on touch devices (WCAG 2.5.5).
+   Detected by pointer:coarse so this triggers on phones/tablets and
+   touchscreen laptops without affecting mouse-driven desktops. */
+@media (pointer: coarse) {
+  .chip,
+  .start-pick-link {
+    padding: 9px 12px;
+    font-size: 11px;
+  }
+
+  .range-track {
+    height: 28px;
+  }
+
+  .range-track input[type="range"]::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+  .range-track input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  .btn {
+    padding: 12px 18px;
+  }
+}
+
 /* small screens — let it stack but keep usable */
 @media (max-width: 900px) {
   .app {
