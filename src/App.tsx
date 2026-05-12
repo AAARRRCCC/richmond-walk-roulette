@@ -321,14 +321,20 @@ export default function App() {
   // Open in Google Maps walking directions
   const openInMaps = useCallback(() => {
     if (!destination) return;
-    const origin = encodeURIComponent(`${startLocation.name} Richmond VA`);
-    const dest = encodeURIComponent(`${destination.name} Richmond VA`);
+    // Pass lat,lng instead of names. Names get geocoded by Maps and can
+    // land at a similarly-named place; the POI dataset has exact
+    // coordinates, so use those directly. Maps will still render the
+    // resolved place name on its end.
+    const startLL = toLngLat(startLocation);
+    const destLL = toLngLat(destination);
+    const origin = `${startLL.lat},${startLL.lng}`;
+    const dest = `${destLL.lat},${destLL.lng}`;
     window.open(
       `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&travelmode=walking`,
       "_blank",
       "noopener,noreferrer",
     );
-  }, [destination, startLocation.name]);
+  }, [destination, startLocation]);
 
   const reset = useCallback(() => {
     setSelectedId(null);
