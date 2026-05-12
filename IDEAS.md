@@ -106,3 +106,4 @@ by priority. Top-down order is rough preference, not strict.
 - `c5d864e` — Seed IDEAS.md backlog
 - `e3bf098` — Focus styles + keyboard-operable toggle
 - `d0b0e17` — Wheel-edge label fade
+- `efb0447` — Remove unused isRoutesApiConfigured export
