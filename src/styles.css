@@ -576,6 +576,33 @@ button {
   background: var(--paper);
 }
 
+/* Error-boundary fallback for when the map chunk fails to load. */
+.map-error {
+  width: 100%;
+  height: 100%;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 32px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.map-error .big {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.map-error .small {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  max-width: 32ch;
+  line-height: 1.5;
+}
+
 /* MapLibre attribution: tighten so it doesn't visually crowd the pane chrome */
 .map-pane .maplibregl-ctrl-attrib {
   font-family: var(--font-mono);

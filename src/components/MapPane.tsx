@@ -2,6 +2,7 @@ import type { POI, StartLocation } from "../data/pois";
 import { distanceTo, fmtMiles, type MileXY, type Range } from "../lib/geo";
 import type { WalkingRoute } from "../lib/route";
 import { DeferredMap } from "./DeferredMap";
+import { MapErrorBoundary } from "./MapErrorBoundary";
 
 type Props = {
   pois: readonly POI[];
@@ -38,19 +39,21 @@ export function MapPane({
         <span>{startLocation.name.toUpperCase()}</span>
         {destination && <span>→ {destination.name.toUpperCase()}</span>}
       </span>
-      <DeferredMap
-        pois={pois}
-        eligibleIds={eligibleIds}
-        startLocation={startLocation}
-        destination={destination}
-        walkRange={walkRange}
-        roundTrip={roundTrip}
-        showRoute={!!destination}
-        walkingRoute={walkingRoute}
-        pickingStart={pickingStart}
-        onPickStart={onPickStart}
-        onPoiClick={onPoiClick}
-      />
+      <MapErrorBoundary>
+        <DeferredMap
+          pois={pois}
+          eligibleIds={eligibleIds}
+          startLocation={startLocation}
+          destination={destination}
+          walkRange={walkRange}
+          roundTrip={roundTrip}
+          showRoute={!!destination}
+          walkingRoute={walkingRoute}
+          pickingStart={pickingStart}
+          onPickStart={onPickStart}
+          onPoiClick={onPoiClick}
+        />
+      </MapErrorBoundary>
       {/* Keyboard / screen-reader equivalent of clicking POI dots on the
           map. Visually hidden; participates in tab order so SR users can
           pick a destination by name + distance. */}
