@@ -204,6 +204,22 @@ export default function App() {
     [],
   );
 
+  // If filters change mid-spin, cancel the in-flight animation. The spin's
+  // closure captured the OLD wheelPois snapshot, so allowing it to complete
+  // would land the wheel at a slot that may not exist in the new layout
+  // (and the filter-invalidation effect would then clean up selectedId
+  // half a frame later — user sees a broken landing flash). Cancel up
+  // front. wheelPois identity is stable across animation frames thanks
+  // to useMemo, so this only fires on actual filter changes.
+  useEffect(() => {
+    if (animFrameRef.current !== null) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+      setSpinning(false);
+      setRotation(0);
+    }
+  }, [wheelPois]);
+
   // User chose a custom start by clicking on the map (only fires while pickingStart)
   const onPickStart = useCallback((miles: MileXY) => {
     dispatch({
