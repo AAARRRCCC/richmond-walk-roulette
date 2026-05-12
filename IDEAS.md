@@ -31,10 +31,6 @@ by priority. Top-down order is rough preference, not strict.
       "Open in Maps / Reroll / Clear" are stacked vertically with
       200px min-width. On wide screens, an inline row with smaller
       buttons would feel tighter. On narrow screens, keep stacked.
-- [ ] **Toast position collides with the spin button** on narrow
-      viewports (toast is fixed bottom-center, spin button is
-      bottom-center of the wheel pane). Move the toast up ~80px when
-      it would overlap the spin-btn-wrap region.
 - [ ] **Map "MAP" label overlaps attribution** on tall narrow panes
       (the OpenFreeMap attribution sits bottom-right; not actually
       colliding most of the time, but the muted gray of the

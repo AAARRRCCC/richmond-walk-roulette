@@ -724,10 +724,11 @@ button {
   pointer-events: none;
 }
 
-/* Toast */
+/* Toast — sits above the result pane (min-height 132px) so it doesn't
+   overlay stats text. The 156 = 132 + 24 gap above the result pane top edge. */
 .toast {
   position: fixed;
-  bottom: 24px;
+  bottom: 156px;
   left: 50%;
   transform: translateX(-50%);
   background: var(--ink);
