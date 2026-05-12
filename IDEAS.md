@@ -91,3 +91,4 @@ by priority. Top-down order is rough preference, not strict.
 - `830d459` — Start-pick restyled as a chip-pill
 - `ec27613` — aria-live announcement on pick + aria-busy on wheel
 - `6eb1018` — Code-split MapLibre (main bundle 273→54 KB gzipped)
+- `d02b8b4` — Real <label> pairing for Start dropdown
