@@ -45,11 +45,6 @@ by priority. Top-down order is rough preference, not strict.
 
 ### Accessibility
 
-- [ ] **Map has no keyboard-only path to "pick a destination."**
-      Mouse users can click POI dots; keyboard users have no
-      equivalent. The wheel itself is technically the keyboard
-      version of picking, but the map's POI dots should at least
-      be skip-linked.
 - [ ] **Color contrast on `.ink-soft` (#4a4843) against `--paper`**
       reads at ~9:1 which is fine, but the dim variants used in
       ineligible POI strokes (#c4bcaa on #faf7ee) are below 3:1.

@@ -426,6 +426,22 @@ export default function App() {
               onPickStart={onPickStart}
               onPoiClick={onPoiClick}
             />
+            {/* Keyboard / screen-reader equivalent of clicking POI dots on
+                the map. Visually hidden; participates in tab order so SR
+                users can pick a destination by name + distance. */}
+            <ul className="sr-only" aria-label="Map destinations">
+              {wheelPois.map((p) => {
+                const trip = (roundTrip ? 2 : 1) * distanceTo(startLocation, p);
+                return (
+                  <li key={p.id}>
+                    <button type="button" onClick={() => onPoiClick(p.id)}>
+                      {p.name}, {fmtMiles(trip)}{" "}
+                      {roundTrip ? "round trip" : "one way"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           <ResultPane
