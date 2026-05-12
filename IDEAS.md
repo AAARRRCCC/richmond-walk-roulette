@@ -76,3 +76,4 @@ by priority. Top-down order is rough preference, not strict.
 - `c9ffde5` — Extract <MapPane> sub-component (App.tsx 455→432 lines)
 - `c51a957` — Verified MAP label / attribution overlap is not a real bug
 - `6d1f429` — Verified result-pane action stack is not actually ugly
+- `fec7db5` — Extract <WheelPane> sub-component (App.tsx 432→409 lines)
