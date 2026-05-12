@@ -73,3 +73,4 @@ by priority. Top-down order is rough preference, not strict.
 - `f055f0b` — Drop dead setLoaded(false) in RichmondMap unmount (score 97→98)
 - `43e3219` — Mobile breakpoint pass (pane min-heights, 1-col controls)
 - `5d92ba6` — Discoverability title attrs on ambiguous controls
+- `f821155` — Empty-wheel Clear Filters action button
