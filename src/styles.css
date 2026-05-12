@@ -400,6 +400,21 @@ button {
   min-width: 0;
 }
 
+/* Subtle 1px rule under the pane labels — anchors the floating
+   DESTINATIONS / MAP text so they don't look mid-air. */
+.wheel-pane::before,
+.map-pane::before {
+  content: "";
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--rule-soft);
+  z-index: 1;
+  pointer-events: none;
+}
+
 .pane-label {
   position: absolute;
   top: 14px;

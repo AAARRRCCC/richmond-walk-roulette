@@ -38,9 +38,6 @@ by priority. Top-down order is rough preference, not strict.
 - [ ] **Start-pick "or pick on map" link feels disconnected from the
       select** — it's small, dashed, off to the left. Consider an
       inline icon button beside the dropdown, or a "pick" mode chip.
-- [ ] **Pane labels (DESTINATIONS / MAP) and meta text float at the
-      top with no panel chrome,** which works but looks unmoored.
-      Try a subtle 1px bottom border on the top 36px of each pane.
 
 ### Polish — mobile
 
