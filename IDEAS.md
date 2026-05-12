@@ -82,3 +82,4 @@ by priority. Top-down order is rough preference, not strict.
 - `b22d3c5` — Error boundary around the lazy map chunk
 - `5846fff` — Cancel previous toast clear-timer on re-trigger
 - `f95fd8b` — Single CLEAR_FILTERS reducer action (was 3 dispatches)
+- `7b0c833` — Cancel in-flight spin when filters change mid-animation
