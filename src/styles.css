@@ -356,7 +356,19 @@ button {
 }
 
 .toggle input {
-  display: none;
+  /* Visually hidden but still focusable + clickable in the tab order.
+     `display: none` removes the element entirely and breaks keyboard
+     toggling, which was a latent a11y bug. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .toggle input:checked + .switch {
   background: var(--ink);
@@ -738,6 +750,42 @@ button {
     opacity: 1;
     transform: translate(-50%, 0);
   }
+}
+
+/* ---------- Keyboard focus ---------- */
+
+/* Visible high-contrast focus ring on every interactive element when
+   focused via keyboard. `:focus-visible` keeps mouse clicks ring-free. */
+
+.btn:focus-visible,
+.chip:focus-visible,
+.start-pick-link:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 2px;
+}
+
+/* The Start dropdown explicitly disabled outline; restore it for keyboard. */
+.control select:focus-visible {
+  outline: 2px solid var(--highlight);
+  outline-offset: 4px;
+}
+
+/* Range thumbs paint via pseudo-elements; ring the input wrapper. */
+.range-track input[type="range"]:focus-visible {
+  outline: none; /* don't ring the whole track */
+}
+.range-track input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--highlight);
+}
+.range-track input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--highlight);
+}
+
+/* Toggle: the actual checkbox is visually hidden, so focus shifts to
+   the label-as-clickable-region. Ring the switch track. */
+.toggle:focus-within .switch {
+  outline: 2px solid var(--highlight);
+  outline-offset: 3px;
 }
 
 /* small screens — let it stack but keep usable */

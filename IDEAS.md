@@ -17,11 +17,6 @@ by priority. Top-down order is rough preference, not strict.
       the JS bundle. Code-split it so the header, controls, and wheel
       can paint before MapLibre arrives. Suspense fallback on the map
       pane while it streams in.
-- [ ] **No focus styles.** Tab through the app: chips, the toggle,
-      buttons, and the Start dropdown all have invisible focus rings.
-      Adds a CSS `:focus-visible` outline using `--highlight`. Make
-      sure the outline is visible against `--paper` (use 2px solid +
-      2px offset).
 - [ ] **App.tsx is 410 lines + 12 `useState` calls.** react-doctor's
       `no-giant-component` and `prefer-useReducer`. Group the filter
       state (`startId`, `customStart`, `range`, `roundTrip`,
@@ -115,3 +110,5 @@ by priority. Top-down order is rough preference, not strict.
 (Shipped items append here with the iteration commit SHA.)
 
 - `fbac414` — Vendor audit skills from Owl-Listener/designer-skills
+- `c5d864e` — Seed IDEAS.md backlog
+- (next) — Focus styles + keyboard-operable toggle
