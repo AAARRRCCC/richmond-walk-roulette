@@ -75,3 +75,4 @@ by priority. Top-down order is rough preference, not strict.
 - `5d92ba6` — Discoverability title attrs on ambiguous controls
 - `f821155` — Empty-wheel Clear Filters action button
 - `ad12d4c` — Document idle-state destination tracking as intentional
+- `011ef8c` — Bound the walking-route cache (LRU, limit 50)
