@@ -7,7 +7,7 @@ import { fetchWalkingRoute, type WalkingRoute } from "./lib/route";
 import { filterReducer, filterStateFromShare } from "./lib/filter-state";
 import { Header } from "./components/Header";
 import { Controls } from "./components/Controls";
-import { Wheel } from "./components/Wheel";
+import { WheelPane } from "./components/WheelPane";
 import { MapPane } from "./components/MapPane";
 import { ResultPane } from "./components/ResultPane";
 
@@ -374,37 +374,14 @@ export default function App() {
       />
 
       <div className={"main" + (spinning ? " spinning" : "")}>
-        <div className="wheel-pane" aria-busy={spinning}>
-          <span className="pane-label">Destinations</span>
-          <span className="pane-meta">
-            <span>
-              {wheelPois.length} of {POIS.length} fit
-            </span>
-          </span>
-
-          {wheelPois.length === 0 ? (
-            <div className="empty-wheel">
-              <div className="big">No matches</div>
-              <div className="small">widen the range or clear filters</div>
-            </div>
-          ) : (
-            <Wheel
-              pois={wheelPois}
-              rotation={rotation}
-              pickedId={selectedId}
-            />
-          )}
-
-          <div className="spin-btn-wrap">
-            <button
-              className="btn primary"
-              onClick={spin}
-              disabled={spinning || wheelPois.length === 0}
-            >
-              {spinning ? "Spinning…" : selectedId ? "Spin Again" : "Spin"}
-            </button>
-          </div>
-        </div>
+        <WheelPane
+          wheelPois={wheelPois}
+          totalPoiCount={POIS.length}
+          rotation={rotation}
+          selectedId={selectedId}
+          spinning={spinning}
+          onSpin={spin}
+        />
 
         <div className="right-col">
           <MapPane
