@@ -74,3 +74,4 @@ by priority. Top-down order is rough preference, not strict.
 - `43e3219` — Mobile breakpoint pass (pane min-heights, 1-col controls)
 - `5d92ba6` — Discoverability title attrs on ambiguous controls
 - `f821155` — Empty-wheel Clear Filters action button
+- `ad12d4c` — Document idle-state destination tracking as intentional
