@@ -21,6 +21,11 @@
 
   --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: "JetBrains Mono", "Courier New", monospace;
+
+  /* Result pane is sized to its populated state so the map pane above
+     (which takes 1fr) doesn't grow/shrink on spin. Shared by the toast
+     position calc so the two can't drift. */
+  --result-pane-h: 152px;
 }
 
 * {
@@ -721,7 +726,10 @@ button {
   grid-template-columns: 1fr auto;
   gap: 18px;
   align-items: center;
-  min-height: 132px;
+  /* Sized to match the populated state's rendered height so the map
+     pane above (1fr) doesn't grow/shrink on Spin Again. Measured at
+     152px across POI name/blurb lengths at desktop widths. */
+  min-height: var(--result-pane-h);
 }
 
 .result-pane.empty {
@@ -795,11 +803,12 @@ button {
   pointer-events: none;
 }
 
-/* Toast — sits above the result pane (min-height 132px) so it doesn't
-   overlay stats text. The 156 = 132 + 24 gap above the result pane top edge. */
+/* Toast — sits above the result pane so it doesn't overlay stats text.
+   Bottom offset = result pane height + a 24px gap. Uses the same CSS
+   variable as .result-pane min-height so they can't drift. */
 .toast {
   position: fixed;
-  bottom: 156px;
+  bottom: calc(var(--result-pane-h) + 24px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--ink);
