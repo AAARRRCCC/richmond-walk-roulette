@@ -187,6 +187,15 @@ function installLayers(
       "line-color": "#b6332a",
       "line-width": 2.4,
       "line-dasharray": [3, 1.5],
+      // Approximated routes (Bezier fallback, no real Routes API result)
+      // render at lower opacity to signal "not an actual walking path."
+      // Pairs with the "APPROX ROUTE" badge in MapPane's pane-meta.
+      "line-opacity": [
+        "case",
+        ["boolean", ["get", "approx"], false],
+        0.4,
+        1,
+      ],
     },
   });
 
@@ -287,19 +296,21 @@ function useMapLayerSync(
     src?.setData({ type: "FeatureCollection", features });
   }, [mapRef, loaded, startLocation, walkRange, roundTrip]);
 
-  // Route line — prefer the real walking route when available, else a stylized Bezier
+  // Route line — prefer the real walking route when available, else a stylized Bezier.
+  // The `approx` feature property feeds the route layer's line-opacity case
+  // expression so the approximate path renders at 0.4 opacity vs the real one's 1.0.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loaded) return;
     const features: GeoJSON.Feature<GeoJSON.LineString>[] = [];
     if (showRoute && destination) {
-      const coords =
-        walkingRoute?.coords && walkingRoute.coords.length > 1
-          ? walkingRoute.coords
-          : bezierLineCoords(toLngLat(startLocation), toLngLat(destination));
+      const hasRealRoute = !!walkingRoute?.coords && walkingRoute.coords.length > 1;
+      const coords = hasRealRoute
+        ? walkingRoute.coords
+        : bezierLineCoords(toLngLat(startLocation), toLngLat(destination));
       features.push({
         type: "Feature",
-        properties: {},
+        properties: { approx: !hasRealRoute },
         geometry: { type: "LineString", coordinates: coords },
       });
     }
