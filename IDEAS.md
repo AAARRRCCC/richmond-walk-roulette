@@ -95,3 +95,4 @@ by priority. Top-down order is rough preference, not strict.
 - `58c62fa` — Mobile bottom-sheet drawer v1 (Web Claude direction)
 - `023741c` — Refresh iter-log.html with iters 41-43
 - `84ebbf9` — Polyline opacity differentiation for Bezier fallback
+- `15f480f` — Wholesale mobile layout flip (map dominant, wheel transient, result in peek)
