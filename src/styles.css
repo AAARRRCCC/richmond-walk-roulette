@@ -132,7 +132,7 @@ button {
     color 0.12s ease;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   background: var(--ink);
   color: var(--paper);
 }
@@ -143,7 +143,7 @@ button {
   border-color: var(--highlight);
 }
 
-.btn.primary:hover {
+.btn.primary:hover:not(:disabled) {
   background: #8d2620;
   border-color: #8d2620;
 }
@@ -152,7 +152,7 @@ button {
   border-color: var(--rule);
   color: var(--ink-soft);
 }
-.btn.ghost:hover {
+.btn.ghost:hover:not(:disabled) {
   background: var(--rule-soft);
   color: var(--ink);
 }
