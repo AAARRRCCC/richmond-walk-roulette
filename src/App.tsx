@@ -228,10 +228,14 @@ export default function App() {
   useEffect(() => {
     const wasSpinning = wasSpinningRef.current;
     wasSpinningRef.current = spinning;
+    // preventScroll keeps the browser from scrolling the page to bring
+    // the focus target into view. The announce region is visually
+    // hidden but still has a DOM position (top-left of the body), so
+    // without this the page would jump on every spin start.
     if (!wasSpinning && spinning) {
-      spinningAnnounceRef.current?.focus();
+      spinningAnnounceRef.current?.focus({ preventScroll: true });
     } else if (wasSpinning && !spinning) {
-      spinAgainButtonRef.current?.focus();
+      spinAgainButtonRef.current?.focus({ preventScroll: true });
     }
   }, [spinning]);
 
