@@ -460,6 +460,21 @@ button {
   z-index: 2;
   display: flex;
   gap: 14px;
+  align-items: center;
+}
+
+/* Bezier-fallback honesty tag: signals that the map route is a
+   stylized approximation, not a real walking path. */
+.approx-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--highlight);
+  border: 1px solid var(--highlight);
+  border-radius: 999px;
+  padding: 1px 7px;
+  cursor: help;
 }
 
 .wheel-svg {

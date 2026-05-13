@@ -38,6 +38,18 @@ export function MapPane({
       <span className="pane-meta">
         <span>{startLocation.name.toUpperCase()}</span>
         {destination && <span>→ {destination.name.toUpperCase()}</span>}
+        {/* If destination is picked but the real walking polyline didn't
+            arrive (no Routes API key, or the fetch failed), the map is
+            drawing a stylized Bezier curve, not an actual walking path.
+            Tag it so the user doesn't trust the shape literally. */}
+        {destination && !walkingRoute && (
+          <span
+            className="approx-tag"
+            title="Showing a stylized straight-line approximation. Configure VITE_GOOGLE_MAPS_API_KEY for the real walking route."
+          >
+            approx route
+          </span>
+        )}
       </span>
       <MapErrorBoundary>
         <DeferredMap
