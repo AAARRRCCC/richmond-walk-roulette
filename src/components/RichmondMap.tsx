@@ -179,30 +179,34 @@ function installLayers(
     type: "geojson",
     data: { type: "FeatureCollection", features: [] },
   });
+  // Two route layers share the same source. Static line-dasharray on each
+  // (MapLibre 4.x doesn't support data-driven dasharray) + filters on the
+  // feature's `approx` property differentiate the real walking polyline
+  // from the Bezier fallback. Real route: tight dashes, full opacity.
+  // Approx: longer gaps, muted opacity — combined with the APPROX ROUTE
+  // badge, the user gets three coordinated signals.
   map.addLayer({
     id: ROUTE_LAYER,
     type: "line",
     source: ROUTE_SRC,
+    filter: ["!=", ["get", "approx"], true],
     paint: {
       "line-color": "#b6332a",
       "line-width": 2.4,
-      // Three coordinated signals tell the user when the route is an
-      // approximation (badge + opacity + dash pattern). Real route gets
-      // the tighter dasharray + full opacity; approx is muted and uses
-      // a more spaced dash pattern to read as "tentative" without
-      // looking broken.
-      "line-dasharray": [
-        "case",
-        ["boolean", ["get", "approx"], false],
-        ["literal", [2, 4]],
-        ["literal", [3, 1.5]],
-      ],
-      "line-opacity": [
-        "case",
-        ["boolean", ["get", "approx"], false],
-        0.65,
-        1,
-      ],
+      "line-dasharray": [3, 1.5],
+      "line-opacity": 1,
+    },
+  });
+  map.addLayer({
+    id: ROUTE_LAYER + "-approx",
+    type: "line",
+    source: ROUTE_SRC,
+    filter: ["==", ["get", "approx"], true],
+    paint: {
+      "line-color": "#b6332a",
+      "line-width": 2.4,
+      "line-dasharray": [2, 4],
+      "line-opacity": 0.65,
     },
   });
 
