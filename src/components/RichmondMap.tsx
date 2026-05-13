@@ -186,14 +186,21 @@ function installLayers(
     paint: {
       "line-color": "#b6332a",
       "line-width": 2.4,
-      "line-dasharray": [3, 1.5],
-      // Approximated routes (Bezier fallback, no real Routes API result)
-      // render at lower opacity to signal "not an actual walking path."
-      // Pairs with the "APPROX ROUTE" badge in MapPane's pane-meta.
+      // Three coordinated signals tell the user when the route is an
+      // approximation (badge + opacity + dash pattern). Real route gets
+      // the tighter dasharray + full opacity; approx is muted and uses
+      // a more spaced dash pattern to read as "tentative" without
+      // looking broken.
+      "line-dasharray": [
+        "case",
+        ["boolean", ["get", "approx"], false],
+        ["literal", [2, 4]],
+        ["literal", [3, 1.5]],
+      ],
       "line-opacity": [
         "case",
         ["boolean", ["get", "approx"], false],
-        0.4,
+        0.65,
         1,
       ],
     },
