@@ -474,7 +474,49 @@ export default function App() {
       {/* Mobile-only bottom sheet. Renders a second copy of <Controls>
           so phone users can reach filters without scrolling past the
           map/wheel. Desktop CSS hides this entirely. */}
-      <MobileDrawer label="Filters">
+      <MobileDrawer
+        label="Filters"
+        peekContent={
+          <div className="mobile-peek">
+            {destination ? (
+              <>
+                <div className="mobile-peek-result">
+                  <span className="mobile-peek-name">{destination.name}</span>
+                  <span className="mobile-peek-stat">
+                    {fmtMiles(totalDist)}{" "}
+                    {roundTrip ? "round trip" : "one way"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="btn primary mobile-peek-spin"
+                  onClick={spin}
+                  disabled={spinning || wheelPois.length === 0}
+                  title="Spin the wheel again"
+                >
+                  {spinning ? "…" : "Spin Again"}
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="mobile-peek-hint">
+                  {wheelPois.length === 0
+                    ? "No matches — open Filters"
+                    : "Tap Spin to pick a destination"}
+                </span>
+                <button
+                  type="button"
+                  className="btn primary mobile-peek-spin"
+                  onClick={spin}
+                  disabled={spinning || wheelPois.length === 0}
+                >
+                  {spinning ? "…" : "Spin"}
+                </button>
+              </>
+            )}
+          </div>
+        }
+      >
         <Controls
           starts={START_LOCATIONS}
           startId={startId}

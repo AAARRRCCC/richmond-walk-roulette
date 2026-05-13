@@ -972,19 +972,62 @@ button {
 }
 
 @media (max-width: 900px) {
+  /* WHOLESALE MOBILE LAYOUT FLIP (iter 45, per Web Claude).
+     On phones, the map becomes the dominant viewport. The wheel is a
+     transient overlay shown only during spin. The bottom-sheet drawer's
+     peek strip carries the current result + Spin Again button so users
+     can act on a pick without opening the drawer. The drawer's open
+     state holds the Controls. */
+
   /* Hide the top-of-page controls bar — its <Controls> tree lives
-     inside <MobileDrawer> at the bottom instead. */
+     inside <MobileDrawer> at the bottom instead. display:none keeps
+     the hidden copy out of the tab order (Web Claude's verification
+     ask). */
   .app > .controls {
     display: none;
   }
 
-  /* Push the body up so the drawer's peek doesn't cover content. */
+  /* Hide the wheel pane and the bottom result pane by default — both
+     move into the drawer's peek/overlay flow. */
+  .wheel-pane {
+    display: none;
+  }
+  .right-col > .result-pane {
+    display: none;
+  }
+  /* Map now claims the entire main grid area. */
+  .main {
+    grid-template-rows: 1fr;
+  }
+  .right-col {
+    grid-template-rows: 1fr;
+  }
+
+  /* During a spin, the wheel-pane becomes a fullscreen-ish overlay
+     so the spinning is the focal point. Web Claude: "wheel becomes
+     a transient overlay during spin." */
+  .main.spinning > .wheel-pane {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(250, 247, 238, 0.96);
+    z-index: 100;
+    /* The drawer (z-index: 50) stays beneath the overlay; the
+       overlay also covers the header to keep focus on the wheel. */
+  }
+  /* The Spin button inside the wheel-pane is replaced by the
+     drawer-peek button on mobile. Hide the in-wheel button. */
+  .main.spinning > .wheel-pane .spin-btn-wrap {
+    display: none;
+  }
+
+  /* Bump page padding to clear the drawer's larger peek (handle 56 +
+     peek strip 56). */
   .app {
-    padding-bottom: 56px;
+    padding-bottom: 112px;
   }
 
   .mobile-drawer {
-    display: block;
     position: fixed;
     left: 0;
     right: 0;
@@ -992,7 +1035,8 @@ button {
     background: var(--paper);
     border-top: 1px solid var(--rule);
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
-    transform: translateY(calc(100% - 56px));
+    /* Peek = handle (56) + peek strip (56) = 112px visible at rest. */
+    transform: translateY(calc(100% - 112px));
     transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
     z-index: 50;
     max-height: 80vh;
@@ -1034,6 +1078,68 @@ button {
   }
   .mobile-drawer-handle:hover .mobile-drawer-grip {
     background: var(--ink-soft);
+  }
+
+  /* Peek strip — visible alongside the handle when drawer is collapsed.
+     Carries the current pick (or "Tap Spin" hint) + a Spin Again button.
+     Web Claude: "Spin Again affordance... in the drawer peek, adjacent
+     to the result chip." */
+  .mobile-drawer-peek {
+    flex: 0 0 56px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--rule-soft);
+    display: flex;
+    align-items: center;
+    background: var(--paper);
+  }
+  .mobile-drawer.open .mobile-drawer-peek {
+    /* When drawer is open, the peek strip is redundant with the
+       open content above the controls. Hide it to keep the open
+       state focused on the filters. */
+    display: none;
+  }
+  .mobile-peek {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+  }
+  .mobile-peek-result {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+  }
+  .mobile-peek-name {
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-peek-stat {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+  .mobile-peek-hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    flex: 1;
+  }
+  .mobile-peek-spin {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-size: 11px;
+    min-width: 100px;
   }
 
   .mobile-drawer-content {
