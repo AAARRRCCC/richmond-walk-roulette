@@ -47,14 +47,19 @@ export function MobileDrawer({ label = "Filters", children, peekContent }: Props
           {peekContent}
         </div>
       )}
+      {/* aria-hidden + inert together so the closed-drawer body is
+          skipped by both screen readers AND keyboard tab navigation.
+          Without inert the body is just translated offscreen by the
+          parent transform — tab focus would still jump to the duplicate
+          Controls there, scrolling the user out of the page. inert is
+          well-supported (Chrome 102+, Firefox 112+, Safari 15.5+) but
+          React's type doesn't expose it on DetailedHTMLProps yet, so we
+          spread it from a typed extras object. */}
       <div
         id="mobile-drawer-content"
         className="mobile-drawer-content"
-        // Hide from screen readers when collapsed so they don't see
-        // duplicate controls. Sighted users can't reach them anyway
-        // (display:none on the parent class .mobile-drawer-content
-        // when not .open).
         aria-hidden={!open}
+        {...(open ? {} : ({ inert: "" } as Record<string, string>))}
       >
         {children}
       </div>
