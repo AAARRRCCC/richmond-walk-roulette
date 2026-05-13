@@ -35,6 +35,15 @@ export default function App() {
   );
   const { rotation, spinning, selectedId } = wheel;
   const animFrameRef = useRef<number | null>(null);
+  // Focus management for the wheel overlay: when a spin starts, keyboard
+  // focus shifts to a non-interactive announcement region inside the
+  // overlay (Web Claude: "focus moves to non-interactive announcement
+  // region 'Spinning the wheel'"); when the spin ends, focus returns to
+  // the Spin Again button in the drawer peek so the next interaction is
+  // one keystroke away.
+  const spinningAnnounceRef = useRef<HTMLDivElement | null>(null);
+  const spinAgainButtonRef = useRef<HTMLButtonElement | null>(null);
+  const wasSpinningRef = useRef(false);
 
   const [pickingStart, setPickingStart] = useState(false);
   const [walkingRoute, setWalkingRoute] = useState<WalkingRoute | null>(null);
@@ -206,6 +215,25 @@ export default function App() {
     },
     [],
   );
+
+  // Focus management around the wheel overlay (Web Claude a11y direction).
+  // Detect spinning transitions:
+  //   false → true: focus the in-overlay announcement so screen-reader
+  //                 users hear "Spinning the wheel" and so keyboard
+  //                 focus doesn't land on a button hidden by the overlay.
+  //   true → false: return focus to the Spin Again button if it's
+  //                 mounted (destination set, drawer peek shows it).
+  // No focus trap — user can tab away from the overlay region freely
+  // (Web Claude's "no focus trap during 1.2s auto-dismiss").
+  useEffect(() => {
+    const wasSpinning = wasSpinningRef.current;
+    wasSpinningRef.current = spinning;
+    if (!wasSpinning && spinning) {
+      spinningAnnounceRef.current?.focus();
+    } else if (wasSpinning && !spinning) {
+      spinAgainButtonRef.current?.focus();
+    }
+  }, [spinning]);
 
   // If filters change mid-spin, cancel the in-flight animation. The spin's
   // closure captured the OLD wheelPois snapshot, so allowing it to complete
@@ -480,7 +508,11 @@ export default function App() {
           <div className="mobile-peek">
             {destination ? (
               <>
-                <div className="mobile-peek-result">
+                <div
+                  className="mobile-peek-result"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
                   <span className="mobile-peek-name">{destination.name}</span>
                   <span className="mobile-peek-stat">
                     {fmtMiles(totalDist)}{" "}
@@ -488,10 +520,12 @@ export default function App() {
                   </span>
                 </div>
                 <button
+                  ref={spinAgainButtonRef}
                   type="button"
                   className="btn primary mobile-peek-spin"
                   onClick={spin}
                   disabled={spinning || wheelPois.length === 0}
+                  aria-busy={spinning}
                   title="Spin the wheel again"
                 >
                   {spinning ? "…" : "Spin Again"}
@@ -509,6 +543,7 @@ export default function App() {
                   className="btn primary mobile-peek-spin"
                   onClick={spin}
                   disabled={spinning || wheelPois.length === 0}
+                  aria-busy={spinning}
                 >
                   {spinning ? "…" : "Spin"}
                 </button>
@@ -542,6 +577,20 @@ export default function App() {
           assistive tech read the whole sentence, not just the diff. */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}
+      </div>
+
+      {/* Wheel-spinning announcement region. Receives focus when a spin
+          starts (Web Claude a11y direction) so keyboard users don't
+          land on a hidden control and screen-reader users hear the
+          state change immediately. tabindex=-1 makes it programmatically
+          focusable but skipped in natural tab order — no focus trap. */}
+      <div
+        ref={spinningAnnounceRef}
+        className="sr-only"
+        tabIndex={-1}
+        aria-live="assertive"
+      >
+        {spinning ? "Spinning the wheel" : ""}
       </div>
     </div>
   );

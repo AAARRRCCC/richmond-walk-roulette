@@ -50,6 +50,7 @@ export function WheelPane({
           className="btn primary"
           onClick={onSpin}
           disabled={spinning || wheelPois.length === 0}
+          aria-busy={spinning}
         >
           {spinning ? "Spinning…" : selectedId ? "Spin Again" : "Spin"}
         </button>

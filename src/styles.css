@@ -853,11 +853,17 @@ button {
 /* Visible high-contrast focus ring on every interactive element when
    focused via keyboard. `:focus-visible` keeps mouse clicks ring-free. */
 
+/* Higher-contrast focus ring on the warm-paper background (Web Claude
+   a11y review). The previous 2px var(--highlight) ring read OK but the
+   doubled width + paper inset gives a clearer "layered" focus indicator
+   visible against both ivory paper and the destination-red primary
+   button background. */
 .btn:focus-visible,
 .chip:focus-visible,
 .start-pick-link:focus-visible {
-  outline: 2px solid var(--highlight);
+  outline: 3px solid var(--highlight);
   outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--paper);
 }
 
 /* The Start dropdown explicitly disabled outline; restore it for keyboard. */
