@@ -99,3 +99,4 @@ by priority. Top-down order is rough preference, not strict.
 - `0229e3a` — viewport-fit=cover + theme-color + safe-area-inset
 - `f82f923` — Polyline opacity 0.65 + dasharray differentiation (Web Claude review)
 - `1518b4d` — Wheel overlay: paper-tone backdrop + fade + drop shadow (Web Claude review)
+- `33eace9` — a11y pass: focus management + aria-live/busy + higher-contrast rings
