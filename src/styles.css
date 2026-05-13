@@ -1022,9 +1022,10 @@ button {
   }
 
   /* Bump page padding to clear the drawer's larger peek (handle 56 +
-     peek strip 56). */
+     peek strip 56), plus the iOS safe-area-inset so the peek doesn't
+     sit under the home indicator. */
   .app {
-    padding-bottom: 112px;
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
   }
 
   .mobile-drawer {
@@ -1035,8 +1036,11 @@ button {
     background: var(--paper);
     border-top: 1px solid var(--rule);
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
-    /* Peek = handle (56) + peek strip (56) = 112px visible at rest. */
-    transform: translateY(calc(100% - 112px));
+    /* Peek = handle (56) + peek strip (56) = 112px visible at rest.
+       Translate clears the safe-area-inset on iOS so the home
+       indicator doesn't overlap the peek content. */
+    transform: translateY(calc(100% - 112px - env(safe-area-inset-bottom, 0px)));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
     z-index: 50;
     max-height: 80vh;
