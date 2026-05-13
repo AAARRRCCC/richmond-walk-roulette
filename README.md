@@ -40,29 +40,36 @@ npm run build
 # serve ./dist with Caddy or nginx, expose via `cloudflared tunnel`
 ```
 
-Any static host works.
+Any static host works. **Before exposing the app to the public web, run through [`LAUNCH.md`](./LAUNCH.md)** — it covers the Routes API key restriction, the OG image asset, the mobile phone-test gate, and optional Cloudflare Web Analytics setup.
 
 ## Project layout
 
 ```
 src/
-├── App.tsx                  # State + spin/rotate animation + wiring
-├── main.tsx                 # Entry point
-├── styles.css               # All styles (no preprocessor)
-├── data/pois.ts             # 34 POIs + 10 preset starts (mile offsets from Monroe Park)
+├── App.tsx                       # State (two reducers + a few useStates) + spin/rotate animation + wiring
+├── main.tsx                      # Entry point; optional Cloudflare Web Analytics beacon
+├── styles.css                    # All styles (no preprocessor)
+├── data/pois.ts                  # 34 POIs + 10 preset starts (mile offsets from Monroe Park)
 ├── lib/
-│   ├── geo.ts               # distance, mile-offset ↔ lat/lng, eligibility filter
-│   ├── route.ts             # Google Routes API + polyline decoder
-│   ├── url-state.ts         # share/restore via location.hash
-│   └── wheel-layout.ts      # curved-arc geometry constants
+│   ├── geo.ts                    # distance, mile-offset ↔ lat/lng, eligibility filter
+│   ├── route.ts                  # Google Routes API + polyline decoder + bounded LRU
+│   ├── url-state.ts              # share/restore via location.hash
+│   ├── wheel-layout.ts           # curved-arc geometry constants
+│   ├── filter-state.ts           # filter useReducer + URL-hash hydration
+│   └── wheel-state.ts            # wheel/spin useReducer (rotation, spinning, selectedId)
 └── components/
     ├── Header.tsx
-    ├── Controls.tsx         # start, range, round-trip, difficulty, vibe chips
+    ├── Controls.tsx              # start, range, round-trip, difficulty, vibe chips
     ├── RangeSlider.tsx
     ├── ChipGroup.tsx
-    ├── Wheel.tsx            # curved-arc SVG roulette
-    ├── RichmondMap.tsx      # MapLibre + walking-radius rings, route, POI dots
+    ├── Wheel.tsx                 # curved-arc SVG roulette
+    ├── WheelPane.tsx              # desktop wheel container; overlay on mobile during spin
+    ├── RichmondMap.tsx            # MapLibre + walking-radius rings, route, POI dots
+    ├── DeferredMap.tsx            # IntersectionObserver-gated lazy mount for RichmondMap
+    ├── MapPane.tsx                # map container + sr-only POI list
+    ├── MapErrorBoundary.tsx       # falls back gracefully if the lazy map chunk fails
+    ├── MobileDrawer.tsx           # bottom-sheet at <900px: peek + open states
     └── ResultPane.tsx
 ```
 
-The original design handoff (spec + reference prototype) is preserved in [`design_handoff_walk_roulette/`](./design_handoff_walk_roulette/).
+The original design handoff (spec + reference prototype) is preserved in [`design_handoff_walk_roulette/`](./design_handoff_walk_roulette/). Detailed iteration history lives in [`iter-log.html`](./iter-log.html) and [`IDEAS.md`](./IDEAS.md).
