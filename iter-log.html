@@ -170,7 +170,7 @@
     <div class="page">
       <header class="cover">
         <h1>Walk Roulette — autonomous iteration log</h1>
-        <div class="subtitle">45 iterations · score 96 → 99 · bundle 273 KB → 54 KB gzipped first paint · Web Claude as PM since iter 41</div>
+        <div class="subtitle">49 iterations · score 96 → 99 · bundle 273 KB → 56 KB gzipped first paint · Web Claude as PM since iter 41</div>
       </header>
 
       <h2>The goal you set</h2>
@@ -209,7 +209,7 @@
         </div>
         <div class="stat">
           <div class="stat-label">Iterations</div>
-          <div class="stat-value">45</div>
+          <div class="stat-value">49</div>
         </div>
         <div class="stat">
           <div class="stat-label">Real bugs caught</div>
@@ -573,12 +573,45 @@
             <code>display:none</code> and the map claims the full
             <code>.main</code> grid. <code>.main.spinning &gt; .wheel-pane</code>
             re-enters layout as a <code>position:fixed inset:0</code> overlay with a
-            paper-toned 96% backdrop and z-index 100 — the wheel is now a transient
-            spin-time overlay. The drawer peek strip (56px alongside the 56px handle)
-            renders the current result + a Spin Again button, or "Tap Spin" when no
-            destination. URL-restored picks don't animate (overlay gated by
-            <code>.spinning</code>); duplicate Controls DOM verified via
-            <code>display:none</code> + tab-order check. Desktop visually unchanged.</td>
+            paper-toned backdrop — the wheel is now a transient spin-time overlay.
+            The drawer peek strip (56px alongside the 56px handle) renders the
+            current result + a Spin Again button. URL-restored picks don't animate;
+            duplicate Controls DOM verified.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">46b</td>
+          <td class="sha-col">0229e3a</td>
+          <td>Mobile-deploy hygiene: <code>viewport-fit=cover</code>,
+            <code>theme-color</code> matching <code>--paper</code>, and
+            <code>env(safe-area-inset-bottom)</code> on <code>.app</code> padding +
+            <code>.mobile-drawer</code> so iOS notch + home indicator are handled.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">47</td>
+          <td class="sha-col">f82f923</td>
+          <td>Polyline polish per Web Claude review. Approx-route opacity 0.4 → 0.65
+            (0.4 read as "broken"); added data-driven <code>line-dasharray</code>
+            (<code>[2, 4]</code> approx vs <code>[3, 1.5]</code> real). Same stroke
+            color. Three coordinated signals now: badge + opacity + dash pattern.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">48</td>
+          <td class="sha-col">1518b4d</td>
+          <td>Wheel overlay polish. Backdrop softened to <code>rgba(250, 247, 238,
+            0.78)</code> — map visible behind, no dark scrim. 220ms opacity transition
+            in/out (was hard <code>display:none</code> toggle). Soft drop-shadow on
+            the wheel SVG lifts it off the backdrop.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">49</td>
+          <td class="sha-col">33eace9</td>
+          <td><span class="tag a11y">a11y</span> Web Claude's pass on the iter 45
+            structures. Peek result gets <code>aria-live="polite"</code>; Spin
+            buttons gain <code>aria-busy</code>; new sr-only announcement region
+            with <code>tabIndex=-1</code> receives focus on spin start and reports
+            "Spinning the wheel" via <code>aria-live="assertive"</code>; focus returns
+            to Spin Again on spin end (no focus trap). Focus rings widened to 3px
+            with a paper-colored 5px box-shadow for warmer-paper contrast.</td>
         </tr>
       </table>
 
@@ -654,9 +687,11 @@
       </p>
 
       <div class="footer">
-        Updated after iter 45. Score 99 / 100. Latest commit: 15f480f.
+        Updated after iter 49. Score 99 / 100. Latest commit: 33eace9.
         Web Claude is the active PM; check the claude.ai conversation tab for current
-        direction.
+        direction. <code>prefers-reduced-motion</code> is deferred until Brady OKs —
+        the spin-animation timing/easing is on his off-limits list and a
+        reduced-motion branch would touch it.
       </div>
     </div>
   </body>
