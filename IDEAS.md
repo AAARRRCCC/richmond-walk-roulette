@@ -90,3 +90,4 @@ by priority. Top-down order is rough preference, not strict.
 - `c380a31` — Stop result-pane shrinking on Spin Again (user-reported)
 - `6d76dcc` — Auto-anchor destination callout (no off-screen clipping when panned)
 - `41fb524` — Suppress :hover on disabled buttons
+- `88b5944` — Bezier fallback honesty signal (Web Claude #3)
