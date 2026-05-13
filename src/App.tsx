@@ -5,6 +5,7 @@ import { wheelLayout, normalizeAngle } from "./lib/wheel-layout";
 import { readShareState, writeShareState, type ShareState } from "./lib/url-state";
 import { fetchWalkingRoute, type WalkingRoute } from "./lib/route";
 import { filterReducer, filterStateFromShare } from "./lib/filter-state";
+import { wheelReducer, wheelStateFromShare } from "./lib/wheel-state";
 import { Header } from "./components/Header";
 import { Controls } from "./components/Controls";
 import { WheelPane } from "./components/WheelPane";
@@ -19,17 +20,19 @@ export default function App() {
   // everything in one dispatch (was 7 cascading setStates) and filter
   // updates remain atomic. Initial value is computed lazily from the
   // URL hash so there's no startup effect-chain.
-  const [filters, dispatch] = useReducer(filterReducer, null, () =>
+  const [filters, filtersDispatch] = useReducer(filterReducer, null, () =>
     filterStateFromShare(readShareState()),
   );
   const { startId, customStart, range, roundTrip, difficulty, tags } = filters;
 
-  const [rotation, setRotation] = useState(0);
-  const [spinning, setSpinning] = useState(false);
-  // selectedId is also restored from URL hash on mount (lazy initial).
-  const [selectedId, setSelectedId] = useState<string | null>(
-    () => readShareState()?.pick ?? null,
+  // Wheel/animation state lives in its own reducer so the (rotation,
+  // spinning, selectedId) trio updates atomically — previously these were
+  // three separate setStates with briefly-inconsistent intermediate
+  // renders. Restored from URL hash on mount via the lazy initializer.
+  const [wheel, wheelDispatch] = useReducer(wheelReducer, null, () =>
+    wheelStateFromShare(readShareState()?.pick),
   );
+  const { rotation, spinning, selectedId } = wheel;
   const animFrameRef = useRef<number | null>(null);
 
   const [pickingStart, setPickingStart] = useState(false);
@@ -104,8 +107,7 @@ export default function App() {
   // If filters change such that the picked POI is no longer eligible, drop it
   useEffect(() => {
     if (selectedId && !eligibleIds.has(selectedId)) {
-      setSelectedId(null);
-      setRotation(0);
+      wheelDispatch({ type: "CLEAR_SELECTION" });
     }
   }, [eligibleIds, selectedId]);
 
@@ -166,8 +168,7 @@ export default function App() {
     const from = rotation;
     while (to < from + 360 * 3) to += 360;
 
-    setSpinning(true);
-    setSelectedId(null);
+    wheelDispatch({ type: "SPIN_START" });
 
     const startTime = performance.now();
     const ease = (t: number) => 1 - Math.pow(1 - t, 4);
@@ -177,19 +178,20 @@ export default function App() {
       const t = Math.min(elapsed / SPIN_DURATION_MS, 1);
       const v = from + (to - from) * ease(t);
       if (t < 1) {
-        setRotation(v);
+        wheelDispatch({ type: "ROTATION_TICK", rotation: v });
         animFrameRef.current = requestAnimationFrame(tick);
       } else {
         animFrameRef.current = null;
-        // Snap to the EXACT target rotation. The eased value is correct math-wise,
-        // but explicit snapping eliminates any accumulated float drift across many
-        // spins and guarantees the slot's center sits dead-center on the indicator.
-        setRotation(-targetBase);
-        setSpinning(false);
         const picked = wheelPois[targetIdx];
         if (picked) {
-          setSelectedId(picked.id);
+          // Snap to the EXACT target rotation (no float drift) and commit
+          // the pick atomically with spinning=false.
+          wheelDispatch({ type: "SPIN_END", rotation: -targetBase, pickedId: picked.id });
           writeShareState(buildShareState(picked.id));
+        } else {
+          // Defensive: targetIdx should always be in range. If not, just
+          // stop spinning and reset rotation.
+          wheelDispatch({ type: "CLEAR_SELECTION" });
         }
       }
     };
@@ -215,8 +217,7 @@ export default function App() {
     if (animFrameRef.current !== null) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
-      setSpinning(false);
-      setRotation(0);
+      wheelDispatch({ type: "CLEAR_SELECTION" });
     }
   }, [wheelPois]);
 
@@ -225,7 +226,7 @@ export default function App() {
   // the POI name so the start label reads as the place instead of a
   // generic coord pair.
   const onPickStart = useCallback((miles: MileXY, name?: string) => {
-    dispatch({
+    filtersDispatch({
       type: "SET_CUSTOM_START",
       start: {
         id: "custom",
@@ -234,8 +235,7 @@ export default function App() {
         y: miles.y,
       },
     });
-    setSelectedId(null);
-    setRotation(0);
+    wheelDispatch({ type: "CLEAR_SELECTION" });
     setPickingStart(false);
   }, []);
 
@@ -278,8 +278,7 @@ export default function App() {
       const duration = Math.max(250, Math.min(900, Math.abs(bestDelta) * 6));
       const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 
-      setSpinning(true);
-      setSelectedId(null);
+      wheelDispatch({ type: "SPIN_START" });
 
       const startTime = performance.now();
       const tick = (now: number) => {
@@ -287,13 +286,11 @@ export default function App() {
         const t = Math.min(elapsed / duration, 1);
         const v = from + (to - from) * ease(t);
         if (t < 1) {
-          setRotation(v);
+          wheelDispatch({ type: "ROTATION_TICK", rotation: v });
           animFrameRef.current = requestAnimationFrame(tick);
         } else {
           animFrameRef.current = null;
-          setRotation(-targetBase);
-          setSpinning(false);
-          setSelectedId(targetPoiId);
+          wheelDispatch({ type: "SPIN_END", rotation: -targetBase, pickedId: targetPoiId });
           writeShareState(buildShareState(targetPoiId));
         }
       };
@@ -371,15 +368,13 @@ export default function App() {
   }, [destination, startLocation, showToast]);
 
   const reset = useCallback(() => {
-    setSelectedId(null);
-    setRotation(0);
+    wheelDispatch({ type: "CLEAR_SELECTION" });
   }, []);
 
   const onStartChange = useCallback((id: string) => {
     // SET_START_ID reducer action already clears customStart atomically.
-    dispatch({ type: "SET_START_ID", id });
-    setSelectedId(null);
-    setRotation(0);
+    filtersDispatch({ type: "SET_START_ID", id });
+    wheelDispatch({ type: "CLEAR_SELECTION" });
     // Selecting a preset is an explicit start choice; cancel pick-on-map
     // mode if it's still active so the cursor and chip don't lie.
     setPickingStart(false);
@@ -387,19 +382,19 @@ export default function App() {
 
   // Thin dispatch wrappers for the Controls component (it expects per-field setters).
   const onRangeChange = useCallback(
-    (next: typeof range) => dispatch({ type: "SET_RANGE", range: next }),
+    (next: typeof range) => filtersDispatch({ type: "SET_RANGE", range: next }),
     [],
   );
   const onRoundTripChange = useCallback(
-    (value: boolean) => dispatch({ type: "SET_ROUND_TRIP", value }),
+    (value: boolean) => filtersDispatch({ type: "SET_ROUND_TRIP", value }),
     [],
   );
   const onDifficultyChange = useCallback(
-    (value: typeof difficulty) => dispatch({ type: "SET_DIFFICULTY", value }),
+    (value: typeof difficulty) => filtersDispatch({ type: "SET_DIFFICULTY", value }),
     [],
   );
   const onTagsChange = useCallback(
-    (next: typeof tags) => dispatch({ type: "SET_TAGS", tags: next }),
+    (next: typeof tags) => filtersDispatch({ type: "SET_TAGS", tags: next }),
     [],
   );
 
@@ -407,7 +402,7 @@ export default function App() {
   // difficulty, tags, and range atomically (one render, one reducer
   // pass). Start location is preserved — it's an anchor, not a filter.
   const onClearFilters = useCallback(() => {
-    dispatch({ type: "CLEAR_FILTERS" });
+    filtersDispatch({ type: "CLEAR_FILTERS" });
   }, []);
 
   return (
