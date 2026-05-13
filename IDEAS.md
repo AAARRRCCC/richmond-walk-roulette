@@ -93,3 +93,5 @@ by priority. Top-down order is rough preference, not strict.
 - `88b5944` — Bezier fallback honesty signal (Web Claude #3)
 - `24e94c7` — Wheel/animation state useReducer (score 98→99)
 - `58c62fa` — Mobile bottom-sheet drawer v1 (Web Claude direction)
+- `023741c` — Refresh iter-log.html with iters 41-43
+- `84ebbf9` — Polyline opacity differentiation for Bezier fallback
