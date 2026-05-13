@@ -10,6 +10,13 @@ interface ImportMetaEnv {
    * Google Cloud Console before exposing it to the public web.
    */
   readonly VITE_GOOGLE_MAPS_API_KEY?: string;
+
+  /**
+   * Cloudflare Web Analytics beacon token. Optional — when unset,
+   * no analytics script is injected (dev / preview / self-hosted-
+   * without-CF builds get no telemetry by default).
+   */
+  readonly VITE_CF_ANALYTICS_TOKEN?: string;
 }
 
 interface ImportMeta {

@@ -216,16 +216,23 @@ export default function App() {
     [],
   );
 
-  // Dynamic document.title for share-URL previews. When a pick is in
-  // the URL hash, the tab title reads "Richmond Walk Roulette: <POI>"
-  // — that's what link previews (iMessage, Discord, Slack) pick up as
-  // the headline. Static OG tags in index.html cover og:image and
-  // og:description. Per-pick OG image generation is a v2 concern
-  // (Web Claude direction).
+  // Dynamic document.title for share-URL previews. Depends on
+  // selectedId (a COMMITTED pick), not the destination memo —
+  // destination includes the idle wheel-preview POI, which would make
+  // every bare-URL visit show a "Richmond Walk Roulette: <random POI>"
+  // title before the user even spun. Web Claude was explicit: "<title>
+  // reflecting 'Richmond Walk Roulette: [pick name]' when a pick is in
+  // the URL." Static OG tags in index.html cover og:image and
+  // og:description. Per-pick OG image generation is a v2 concern.
   useEffect(() => {
     const base = "Richmond Walk Roulette";
-    document.title = destination ? `${base}: ${destination.name}` : base;
-  }, [destination]);
+    if (!selectedId) {
+      document.title = base;
+      return;
+    }
+    const poi = POIS.find((p) => p.id === selectedId);
+    document.title = poi ? `${base}: ${poi.name}` : base;
+  }, [selectedId]);
 
   // Focus management around the wheel overlay (Web Claude a11y direction).
   // Detect spinning transitions:
