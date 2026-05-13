@@ -88,3 +88,4 @@ by priority. Top-down order is rough preference, not strict.
 - `f7e8a13` — Toast feedback when popup blocker rejects Open in Maps
 - `9413b8e` — Cancel pickingStart when user selects a preset Start
 - `c380a31` — Stop result-pane shrinking on Spin Again (user-reported)
+- `6d76dcc` — Auto-anchor destination callout (no off-screen clipping when panned)
