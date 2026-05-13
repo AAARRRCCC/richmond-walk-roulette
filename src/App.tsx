@@ -360,12 +360,15 @@ export default function App() {
     const destLL = toLngLat(destination);
     const origin = `${startLL.lat},${startLL.lng}`;
     const dest = `${destLL.lat},${destLL.lng}`;
-    window.open(
+    const win = window.open(
       `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&travelmode=walking`,
       "_blank",
       "noopener,noreferrer",
     );
-  }, [destination, startLocation]);
+    // window.open returns null when a popup blocker rejects the call.
+    // Without feedback the user just sees nothing happen.
+    if (!win) showToast("Popup blocked");
+  }, [destination, startLocation, showToast]);
 
   const reset = useCallback(() => {
     setSelectedId(null);
