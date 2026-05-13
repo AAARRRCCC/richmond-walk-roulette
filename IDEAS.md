@@ -87,3 +87,4 @@ by priority. Top-down order is rough preference, not strict.
 - `fd7a8a6` — AbortController on fetchWalkingRoute (cancels HTTP, not just result)
 - `f7e8a13` — Toast feedback when popup blocker rejects Open in Maps
 - `9413b8e` — Cancel pickingStart when user selects a preset Start
+- `c380a31` — Stop result-pane shrinking on Spin Again (user-reported)
