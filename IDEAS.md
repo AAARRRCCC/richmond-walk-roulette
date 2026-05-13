@@ -100,3 +100,9 @@ by priority. Top-down order is rough preference, not strict.
 - `f82f923` — Polyline opacity 0.65 + dasharray differentiation (Web Claude review)
 - `1518b4d` — Wheel overlay: paper-tone backdrop + fade + drop shadow (Web Claude review)
 - `33eace9` — a11y pass: focus management + aria-live/busy + higher-contrast rings
+- `e44b843` — preventScroll on focus shifts (avoid page jumps on spin start)
+- `3267360` — Fix iter 47 route layer (MapLibre 4.x rejects data-driven dasharray)
+- `030f129` — OG tags + dynamic document.title (launch readiness)
+- `30b62cc` — LAUNCH.md deploy checklist for Brady
+- `d664385` — CF Web Analytics drop-in + title fix (committed-pick only)
+- `711a4e4` — inert closed-drawer body (tab-order audit fix)
