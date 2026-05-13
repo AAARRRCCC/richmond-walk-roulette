@@ -11,6 +11,7 @@ import { Controls } from "./components/Controls";
 import { WheelPane } from "./components/WheelPane";
 import { MapPane } from "./components/MapPane";
 import { ResultPane } from "./components/ResultPane";
+import { MobileDrawer } from "./components/MobileDrawer";
 
 const DEFAULT_WEATHER = "Get out — the air is doing nothing dramatic";
 const SPIN_DURATION_MS = 4200;
@@ -409,6 +410,10 @@ export default function App() {
     <div className="app">
       <Header weather={DEFAULT_WEATHER} onShare={copyShare} />
 
+      {/* Desktop: top controls bar. Hidden at <900px by CSS — the same
+          <Controls> tree is rendered again inside <MobileDrawer> at the
+          bottom of the app. <Controls> is fully prop-driven so the two
+          mounts share no internal state. */}
       <Controls
         starts={START_LOCATIONS}
         startId={startId}
@@ -465,6 +470,28 @@ export default function App() {
           />
         </div>
       </div>
+
+      {/* Mobile-only bottom sheet. Renders a second copy of <Controls>
+          so phone users can reach filters without scrolling past the
+          map/wheel. Desktop CSS hides this entirely. */}
+      <MobileDrawer label="Filters">
+        <Controls
+          starts={START_LOCATIONS}
+          startId={startId}
+          customStart={customStart}
+          onStartChange={onStartChange}
+          pickingStart={pickingStart}
+          onTogglePickingStart={togglePickingStart}
+          range={range}
+          onRangeChange={onRangeChange}
+          roundTrip={roundTrip}
+          onRoundTripChange={onRoundTripChange}
+          difficulty={difficulty}
+          onDifficultyChange={onDifficultyChange}
+          tags={tags}
+          onTagsChange={onTagsChange}
+        />
+      </MobileDrawer>
 
       {toast && <div className="toast">{toast}</div>}
 
