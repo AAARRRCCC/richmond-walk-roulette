@@ -340,7 +340,9 @@ function useMapLayerSync(
     const popup = new maplibregl.Popup({
       closeButton: false,
       closeOnClick: false,
-      anchor: "bottom",
+      // No explicit anchor — MapLibre auto-flips based on viewport edges,
+      // so the callout doesn't get clipped if the user pans so the
+      // destination dot is near the top/left/right of the visible map.
       offset: 14,
       className: "destination-callout-popup",
     })
