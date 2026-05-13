@@ -96,3 +96,6 @@ by priority. Top-down order is rough preference, not strict.
 - `023741c` — Refresh iter-log.html with iters 41-43
 - `84ebbf9` — Polyline opacity differentiation for Bezier fallback
 - `15f480f` — Wholesale mobile layout flip (map dominant, wheel transient, result in peek)
+- `0229e3a` — viewport-fit=cover + theme-color + safe-area-inset
+- `f82f923` — Polyline opacity 0.65 + dasharray differentiation (Web Claude review)
+- `1518b4d` — Wheel overlay: paper-tone backdrop + fade + drop shadow (Web Claude review)
