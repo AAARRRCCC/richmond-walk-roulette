@@ -987,11 +987,7 @@ button {
     display: none;
   }
 
-  /* Hide the wheel pane and the bottom result pane by default — both
-     move into the drawer's peek/overlay flow. */
-  .wheel-pane {
-    display: none;
-  }
+  /* Hide the bottom result pane — content moves into the drawer's peek. */
   .right-col > .result-pane {
     display: none;
   }
@@ -1003,21 +999,40 @@ button {
     grid-template-rows: 1fr;
   }
 
-  /* During a spin, the wheel-pane becomes a fullscreen-ish overlay
-     so the spinning is the focal point. Web Claude: "wheel becomes
-     a transient overlay during spin." */
-  .main.spinning > .wheel-pane {
-    display: block;
+  /* Wheel-pane is always rendered at mobile but lives as an out-of-flow
+     overlay that's invisible + non-interactive by default. When
+     .main.spinning fires, opacity transitions in (matching Web Claude's
+     "dimmer + fade" — paper tone at 0.78 keeps the map visible behind
+     the wheel without a dark scrim). The asymmetric durations are
+     within Web Claude's stated range (150-200 in, 200-300 out); using
+     220ms for both keeps the CSS simple and lands in both windows. */
+  .wheel-pane {
     position: fixed;
     inset: 0;
-    background: rgba(250, 247, 238, 0.96);
+    background: rgba(250, 247, 238, 0.78);
     z-index: 100;
-    /* The drawer (z-index: 50) stays beneath the overlay; the
-       overlay also covers the header to keep focus on the wheel. */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+    /* Override the desktop-only border-right at mobile (it would
+       paint a stripe down the side of the overlay otherwise). */
+    border-right: 0;
+    border-bottom: 0;
+    /* Reset desktop min-height so the overlay sizes to viewport. */
+    min-height: 0;
   }
-  /* The Spin button inside the wheel-pane is replaced by the
-     drawer-peek button on mobile. Hide the in-wheel button. */
-  .main.spinning > .wheel-pane .spin-btn-wrap {
+  .main.spinning > .wheel-pane {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* Soft drop-shadow on the spinning wheel to lift it off the
+     paper-tinted backdrop, per Web Claude. */
+  .main.spinning > .wheel-pane .wheel-svg {
+    filter: drop-shadow(0 2px 12px rgba(28, 28, 26, 0.08));
+  }
+  /* The in-wheel Spin button is replaced by the drawer-peek button
+     on mobile. */
+  .wheel-pane .spin-btn-wrap {
     display: none;
   }
 
