@@ -91,3 +91,4 @@ by priority. Top-down order is rough preference, not strict.
 - `6d76dcc` — Auto-anchor destination callout (no off-screen clipping when panned)
 - `41fb524` — Suppress :hover on disabled buttons
 - `88b5944` — Bezier fallback honesty signal (Web Claude #3)
+- `24e94c7` — Wheel/animation state useReducer (score 98→99)
