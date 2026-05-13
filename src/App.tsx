@@ -380,6 +380,9 @@ export default function App() {
     dispatch({ type: "SET_START_ID", id });
     setSelectedId(null);
     setRotation(0);
+    // Selecting a preset is an explicit start choice; cancel pick-on-map
+    // mode if it's still active so the cursor and chip don't lie.
+    setPickingStart(false);
   }, []);
 
   // Thin dispatch wrappers for the Controls component (it expects per-field setters).
