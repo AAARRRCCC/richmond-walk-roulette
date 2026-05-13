@@ -170,7 +170,7 @@
     <div class="page">
       <header class="cover">
         <h1>Walk Roulette — autonomous iteration log</h1>
-        <div class="subtitle">43 iterations · score 96 → 99 · bundle 273 KB → 54 KB gzipped first paint · Web Claude as PM since iter 41</div>
+        <div class="subtitle">45 iterations · score 96 → 99 · bundle 273 KB → 54 KB gzipped first paint · Web Claude as PM since iter 41</div>
       </header>
 
       <h2>The goal you set</h2>
@@ -209,7 +209,7 @@
         </div>
         <div class="stat">
           <div class="stat-label">Iterations</div>
-          <div class="stat-value">43</div>
+          <div class="stat-value">45</div>
         </div>
         <div class="stat">
           <div class="stat-label">Real bugs caught</div>
@@ -555,9 +555,30 @@
             renders at all viewports but is <code>display:none</code> on desktop. At
             <code>&lt;900px</code> it's a fixed bottom sheet sliding between peek
             (handle visible, body offscreen) and open (handle + Controls visible).
-            Top Controls bar hides at mobile; the drawer takes over. v1 ships the
-            drawer scaffold + Controls inside; next iters extend toward map-dominant
-            layout + wheel-overlay-during-spin + result-in-peek.</td>
+            Top Controls bar hides at mobile; the drawer takes over.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">44b</td>
+          <td class="sha-col">84ebbf9</td>
+          <td>Polyline opacity differentiation for the Bezier fallback — the second
+            visual signal Web Claude originally called for. Approximate routes now
+            render at 0.4 opacity via a data-driven case expression on a
+            <code>properties.approx</code> boolean.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">45</td>
+          <td class="sha-col">15f480f</td>
+          <td><strong>Wholesale mobile layout flip</strong> in one revertable commit
+            (per Web Claude). At <code>&lt;900px</code>: wheel-pane + result-pane go
+            <code>display:none</code> and the map claims the full
+            <code>.main</code> grid. <code>.main.spinning &gt; .wheel-pane</code>
+            re-enters layout as a <code>position:fixed inset:0</code> overlay with a
+            paper-toned 96% backdrop and z-index 100 — the wheel is now a transient
+            spin-time overlay. The drawer peek strip (56px alongside the 56px handle)
+            renders the current result + a Spin Again button, or "Tap Spin" when no
+            destination. URL-restored picks don't animate (overlay gated by
+            <code>.spinning</code>); duplicate Controls DOM verified via
+            <code>display:none</code> + tab-order check. Desktop visually unchanged.</td>
         </tr>
       </table>
 
@@ -633,7 +654,7 @@
       </p>
 
       <div class="footer">
-        Updated after iter 43. Score 99 / 100. Latest commit: 58c62fa.
+        Updated after iter 45. Score 99 / 100. Latest commit: 15f480f.
         Web Claude is the active PM; check the claude.ai conversation tab for current
         direction.
       </div>
