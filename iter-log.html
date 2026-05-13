@@ -170,7 +170,7 @@
     <div class="page">
       <header class="cover">
         <h1>Walk Roulette — autonomous iteration log</h1>
-        <div class="subtitle">49 iterations · score 96 → 99 · bundle 273 KB → 56 KB gzipped first paint · Web Claude as PM since iter 41</div>
+        <div class="subtitle">50 iterations · score 96 → 99 · bundle 273 KB → 56 KB gzipped first paint · Web Claude as PM since iter 41 · launch-readiness pass complete</div>
       </header>
 
       <h2>The goal you set</h2>
@@ -209,7 +209,7 @@
         </div>
         <div class="stat">
           <div class="stat-label">Iterations</div>
-          <div class="stat-value">49</div>
+          <div class="stat-value">50</div>
         </div>
         <div class="stat">
           <div class="stat-label">Real bugs caught</div>
@@ -613,6 +613,59 @@
             to Spin Again on spin end (no focus trap). Focus rings widened to 3px
             with a paper-colored 5px box-shadow for warmer-paper contrast.</td>
         </tr>
+        <tr>
+          <td class="iter-col">49+</td>
+          <td class="sha-col">e44b843</td>
+          <td><span class="tag a11y">a11y</span> Added <code>{ preventScroll: true }</code>
+            on the iter 49 focus shifts to avoid page-jump when focusing the
+            sr-only announce region.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">50_pre</td>
+          <td class="sha-col">3267360</td>
+          <td><span class="tag bug">bug</span> Iter 47's data-driven
+            <code>line-dasharray</code> case expression is rejected by MapLibre
+            GL 4.x — entire route layer was failing to install (silently no route
+            line). Replaced with two static-paint layers sharing the source,
+            filtered on <code>properties.approx</code>. Caught during iter 50
+            validation.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">50a</td>
+          <td class="sha-col">030f129</td>
+          <td>Share-preview meta: og:type/title/description/image (1200×630 PNG at
+            <code>/og-image.png</code>, Brady provides), twitter:card=summary_large_image.
+            Initial dynamic-title implementation (later refined in 50c).</td>
+        </tr>
+        <tr>
+          <td class="iter-col">50b</td>
+          <td class="sha-col">30b62cc</td>
+          <td><code>LAUNCH.md</code> — committed deploy checklist for Brady.
+            Hosting target decision, Routes API key referrer restriction, OG image
+            provision, mobile phone-test (the actual ship blocker), CF Analytics
+            setup, build/deploy steps, post-deploy smoke tests, standing escalations.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">50c</td>
+          <td class="sha-col">d664385</td>
+          <td>Cloudflare Web Analytics drop-in gated on
+            <code>VITE_CF_ANALYTICS_TOKEN</code> — main.tsx injects the cookie-free
+            beacon only when set. Also fixed iter 50a's title scope: depends on
+            <code>selectedId</code> (committed pick) instead of
+            <code>destination</code> (which includes idle preview), so bare URLs
+            show plain title.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">50d</td>
+          <td class="sha-col">711a4e4</td>
+          <td><span class="tag a11y">a11y</span> Tab-order audit fix. The closed
+            mobile drawer body is translated offscreen but its Controls duplicate
+            was still in tab order — keyboard users would jump into the offscreen
+            copy. Fix: <code>inert</code> attribute on the body when collapsed.
+            Skips both keyboard and screen readers. Drawer
+            <code>aria-expanded</code> + <code>aria-controls</code> re-verified
+            (in place since iter 43; my iter 49 report omitted to mention).</td>
+        </tr>
       </table>
 
       <h2>Things I noticed about the workflow</h2>
@@ -687,11 +740,14 @@
       </p>
 
       <div class="footer">
-        Updated after iter 49. Score 99 / 100. Latest commit: 33eace9.
+        Updated after iter 50. Score 99 / 100. Latest commit: 711a4e4.
         Web Claude is the active PM; check the claude.ai conversation tab for current
-        direction. <code>prefers-reduced-motion</code> is deferred until Brady OKs —
-        the spin-animation timing/easing is on his off-limits list and a
-        reduced-motion branch would touch it.
+        direction. Launch-readiness pass complete — see <code>LAUNCH.md</code> for the
+        deploy checklist (Brady action items: hosting target decision, OG image
+        asset, mobile phone-test, optional CF Analytics token). Standing escalations
+        for Brady: <code>prefers-reduced-motion</code> approach (touches off-limits
+        spin timing), POI expansion past 34 (touches off-limits
+        <code>pois.ts</code>), saved-routes/history decision.
       </div>
     </div>
   </body>
