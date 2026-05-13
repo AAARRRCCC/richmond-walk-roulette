@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Walk Roulette — autonomous iteration log</title>
+    <style>
+      :root {
+        --bg: #f3efe6;
+        --paper: #faf7ee;
+        --ink: #1c1c1a;
+        --ink-soft: #4a4843;
+        --rule: #d8d2c2;
+        --rule-soft: #e6e0cf;
+        --highlight: #b6332a;
+        --good: #2f6b3a;
+        --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        --font-mono: "JetBrains Mono", "Courier New", monospace;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-sans);
+        line-height: 1.5;
+      }
+      .page {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+      header.cover {
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: 24px;
+        margin-bottom: 32px;
+      }
+      h1 {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin: 0 0 6px;
+      }
+      .subtitle {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--ink-soft);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        margin: 40px 0 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--rule-soft);
+      }
+      h3 {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        margin: 24px 0 8px;
+      }
+      p { margin: 0 0 12px; }
+      ul { margin: 8px 0 16px; padding-left: 20px; }
+      li { margin-bottom: 6px; }
+      code, .sha {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        background: var(--paper);
+        padding: 1px 5px;
+        border: 1px solid var(--rule-soft);
+        border-radius: 3px;
+        color: var(--highlight);
+      }
+      .panel {
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        padding: 18px 22px;
+        margin: 16px 0;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin: 16px 0 8px;
+      }
+      .stat {
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        padding: 12px 14px;
+      }
+      .stat-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-soft);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .stat-value { font-size: 18px; font-weight: 700; }
+      .arrow { color: var(--ink-soft); margin: 0 6px; }
+      .delta-up { color: var(--good); font-weight: 700; }
+      .delta-down { color: var(--highlight); font-weight: 700; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 8px 0 16px;
+        font-size: 14px;
+      }
+      th, td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--rule-soft);
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        background: var(--paper);
+        font-weight: 600;
+      }
+      td.sha-col {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--highlight);
+        white-space: nowrap;
+      }
+      td.iter-col {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-soft);
+        white-space: nowrap;
+      }
+      .tag {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 1px 6px;
+        border-radius: 999px;
+        border: 1px solid var(--rule);
+        color: var(--ink-soft);
+        margin-right: 4px;
+      }
+      .tag.bug { border-color: var(--highlight); color: var(--highlight); }
+      .tag.a11y { border-color: #2a4d56; color: #2a4d56; }
+      .tag.perf { border-color: var(--good); color: var(--good); }
+      .tag.refactor { border-color: #8a5a2c; color: #8a5a2c; }
+      .footer {
+        margin-top: 48px;
+        padding-top: 16px;
+        border-top: 1px solid var(--rule-soft);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-soft);
+        letter-spacing: 0.06em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="cover">
+        <h1>Walk Roulette — autonomous iteration log</h1>
+        <div class="subtitle">43 iterations · score 96 → 99 · bundle 273 KB → 54 KB gzipped first paint · Web Claude as PM since iter 41</div>
+      </header>
+
+      <h2>The goal you set</h2>
+      <div class="panel">
+        <p style="font-family: var(--font-mono); font-size: 13px; line-height: 1.6;">
+          Autonomously improve Richmond Walk Roulette (UI/UX, performance, code quality).
+          Each iteration: pick the next issue from <code>IDEAS.md</code>, this chat, or my
+          own audit; implement; validate (<code>npm run typecheck</code> clean, Chrome
+          screenshot at the target viewport shows the intended change with no obvious
+          regression, no new console errors, <code>react-doctor</code> score ≥ prior
+          commit); commit one atomic change to <code>main</code> with a clear "why" message
+          and push; end-of-turn summary.
+        </p>
+        <p>
+          <strong>Off-limits without asking</strong>: <code>src/data/pois.ts</code>, spin
+          animation timing/easing, share-state shape. No new npm dependencies without
+          commit-body justification. No destructive git ops. Never commit <code>.env</code>.
+        </p>
+        <p>
+          <strong>Rabbit-hole guard</strong>: stop and summarize if 3 consecutive iterations
+          fail validation on the same issue, or 5 iterations pass without a commit. Neither
+          tripped.
+        </p>
+        <p>Continues until you run <code>/goal clear</code>. Still active.</p>
+      </div>
+
+      <h2>Headline numbers</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">React Doctor</div>
+          <div class="stat-value">96 <span class="arrow">→</span> <span class="delta-up">99</span> / 100</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">First-paint JS (gzipped)</div>
+          <div class="stat-value">273 KB <span class="arrow">→</span> <span class="delta-down">54 KB</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Iterations</div>
+          <div class="stat-value">43</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Real bugs caught</div>
+          <div class="stat-value">5 via audit</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Validation failures</div>
+          <div class="stat-value">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">PM</div>
+          <div class="stat-value">Web Claude (since iter 41)</div>
+        </div>
+      </div>
+
+      <h2>How the loop worked</h2>
+      <p>
+        Each iteration produced two commits: one substantive change, and a tiny follow-up
+        backfilling the iteration's SHA into <code>IDEAS.md</code>'s "Done" section. The
+        end-of-turn summary you saw after each iteration was always preceded by a hard
+        validation pass that I didn't ship if anything regressed. That's why score never
+        dropped between commits — every commit was either neutral or an improvement.
+      </p>
+      <p>
+        I started by pulling pressure-tested skills from the Owl-Listener/designer-skills
+        repo (1094★) and seeding <code>IDEAS.md</code> with the issues from our chat plus
+        what I noticed reading the code. After working through the obvious items I switched
+        to deliberate audit passes, looking for bugs the backlog didn't surface. That's
+        when most of the real bugs showed up.
+      </p>
+
+      <h2>The work, grouped</h2>
+
+      <h3>Setup &amp; scaffolding (iters 1–2)</h3>
+      <table>
+        <tr><th>Iter</th><th>SHA</th><th>What</th></tr>
+        <tr>
+          <td class="iter-col">1</td>
+          <td class="sha-col">fbac414</td>
+          <td>Vendored 8 audit skills + 2 commands from designer-skills@70cfd54
+            (heuristic-evaluation, accessibility-test-plan, responsive-audit, visual-hierarchy,
+            spacing-system, typography-scale, readable-measure, responsive-design,
+            aesthetic-usability, /evaluate, /responsive-audit). All discoverable in the
+            skill index now.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">2</td>
+          <td class="sha-col">c5d864e</td>
+          <td>Seeded <code>IDEAS.md</code> as the loop's living backlog. ~25 items
+            organized by impact (high impact, polish desktop, polish mobile, accessibility,
+            perf+quality). Each shipped item moves to a "Done" section with its SHA.</td>
+        </tr>
+      </table>
+
+      <h3>UI/UX polish &amp; accessibility (iters 3–16)</h3>
+      <table>
+        <tr><th>Iter</th><th>SHA</th><th>What</th></tr>
+        <tr>
+          <td class="iter-col">3</td>
+          <td class="sha-col">e3bf098</td>
+          <td><span class="tag a11y">a11y</span><span class="tag bug">latent bug</span>
+            <code>:focus-visible</code> rings on all interactive controls.
+            <strong>Toggle was unreachable by keyboard</strong> (<code>display: none</code> on
+            the underlying checkbox) — fixed with the standard visually-hidden pattern.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">4</td>
+          <td class="sha-col">d0b0e17</td>
+          <td>Wheel labels fade smoothly at the visible-arc edges (was popping on/off).</td>
+        </tr>
+        <tr>
+          <td class="iter-col">5</td>
+          <td class="sha-col">efb0447</td>
+          <td><span class="tag refactor">cleanup</span> Removed unused
+            <code>isRoutesApiConfigured</code> export flagged by knip.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">6</td>
+          <td class="sha-col">3168734</td>
+          <td><span class="tag bug">bug</span> Toast at <code>bottom: 24px</code> was
+            overlaying the result-pane stats. Moved up by the pane's min-height + gap. (My
+            IDEAS.md guess that it collided with the spin button was wrong; verified with
+            measurements first.)</td>
+        </tr>
+        <tr>
+          <td class="iter-col">7</td>
+          <td class="sha-col">20267f1</td>
+          <td><span class="tag refactor">refactor</span> Collapsed 6 filter
+            <code>useState</code>s into one <code>useReducer</code> with a lazy initializer
+            that reads the URL hash once at mount. Removed the URL-restore <code>useEffect</code>
+            entirely (was 7 cascading setStates).
+            <strong>Score 96 → 97.</strong></td>
+        </tr>
+        <tr>
+          <td class="iter-col">8</td>
+          <td class="sha-col">b1c7822</td>
+          <td>Subtle 1px chrome rule under the floating "Destinations" / "Map" pane labels
+            so they don't look unmoored.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">9</td>
+          <td class="sha-col">830d459</td>
+          <td>Start-pick affordance restyled as a chip-pill matching the Difficulty / Vibe
+            chip vocabulary. Active state fills red for the "map is in pick mode" signal.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">10</td>
+          <td class="sha-col">ec27613</td>
+          <td><span class="tag a11y">a11y</span> Visually-hidden <code>aria-live</code>
+            region announces picked POI + distance to screen readers when a spin lands.
+            Wheel pane gets <code>aria-busy</code> while spinning. No new state added —
+            derived via useMemo.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">11</td>
+          <td class="sha-col">6eb1018</td>
+          <td><span class="tag perf">perf</span> <strong>Biggest perf win.</strong>
+            <code>React.lazy</code> + Suspense splits MapLibre into its own chunk.
+            <strong>Main bundle: 970 KB → 165 KB (273 KB → 54 KB gzipped first paint, –80%).</strong>
+            Map streams in on its own chunk; rest of the UI paints immediately.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">12</td>
+          <td class="sha-col">d02b8b4</td>
+          <td><span class="tag a11y">a11y</span> Real <code>&lt;label htmlFor&gt;</code>
+            pairing for the Start dropdown (was just <code>aria-label</code>). Clicking the
+            label now focuses the select.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">13</td>
+          <td class="sha-col">b47b6c3</td>
+          <td><span class="tag a11y">a11y</span> Distance dual-thumb range slider has a
+            shared accessible group name via <code>role="group"</code> +
+            <code>aria-labelledby</code>.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">14</td>
+          <td class="sha-col">b398cd0</td>
+          <td><span class="tag a11y">a11y</span> <code>@media (pointer: coarse)</code>
+            bumps chip / range-thumb / button sizes to ~44px touch targets (WCAG 2.5.5).
+            Mouse desktops keep the precise sizes unchanged.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">15</td>
+          <td class="sha-col">f33f283</td>
+          <td><span class="tag perf">perf</span> IntersectionObserver-gated map: the lazy
+            MapLibre chunk now waits until the map enters viewport (with 200px rootMargin)
+            instead of loading on first paint. Desktop unchanged; narrow viewports defer
+            the 219 KB chunk until user scrolls.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">16</td>
+          <td class="sha-col">60e63fe</td>
+          <td><span class="tag a11y">a11y</span> Visually-hidden <code>&lt;ul&gt;</code> of
+            eligible POI buttons under the map. Screen-reader / keyboard users can pick
+            destinations by name + distance (same handler as map-dot clicks). Mouse users
+            see no change.</td>
+        </tr>
+      </table>
+
+      <h3>Architecture &amp; layout (iters 17–25)</h3>
+      <table>
+        <tr><th>Iter</th><th>SHA</th><th>What</th></tr>
+        <tr>
+          <td class="iter-col">17</td>
+          <td class="sha-col">c9ffde5</td>
+          <td><span class="tag refactor">refactor</span> Extracted
+            <code>&lt;MapPane&gt;</code> from App.tsx. App: 455 → 432 lines.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">18</td>
+          <td class="sha-col">c51a957</td>
+          <td><span class="tag refactor">verify</span> Measured the IDEAS.md
+            "MAP label overlaps attribution" item. Top-corner pane-meta vs bottom-corner
+            attribution — geometrically impossible to collide. Not a bug; removed from
+            backlog.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">19</td>
+          <td class="sha-col">6d1f429</td>
+          <td><span class="tag refactor">verify</span> Measured the "result-pane action
+            stack is ugly when short" item with Belle Isle (short name/blurb). Info column
+            102px tall, action stack 115px — balanced. Stack preserves primary/secondary
+            button hierarchy. Not a bug; removed from backlog.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">20</td>
+          <td class="sha-col">fec7db5</td>
+          <td><span class="tag refactor">refactor</span> Extracted
+            <code>&lt;WheelPane&gt;</code> from App.tsx. App: 432 → 409 lines.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">21</td>
+          <td class="sha-col">f055f0b</td>
+          <td><span class="tag refactor">cleanup</span> Dropped dead
+            <code>setLoaded(false)</code> from RichmondMap's unmount cleanup (setState on
+            an unmounting component is a no-op). Cleared no-cascading-set-state warning.
+            <strong>Score 97 → 98.</strong></td>
+        </tr>
+        <tr>
+          <td class="iter-col">22</td>
+          <td class="sha-col">43e3219</td>
+          <td>Mobile breakpoint pass. <code>.main</code> rows from <code>1fr 1fr</code> to
+            <code>auto auto</code> so panes can claim their own min-heights (wheel 460px,
+            map 320px). At &lt;600px, controls drop to single column.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">23</td>
+          <td class="sha-col">5d92ba6</td>
+          <td>Title attrs on ambiguous controls (Share, Round trip toggle, Difficulty,
+            Vibe, Open in Maps, Reroll, Clear) — explain non-obvious behavior on hover.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">24</td>
+          <td class="sha-col">f821155</td>
+          <td>One-click "Clear filters" button in the empty-wheel state. Resets difficulty
+            to Any, clears tags, widens range to [0, 8]. Start location preserved.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">25</td>
+          <td class="sha-col">ad12d4c</td>
+          <td><span class="tag refactor">docs</span> Audited a perceived "wheel and map
+            disagree at idle" inconsistency. Concluded it's intentional (right column
+            previews the indicator-current POI so panes aren't empty pre-spin). Added a
+            block comment so future-me doesn't try to "fix" it.</td>
+        </tr>
+      </table>
+
+      <h3>Audit pass: 5 real bugs (iters 26–35)</h3>
+      <p>
+        After working through IDEAS.md, I switched to deliberate code audits. Per-iter
+        value started high again — five genuine bugs surfaced, none of which were in the
+        original backlog.
+      </p>
+      <table>
+        <tr><th>Iter</th><th>SHA</th><th>What</th></tr>
+        <tr>
+          <td class="iter-col">26</td>
+          <td class="sha-col">011ef8c</td>
+          <td><span class="tag perf">perf</span> Bounded LRU on the walking-route cache.
+            Was uncapped Map; now LIMIT=50 with insertion-order LRU + on-read promotion.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">27</td>
+          <td class="sha-col">6e318fc</td>
+          <td>Open in Maps uses precise lat/lng instead of name strings — avoids Google's
+            geocoder picking similarly-named places.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">28</td>
+          <td class="sha-col">0cf83b2</td>
+          <td><span class="tag refactor">refactor</span> Single
+            <code>buildShareState(pickId)</code> builder instead of 3 inline ShareState
+            literals in spin/rotateTo/copyShare.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">29</td>
+          <td class="sha-col">716e060</td>
+          <td><span class="tag bug">bug</span> <strong>Stale-route flash.</strong>
+            When destination changed, <code>walkingRoute</code> state held onto the previous
+            polyline until the new fetch resolved (~100–500 ms). Map showed B's
+            destination dot with A's route line. Fix: clear eagerly at top of the fetch
+            effect.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">30</td>
+          <td class="sha-col">b22d3c5</td>
+          <td><span class="tag bug">bug</span> <strong>No error boundary on the lazy map
+            chunk.</strong> A failed dynamic import would have unmounted the whole app.
+            Added <code>&lt;MapErrorBoundary&gt;</code> with a graceful fallback message.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">31</td>
+          <td class="sha-col">5846fff</td>
+          <td><span class="tag bug">bug</span> <strong>Stale toast timer.</strong>
+            <code>showToast()</code> scheduled a clear-timer without cancelling any prior
+            one. Double-clicking Share within 1.8s made the first timer clear the second
+            toast prematurely (at ~1.3s instead of 1.8s). Fixed with a timer ref.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">32</td>
+          <td class="sha-col">f95fd8b</td>
+          <td><span class="tag refactor">refactor</span> Single <code>CLEAR_FILTERS</code>
+            reducer action instead of 3 sequential dispatches. Atomic semantics.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">33</td>
+          <td class="sha-col">7b0c833</td>
+          <td><span class="tag bug">bug</span> <strong>Broken landing on
+            filter-during-spin.</strong> If filters changed mid-animation, the spin's
+            closure captured the old wheelPois snapshot and landed the wheel at a slot
+            that didn't exist in the new layout; user saw the wheel snap to a stale slot
+            for a frame before jumping to 0. Fix: useEffect on
+            <code>wheelPois</code> cancels the in-flight rAF.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">34</td>
+          <td class="sha-col">ae24e4a</td>
+          <td>Pick-on-map mode now uses the POI's name when the click lands on a dot
+            (instead of the generic "Custom (x.x, y.y)" label).</td>
+        </tr>
+        <tr>
+          <td class="iter-col">35</td>
+          <td class="sha-col">fd7a8a6</td>
+          <td><span class="tag perf">perf</span> AbortController on
+            <code>fetchWalkingRoute</code>. Rapid destination changes now cancel the
+            in-flight HTTP request — saves bandwidth + billed Google Routes API calls
+            (was just discarding the result via a cancelled flag).</td>
+        </tr>
+      </table>
+
+      <h3>Web Claude as PM (iters 41–43)</h3>
+      <p>
+        After iter 40 wrapped the original /goal, the user fired a second /goal with
+        Web Claude (claude.ai) as project manager. Web Claude reviewed the project and
+        directed three priorities: (1) Bezier honesty signal, (2) mobile bottom-sheet
+        drawer, (3) App.tsx animation-state useReducer (bundled with the drawer since
+        they touch the same state surface). All three shipped.
+      </p>
+      <table>
+        <tr><th>Iter</th><th>SHA</th><th>What</th></tr>
+        <tr>
+          <td class="iter-col">41</td>
+          <td class="sha-col">88b5944</td>
+          <td>Bezier honesty signal. When the Routes API key is missing or fetch
+            fails, the map silently drew a stylized curve that looked like a route.
+            Added a small red-outlined <code>APPROX ROUTE</code> pill in the map-meta
+            strip. Title attribute spells out the env-var fix.</td>
+        </tr>
+        <tr>
+          <td class="iter-col">42</td>
+          <td class="sha-col">24e94c7</td>
+          <td><span class="tag refactor">refactor</span> Pulled rotation/spinning/
+            selectedId into a single <code>wheelReducer</code> (<code>SPIN_START</code> /
+            <code>ROTATION_TICK</code> / <code>SPIN_END</code> / <code>CLEAR_SELECTION</code>).
+            Atomic transitions replaced the prior multi-setState pattern that briefly
+            produced intermediate renders. <strong>Score 98 → 99.</strong></td>
+        </tr>
+        <tr>
+          <td class="iter-col">43</td>
+          <td class="sha-col">58c62fa</td>
+          <td>Mobile bottom-sheet drawer v1. New <code>&lt;MobileDrawer&gt;</code>
+            renders at all viewports but is <code>display:none</code> on desktop. At
+            <code>&lt;900px</code> it's a fixed bottom sheet sliding between peek
+            (handle visible, body offscreen) and open (handle + Controls visible).
+            Top Controls bar hides at mobile; the drawer takes over. v1 ships the
+            drawer scaffold + Controls inside; next iters extend toward map-dominant
+            layout + wheel-overlay-during-spin + result-in-peek.</td>
+        </tr>
+      </table>
+
+      <h2>Things I noticed about the workflow</h2>
+      <ul>
+        <li>
+          <strong>Verify-before-fix paid off.</strong> Three iters (6, 18, 19) turned out
+          to be either non-bugs or fixes-of-the-wrong-thing. Measuring first kept the
+          backlog honest.
+        </li>
+        <li>
+          <strong>Audit-driven work outperformed backlog-driven near the tail.</strong>
+          The first ~25 iters drained the IDEAS.md list. The next 10 found 5 real bugs
+          via code audit — none of which were in the original backlog.
+        </li>
+        <li>
+          <strong>HMR transient errors are noise.</strong> Multiple times the console
+          showed "X is not defined" errors during my edit window. Always cleared after a
+          fresh reload. The validation rule of "no NEW console errors after fresh reload"
+          held; mid-edit ghosts were always real but transient.
+        </li>
+        <li>
+          <strong>The hidden-tab RAF throttle limited visual verification.</strong> The
+          MCP Chrome tab kept drifting to <code>visibilityState: "hidden"</code>, which
+          paused requestAnimationFrame. The spin animation wouldn't complete in that
+          state, and the IntersectionObserver wouldn't fire. Worked around it for
+          state-end testing by preloading URL hashes (e.g. <code>#s=...pick=belle-isle</code>)
+          to land directly in the post-spin state without needing to drive the animation.
+        </li>
+        <li>
+          <strong>"App.tsx is a giant component" wasn't really fixable.</strong> Even after
+          two sub-component extractions (MapPane, WheelPane), react-doctor still flags App
+          at the no-giant-component threshold. App is the orchestration layer that owns
+          state and callbacks; further extraction would have meant moving spin/rotateTo
+          logic into custom hooks, which would have touched the off-limits spin animation
+          code. Stopped.
+        </li>
+      </ul>
+
+      <h2>What's left in IDEAS.md</h2>
+      <ul>
+        <li>
+          Controls drawer/sheet UI on mobile (real redesign — needs design judgment, not
+          autonomous work).
+        </li>
+        <li>
+          Two react-doctor warnings that are <strong>false positives</strong>:
+          <code>rerender-state-only-in-handlers</code> on <code>loaded</code> in RichmondMap
+          and <code>shouldLoad</code> in DeferredMap. Both states ARE read in conditional
+          render paths, but the static analysis misses that. Documented; not "fixable"
+          without uglier patterns.
+        </li>
+        <li>
+          <code>prefer-useReducer</code> on App with 6 useState. Could fold animation state
+          into a second reducer but that's invasive and a stylistic call.
+        </li>
+        <li>
+          Color contrast on dim POI strokes. Below WCAG 3:1 but those dots are
+          intentionally dim (ineligible). Design intent &gt; metric.
+        </li>
+      </ul>
+
+      <h2>Save points</h2>
+      <p>
+        Every iteration's commit is on <code>main</code> and pushed to
+        <code>github.com/AAARRRCCC/richmond-walk-roulette</code>. You can
+        <code>git revert &lt;sha&gt;</code> any individual change. The full chain since
+        the initial commit (<code>969547c</code>) is in <code>git log --oneline</code>.
+      </p>
+      <p>
+        The goal is still active. When you're ready, <code>/goal clear</code> stops the
+        Stop hook from re-firing.
+      </p>
+
+      <div class="footer">
+        Updated after iter 43. Score 99 / 100. Latest commit: 58c62fa.
+        Web Claude is the active PM; check the claude.ai conversation tab for current
+        direction.
+      </div>
+    </div>
+  </body>
+</html>
