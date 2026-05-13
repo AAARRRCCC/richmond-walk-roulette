@@ -85,3 +85,4 @@ by priority. Top-down order is rough preference, not strict.
 - `7b0c833` — Cancel in-flight spin when filters change mid-animation
 - `ae24e4a` — Pick-on-map uses POI name when clicking a dot
 - `fd7a8a6` — AbortController on fetchWalkingRoute (cancels HTTP, not just result)
+- `f7e8a13` — Toast feedback when popup blocker rejects Open in Maps
