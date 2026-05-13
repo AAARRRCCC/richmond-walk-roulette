@@ -89,3 +89,4 @@ by priority. Top-down order is rough preference, not strict.
 - `9413b8e` — Cancel pickingStart when user selects a preset Start
 - `c380a31` — Stop result-pane shrinking on Spin Again (user-reported)
 - `6d76dcc` — Auto-anchor destination callout (no off-screen clipping when panned)
+- `41fb524` — Suppress :hover on disabled buttons
