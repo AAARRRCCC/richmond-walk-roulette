@@ -10,11 +10,12 @@
 import { test, type TestContext } from "node:test";
 import assert from "node:assert/strict";
 import { handleApiRequest, WALKING_SPEED_KMH } from "./proxy.ts";
+import type { Json } from "../src/lib/json.ts";
 
 const MONROE = { latitude: 37.5464, longitude: -77.4517 };
 const LADDER = Array.from({ length: 56 }, (_, i) => i + 5);
 
-function post(path: string, body: unknown): Request {
+function post(path: string, body: Json): Request {
   return new Request(`http://app.local${path}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -22,16 +23,45 @@ function post(path: string, body: unknown): Request {
   });
 }
 
-type Upstream = { url: string; body: Record<string, unknown> };
+/** The request body this proxy sends upstream; the stub parses it back. */
+type UpstreamBody = {
+  contours?: { time: number }[];
+  costing?: string;
+  costing_options?: Json;
+  locations?: Json[];
+  units?: string;
+};
+
+type Upstream = { url: string; body: UpstreamBody };
+
+/** The proxy's own reply vocabulary: {error, detail} plus GeoJSON features. */
+type ProxyReply = {
+  error?: string;
+  detail?: string;
+  features?: { properties: { contour: number } }[];
+};
+
+async function reply(response: Response | null): Promise<ProxyReply> {
+  assert.ok(response);
+  // SAFETY: the proxy under test emits only its own JSON vocabulary — {error,
+  // detail} failure bodies and GeoJSON FeatureCollections — and these tests
+  // read just the fields that vocabulary guarantees.
+  return (await response.json()) as ProxyReply;
+}
 
 /** Replaces fetch for one test; returns the log of upstream calls. */
 function stubFetch(t: TestContext, respond: (call: Upstream) => Response | Error): Upstream[] {
   const calls: Upstream[] = [];
   const original = globalThis.fetch;
+  // SAFETY: the stub covers the one (input, init) call pattern the proxy
+  // uses, and every body it parses back is one the proxy just serialized
+  // from the UpstreamBody request fields these tests assert on.
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    // SAFETY: every body reaching this stub was just serialized by the proxy
+    // from the UpstreamBody request fields these tests assert on.
     const call: Upstream = {
       url: String(input),
-      body: JSON.parse(String(init?.body)) as Record<string, unknown>,
+      body: JSON.parse(String(init?.body)) as UpstreamBody,
     };
     calls.push(call);
     const out = respond(call);
@@ -44,11 +74,10 @@ function stubFetch(t: TestContext, respond: (call: Upstream) => Response | Error
   return calls;
 }
 
-function contourResponse(body: Record<string, unknown>): Response {
-  const contours = body.contours as { time: number }[];
+function contourResponse(body: UpstreamBody): Response {
   return Response.json({
     type: "FeatureCollection",
-    features: contours.map(({ time }) => ({
+    features: (body.contours ?? []).map(({ time }) => ({
       type: "Feature",
       properties: { contour: time, metric: "time" },
       geometry: { type: "Polygon", coordinates: [[]] },
@@ -74,12 +103,12 @@ test("full ladder is one upstream query when the limit allows", async (t) => {
   assert.equal(sent.costing, "pedestrian");
   assert.deepEqual(sent.costing_options, { pedestrian: { walking_speed: WALKING_SPEED_KMH } });
   assert.deepEqual(
-    (sent.contours as { time: number }[]).map((c) => c.time),
+    (sent.contours ?? []).map((c) => c.time),
     LADDER,
   );
 
-  const payload = (await response!.json()) as { features: unknown[] };
-  assert.equal(payload.features.length, LADDER.length);
+  const payload = await reply(response);
+  assert.equal((payload.features ?? []).length, LADDER.length);
 });
 
 test("stock contour limit splits the ladder and merges the features", async (t) => {
@@ -93,14 +122,12 @@ test("stock contour limit splits the ladder and merges the features", async (t) 
   assert.equal(response?.status, 200);
   assert.equal(calls.length, Math.ceil(LADDER.length / 4));
   for (const call of calls) {
-    assert.ok((call.body.contours as unknown[]).length <= 4);
+    assert.ok((call.body.contours ?? []).length <= 4);
   }
 
-  const payload = (await response!.json()) as {
-    features: { properties: { contour: number } }[];
-  };
+  const payload = await reply(response);
   assert.deepEqual(
-    payload.features.map((f) => f.properties.contour),
+    (payload.features ?? []).map((f) => f.properties.contour),
     LADDER,
   );
 });
@@ -115,7 +142,7 @@ test("duplicate and unordered minutes are normalised before the engine sees them
 
   assert.equal(response?.status, 200);
   assert.deepEqual(
-    (calls[0]!.body.contours as { time: number }[]).map((c) => c.time),
+    (calls[0]!.body.contours ?? []).map((c) => c.time),
     [5, 15, 25],
   );
 });
@@ -148,7 +175,7 @@ test("no VALHALLA_URL means 503 not-configured, before any fetch", async (t) => 
   const response = await handleApiRequest(post("/api/isochrone", { location: MONROE, minutes: [25] }), {});
 
   assert.equal(response?.status, 503);
-  const payload = (await response!.json()) as { error: string };
+  const payload = await reply(response);
   assert.equal(payload.error, "not-configured");
   assert.equal(calls.length, 0);
 });
@@ -159,12 +186,12 @@ test("an unreachable engine reads as not-configured, naming the URL", async (t) 
   const response = await handleApiRequest(post("/api/isochrone", { location: MONROE, minutes: [25] }), ENV);
 
   assert.equal(response?.status, 503);
-  const payload = (await response!.json()) as { detail: string };
-  assert.ok(payload.detail.includes("http://engine.local:8002"));
+  const payload = await reply(response);
+  assert.ok(payload.detail?.includes("http://engine.local:8002"));
 });
 
 test("route forwards the trip and pins the pedestrian costing", async (t) => {
-  const trip = { trip: { legs: [{ shape: "abc" }], summary: { length: 1.2, time: 900 } } };
+  const trip = { trip: { legs: [{ "shape": "abc" }], summary: { length: 1.2, time: 900 } } };
   const calls = stubFetch(t, () => Response.json(trip));
 
   const response = await handleApiRequest(
@@ -180,7 +207,7 @@ test("route forwards the trip and pins the pedestrian costing", async (t) => {
   assert.equal(sent.costing, "pedestrian");
   assert.equal(sent.units, "kilometers");
   assert.deepEqual(sent.costing_options, { pedestrian: { walking_speed: WALKING_SPEED_KMH } });
-  assert.equal((sent.locations as unknown[]).length, 2);
+  assert.equal((sent.locations ?? []).length, 2);
 });
 
 test("engine 4xx stays final (400); 429 and 5xx read transient", async (t) => {
@@ -197,7 +224,7 @@ test("engine 4xx stays final (400); 429 and 5xx read transient", async (t) => {
     ENV,
   );
   assert.equal(noPath?.status, 400);
-  const payload = (await noPath!.json()) as { detail: string };
+  const payload = await reply(noPath);
   assert.equal(payload.detail, "No path could be found");
 
   status = 429;

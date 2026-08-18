@@ -46,9 +46,9 @@ const isDevServer = import.meta.env.DEV;
 
 type Failure = { message: string; configured: boolean };
 
-const describe = (error: unknown): Failure => ({
-  configured: !(error instanceof NotConfiguredError),
-  message: error instanceof Error ? error.message : "Could not load the reachable area.",
+const describe = (cause: unknown): Failure => ({
+  configured: !(cause instanceof NotConfiguredError),
+  message: cause instanceof Error ? cause.message : "Could not load the reachable area.",
 });
 
 export function App() {
@@ -56,7 +56,7 @@ export function App() {
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 900px)").matches,
+    () => window.matchMedia("(min-width: 900px)").matches,
   );
 
   /**
@@ -79,8 +79,8 @@ export function App() {
       if (cancelled) return;
       dispatch({ type: "warmProgress", fraction: progress.done / progress.total });
       bumpContours();
-    }).catch((error: unknown) => {
-      if (!cancelled) dispatch({ type: "failed", failure: describe(error) });
+    }).catch((cause: unknown) => {
+      if (!cancelled) dispatch({ type: "failed", failure: describe(cause) });
     });
     return () => {
       cancelled = true;
@@ -107,8 +107,8 @@ export function App() {
       .then(() => {
         if (!cancelled) bumpContours();
       })
-      .catch((error: unknown) => {
-        if (!cancelled) dispatch({ type: "failed", failure: describe(error) });
+      .catch((cause: unknown) => {
+        if (!cancelled) dispatch({ type: "failed", failure: describe(cause) });
       });
     return () => {
       cancelled = true;
