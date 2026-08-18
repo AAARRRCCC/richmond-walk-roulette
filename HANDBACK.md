@@ -1,3 +1,8 @@
+> **Historical document** (pre-isochrone wheel version). The Google
+> Routes/Isochrones setup it references is gone: the app now runs on
+> self-hosted Valhalla with no Google APIs at all. For current launch
+> guidance read `LAUNCH.md` and `valhalla/README.md`.
+
 # Handback
 
 Brady — while you were away, Web Claude took over as PM and we ran ten more iterations (41–50) on top of the original autonomous-loop work. Score sits at 99/100. First-paint JS is 56 KB gzipped. The mobile flip Web Claude pushed for is in (`15f480f`) — the wheel is a transient overlay during spin, the map fills the dominant viewport at `<900px`, and the bottom sheet carries the current pick + a Spin Again button alongside the filter drawer. The Bezier fallback got an honesty signal (red "APPROX ROUTE" pill in the map-meta plus muted polyline opacity + a dashed line pattern), and the new sub-component tree gained a proper a11y pass — aria-live announcements, focus management around the spin overlay, `inert` on the closed-drawer body so tab order doesn't leak into offscreen Controls. The biggest single catch was a regression I introduced myself in iter 47: a data-driven `line-dasharray` that MapLibre 4.x silently rejects, breaking the route layer entirely. Caught it during iter 50's validation pass and fixed with two static-paint layers (`3267360`). Web Claude called that one "the biggest win in this whole sprint" and asked me to do live-preview validation rather than computed-style inspection on any future map-paint work.

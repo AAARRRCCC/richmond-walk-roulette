@@ -1,0 +1,991 @@
+/*
+ * Walk Roulette, Richmond.
+ *
+ * Design read: a single-purpose consumer map tool for people who already live
+ * here. The map is the product, so it runs full bleed and everything else is a
+ * quiet instrument panel floating over it.
+ *
+ * Locked decisions, applied everywhere:
+ *   Theme    dark only. There is no light mode; a night cartographic palette is
+ *            the whole point of the isochrone bloom reading as heat.
+ *   Accent   amber #ffb043, and nothing else. Warnings borrow it too.
+ *   Radius   surfaces 16px, controls 10px, chips and switches full pill.
+ *   Type     Geist for text, Geist Mono for every number.
+ *   Motion   transitions only, 160-260ms, transform and opacity. The one real
+ *            animation is the spin reel, which communicates randomising.
+ */
+
+:root {
+  --bg: #0b1014;
+  --surface: rgba(16, 23, 30, 0.86);
+  --surface-solid: #101720;
+  --raise: #16202a;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  --ink: #e9eef3;
+  --ink-2: #93a6b5;
+  --ink-3: #647a8a;
+
+  --accent: #ffb043;
+  --accent-soft: #ffd7a0;
+  --accent-ink: #150d02;
+  --accent-wash: rgba(255, 176, 67, 0.12);
+
+  --r-surface: 16px;
+  --r-control: 10px;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --font: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono Variable", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 0.1em 0.36em;
+  border-radius: 5px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------- shell */
+
+.shell {
+  position: fixed;
+  inset: 0;
+  min-height: 100dvh;
+}
+
+.map-shell,
+.map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * Google Maps attribution for the isochrone contours. The policy fixes most of
+ * this: the words "Google Maps" unmodified and unwrapped, weight 400, 12 to
+ * 16px, one of three approved colours at 4.5:1 against the background, and
+ * visually separated from other content. White is the only approved colour
+ * that clears contrast on this basemap. It sits above MapLibre's own
+ * attribution so the two credits read as separate claims, because they are.
+ */
+.gmp-attribution {
+  position: absolute;
+  right: 8px;
+  bottom: 26px;
+  z-index: 2;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(11, 16, 20, 0.82);
+  pointer-events: none;
+}
+
+.gmp-source {
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.gmp-brand {
+  font-family: Roboto, var(--font), sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: normal;
+  white-space: nowrap;
+  color: #ffffff;
+}
+
+.shell.is-picking .rail {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.shell.is-picking .origin,
+.shell.is-picking .origin * {
+  pointer-events: auto;
+}
+
+/* ----------------------------------------------------------------- rail */
+
+.rail {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  bottom: 18px;
+  width: 384px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  transition: opacity 200ms var(--ease);
+}
+
+.brand {
+  position: relative;
+  /* Bounds the scrim below: without a stacking context, z-index -1 escapes to
+     the root and the pseudo-element paints behind the map instead. */
+  isolation: isolate;
+  padding: 2px 4px 0;
+}
+
+/* The brand floats directly on the map, so a basemap label can land behind it.
+   A soft radial scrim keeps it legible without drawing a panel edge. */
+.brand::before {
+  content: "";
+  position: absolute;
+  inset: -16px -28px -12px -22px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    118% 100% at 0% 45%,
+    rgba(11, 16, 20, 0.95) 0%,
+    rgba(11, 16, 20, 0.82) 45%,
+    rgba(11, 16, 20, 0) 100%
+  );
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.brand-place {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.brand-line {
+  margin: 5px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  max-width: 34ch;
+}
+
+.panel,
+.result,
+.drawer {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-surface);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+}
+
+.panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .panel,
+  .result,
+  .drawer,
+  .origin-menu {
+    background: var(--surface-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.field-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* --------------------------------------------------------------- origin */
+
+.origin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.origin-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--raise);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 160ms var(--ease), background 160ms var(--ease);
+}
+.origin-chip:hover {
+  border-color: var(--line-strong);
+}
+.origin-chip svg:first-child {
+  color: var(--accent);
+  flex: none;
+}
+.origin-name {
+  flex: 1;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.origin-caret {
+  color: var(--ink-3);
+  flex: none;
+}
+
+.origin-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  padding: 6px;
+  background: var(--surface-solid);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.6);
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.origin-action,
+.origin-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+}
+.origin-action:hover:not(:disabled),
+.origin-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.origin-action:disabled {
+  color: var(--ink-3);
+  cursor: default;
+}
+.origin-action svg {
+  color: var(--ink-2);
+}
+.origin-option[aria-current="true"] {
+  color: var(--accent);
+}
+
+.origin-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 6px 4px;
+}
+
+.origin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.origin-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--accent);
+}
+
+/* ----------------------------------------------------------------- dial */
+
+.dial-head {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-bottom: 6px;
+}
+
+.dial-value {
+  font-family: var(--mono);
+  font-size: 46px;
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.dial-unit {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.dial-caption {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: right;
+}
+
+/* The marks box is inset by half the thumb width so a tick at N% sits under
+   the thumb centre when the value is N% of the range. */
+.dial-track {
+  position: relative;
+  height: 34px;
+}
+
+.dial-marks {
+  position: absolute;
+  inset: 4px 8px 12px;
+}
+
+.dial-tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 6px;
+  background: var(--line-strong);
+  transform: translateX(-0.5px);
+  transition: background 120ms linear, height 120ms var(--ease);
+}
+.dial-tick.is-mid {
+  height: 10px;
+}
+.dial-tick.is-major {
+  height: 15px;
+}
+/* Ticks start dim and light up as their contours arrive, so the warm-up is
+   something you watch fill in rather than a spinner over the whole panel.
+   A dim tick still works; it just costs a request instead of a cache read. */
+.dial-tick {
+  opacity: 0.35;
+}
+.dial-tick.is-warm {
+  opacity: 1;
+}
+.dial-tick.is-reached {
+  background: var(--accent);
+}
+.dial-tick.is-reached.is-warm {
+  opacity: 0.85;
+}
+
+.dial-warming {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent);
+  opacity: 0.85;
+}
+
+.dial-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: ew-resize;
+}
+.dial-input::-webkit-slider-runnable-track {
+  height: 34px;
+  background: none;
+}
+.dial-input::-moz-range-track {
+  height: 34px;
+  background: none;
+}
+.dial-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 34px;
+  border: 0;
+  border-radius: 3px;
+  background:
+    linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
+}
+.dial-input::-moz-range-thumb {
+  width: 16px;
+  height: 34px;
+  border: 0;
+  border-radius: 3px;
+  background:
+    linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
+}
+
+.dial-scale {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+
+/* -------------------------------------------------------------- readout */
+
+.readout {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-height: 20px;
+}
+.readout strong {
+  color: var(--ink);
+  font-weight: 500;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.readout-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+.readout.is-loading {
+  gap: 10px;
+}
+
+.skeleton {
+  display: inline-block;
+  height: 0.85em;
+  vertical-align: middle;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--raise), #1e2a36, var(--raise));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* -------------------------------------------------------------- buttons */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--raise);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 120ms var(--ease), background 160ms var(--ease),
+    border-color 160ms var(--ease);
+}
+.button:hover:not(:disabled) {
+  background: #1c2733;
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button.is-primary,
+.button.is-spin {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.button.is-primary:hover:not(:disabled),
+.button.is-spin:hover:not(:disabled) {
+  background: #ffc063;
+  border-color: #ffc063;
+}
+
+.button.is-spin {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+/* Dimmed amber still reads as a filled, tappable button. A disabled control
+   has to lose the accent entirely. */
+.button:disabled {
+  background: var(--raise);
+  border-color: var(--line);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* -------------------------------------------------------------- notices */
+
+.notice {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+.notice.is-warn {
+  border-color: rgba(255, 176, 67, 0.4);
+  background: var(--accent-wash);
+  color: var(--accent-soft);
+}
+.notice.is-setup {
+  display: block;
+}
+.notice.is-setup strong {
+  display: block;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+.notice.is-setup p {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------- spin + result */
+
+.spin-slot:empty {
+  display: none;
+}
+
+.spin-reel {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-surface);
+  background: var(--accent-wash);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spin-name {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--accent-soft);
+  /* Reserve the line so rapid name swaps do not resize the panel. */
+  min-height: 1.4em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: rise 260ms var(--ease);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.result-name {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.result-blurb {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 4px 0 2px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.stat dt {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.stat dd {
+  margin: 3px 0 0;
+  font-family: var(--mono);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-warning {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--accent);
+}
+
+.result-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* -------------------------------------------------------------- filters */
+
+.drawer {
+  padding: 4px 16px;
+}
+.drawer > summary {
+  padding: 12px 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  cursor: pointer;
+  list-style: none;
+}
+.drawer > summary::-webkit-details-marker {
+  display: none;
+}
+.drawer > summary::after {
+  content: "+";
+  float: right;
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1;
+}
+.drawer[open] > summary::after {
+  content: "-";
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 16px;
+}
+
+.switch-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch-track {
+  flex: none;
+  position: relative;
+  width: 34px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--raise);
+  border: 1px solid var(--line-strong);
+  transition: background 160ms var(--ease), border-color 160ms var(--ease);
+}
+.switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  transition: transform 180ms var(--ease), background 160ms var(--ease);
+}
+.switch input:checked + .switch-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.switch input:checked + .switch-track .switch-thumb {
+  transform: translateX(14px);
+  background: var(--accent-ink);
+}
+.switch input:focus-visible + .switch-track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.switch-text {
+  display: flex;
+  flex-direction: column;
+}
+.switch-label {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.switch-hint {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.chips {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chips > legend {
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.chip {
+  padding: 5px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 140ms var(--ease), border-color 140ms var(--ease),
+    background 140ms var(--ease);
+}
+.chip:hover {
+  color: var(--ink);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.chip[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------ map chrome */
+
+.origin-marker {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid var(--accent);
+  box-shadow: 0 0 0 6px rgba(255, 176, 67, 0.18), 0 3px 12px rgba(0, 0, 0, 0.7);
+  cursor: grab;
+}
+.origin-marker:active {
+  cursor: grabbing;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--surface-solid) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--r-control) !important;
+  box-shadow: none !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top-color: var(--line) !important;
+}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1) brightness(0.85);
+}
+.maplibregl-ctrl-attrib {
+  background: rgba(11, 16, 20, 0.8) !important;
+  color: var(--ink-3) !important;
+  font-size: 10.5px !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--ink-2) !important;
+}
+.maplibregl-ctrl-attrib-button {
+  filter: invert(1) brightness(0.8);
+}
+
+/* ------------------------------------------------------------- responsive */
+
+/* The bottom sheet covers the map's bottom-right corner, so the attribution
+   moves to the free space at the top. Pinch zoom makes the zoom buttons
+   redundant on touch, and dropping them clears the corner. */
+@media (max-width: 899px) {
+  .maplibregl-ctrl-bottom-right {
+    top: 10px;
+    bottom: auto;
+  }
+
+  /* The bottom sheet covers the map's lower half, and attribution must never
+     be obscured, so it moves up under MapLibre's own credit. */
+  .gmp-attribution {
+    top: 38px;
+    bottom: auto;
+  }
+  .maplibregl-ctrl-top-right .maplibregl-ctrl-group {
+    display: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .rail {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 72dvh;
+    padding: 0 12px calc(12px + env(safe-area-inset-bottom));
+    gap: 10px;
+    background: linear-gradient(to bottom, transparent, rgba(11, 16, 20, 0.75) 34px);
+  }
+
+  .brand {
+    padding-top: 10px;
+  }
+  .brand-line {
+    display: none;
+  }
+
+  .dial-value {
+    font-size: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+

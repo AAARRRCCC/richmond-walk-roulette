@@ -1,0 +1,225 @@
+/**
+ * Protocol tests for the Valhalla proxy, run with a stubbed `fetch` so no
+ * engine is needed: `npm test` (node --test, Node >= 23).
+ *
+ * These defend the contract the client and the engine each rely on: the
+ * fan-out respects the instance's contour limit, the costing is pinned
+ * server-side, bad requests never reach the engine, and failures map onto
+ * the status classes the client's retry logic keys on.
+ */
+import { test, type TestContext } from "node:test";
+import assert from "node:assert/strict";
+import { handleApiRequest, WALKING_SPEED_KMH } from "./proxy.ts";
+
+const MONROE = { latitude: 37.5464, longitude: -77.4517 };
+const LADDER = Array.from({ length: 56 }, (_, i) => i + 5);
+
+function post(path: string, body: unknown): Request {
+  return new Request(`http://app.local${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+type Upstream = { url: string; body: Record<string, unknown> };
+
+/** Replaces fetch for one test; returns the log of upstream calls. */
+function stubFetch(t: TestContext, respond: (call: Upstream) => Response | Error): Upstream[] {
+  const calls: Upstream[] = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const call: Upstream = {
+      url: String(input),
+      body: JSON.parse(String(init?.body)) as Record<string, unknown>,
+    };
+    calls.push(call);
+    const out = respond(call);
+    if (out instanceof Error) throw out;
+    return out;
+  }) as typeof fetch;
+  t.after(() => {
+    globalThis.fetch = original;
+  });
+  return calls;
+}
+
+function contourResponse(body: Record<string, unknown>): Response {
+  const contours = body.contours as { time: number }[];
+  return Response.json({
+    type: "FeatureCollection",
+    features: contours.map(({ time }) => ({
+      type: "Feature",
+      properties: { contour: time, metric: "time" },
+      geometry: { type: "Polygon", coordinates: [[]] },
+    })),
+  });
+}
+
+const ENV = { VALHALLA_URL: "http://engine.local:8002" };
+
+test("full ladder is one upstream query when the limit allows", async (t) => {
+  const calls = stubFetch(t, (call) => contourResponse(call.body));
+
+  const response = await handleApiRequest(
+    post("/api/isochrone", { location: MONROE, minutes: LADDER }),
+    { ...ENV, VALHALLA_MAX_CONTOURS: "60" },
+  );
+
+  assert.equal(response?.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0]!.url, "http://engine.local:8002/isochrone");
+
+  const sent = calls[0]!.body;
+  assert.equal(sent.costing, "pedestrian");
+  assert.deepEqual(sent.costing_options, { pedestrian: { walking_speed: WALKING_SPEED_KMH } });
+  assert.deepEqual(
+    (sent.contours as { time: number }[]).map((c) => c.time),
+    LADDER,
+  );
+
+  const payload = (await response!.json()) as { features: unknown[] };
+  assert.equal(payload.features.length, LADDER.length);
+});
+
+test("stock contour limit splits the ladder and merges the features", async (t) => {
+  const calls = stubFetch(t, (call) => contourResponse(call.body));
+
+  const response = await handleApiRequest(
+    post("/api/isochrone", { location: MONROE, minutes: LADDER }),
+    ENV, // no VALHALLA_MAX_CONTOURS: assume Valhalla's default of 4
+  );
+
+  assert.equal(response?.status, 200);
+  assert.equal(calls.length, Math.ceil(LADDER.length / 4));
+  for (const call of calls) {
+    assert.ok((call.body.contours as unknown[]).length <= 4);
+  }
+
+  const payload = (await response!.json()) as {
+    features: { properties: { contour: number } }[];
+  };
+  assert.deepEqual(
+    payload.features.map((f) => f.properties.contour),
+    LADDER,
+  );
+});
+
+test("duplicate and unordered minutes are normalised before the engine sees them", async (t) => {
+  const calls = stubFetch(t, (call) => contourResponse(call.body));
+
+  const response = await handleApiRequest(
+    post("/api/isochrone", { location: MONROE, minutes: [25, 5, 25, 15] }),
+    { ...ENV, VALHALLA_MAX_CONTOURS: "60" },
+  );
+
+  assert.equal(response?.status, 200);
+  assert.deepEqual(
+    (calls[0]!.body.contours as { time: number }[]).map((c) => c.time),
+    [5, 15, 25],
+  );
+});
+
+test("an origin outside the Richmond box never reaches the engine", async (t) => {
+  const calls = stubFetch(t, () => Response.json({}));
+
+  const response = await handleApiRequest(
+    post("/api/isochrone", { location: { latitude: 48.8566, longitude: 2.3522 }, minutes: [25] }),
+    { ...ENV, VALHALLA_MAX_CONTOURS: "60" },
+  );
+
+  assert.equal(response?.status, 400);
+  assert.equal(calls.length, 0);
+});
+
+test("malformed minutes are rejected without an upstream call", async (t) => {
+  const calls = stubFetch(t, () => Response.json({}));
+
+  for (const minutes of [[], [2.5], [0], [91], "25", null]) {
+    const response = await handleApiRequest(post("/api/isochrone", { location: MONROE, minutes }), ENV);
+    assert.equal(response?.status, 400);
+  }
+  assert.equal(calls.length, 0);
+});
+
+test("no VALHALLA_URL means 503 not-configured, before any fetch", async (t) => {
+  const calls = stubFetch(t, () => Response.json({}));
+
+  const response = await handleApiRequest(post("/api/isochrone", { location: MONROE, minutes: [25] }), {});
+
+  assert.equal(response?.status, 503);
+  const payload = (await response!.json()) as { error: string };
+  assert.equal(payload.error, "not-configured");
+  assert.equal(calls.length, 0);
+});
+
+test("an unreachable engine reads as not-configured, naming the URL", async (t) => {
+  stubFetch(t, () => new Error("ECONNREFUSED"));
+
+  const response = await handleApiRequest(post("/api/isochrone", { location: MONROE, minutes: [25] }), ENV);
+
+  assert.equal(response?.status, 503);
+  const payload = (await response!.json()) as { detail: string };
+  assert.ok(payload.detail.includes("http://engine.local:8002"));
+});
+
+test("route forwards the trip and pins the pedestrian costing", async (t) => {
+  const trip = { trip: { legs: [{ shape: "abc" }], summary: { length: 1.2, time: 900 } } };
+  const calls = stubFetch(t, () => Response.json(trip));
+
+  const response = await handleApiRequest(
+    post("/api/route", { origin: MONROE, destination: { latitude: 37.5407, longitude: -77.4361 } }),
+    ENV,
+  );
+
+  assert.equal(response?.status, 200);
+  assert.deepEqual(await response!.json(), trip);
+
+  const sent = calls[0]!.body;
+  assert.equal(calls[0]!.url, "http://engine.local:8002/route");
+  assert.equal(sent.costing, "pedestrian");
+  assert.equal(sent.units, "kilometers");
+  assert.deepEqual(sent.costing_options, { pedestrian: { walking_speed: WALKING_SPEED_KMH } });
+  assert.equal((sent.locations as unknown[]).length, 2);
+});
+
+test("engine 4xx stays final (400); 429 and 5xx read transient", async (t) => {
+  let status = 400;
+  stubFetch(t, () =>
+    Response.json(
+      { error: "No path could be found", error_code: 442 },
+      { status, headers: status === 429 ? { "retry-after": "7" } : {} },
+    ),
+  );
+
+  const noPath = await handleApiRequest(
+    post("/api/route", { origin: MONROE, destination: MONROE }),
+    ENV,
+  );
+  assert.equal(noPath?.status, 400);
+  const payload = (await noPath!.json()) as { detail: string };
+  assert.equal(payload.detail, "No path could be found");
+
+  status = 429;
+  const limited = await handleApiRequest(
+    post("/api/route", { origin: MONROE, destination: MONROE }),
+    ENV,
+  );
+  assert.equal(limited?.status, 429);
+  assert.equal(limited?.headers.get("retry-after"), "7");
+
+  status = 500;
+  const flaky = await handleApiRequest(
+    post("/api/route", { origin: MONROE, destination: MONROE }),
+    ENV,
+  );
+  assert.equal(flaky?.status, 502);
+});
+
+test("non-API paths fall through, non-POST is rejected", async (t) => {
+  stubFetch(t, () => Response.json({}));
+
+  assert.equal(await handleApiRequest(new Request("http://app.local/index.html"), ENV), null);
+  const got = await handleApiRequest(new Request("http://app.local/api/isochrone"), ENV);
+  assert.equal(got?.status, 405);
+});

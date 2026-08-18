@@ -1,6 +1,11 @@
 node_modules
 dist
 dist-ssr
+
+# Valhalla graph data: OSM extracts, built tiles, generated config. Hundreds
+# of MB, rebuilt from valhalla/README.md. Only docs/compose/config recipes
+# are tracked.
+valhalla/data
 *.local
 
 # Environment files — never commit. .env.example IS allowed (no secrets).
@@ -23,3 +28,6 @@ dist-ssr
 
 # TS incremental build info
 *.tsbuildinfo
+
+# Dev server log
+dev.log

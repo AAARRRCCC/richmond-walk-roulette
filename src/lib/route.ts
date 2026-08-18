@@ -1,170 +1,154 @@
-import type { LngLat } from "./geo";
-
-const ROUTES_API_URL = "https://routes.googleapis.com/directions/v2:computeRoutes";
+import type { LngLat } from "./geometry";
+import { pooled } from "./pool";
+import { postJson } from "./http";
 
 export type WalkingRoute = {
-  /** [lng, lat] pairs along the walking path. */
-  coords: [number, number][];
+  coords: LngLat[];
   distanceMeters: number;
   durationSeconds: number;
 };
 
-// Bounded LRU cache for fetched walking routes. Map iteration order is
-// insertion order, so on overflow we delete the first key (the oldest).
-// 50 is plenty for a single session: ~34 POIs × a handful of distinct
-// starts per visit, hits the steady state quickly.
-const CACHE_LIMIT = 50;
-const cache = new Map<string, WalkingRoute>();
+/** Every destination for a few origins, so revisiting a start stays instant. */
+const CACHE_LIMIT = 200;
+const cache = new Map<string, WalkingRoute | null>();
+const inFlight = new Map<string, Promise<WalkingRoute | null>>();
 
 function cacheKey(origin: LngLat, destination: LngLat): string {
   return `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}|${destination.lat.toFixed(5)},${destination.lng.toFixed(5)}`;
 }
 
-function cachePut(key: string, value: WalkingRoute): void {
-  // LRU: bump the entry to most-recent by re-inserting at the end.
-  if (cache.has(key)) cache.delete(key);
-  cache.set(key, value);
-  if (cache.size > CACHE_LIMIT) {
-    const oldest = cache.keys().next().value;
-    if (oldest !== undefined) cache.delete(oldest);
-  }
-}
+type ValhallaTrip = {
+  trip?: {
+    legs?: { shape?: string }[];
+    /** With `units: "kilometers"`: length in km, time in seconds. */
+    summary?: { length?: number; time?: number };
+  };
+};
 
-function cacheGet(key: string): WalkingRoute | undefined {
-  const hit = cache.get(key);
-  if (hit) {
-    // Touch on read so a frequently-used route doesn't get evicted.
-    cache.delete(key);
-    cache.set(key, hit);
-  }
-  return hit;
-}
+async function requestRoute(origin: LngLat, destination: LngLat): Promise<WalkingRoute | null> {
+  const response = await postJson("/api/route", {
+    origin: { latitude: origin.lat, longitude: origin.lng },
+    destination: { latitude: destination.lat, longitude: destination.lng },
+  });
 
-function getApiKey(): string | undefined {
-  return import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  // postJson has already retried the transient statuses. Anything still
+  // failing here is the server's final word, except 503, which means the
+  // engine is not configured and will start working the moment it is.
+  if (response.status === 503) throw new Error("route service not configured");
+  if (!response.ok) return null;
+
+  const payload = (await response.json()) as ValhallaTrip;
+  const legs = payload.trip?.legs ?? [];
+  const coords = legs.flatMap((leg) => (leg.shape ? decodePolyline(leg.shape) : []));
+  if (coords.length === 0) return null;
+
+  return {
+    coords,
+    distanceMeters: Math.round((payload.trip?.summary?.length ?? 0) * 1000),
+    durationSeconds: payload.trip?.summary?.time ?? 0,
+  };
 }
 
 /**
- * Fetch a walking route from Google Routes API. Returns null if not configured
- * or on any failure — caller should fall back to a stylized line. Pass an
- * AbortSignal to cancel the in-flight request if the caller no longer cares
- * about the result (e.g. destination changed); cancelled requests also return
- * null without logging.
+ * A genuine "no walking route" is cached as null: it will not become reachable
+ * on a retry, and re-asking on every spin tick would be a request per frame.
+ *
+ * A transient failure is deliberately *not* cached. Caching a rate-limited
+ * response would blank that destination's route for the rest of the session,
+ * and the warm-up burst is exactly when rate limiting is most likely.
  */
-export async function fetchWalkingRoute(
+export function fetchWalkingRoute(
   origin: LngLat,
   destination: LngLat,
-  signal?: AbortSignal,
 ): Promise<WalkingRoute | null> {
-  const apiKey = getApiKey();
-  if (!apiKey) return null;
-
   const key = cacheKey(origin, destination);
-  const cached = cacheGet(key);
-  if (cached) return cached;
 
-  try {
-    const res = await fetch(ROUTES_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask":
-          "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
-      },
-      body: JSON.stringify({
-        origin: {
-          location: {
-            latLng: { latitude: origin.lat, longitude: origin.lng },
-          },
-        },
-        destination: {
-          location: {
-            latLng: { latitude: destination.lat, longitude: destination.lng },
-          },
-        },
-        travelMode: "WALK",
-        polylineQuality: "HIGH_QUALITY",
-        polylineEncoding: "ENCODED_POLYLINE",
-      }),
-      signal,
+  if (cache.has(key)) {
+    const hit = cache.get(key) ?? null;
+    cache.delete(key);
+    cache.set(key, hit);
+    return Promise.resolve(hit);
+  }
+
+  const pending = inFlight.get(key);
+  if (pending) return pending;
+
+  const promise = requestRoute(origin, destination)
+    .then((route) => {
+      if (cache.size >= CACHE_LIMIT) {
+        const oldest = cache.keys().next();
+        if (!oldest.done) cache.delete(oldest.value);
+      }
+      cache.set(key, route);
+      return route;
+    })
+    .catch(() => null)
+    .finally(() => {
+      inFlight.delete(key);
     });
 
-    if (!res.ok) {
-      console.warn(
-        "[walk-roulette] Routes API request failed:",
-        res.status,
-        await res.text().catch(() => "<no body>"),
-      );
-      return null;
-    }
-
-    const data = (await res.json()) as RoutesApiResponse;
-    const route = data.routes?.[0];
-    const encoded = route?.polyline?.encodedPolyline;
-    if (!route || !encoded) return null;
-
-    const coords = decodePolyline(encoded);
-    const result: WalkingRoute = {
-      coords: coords.map(({ lng, lat }) => [lng, lat] as [number, number]),
-      distanceMeters: route.distanceMeters ?? 0,
-      durationSeconds: parseDurationSeconds(route.duration),
-    };
-    cachePut(key, result);
-    return result;
-  } catch (err) {
-    // AbortError is a normal caller-initiated cancellation, not a failure.
-    // Quietly return null so the console isn't spammed by rapid destination
-    // changes.
-    if (err instanceof DOMException && err.name === "AbortError") return null;
-    console.warn("[walk-roulette] Routes API request errored:", err);
-    return null;
-  }
+  inFlight.set(key, promise);
+  return promise;
 }
 
-type RoutesApiResponse = {
-  routes?: Array<{
-    distanceMeters?: number;
-    duration?: string;
-    polyline?: { encodedPolyline?: string };
-  }>;
-};
-
-function parseDurationSeconds(duration: string | undefined): number {
-  if (!duration) return 0;
-  const trimmed = duration.endsWith("s") ? duration.slice(0, -1) : duration;
-  const n = parseInt(trimmed, 10);
-  return Number.isFinite(n) ? n : 0;
+/** Synchronous cache read. Undefined means "not fetched", null means "no route". */
+export function cachedRoute(origin: LngLat, destination: LngLat): WalkingRoute | null | undefined {
+  return cache.get(cacheKey(origin, destination));
 }
 
-// Google Encoded Polyline Algorithm Format
-// https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+/**
+ * Warms routes to every destination the spinner could land on. Without this the
+ * reel ticks through names with an empty map behind it and only draws a line
+ * once it stops, which throws away the most legible part of the animation.
+ */
+export async function prefetchRoutes(
+  origin: LngLat,
+  destinations: readonly LngLat[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<void> {
+  let done = 0;
+  await pooled(
+    destinations.map((destination) => async () => {
+      const route = await fetchWalkingRoute(origin, destination);
+      onProgress?.(++done, destinations.length);
+      return route;
+    }),
+    6,
+  );
+}
+
+/**
+ * Valhalla encodes shapes with the same algorithm Google documents, but at
+ * six decimal places rather than five; the 1e6 divisor is the whole
+ * difference. https://valhalla.github.io/valhalla/decoding/
+ */
 function decodePolyline(encoded: string): LngLat[] {
-  const coords: LngLat[] = [];
+  const points: LngLat[] = [];
   let index = 0;
   let lat = 0;
   let lng = 0;
+
   while (index < encoded.length) {
     let result = 0;
     let shift = 0;
-    let b: number;
+    let byte: number;
     do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
       shift += 5;
-    } while (b >= 0x20);
+    } while (byte >= 0x20);
     lat += result & 1 ? ~(result >> 1) : result >> 1;
 
     result = 0;
     shift = 0;
     do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
       shift += 5;
-    } while (b >= 0x20);
+    } while (byte >= 0x20);
     lng += result & 1 ? ~(result >> 1) : result >> 1;
 
-    coords.push({ lat: lat / 1e5, lng: lng / 1e5 });
+    points.push({ lat: lat / 1e6, lng: lng / 1e6 });
   }
-  return coords;
+  return points;
 }

@@ -1,75 +1,161 @@
-# Richmond Walk Roulette
+# Walk Roulette, Richmond
 
-Spin a wheel for a random walking destination in downtown Richmond, Virginia.
+Pick how long you want to walk. See exactly how far you can actually get. Spin
+for somewhere to go.
 
-Single-page React app. Pick a start location, set a distance range, optionally filter by terrain and vibe, then spin a curved-arc roulette wheel of curated POIs. Result panel shows distance, walk time, terrain, and a "Open in Maps" link. Real walking routes are rendered on a MapLibre map when a Google Maps API key is configured; falls back to a stylized curve otherwise.
+The old version measured a straight-line radius from your start. A circle knows
+nothing about the James, which you can only cross at a bridge, so it offers you
+places you cannot actually walk to. This version asks the
+[Valhalla](https://github.com/valhalla/valhalla) routing engine for the real
+reachable area and draws it as nested time contours.
+
+The gap is not small. A 25 minute walk from Monroe Park covers about 2 sq mi.
+The circle you would draw at the same walking speed covers 4.91. The old model
+was offering two and a half times more of Richmond than it could deliver.
+
+## How it works
+
+- **A time budget, not a distance.** The dial is minutes. Round trip halves the
+  outbound leg, which cuts the reachable area by rather more than half: area
+  grows roughly with the square of time.
+- **The whole dial is fetched up front.** Choosing an origin asks Valhalla for
+  every contour the dial can reach, 5 through 60 minutes. Valhalla computes one
+  graph expansion and cuts all 56 contours out of it, so against a self-hosted
+  instance the warm-up is a single query. After that the dial is a cache read:
+  scrubbing 5 to 60 minutes issues zero requests and repaints the contour and
+  the readout per frame (measured: 56 positions in 464 ms, one API call).
+- **Three contours per budget.** The outer one is the budget itself; the two
+  inner ones snap to a 5 minute ladder, so they are shared across dial
+  positions.
+- **Spin picks from inside the polygon.** Point-in-polygon against the real
+  isochrone, holes included, not a radius check. Amber dots on the map are
+  exactly the pool Spin can land on.
+- **The reel draws real routes.** As the spinner ticks through names, the map
+  draws each one's actual walking route. Only places whose route is already
+  cached appear on the reel; the winner is still drawn from the full candidate
+  list, because picking from the warmed subset would bias the result toward
+  places that happened to load first.
+- **Far edge only** narrows the pool to places between the last two contours:
+  go as far as the time allows.
+
+### What it costs
+
+Nothing per request. The engine is open source and the data is OpenStreetMap;
+you pay for whatever box runs it (`valhalla/README.md`). The walking speed is
+pinned at 3.69 km/h server-side — the pace at which Valhalla's 25 minute area
+from Monroe Park matched the Google Isochrones the app previously shipped
+with. That preserved the assumed pace across the cutover, not the contour
+shapes: the engines differ in edge access, penalties and origin snapping, and
+LAUNCH.md documents where. Changing the speed is a product decision;
+re-measure the numbers above if you do.
 
 ## Stack
 
-- React 18 + TypeScript + Vite
-- MapLibre GL with OpenFreeMap tiles (no API key required for the base map)
-- Google Routes API for walking polylines (optional)
-- No backend — POI data is static, state lives in the URL hash
+- React 18 + TypeScript + Vite 7, no UI framework
+- MapLibre GL v5 over [OpenFreeMap](https://openfreemap.org) vector tiles, with
+  a hand-written dark cartographic style (`src/map/basemap.ts`). No key needed
+  for the basemap.
+- Valhalla for isochrones and walking routes, behind a same-origin proxy
+- Cloudflare Worker for production; the Vite dev server mounts the same handler
+
+## The engine never faces the browser
+
+Both endpoints are served by `server/proxy.ts`, which the dev server and the
+Worker both mount at `/api/isochrone` and `/api/route`. The Valhalla instance
+is named by `VALHALLA_URL` (no `VITE_` prefix, so Vite will not inline it).
+
+The proxy forces pedestrian costing, pins the walking speed, clamps the
+duration, and rejects origins outside a Richmond-area bounding box, so a
+scraped endpoint cannot be turned into a free worldwide routing service that
+saturates your box. The Worker adds a per-IP rate limit on top.
+
+`npm test` runs the proxy's protocol tests (Node's built-in runner, `fetch`
+stubbed): contour fan-out against the instance's limit, costing pinned
+server-side, and failure statuses mapped onto the classes the client's retry
+logic keys on.
 
 ## Develop
 
 ```bash
 npm install
-npm run dev          # Vite dev server on http://localhost:5173
-npm run build        # Type-check + production bundle to ./dist
-npm run typecheck    # Type-check only
-npm run lint         # ESLint
+npm run dev                    # http://localhost:5173
+npm run build                  # tsc --noEmit && vite build
+npm test                       # proxy protocol tests
+npm run typecheck
+npm run lint
 ```
 
-## Walking routes (optional)
+`.env.local` decides which engine the proxy talks to. Three options, best
+first:
 
-Without an API key, the map shows a stylized curved line between start and destination. To render real walking polylines:
+1. **Self-hosted** — `valhalla/README.md`, then `VALHALLA_URL=http://localhost:8002`
+   and `VALHALLA_MAX_CONTOURS=60`. The instant full-ladder warm-up needs this.
+2. **FOSSGIS's public instance** — `VALHALLA_URL=https://valhalla1.openstreetmap.de`.
+   Community evaluation infrastructure: the warm-up is 14 chunked queries
+   instead of one, and it must never sit under a deployed URL.
+3. **No engine at all** — `node valhalla/stub.mjs` serves synthetic contours
+   on port 8003 for offline UI work.
 
-1. Create a Google Cloud project and enable the **Routes API**
-2. Create an API key. Restrict it to HTTP referrers for your deployed domain (e.g. `https://walk.example.com/*`) and to the Routes API only
-3. Copy `.env.example` to `.env.local` and paste the key into `VITE_GOOGLE_MAPS_API_KEY`
-
-Vite inlines the key at build time. `.env.local` is gitignored.
+Without any of them the app still runs: the map, the dial, and the filters all
+work, and the panel explains what is missing instead of failing silently.
 
 ## Deploy
 
-Build target is a plain static site (`dist/`). The intended deployment is self-hosted on a Mac Mini behind a Cloudflare Tunnel:
-
 ```bash
 npm run build
-# serve ./dist with Caddy or nginx, expose via `cloudflared tunnel`
+npx wrangler deploy
 ```
 
-Any static host works. **Before exposing the app to the public web, run through [`LAUNCH.md`](./LAUNCH.md)** — it covers the Routes API key restriction, the OG image asset, the mobile phone-test gate, and optional Cloudflare Web Analytics setup.
+`wrangler.toml` wires the built `dist/` as static assets, the rate-limit
+binding, and `VALHALLA_URL` — which must point at a Valhalla instance the
+Worker can reach. Read [`LAUNCH.md`](./LAUNCH.md) before making the site
+public.
 
-## Project layout
+## Layout
 
 ```
 src/
-├── App.tsx                       # State (two reducers + a few useStates) + spin/rotate animation + wiring
-├── main.tsx                      # Entry point; optional Cloudflare Web Analytics beacon
-├── styles.css                    # All styles (no preprocessor)
-├── data/pois.ts                  # 34 POIs + 10 preset starts (mile offsets from Monroe Park)
+├── app/
+│   ├── App.tsx            composition, data fetching, derived state
+│   ├── session.ts         one reducer for the whole session
+│   └── useSpin.ts         the shuffle; winner is drawn before the animation
 ├── lib/
-│   ├── geo.ts                    # distance, mile-offset ↔ lat/lng, eligibility filter
-│   ├── route.ts                  # Google Routes API + polyline decoder + bounded LRU
-│   ├── url-state.ts              # share/restore via location.hash
-│   ├── wheel-layout.ts           # curved-arc geometry constants
-│   ├── filter-state.ts           # filter useReducer + URL-hash hydration
-│   └── wheel-state.ts            # wheel/spin useReducer (rotation, spinning, selectedId)
-└── components/
-    ├── Header.tsx
-    ├── Controls.tsx              # start, range, round-trip, difficulty, vibe chips
-    ├── RangeSlider.tsx
-    ├── ChipGroup.tsx
-    ├── Wheel.tsx                 # curved-arc SVG roulette
-    ├── WheelPane.tsx              # desktop wheel container; overlay on mobile during spin
-    ├── RichmondMap.tsx            # MapLibre + walking-radius rings, route, POI dots
-    ├── DeferredMap.tsx            # IntersectionObserver-gated lazy mount for RichmondMap
-    ├── MapPane.tsx                # map container + sr-only POI list
-    ├── MapErrorBoundary.tsx       # falls back gracefully if the lazy map chunk fails
-    ├── MobileDrawer.tsx           # bottom-sheet at <900px: peek + open states
-    └── ResultPane.tsx
+│   ├── isochrone.ts       contour ladder, batched fetch, LRU + in-flight dedupe
+│   ├── geometry.ts        GeoJSON parsing, point-in-polygon, area
+│   ├── route.ts           Valhalla routes + polyline6 decoder
+│   └── format.ts
+├── map/
+│   ├── basemap.ts         the dark style, written out rather than recoloured
+│   └── MapCanvas.tsx      contours, place dots, route, draggable origin
+├── ui/                    TimeDial, OriginPicker, Filters, ResultCard, ReachReadout
+├── data/places.ts         51 curated destinations; coordinates from OSM,
+│                          with exceptions documented inline
+└── styles/app.css         tokens and every rule; the locked design decisions
+                           are documented at the top
+server/proxy.ts            the shared request handler; policy lives here
+server/proxy.test.ts       its protocol tests (node --test, fetch stubbed)
+server/vite-plugin.ts      mounts it on the dev server
+worker/index.ts            mounts it on Cloudflare, serves dist/
+valhalla/                  self-hosting: compose recipe, docs, offline stub
 ```
 
-The original design handoff (spec + reference prototype) is preserved in [`design_handoff_walk_roulette/`](./design_handoff_walk_roulette/). Detailed iteration history lives in [`iter-log.html`](./iter-log.html) and [`IDEAS.md`](./IDEAS.md).
+Place coordinates were geocoded once from OpenStreetMap via Overpass and baked
+into `src/data/places.ts`. Map data (c) OpenStreetMap contributors, ODbL. Where
+OSM had no entry, the source is named in a comment on that entry; the
+Confederate Pyramid is the one such case today.
+
+Businesses are deliberately thin on the ground here. A pass that added several
+turned up one that had closed and two that had moved, all still listed in OSM,
+so the list leans on neighbourhoods and institutions instead. Anything with a
+schedule says so in its blurb.
+
+## History
+
+The app has moved contour provider once: Google's Isochrones API (Preview)
+drew the reachable area before Valhalla did. The comparison that justified the
+move — matched walking speed, two origins, the measured southbank gap — is
+preserved in `LAUNCH.md`. The pre-isochrone version (curved-arc roulette
+wheel, straight-line radius, 50 iterations of an autonomous improvement loop)
+is in the git history and its notes are preserved in `IDEAS.md`,
+`HANDBACK.md`, `iter-log.html`, and `design_handoff_walk_roulette/`. None of
+it is wired into the current build.

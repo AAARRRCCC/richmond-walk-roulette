@@ -1,24 +1,16 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
 import "maplibre-gl/dist/maplibre-gl.css";
-import "./styles.css";
+import "./styles/app.css";
+import { App } from "./app/App";
 
-// Cloudflare Web Analytics drop-in. Cookie-free; only injected when
-// VITE_CF_ANALYTICS_TOKEN is set in the build env (so dev builds and
-// PR previews don't double-count). Vite inlines the env var at build
-// time, so the conditional has zero runtime cost when disabled.
-const cfToken = import.meta.env.VITE_CF_ANALYTICS_TOKEN;
-if (cfToken) {
-  const s = document.createElement("script");
-  s.defer = true;
-  s.src = "https://static.cloudflareinsights.com/beacon.min.js";
-  s.dataset.cfBeacon = JSON.stringify({ token: cfToken });
-  document.head.appendChild(s);
-}
+const root = document.getElementById("root");
+if (!root) throw new Error("Missing #root");
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
+createRoot(root).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>,
+  </StrictMode>,
 );

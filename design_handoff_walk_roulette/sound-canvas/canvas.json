@@ -1,0 +1,11 @@
+{
+  "artboards": [
+    { "file": "Desktop.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Desktop" },
+    { "file": "Main.dc.html", "x": 0, "y": 980, "w": 460, "h": 950, "title": "Live panel" },
+    { "file": "Soundboard.dc.html", "x": 540, "y": 980, "w": 520, "h": 880, "title": "Sound palette" }
+  ],
+  "annotations": [
+    { "id": "listen-note", "x": 0, "y": -160, "w": 340, "text": "Turn your volume up a touch — every cue sits at whisper level on purpose. Scrub the dial, flip the switch, then Spin for the four-second throw." }
+  ],
+  "launch": { "view": "canvas" }
+}

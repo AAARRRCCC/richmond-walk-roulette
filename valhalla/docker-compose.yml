@@ -1,0 +1,25 @@
+# Self-hosted Valhalla for Walk Roulette. See README.md in this directory.
+#
+# First run builds the routing graph from every .osm.pbf in ./data (put the
+# Virginia extract there first), then serves HTTP on :8002. Subsequent runs
+# reuse the built tiles; a changed PBF triggers a rebuild automatically.
+services:
+  valhalla:
+    image: ghcr.io/valhalla/valhalla-scripted:latest
+    container_name: walk-roulette-valhalla
+    restart: unless-stopped
+    ports:
+      # Bind to loopback: the engine must only be reachable through the app's
+      # proxy, which enforces the walking costing and the Richmond bounds.
+      # Remove the 127.0.0.1 prefix only if something else fronts it.
+      - "127.0.0.1:8002:8002"
+    volumes:
+      - ./data:/custom_files
+    environment:
+      # The app never uses time-dependent or cross-border routing, and
+      # skipping these DBs keeps the first build fast.
+      - build_admins=False
+      - build_time_zones=False
+      - use_default_speeds_config=False
+      # Walking never needs more than a few threads; leave headroom on the box.
+      - server_threads=4

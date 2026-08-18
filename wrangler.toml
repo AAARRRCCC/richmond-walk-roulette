@@ -1,0 +1,33 @@
+name = "walk-roulette"
+main = "worker/index.ts"
+compatibility_date = "2026-07-01"
+
+# The Worker serves the built site and forwards the two API endpoints to the
+# Valhalla instance named below.
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+# Where the self-hosted Valhalla lives, and the contour limit its config
+# allows per /isochrone call (see valhalla/README.md). The URL is not a
+# secret in the usual sense, but the engine should still only ever be
+# reachable through this Worker; firewall it to Cloudflare or bind it to a
+# private network if the host allows.
+[vars]
+VALHALLA_URL = ""
+VALHALLA_MAX_CONTOURS = "60"
+
+# Per-IP rate limit on /api/*. The engine is self-hosted so the exposure is
+# CPU rather than a bill, but an open endpoint would still let one scraper
+# saturate a small box. It has to admit one honest origin warm-up, which is
+# one ladder request plus a route to every reachable place: call it 40
+# requests over a few seconds.
+#
+# 240 per minute therefore allows several full origin changes per minute per
+# IP and throttles sustained scraping. The client retries 429 with backoff,
+# so a user who does trip it sees a slower warm-up rather than a broken map.
+[[unsafe.bindings]]
+name = "API_RATE_LIMIT"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 240, period = 60 }

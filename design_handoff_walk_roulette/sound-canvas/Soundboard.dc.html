@@ -1,0 +1,224 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  <style>
+    :root {
+      --bg: #0b1014;
+      --surface: rgba(16, 23, 30, 0.86);
+      --raise: #16202a;
+      --line: rgba(255, 255, 255, 0.09);
+      --line-strong: rgba(255, 255, 255, 0.16);
+      --ink: #e9eef3;
+      --ink-2: #93a6b5;
+      --ink-3: #647a8a;
+      --accent: #ffb043;
+      --accent-soft: #ffd7a0;
+      --accent-ink: #150d02;
+      --accent-wash: rgba(255, 176, 67, 0.12);
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --font: "Geist", ui-sans-serif, system-ui, sans-serif;
+      --mono: "Geist Mono", ui-monospace, monospace;
+    }
+    body { margin: 0; background: #0b1014; color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    a { color: var(--accent); }
+    a:hover { color: var(--accent-soft); }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+    .field-label { display: block; font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+
+    .row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 14px;
+      background: var(--raise); border: 1px solid var(--line); border-radius: 10px;
+      transition: border-color 160ms var(--ease);
+    }
+    .row:hover { border-color: var(--line-strong); }
+    .play {
+      flex: none; display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; padding: 0;
+      border: 1px solid var(--accent); border-radius: 999px;
+      background: none; color: var(--accent); cursor: pointer;
+      transition: background 140ms var(--ease), color 140ms var(--ease), transform 120ms var(--ease);
+    }
+    .play:hover { background: var(--accent); color: var(--accent-ink); }
+    .play:active { transform: translateY(1px); }
+    .row-text { flex: 1; min-width: 0; }
+    .row-name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+    .row-trigger { font-size: 12.5px; color: var(--ink-2); }
+    .row-spec { flex: none; font-family: var(--mono); font-size: 11px; color: var(--ink-3); text-align: right; white-space: nowrap; }
+  </style>
+</helmet>
+<div style="width: 520px; min-height: 880px; padding: 26px 24px; background: #0b1014; display: flex; flex-direction: column; gap: 18px">
+  <header style="padding: 0 2px">
+    <span class="field-label">Sound palette</span>
+    <h1 style="margin: 6px 0 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em">Felt more than heard</h1>
+    <p style="margin: 8px 0 0; font-size: 13px; line-height: 1.55; color: var(--ink-2); max-width: 52ch">
+      Every cue is synthesized in the page — no files, nothing loaded — and sits at whisper
+      level under a shared master volume. High, short tones for fingertip contact; a single
+      low thump reserved for the one moment that matters, the reel landing. The ratchet
+      inherits the reel's timing — a four-second throw whose flips ease from 30 ms out to
+      320 ms — and its pitch falls as it slows.
+    </p>
+  </header>
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <sc-for list="{{sounds}}" as="s" hint-placeholder-count="7">
+      <div class="row">
+        <button type="button" class="play" onClick="{{s.play}}" aria-label="Play {{s.name}}">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M2.5 1.4v9.2c0 .5.55.8.98.53l7.2-4.6a.62.62 0 0 0 0-1.06l-7.2-4.6a.62.62 0 0 0-.98.53z"></path></svg>
+        </button>
+        <div class="row-text">
+          <div class="row-name">{{s.name}}</div>
+          <div class="row-trigger">{{s.trigger}}</div>
+        </div>
+        <div class="row-spec" style="white-space: pre-line">{{s.spec}}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <p style="margin: 2px 2px 0; font-size: 12px; line-height: 1.5; color: var(--ink-3); max-width: 54ch">
+    Rules the palette keeps: one gesture, one cue — only the throw earns a run of them,
+    and that run always decays; nothing sounds without a gesture; and the mute pill stops
+    new cues at once (a cue already ringing fades within a quarter second). Under
+    prefers-reduced-motion the live panels skip the reel, so the ratchet run goes with it
+    and only the landing plays.
+  </p>
+</div>
+<script data-dc-script data-props='{"volume":{"editor":"range","default":0.5,"min":0,"max":1,"step":0.05,"section":"Sound"},"$preview":{"width":520,"height":880}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.timers = [];
+  }
+
+  componentWillUnmount() {
+    for (var i = 0; i < this.timers.length; i++) clearTimeout(this.timers[i]);
+    this.timers = [];
+    this.ratchetRunning = false;
+  }
+
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+
+  audio() {
+    if (!this.ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.connect(this.ctx.destination);
+    }
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    this.master.gain.value = (this.props.volume == null ? 0.5 : this.props.volume);
+    return this.ctx;
+  }
+
+  tone(freq, type, dur, gain, drop) {
+    var ctx = this.audio();
+    var t = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    var g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    if (drop) osc.frequency.exponentialRampToValueAtTime(drop, t + dur);
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g); g.connect(this.master);
+    osc.start(t); osc.stop(t + dur + 0.02);
+  }
+
+  clickNoise(centerHz, dur, gain) {
+    var ctx = this.audio();
+    var t = ctx.currentTime;
+    var n = Math.max(1, Math.floor(ctx.sampleRate * dur));
+    var buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    var data = buf.getChannelData(0);
+    for (var i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    var bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.frequency.value = centerHz; bp.Q.value = 1.4;
+    var g = ctx.createGain(); g.gain.value = gain;
+    src.connect(bp); bp.connect(g); g.connect(this.master);
+    src.start(t);
+  }
+
+  renderVals() {
+    var self = this;
+    var sounds = [
+      {
+        name: "Detent", trigger: "Time dial, every 5-minute step; pitch tracks the value",
+        spec: "sine 1.5–2.1 kHz\n18 ms",
+        play: function () {
+          // Three detents rising, as if scrubbing the dial from 25 to 65 min.
+          [25, 45, 65].forEach(function (m, i) {
+            self.later(function () {
+              self.tone(1500 + (m - 10) * 8, "sine", 0.018, 0.05);
+              self.clickNoise(3200, 0.008, 0.02);
+            }, i * 140);
+          });
+        }
+      },
+      {
+        name: "Chip tap", trigger: "Vibe chip on / off — higher going on, lower off",
+        spec: "triangle 950 / 640 Hz\n45 ms",
+        play: function () {
+          self.tone(950, "triangle", 0.045, 0.07);
+          self.later(function () { self.tone(640, "triangle", 0.045, 0.07); }, 260);
+        }
+      },
+      {
+        name: "Thock", trigger: "Round-trip switch — a small physical latch",
+        spec: "triangle 200→170 Hz\n60 ms",
+        play: function () { self.tone(200, "triangle", 0.06, 0.12, 170); self.clickNoise(1800, 0.01, 0.03); }
+      },
+      {
+        name: "Press", trigger: "Spin button and Directions — key-down contact",
+        spec: "noise, 900 Hz band\n12 ms",
+        play: function () { self.clickNoise(900, 0.012, 0.08); }
+      },
+      {
+        name: "Ratchet", trigger: "Each reel flip; a hard throw slowing 30→320 ms over 4 s",
+        spec: "noise 2.6→1.8 kHz\n12 ms each",
+        play: function () {
+          if (self.ratchetRunning) return;
+          self.ratchetRunning = true;
+          var started = performance.now();
+          var flip = function () {
+            var p = Math.min(1, (performance.now() - started) / 4000);
+            if (p >= 1) { self.ratchetRunning = false; return; }
+            self.clickNoise(2600 - p * 800, 0.012, 0.06);
+            self.later(flip, 30 + 290 * (1 - Math.pow(1 - p, 3)));
+          };
+          flip();
+        }
+      },
+      {
+        name: "Landing", trigger: "Reel stops — the one low, weighted moment",
+        spec: "110 Hz thump\n+ soft fifth 660/990 Hz",
+        play: function () {
+          self.tone(110, "sine", 0.18, 0.16, 70);
+          self.later(function () {
+            self.tone(660, "triangle", 0.25, 0.035);
+            self.tone(990, "triangle", 0.25, 0.025);
+          }, 60);
+        }
+      },
+      {
+        name: "Dismiss", trigger: "Closing the result card — the off half of the tap",
+        spec: "triangle 640 Hz\n45 ms",
+        play: function () { self.tone(640, "triangle", 0.045, 0.07); }
+      }
+    ];
+    return { sounds: sounds };
+  }
+}
+</script>
+</body>
+</html>
