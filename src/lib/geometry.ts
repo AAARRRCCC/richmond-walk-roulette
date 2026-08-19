@@ -17,6 +17,25 @@ export type MultiPolygon = Polygon[];
 export type LngLat = { lng: number; lat: number };
 
 /**
+ * Decimal places a point is identified by. Five is about 1.1 m, far finer
+ * than any distinction this app draws between two places to start from.
+ *
+ * Load-bearing rather than cosmetic: the contour cache, the route cache and
+ * the precomputed snapshot filenames all name an origin through `pointKey`,
+ * so these have to agree or a snapshot silently stops matching the key the
+ * app looks it up by. Changing it means regenerating `public/reach/`.
+ *
+ * @public - also read by scripts/build-reach.mjs, which rounds the coordinates
+ * it writes to the same precision.
+ */
+export const COORD_PRECISION = 5;
+
+/** Stable identity for a point, for cache keys and file names. */
+export function pointKey(point: LngLat): string {
+  return `${point.lat.toFixed(COORD_PRECISION)},${point.lng.toFixed(COORD_PRECISION)}`;
+}
+
+/**
  * Pulls every Polygon out of an arbitrary RFC 7946 document: a bare geometry,
  * a Feature, a FeatureCollection, or a GeometryCollection. Valhalla returns
  * Feature(Collection)s today, but accepting the whole family is what made the

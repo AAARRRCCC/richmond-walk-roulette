@@ -15,7 +15,7 @@ import { Filters } from "../ui/Filters";
 import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
 import { ResultCard } from "../ui/ResultCard";
 import { PLACES, type Place, type Terrain, type Vibe } from "../data/places";
-import { contains, type LngLat } from "../lib/geometry";
+import { contains, pointKey, type LngLat } from "../lib/geometry";
 import {
   MAX_MINUTES,
   NotConfiguredError,
@@ -133,7 +133,7 @@ export function App() {
    */
   const warmedNow = useRef("");
   useEffect(() => {
-    const key = `${originKey(origin)}|${candidateKey}`;
+    const key = `${pointKey(origin)}|${candidateKey}`;
     if (candidateKey === "" || warmedNow.current === key) return;
     warmedNow.current = key;
     const pool = PLACES.filter((place) => candidateKey.split(",").includes(place.id));
@@ -148,7 +148,7 @@ export function App() {
   const widestReady = widest !== null;
   const warmedWide = useRef("");
   useEffect(() => {
-    const key = originKey(origin);
+    const key = pointKey(origin);
     if (!widestReady || warmedWide.current === key) return;
     warmedWide.current = key;
     const outermost = cachedReach(origin, MAX_MINUTES)?.bands.at(-1);
@@ -468,10 +468,6 @@ export function App() {
       </div>
     </div>
   );
-}
-
-function originKey(origin: LngLat): string {
-  return `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}`;
 }
 
 /**
