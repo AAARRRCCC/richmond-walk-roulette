@@ -16,8 +16,11 @@ function radiusMeters(minutes, theta) {
   const base = minutes * M_PER_MIN;
   const noise =
     0.14 * Math.sin(3 * theta + 0.7) + 0.09 * Math.sin(5 * theta + 2.1) + 0.05 * Math.sin(8 * theta);
-  // The "river": press the south-southeast in, hard, like the James does.
-  const notch = theta > 3.6 && theta < 4.9 ? 0.45 : 1;
+  // The "river": press the south-southeast in, like the James does. Eased at
+  // both banks with a raised cosine — a hard step drew two straight radial
+  // walls, which read as a rendering glitch rather than a bend in a river.
+  const bank = Math.abs(theta - 4.25) / 0.65;
+  const notch = bank >= 1 ? 1 : 1 - 0.55 * 0.5 * (1 + Math.cos(Math.PI * bank));
   return base * (1 + noise) * notch;
 }
 

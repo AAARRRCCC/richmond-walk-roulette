@@ -184,11 +184,16 @@ code {
 }
 
 /* The brand floats directly on the map, so a basemap label can land behind it.
-   A soft radial scrim keeps it legible without drawing a panel edge. */
+   A soft radial scrim keeps it legible without drawing a panel edge.
+
+   It may bleed left, above and below, but never right: the rail is a scroll
+   container, so anything crossing its right edge turns overflow-x into a
+   horizontal scrollbar under the entire sidebar. The gradient is anchored at
+   0% and has faded out well before that edge, so it costs nothing. */
 .brand::before {
   content: "";
   position: absolute;
-  inset: -16px -28px -12px -22px;
+  inset: -16px 0 -12px -22px;
   z-index: -1;
   pointer-events: none;
   background: radial-gradient(
@@ -216,14 +221,6 @@ code {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--accent);
-}
-
-.brand-line {
-  margin: 5px 0 0;
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--ink-3);
-  max-width: 34ch;
 }
 
 .panel,
@@ -712,13 +709,6 @@ code {
   line-height: 1.15;
 }
 
-.result-blurb {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--ink-2);
-}
-
 .result-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -970,9 +960,6 @@ code {
   .brand {
     padding-top: 10px;
   }
-  .brand-line {
-    display: none;
-  }
 
   .dial-value {
     font-size: 38px;
@@ -989,3 +976,100 @@ code {
   }
 }
 
+
+/* ------------------------------------------------------------ dev tuning */
+
+/* Stripped from production with the component that uses it; kept here rather
+   than inline so it can borrow the panel vocabulary above. */
+.tuner-tab {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.tuner-tab:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.tuner {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 14px 16px 15px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-surface);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+}
+
+.tuner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tuner-switch {
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tuner-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tuner-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.tuner-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.tuner-hint {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.tuner-row input[type="range"] {
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: ew-resize;
+}
+
+.tuner-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tuner-actions .button {
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.tuner-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}

@@ -11,7 +11,7 @@
     "lint:oxlint": "oxlint",
     "lint:dead": "knip",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"server/*.test.ts\""
+    "test": "node --test \"server/*.test.ts\" \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",

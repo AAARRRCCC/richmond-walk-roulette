@@ -51,10 +51,26 @@ export type Action =
   | { type: "failed"; failure: Failure }
   | { type: "frame" };
 
+/**
+ * Defaults for a fresh session.
+ *
+ * Round trips move the dial in two-minute notches from a floor of ten, so a
+ * budget has to sit on that grid or the range input and React disagree about
+ * the thumb and the dial jams. `clampBudget` is what enforces that everywhere
+ * else, so the initial budget is put through it too rather than trusted to be
+ * written on-grid by hand.
+ *
+ * Fifty is chosen for what it leaves outbound: half of it is the twenty-five
+ * minute reach the app is built around, so defaulting to a round trip does not
+ * quietly halve how much of the city is on offer at first load.
+ */
+const DEFAULT_ROUND_TRIP = true;
+const DEFAULT_BUDGET_MINUTES = 50;
+
 export const initialSession: Session = {
   origin: DEFAULT_ORIGIN,
-  budgetMinutes: 25,
-  roundTrip: false,
+  budgetMinutes: clampBudget(DEFAULT_BUDGET_MINUTES, DEFAULT_ROUND_TRIP),
+  roundTrip: DEFAULT_ROUND_TRIP,
   edgeOnly: false,
   terrain: "any",
   vibes: [],
@@ -152,21 +168,30 @@ export function dialMinimum(roundTrip: boolean): number {
 }
 
 /**
- * How far one dial notch moves the *total* budget.
+ * How far one dial notch moves the *total* budget: one minute, always.
  *
- * Doubled for round trips so that halving the total always lands back on the
- * contour ladder. Without this, a 5 minute ladder plus a 15 minute round trip
+ * Round trips used to move in two-minute notches so that halving the total
+ * landed back on the contour ladder. That mattered when the ladder was coarse;
+ * it now holds every minute from 5 to 60, so any total from the dial's floor
+ * of ten halves onto a rung whatever its parity, and the doubling only cost
+ * the dial half its resolution.
+ *
+ * Kept as a function rather than folded into callers because the dial's step,
+ * its tick spacing and the budget snap all have to agree, and one of them
+ * disagreeing is how the control jams.
+ *
+ * The old note, for why it was ever doubled: a 5 minute ladder plus a 15 minute round trip
  * would ask for a 7 minute outbound contour that was never prefetched, and the
  * dial would be back to hitting the network.
  */
-export function budgetStep(roundTrip: boolean): number {
-  return roundTrip ? DIAL_STEP * 2 : DIAL_STEP;
+export function budgetStep(): number {
+  return DIAL_STEP;
 }
 
 /** Snaps a budget onto the dial's notches and inside its range. */
 function clampBudget(minutes: number, roundTrip: boolean): number {
   const low = dialMinimum(roundTrip);
-  const step = budgetStep(roundTrip);
+  const step = budgetStep();
   const snapped = low + Math.round((minutes - low) / step) * step;
   return Math.min(MAX_MINUTES, Math.max(low, snapped));
 }

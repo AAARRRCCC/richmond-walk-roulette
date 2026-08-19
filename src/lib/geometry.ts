@@ -8,8 +8,9 @@ import { isFiniteNumber, isJsonArray, isJsonObject, type Json } from "./json";
  * assertion. Nothing outside this module mutates them.
  */
 type Position = [number, number];
-/** Exterior ring first, interior rings (holes) after. */
-type Ring = Position[];
+/** Exterior ring first, interior rings (holes) after. Exported for the map's
+ *  display-side smoothing, which rebuilds rings; nothing else names it. */
+export type Ring = Position[];
 type Polygon = Ring[];
 export type MultiPolygon = Polygon[];
 

@@ -36,6 +36,8 @@ import {
   type Failure,
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
+import { TuningPanel } from "../ui/TuningPanel";
+import { playPress } from "../lib/sound";
 
 /**
  * Picks the remediation the reader can actually act on: locally the engine
@@ -97,8 +99,16 @@ export function App() {
   const candidateKey = candidates.map((p) => p.id).join(",");
   const picked = PLACES.find((place) => place.id === state.pickedId) ?? null;
 
-  // A dial position the warm-up missed still has to work.
-  const missing = reach === null;
+  /**
+   * A dial position the warm-up missed still has to work.
+   *
+   * Held until the warm-up reports done, because on a cold start this effect
+   * and `prefetchLadder` would otherwise race: the ladder is one static
+   * snapshot away, but this would already have asked the engine for the same
+   * contours, which against a stock contour limit is fourteen queries for
+   * something about to arrive for free.
+   */
+  const missing = reach === null && state.warmed >= 1;
   useEffect(() => {
     if (!missing || failure) return;
     let cancelled = false;
@@ -197,13 +207,14 @@ export function App() {
    */
   const spin = () => {
     if (candidates.length === 0 || drawable.length === 0) return;
+    playPress();
     const winner = candidates[randomIndex(candidates.length)]!;
     const ready = fetchWalkingRoute(origin, winner).then((winnerRoute) => {
       bumpRoutes();
       return winnerRoute;
     });
     dispatch({ type: "spinStart" });
-    runSpin(winner, drawable, ready);
+    runSpin(winner, drawable, ready, origin);
   };
 
   // Abort a spin whose pool changed underneath it: landing on a place that is
@@ -309,9 +320,6 @@ export function App() {
             Walk Roulette
             <span className="brand-place">Richmond</span>
           </h1>
-          <p className="brand-line">
-            Real walking reach, not a circle on a map. Pick a time, spin for somewhere to go.
-          </p>
         </header>
 
         <div className="panel">
@@ -328,7 +336,7 @@ export function App() {
           <TimeDial
             minutes={state.budgetMinutes}
             minimum={dialMinimum(state.roundTrip)}
-            step={budgetStep(state.roundTrip)}
+            step={budgetStep()}
             outboundMinutes={outbound}
             roundTrip={state.roundTrip}
             isWarm={dialWarm}
@@ -443,6 +451,8 @@ export function App() {
           />
         </details>
 
+        {import.meta.env.DEV && <TuningPanel />}
+
         <ul className="sr-only">
           {candidates.map((place) => (
             <li key={place.id}>
@@ -450,7 +460,7 @@ export function App() {
                 type="button"
                 onClick={() => dispatch({ type: "pickPlace", pickedId: place.id })}
               >
-                {place.name}. {place.blurb}
+                {place.name}
               </button>
             </li>
           ))}
