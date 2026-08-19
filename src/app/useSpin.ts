@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Place } from "../data/places";
+import type { LngLat } from "../lib/geometry";
 import type { WalkingRoute } from "../lib/route";
-
-const DURATION_MS = 1500;
-const FIRST_FLIP_MS = 45;
-const LAST_FLIP_MS = 260;
-/** Longest the reel will keep turning while waiting for the winner's route. */
-const MAX_HOLD_MS = 4000;
+import { playLanding, playRatchet } from "../lib/sound";
+import { tuning } from "./tuning";
+import { orderAroundOrigin, reelFrameAt, type ReelStop } from "./reel";
 
 /**
  * Kept out of the component so the React Compiler's purity rule does not see
@@ -58,7 +56,12 @@ export function useSpin(onLand: (place: Place) => void) {
    * motion wait on a network round trip would be a worse trade.
    */
   const run = useCallback(
-    (winner: Place, reel: readonly Place[], ready: Promise<WalkingRoute | null>) => {
+    (
+      winner: Place,
+      reel: readonly Place[],
+      ready: Promise<WalkingRoute | null>,
+      origin: LngLat,
+    ) => {
       cancelAnimationFrame(frameRef.current);
       // cancel() deliberately leaves `showing` alone, so clear it here or the
       // first frame of a new spin renders the previous spin's last name.
@@ -66,6 +69,7 @@ export function useSpin(onLand: (place: Place) => void) {
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (reduced || reel.length === 0) {
         setShowing(null);
+        playLanding();
         landRef.current(winner);
         return;
       }
@@ -82,28 +86,58 @@ export function useSpin(onLand: (place: Place) => void) {
         () => (settled = true),
       );
 
+      /**
+       * The reel has to be able to stop on the winner, so it must contain it.
+       * The winner is still drawn from the full candidate list by the caller;
+       * this only widens what may be *displayed*, which biases nothing.
+       */
+      const pool = reel.includes(winner) ? reel : [...reel, winner];
+      // Compass order is an experiment; off, the reel runs in the order the
+      // candidate list was built, exactly as before.
+      const slots = tuning.spinCircularOrder ? orderAroundOrigin(origin, pool) : pool;
+      const target = slots.indexOf(winner);
+
       const started = performance.now();
-      let nextFlipAt = started;
-      let shownIndex = -1;
+      /**
+       * Where the reel was when a result first became available to stop on.
+       * Recorded once; `reelFrameAt` runs the arrival from it.
+       */
+      let stop: ReelStop | null = null;
+      let shownSlot = -1;
 
       const tick = (now: number) => {
+        // Read per frame, not per run: the tuning panel is judged by ear while
+        // the reel is turning, so a change has to take effect mid-throw.
+        const settings = tuning;
         const elapsed = now - started;
-        const progress = Math.min(1, elapsed / DURATION_MS);
-        if (progress >= 1 && (settled || elapsed >= DURATION_MS + MAX_HOLD_MS)) {
+
+        // A route that never arrives must not hold the reel forever.
+        const overdue = elapsed >= settings.spinDurationMs + settings.spinMaxHoldMs;
+        if (stop === null && elapsed >= settings.spinDurationMs && (settled || overdue)) {
+          stop = { slot: shownSlot < 0 ? target : shownSlot, elapsed };
+        }
+
+        const frame = reelFrameAt(elapsed, settings, target, slots.length, stop);
+        if (frame.kind === "land") {
           frameRef.current = 0;
-          setShowing(null);
+          // `showing` is the winner already: the run-in stepped onto it and it
+          // has been resting there, so the reel and the card agree across the
+          // swap and there is nothing left to jump.
+          playLanding();
           landRef.current(winner);
           return;
         }
-        if (now >= nextFlipAt) {
-          // Cubic ease-out on the interval, so the reel visibly slows down.
-          const eased = 1 - Math.pow(1 - progress, 3);
-          nextFlipAt = now + FIRST_FLIP_MS + (LAST_FLIP_MS - FIRST_FLIP_MS) * eased;
-          let index = randomIndex(reel.length);
-          if (index === shownIndex && reel.length > 1) index = (index + 1) % reel.length;
-          shownIndex = index;
-          setShowing(reel[index]!);
+
+        // Drawing on change, rather than against a second copy of the flip
+        // schedule, keeps the reel's timing in one place: the slot changes
+        // exactly when a flip is due, so there is nothing for the two to
+        // drift apart about.
+        if (frame.slot !== shownSlot) {
+          shownSlot = frame.slot;
+          playRatchet(Math.min(1, elapsed / settings.spinDurationMs));
+          setShowing(slots[frame.slot]!);
         }
+
         frameRef.current = requestAnimationFrame(tick);
       };
       frameRef.current = requestAnimationFrame(tick);

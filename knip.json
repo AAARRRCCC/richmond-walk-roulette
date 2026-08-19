@@ -1,5 +1,17 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["worker/index.ts", "server/*.test.ts", "valhalla/stub.mjs"],
-  "project": ["src/**/*.{ts,tsx}", "server/**/*.ts", "worker/**/*.ts"]
+  "entry": [
+    "worker/index.ts",
+    "server/*.test.ts",
+    "valhalla/stub.mjs",
+    "scripts/*.mjs"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "server/**/*.ts",
+    "worker/**/*.ts"
+  ],
+  "tags": [
+    "-@public"
+  ]
 }

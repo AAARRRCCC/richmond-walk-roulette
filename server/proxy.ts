@@ -49,10 +49,16 @@ export const WALKING_SPEED_KMH = 3.69;
 
 /** Valhalla accepts up to 120 min; we cap lower: this is a walking app. */
 const MIN_MINUTES = 1;
-const MAX_MINUTES = 90;
+// Matches the client ladder's ceiling. Public Valhalla instances cap this
+// themselves (FOSSGIS refuses past 100), so asking for more just earns a 400.
+export const MAX_MINUTES = 100;
 
-/** Most contour minutes accepted in one client request: the full dial ladder. */
-const MAX_LADDER = 60;
+/**
+ * Most contour minutes accepted in one client request. The dial ladder is
+ * every minute from 5 to 100, so this has to clear 96; the rest is headroom
+ * before it becomes an abuse limit rather than a correctness one.
+ */
+const MAX_LADDER = 120;
 
 const STOCK_MAX_CONTOURS = 4;
 
@@ -114,7 +120,10 @@ async function callValhalla(base: string, path: string, body: Json): Promise<Res
   try {
     upstream = await fetch(`${base.replace(/\/+$/, "")}${path}`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      // FOSSGIS's community instance asks apps that call it to identify
+      // themselves with X-Client-Id. Harmless against a private engine, and
+      // the evaluation fallback in valhalla/README.md points here.
+      headers: { "content-type": "application/json", "x-client-id": "walk-roulette" },
       body: JSON.stringify(body),
     });
   } catch {
@@ -197,7 +206,12 @@ async function isochrone(env: ProxyEnv, base: string, payload: JsonObject): Prom
       contours: slice.map((time) => ({ time })),
       polygons: true,
       denoise: 0.2,
-      generalize: 10,
+      // Douglas-Peucker tolerance in metres, and 0 means "do not simplify".
+      // At 10 the longest single chord came out at 768 m, which is what made
+      // contours read as blocky where the reachable edge is long and curved -
+      // most visibly along the river. Ungeneralised the longest is under 100 m
+      // for the same contour, at roughly 3.6x the vertices.
+      generalize: 0,
     });
     if (response.status !== 200) return response;
 

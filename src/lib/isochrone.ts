@@ -1,6 +1,6 @@
 import { areaSqMeters, collectPolygons, type LngLat, type MultiPolygon } from "./geometry";
 import { postJson } from "./http";
-import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson } from "./json";
+import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson, type Json } from "./json";
 import { LruMap } from "./lru";
 
 type Band = {
@@ -26,7 +26,13 @@ export class NotConfiguredError extends Error {
 }
 
 export const MIN_MINUTES = 5;
-export const MAX_MINUTES = 60;
+/**
+ * The engine's own ceiling, not ours: FOSSGIS's instance refuses a pedestrian
+ * isochrone past 100 minutes ("Exceeded max time: 100"). A self-hosted
+ * Valhalla can be configured higher; raise this and the proxy's cap together,
+ * and regenerate the snapshots, if that ever happens.
+ */
+export const MAX_MINUTES = 100;
 
 /**
  * Dial resolution in minutes.
@@ -42,13 +48,19 @@ export const MAX_MINUTES = 60;
  */
 export const DIAL_STEP = 1;
 
-const LADDER: readonly number[] = Array.from(
+/** @public - also read by scripts/build-reach.mjs when generating snapshots. */
+export const LADDER: readonly number[] = Array.from(
   { length: Math.floor((MAX_MINUTES - MIN_MINUTES) / DIAL_STEP) + 1 },
   (_, i) => MIN_MINUTES + i * DIAL_STEP,
 );
 
-/** Inner contours snap to this, so they are shared across dial positions. */
-const INNER_STEP = 5;
+/**
+ * Inner contours used to snap to five-minute marks so a handful of them were
+ * shared across every dial position. The whole ladder is prefetched at
+ * one-minute resolution now, so that saved nothing and only made the inner
+ * bands lurch while the outer one moved smoothly.
+ */
+const INNER_STEP = 1;
 const BAND_COUNT = 3;
 
 /**
@@ -60,11 +72,61 @@ function bandMinutes(budgetMinutes: number): number[] {
   const marks = new Set<number>();
   for (let k = 1; k < BAND_COUNT; k++) {
     const raw = (budgetMinutes * k) / BAND_COUNT;
-    const snapped = Math.max(INNER_STEP, Math.round(raw / INNER_STEP) * INNER_STEP);
+    // Floored at the ladder's own start, not at the step: a mark below
+    // MIN_MINUTES has no contour behind it and would strand the whole reach.
+    const snapped = Math.max(MIN_MINUTES, Math.round(raw / INNER_STEP) * INNER_STEP);
     // Keep a visible gap so two contours never render on top of each other.
     if (snapped <= budgetMinutes - 3) marks.add(snapped);
   }
   return [...marks].toSorted((a, b) => a - b).concat(budgetMinutes);
+}
+
+/**
+ * Precomputed reach for the preset origins.
+ *
+ * A cold start on a known origin would otherwise spend the whole ladder on the
+ * engine: against an instance with the stock contour limit that is fourteen
+ * sequential queries before the first contour draws. The snapshots are built
+ * by `scripts/build-reach.mjs` and served as static files, so the same start
+ * costs one request the browser can also cache between visits.
+ *
+ * The filename is derived from the origin alone, so nothing here needs to know
+ * which origins are presets; an origin without a snapshot just takes the
+ * engine path. `version` guards the shape of the file, and a snapshot whose
+ * contours were built at a different walking speed is stale in a way no code
+ * can detect - regenerate it when WALKING_SPEED_KMH changes.
+ */
+/** @public - the generator stamps this into every file it writes. */
+export const SNAPSHOT_VERSION = 1;
+
+/** @public - the generator names its output files with this. */
+export function snapshotName(origin: LngLat): string {
+  return `${origin.lat.toFixed(5)}_${origin.lng.toFixed(5)}.json`;
+}
+
+/** Seeds the contour cache from a snapshot. False when there is not one. */
+async function seedFromSnapshot(origin: LngLat): Promise<boolean> {
+  let payload: Json;
+  try {
+    const response = await fetch(`/reach/${snapshotName(origin)}`);
+    if (!response.ok) return false;
+    payload = await readJson(response);
+  } catch {
+    return false;
+  }
+
+  if (!isJsonObject(payload) || payload.version !== SNAPSHOT_VERSION) return false;
+  const contours = payload.contours;
+  if (!isJsonObject(contours)) return false;
+
+  let seeded = 0;
+  for (const minutes of LADDER) {
+    const polygons = collectPolygons(contours[String(minutes)] ?? null);
+    if (polygons.length === 0) continue;
+    cache.set(cacheKey(origin, minutes), polygons);
+    seeded++;
+  }
+  return seeded > 0;
 }
 
 /** The whole ladder for a couple of origins, times a safety margin. */
@@ -254,6 +316,10 @@ export async function prefetchLadder(
   onProgress: (progress: PrefetchProgress) => void,
 ): Promise<void> {
   onProgress({ done: 0, total: 1 });
+  if (await seedFromSnapshot(origin)) {
+    onProgress({ done: 1, total: 1 });
+    return;
+  }
   const results = await ensureContours(origin, LADDER);
   onProgress({ done: 1, total: 1 });
 

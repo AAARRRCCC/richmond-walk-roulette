@@ -9,7 +9,7 @@
  */
 import { test, type TestContext } from "node:test";
 import assert from "node:assert/strict";
-import { handleApiRequest, WALKING_SPEED_KMH } from "./proxy.ts";
+import { handleApiRequest, MAX_MINUTES, WALKING_SPEED_KMH } from "./proxy.ts";
 import { parseJson, readJson, type Json } from "../src/lib/json.ts";
 
 const MONROE = { latitude: 37.5464, longitude: -77.4517 };
@@ -162,7 +162,9 @@ test("an origin outside the Richmond box never reaches the engine", async (t) =>
 test("malformed minutes are rejected without an upstream call", async (t) => {
   const calls = stubFetch(t, () => Response.json({}));
 
-  for (const minutes of [[], [2.5], [0], [91], "25", null]) {
+  // Derived from the cap rather than written out, so raising the ceiling
+  // cannot quietly turn this case into a legal request that reaches upstream.
+  for (const minutes of [[], [2.5], [0], [MAX_MINUTES + 1], "25", null]) {
     const response = await handleApiRequest(post("/api/isochrone", { location: MONROE, minutes }), ENV);
     assert.equal(response?.status, 400);
   }
