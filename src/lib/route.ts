@@ -1,7 +1,8 @@
-import type { LngLat } from "./geometry";
+import { pointKey, type LngLat } from "./geometry";
 import { pooled } from "./pool";
 import { postJson } from "./http";
-import { isFiniteNumber, isJsonObject, isString, type Json } from "./json";
+import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson } from "./json";
+import { LruMap } from "./lru";
 
 export type WalkingRoute = {
   coords: LngLat[];
@@ -11,11 +12,11 @@ export type WalkingRoute = {
 
 /** Every destination for a few origins, so revisiting a start stays instant. */
 const CACHE_LIMIT = 200;
-const cache = new Map<string, WalkingRoute | null>();
+const cache = new LruMap<string, WalkingRoute | null>(CACHE_LIMIT);
 const inFlight = new Map<string, Promise<WalkingRoute | null>>();
 
 function cacheKey(origin: LngLat, destination: LngLat): string {
-  return `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}|${destination.lat.toFixed(5)},${destination.lng.toFixed(5)}`;
+  return `${pointKey(origin)}|${pointKey(destination)}`;
 }
 
 async function requestRoute(origin: LngLat, destination: LngLat): Promise<WalkingRoute | null> {
@@ -32,9 +33,9 @@ async function requestRoute(origin: LngLat, destination: LngLat): Promise<Walkin
 
   // Valhalla's trip JSON: legs carry a polyline under the wire key "shape";
   // with `units: "kilometers"` the summary's length is km and time seconds.
-  const payload: Json = await response.json();
+  const payload = await readJson(response);
   const trip = isJsonObject(payload) && isJsonObject(payload.trip) ? payload.trip : undefined;
-  const legs = trip && Array.isArray(trip.legs) ? trip.legs : [];
+  const legs = trip && isJsonArray(trip.legs) ? trip.legs : [];
 
   const coords: LngLat[] = [];
   for (const leg of legs) {
@@ -69,22 +70,13 @@ export function fetchWalkingRoute(
 ): Promise<WalkingRoute | null> {
   const key = cacheKey(origin, destination);
 
-  if (cache.has(key)) {
-    const hit = cache.get(key) ?? null;
-    cache.delete(key);
-    cache.set(key, hit);
-    return Promise.resolve(hit);
-  }
+  if (cache.has(key)) return Promise.resolve(cache.get(key) ?? null);
 
   const pending = inFlight.get(key);
   if (pending) return pending;
 
   const promise = requestRoute(origin, destination)
     .then((route) => {
-      if (cache.size >= CACHE_LIMIT) {
-        const oldest = cache.keys().next();
-        if (!oldest.done) cache.delete(oldest.value);
-      }
       cache.set(key, route);
       return route;
     })
@@ -97,9 +89,12 @@ export function fetchWalkingRoute(
   return promise;
 }
 
-/** Synchronous cache read. Undefined means "not fetched", null means "no route". */
+/**
+ * Synchronous cache read. Undefined means "not fetched", null means "no route".
+ * Peeked, not promoted: the render path reads this for every candidate.
+ */
 export function cachedRoute(origin: LngLat, destination: LngLat): WalkingRoute | null | undefined {
-  return cache.get(cacheKey(origin, destination));
+  return cache.peek(cacheKey(origin, destination));
 }
 
 /**

@@ -20,7 +20,20 @@
   "jsPlugins": [
     { "name": "anti-slop", "specifier": "./tools/oxlint/anti-slop/index.ts" }
   ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
   "rules": {
+    // Every sequential await in this codebase is the design, not an oversight:
+    // the retry loop in lib/http.ts must wait out its own backoff, the pool
+    // worker in lib/pool.ts awaits one task at a time because that IS the
+    // concurrency bound, and the proxy walks the contour ladder in sequence so
+    // a shared engine sees a paced trickle instead of a parallel burst.
+    // Promise.all in any of those places would be a bug.
+    "eslint/no-await-in-loop": "off",
+
     "anti-slop/no-chained-type-assertions": "error",
     "anti-slop/no-conditional-empty-object-spread": "error",
     "anti-slop/no-known-value-widening": "error",

@@ -33,7 +33,6 @@ export function ResultCard(props: ResultCardProps) {
       </header>
 
       <h2 className="result-name">{place.name}</h2>
-      <p className="result-blurb">{place.blurb}</p>
 
       <dl className="result-stats">
         <Stat
