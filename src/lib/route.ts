@@ -1,6 +1,7 @@
 import type { LngLat } from "./geometry";
 import { pooled } from "./pool";
 import { postJson } from "./http";
+import { isFiniteNumber, isJsonObject, isString, type Json } from "./json";
 
 export type WalkingRoute = {
   coords: LngLat[];
@@ -17,14 +18,6 @@ function cacheKey(origin: LngLat, destination: LngLat): string {
   return `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}|${destination.lat.toFixed(5)},${destination.lng.toFixed(5)}`;
 }
 
-type ValhallaTrip = {
-  trip?: {
-    legs?: { shape?: string }[];
-    /** With `units: "kilometers"`: length in km, time in seconds. */
-    summary?: { length?: number; time?: number };
-  };
-};
-
 async function requestRoute(origin: LngLat, destination: LngLat): Promise<WalkingRoute | null> {
   const response = await postJson("/api/route", {
     origin: { latitude: origin.lat, longitude: origin.lng },
@@ -37,15 +30,28 @@ async function requestRoute(origin: LngLat, destination: LngLat): Promise<Walkin
   if (response.status === 503) throw new Error("route service not configured");
   if (!response.ok) return null;
 
-  const payload = (await response.json()) as ValhallaTrip;
-  const legs = payload.trip?.legs ?? [];
-  const coords = legs.flatMap((leg) => (leg.shape ? decodePolyline(leg.shape) : []));
+  // Valhalla's trip JSON: legs carry a polyline under the wire key "shape";
+  // with `units: "kilometers"` the summary's length is km and time seconds.
+  const payload: Json = await response.json();
+  const trip = isJsonObject(payload) && isJsonObject(payload.trip) ? payload.trip : undefined;
+  const legs = trip && Array.isArray(trip.legs) ? trip.legs : [];
+
+  const coords: LngLat[] = [];
+  for (const leg of legs) {
+    if (!isJsonObject(leg)) continue;
+    const encodedPolyline = leg["shape"];
+    if (isString(encodedPolyline)) coords.push(...decodePolyline(encodedPolyline));
+  }
   if (coords.length === 0) return null;
+
+  const summary = trip && isJsonObject(trip.summary) ? trip.summary : undefined;
+  const lengthKm = summary && isFiniteNumber(summary.length) ? summary.length : 0;
+  const timeSeconds = summary && isFiniteNumber(summary.time) ? summary.time : 0;
 
   return {
     coords,
-    distanceMeters: Math.round((payload.trip?.summary?.length ?? 0) * 1000),
-    durationSeconds: payload.trip?.summary?.time ?? 0,
+    distanceMeters: Math.round(lengthKm * 1000),
+    durationSeconds: timeSeconds,
   };
 }
 

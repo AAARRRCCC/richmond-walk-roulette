@@ -109,7 +109,7 @@ const server = createServer((req, res) => {
       const meters = haversineMeters(a, b) * 1.3;
       return json(res, 200, {
         trip: {
-          legs: [{ shape: encodePolyline6(points) }],
+          legs: [{ "shape": encodePolyline6(points) }],
           summary: { length: meters / 1000, time: (meters / (SPEED_KMH * 1000)) * 3600 },
         },
       });

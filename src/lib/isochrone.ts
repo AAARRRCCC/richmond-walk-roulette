@@ -1,5 +1,6 @@
 import { areaSqMeters, collectPolygons, type LngLat, type MultiPolygon } from "./geometry";
 import { postJson } from "./http";
+import { isFiniteNumber, isJsonObject, isString, type Json } from "./json";
 
 export type Band = {
   /** Walking minutes this contour represents. */
@@ -80,8 +81,6 @@ function cacheKey(origin: LngLat, minutes: number): string {
   return `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}|${minutes}`;
 }
 
-type ContourFeature = { properties?: { contour?: number } };
-
 /**
  * One request for many contours. Valhalla computes a single expansion and
  * cuts every requested contour out of it, so asking for the whole ladder at
@@ -98,20 +97,21 @@ async function requestContours(
   });
 
   if (!response.ok) {
-    const body: unknown = await response.json().catch(() => null);
-    const detail =
-      typeof body === "object" && body !== null && "detail" in body && typeof body.detail === "string"
-        ? body.detail
-        : undefined;
+    const failure: Json = await response.json().catch(() => null);
+    const detailValue = isJsonObject(failure) ? failure.detail : undefined;
+    const detail = isString(detailValue) ? detailValue : undefined;
     if (response.status === 503) throw new NotConfiguredError(detail);
     throw new Error(detail ?? `Isochrone request failed (${response.status}).`);
   }
 
-  const payload = (await response.json()) as { features?: ContourFeature[] };
+  const payload: Json = await response.json();
+  const features = isJsonObject(payload) && Array.isArray(payload.features) ? payload.features : [];
   const byMinute = new Map<number, MultiPolygon>();
-  for (const feature of payload.features ?? []) {
-    const contour = feature.properties?.contour;
-    if (typeof contour !== "number") continue;
+  for (const feature of features) {
+    if (!isJsonObject(feature)) continue;
+    const properties = feature.properties;
+    const contour = isJsonObject(properties) ? properties.contour : undefined;
+    if (!isFiniteNumber(contour)) continue;
     const polygons = collectPolygons(feature);
     if (polygons.length > 0) byMinute.set(contour, polygons);
   }
@@ -248,7 +248,7 @@ export async function fetchReach(origin: LngLat, budgetMinutes: number): Promise
   // Every band this budget needs was requested; if the reach still cannot be
   // assembled, the first failure is the reason worth reporting.
   const failed = results.find((r) => r.status === "rejected");
-  if (failed?.status === "rejected") throw failed.reason as Error;
+  if (failed?.status === "rejected") throw failed.reason;
   throw new Error("Contours resolved but could not be assembled.");
 }
 
@@ -275,5 +275,5 @@ export async function prefetchLadder(
   const configFailure = results.find(
     (r) => r.status === "rejected" && r.reason instanceof NotConfiguredError,
   );
-  if (configFailure?.status === "rejected") throw configFailure.reason as Error;
+  if (configFailure?.status === "rejected") throw configFailure.reason;
 }
