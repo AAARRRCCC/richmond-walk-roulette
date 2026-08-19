@@ -3,6 +3,7 @@ import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import type { FeatureCollection, MultiPolygon as MultiPolygonGeometry } from "geojson";
 import { darkBasemap } from "./basemap";
 import type { LngLat, MultiPolygon } from "../lib/geometry";
+import { isString, type Json } from "../lib/json";
 import type { Reach } from "../lib/isochrone";
 import type { WalkingRoute } from "../lib/route";
 import type { Place } from "../data/places";
@@ -158,8 +159,9 @@ export function MapCanvas(props: MapCanvasProps) {
     });
 
     map.on("click", "places", (event) => {
-      const id = event.features?.[0]?.properties?.id;
-      if (typeof id === "string" && !handlers.current.pickingOrigin) {
+      // Feature properties round-trip through MapLibre as JSON values.
+      const id: Json | undefined = event.features?.[0]?.properties?.id;
+      if (isString(id) && !handlers.current.pickingOrigin) {
         event.preventDefault();
         handlers.current.onPickPlace(id);
       }
@@ -237,7 +239,7 @@ export function MapCanvas(props: MapCanvasProps) {
    */
   useEffect(() => {
     const rail = document.querySelector(".rail");
-    if (!rail || typeof ResizeObserver === "undefined") return;
+    if (!rail || !("ResizeObserver" in window)) return;
 
     let timer = 0;
     const observer = new ResizeObserver(() => {
@@ -365,12 +367,9 @@ function setData(map: MapLibreMap, id: string, data: FeatureCollection): void {
 }
 
 function multiPolygonCollection(polygons: MultiPolygon): FeatureCollection {
-  // Structurally identical to GeoJSON's Position[][][]. The only difference is
-  // that our rings are readonly, which the GeoJSON types cannot express, and
-  // copying several hundred vertices on every dial tick to satisfy the
-  // compiler would be worse than saying so here.
-  const coordinates = polygons as unknown as MultiPolygonGeometry["coordinates"];
-  const geometry: MultiPolygonGeometry = { type: "MultiPolygon", coordinates };
+  // Position tuples are structurally assignable to GeoJSON's number[]
+  // positions, so the geometry needs no copy and no assertion.
+  const geometry: MultiPolygonGeometry = { type: "MultiPolygon", coordinates: polygons };
   return { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry }] };
 }
 

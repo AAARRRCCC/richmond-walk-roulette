@@ -7,7 +7,8 @@ export async function pooled<T>(
   tasks: readonly (() => Promise<T>)[],
   limit: number,
 ): Promise<PromiseSettledResult<T>[]> {
-  const results = new Array<PromiseSettledResult<T>>(tasks.length);
+  // Filled by index: every slot is assigned before Promise.all resolves.
+  const results: PromiseSettledResult<T>[] = [];
   let next = 0;
 
   const worker = async (): Promise<void> => {

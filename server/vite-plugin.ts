@@ -31,10 +31,10 @@ export function apiProxy(env: ProxyEnv): Plugin {
               response.headers.forEach((value, key) => res.setHeader(key, value));
               res.end(await response.text());
             })
-            .catch((error: unknown) => {
+            .catch((cause: unknown) => {
               res.statusCode = 500;
               res.setHeader("content-type", "application/json");
-              res.end(JSON.stringify({ error: "proxy failed", detail: String(error) }));
+              res.end(JSON.stringify({ error: "proxy failed", detail: String(cause) }));
             });
         });
       });

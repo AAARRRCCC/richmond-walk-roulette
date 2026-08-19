@@ -18,7 +18,8 @@ export function OriginPicker(props: OriginPickerProps) {
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const inside = event.target instanceof Node && rootRef.current?.contains(event.target);
+      if (!inside) setOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);

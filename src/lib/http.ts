@@ -9,6 +9,8 @@
  * route for the rest of the session.
  */
 
+import type { Json } from "./json";
+
 export class TransientError extends Error {
   constructor(readonly status: number) {
     super(`Request failed with ${status} after retries.`);
@@ -53,7 +55,7 @@ function backoffMs(response: Response, attempt: number): number {
  * POSTs JSON, retrying transient failures. Returns the response for the caller
  * to interpret; only exhausted retries and network errors throw.
  */
-export async function postJson(url: string, body: unknown): Promise<Response> {
+export async function postJson(url: string, body: Json): Promise<Response> {
   let lastStatus = 0;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {

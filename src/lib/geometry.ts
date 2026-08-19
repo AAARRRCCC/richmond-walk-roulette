@@ -1,10 +1,17 @@
 /** Geometry helpers for isochrone polygons. All coordinates are [lng, lat]. */
 
-export type Position = readonly [number, number];
+import { isFiniteNumber, isJsonObject, type Json } from "./json";
+
+/**
+ * Mutable on purpose: these tuples are structurally assignable to GeoJSON's
+ * `number[]` positions, so handing a MultiPolygon to MapLibre needs no
+ * assertion. Nothing outside this module mutates them.
+ */
+export type Position = [number, number];
 /** Exterior ring first, interior rings (holes) after. */
-export type Ring = readonly Position[];
-export type Polygon = readonly Ring[];
-export type MultiPolygon = readonly Polygon[];
+export type Ring = Position[];
+export type Polygon = Ring[];
+export type MultiPolygon = Polygon[];
 
 export type LngLat = { lng: number; lat: number };
 export type Bounds = { west: number; south: number; east: number; north: number };
@@ -15,38 +22,42 @@ export type Bounds = { west: number; south: number; east: number; north: number 
  * Feature(Collection)s today, but accepting the whole family is what made the
  * Google-to-Valhalla provider swap a no-op here.
  */
-export function collectPolygons(geoJson: unknown): MultiPolygon {
+export function collectPolygons(geoJson: Json): MultiPolygon {
   const out: Polygon[] = [];
   visit(geoJson, out, 0);
   return out;
 }
 
-function visit(node: unknown, out: Polygon[], depth: number): void {
-  if (depth > 8 || typeof node !== "object" || node === null) return;
-  const record = node as Record<string, unknown>;
+function visit(node: Json | undefined, out: Polygon[], depth: number): void {
+  if (depth > 8 || !isJsonObject(node)) return;
 
-  switch (record.type) {
-    case "FeatureCollection":
-      if (Array.isArray(record.features)) {
-        for (const feature of record.features) visit(feature, out, depth + 1);
+  switch (node.type) {
+    case "FeatureCollection": {
+      const features = node.features;
+      if (Array.isArray(features)) {
+        for (const feature of features) visit(feature, out, depth + 1);
       }
       return;
-    case "GeometryCollection":
-      if (Array.isArray(record.geometries)) {
-        for (const geometry of record.geometries) visit(geometry, out, depth + 1);
+    }
+    case "GeometryCollection": {
+      const geometries = node.geometries;
+      if (Array.isArray(geometries)) {
+        for (const geometry of geometries) visit(geometry, out, depth + 1);
       }
       return;
+    }
     case "Feature":
-      visit(record.geometry, out, depth + 1);
+      visit(node.geometry, out, depth + 1);
       return;
     case "Polygon": {
-      const polygon = asPolygon(record.coordinates);
+      const polygon = asPolygon(node.coordinates);
       if (polygon) out.push(polygon);
       return;
     }
     case "MultiPolygon": {
-      if (!Array.isArray(record.coordinates)) return;
-      for (const candidate of record.coordinates) {
+      const coordinates = node.coordinates;
+      if (!Array.isArray(coordinates)) return;
+      for (const candidate of coordinates) {
         const polygon = asPolygon(candidate);
         if (polygon) out.push(polygon);
       }
@@ -57,7 +68,7 @@ function visit(node: unknown, out: Polygon[], depth: number): void {
   }
 }
 
-function asPolygon(coordinates: unknown): Polygon | null {
+function asPolygon(coordinates: Json | undefined): Polygon | null {
   if (!Array.isArray(coordinates)) return null;
   const rings: Ring[] = [];
   for (const rawRing of coordinates) {
@@ -65,8 +76,8 @@ function asPolygon(coordinates: unknown): Polygon | null {
     const ring: Position[] = [];
     for (const rawPosition of rawRing) {
       if (!Array.isArray(rawPosition)) continue;
-      const [lng, lat] = rawPosition as unknown[];
-      if (typeof lng === "number" && typeof lat === "number") ring.push([lng, lat]);
+      const [lng, lat] = rawPosition;
+      if (isFiniteNumber(lng) && isFiniteNumber(lat)) ring.push([lng, lat]);
     }
     if (ring.length >= 4) rings.push(ring);
   }
