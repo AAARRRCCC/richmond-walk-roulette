@@ -1,8 +1,9 @@
-import { areaSqMeters, collectPolygons, type LngLat, type MultiPolygon } from "./geometry";
+import { areaSqMeters, collectPolygons, pointKey, type LngLat, type MultiPolygon } from "./geometry";
 import { postJson } from "./http";
-import { isFiniteNumber, isJsonObject, isString, type Json } from "./json";
+import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson, type Json } from "./json";
+import { LruMap } from "./lru";
 
-export type Band = {
+type Band = {
   /** Walking minutes this contour represents. */
   minutes: number;
   polygons: MultiPolygon;
@@ -25,7 +26,13 @@ export class NotConfiguredError extends Error {
 }
 
 export const MIN_MINUTES = 5;
-export const MAX_MINUTES = 60;
+/**
+ * The engine's own ceiling, not ours: FOSSGIS's instance refuses a pedestrian
+ * isochrone past 100 minutes ("Exceeded max time: 100"). A self-hosted
+ * Valhalla can be configured higher; raise this and the proxy's cap together,
+ * and regenerate the snapshots, if that ever happens.
+ */
+export const MAX_MINUTES = 100;
 
 /**
  * Dial resolution in minutes.
@@ -41,19 +48,19 @@ export const MAX_MINUTES = 60;
  */
 export const DIAL_STEP = 1;
 
+/** @public - also read by scripts/build-reach.mjs when generating snapshots. */
 export const LADDER: readonly number[] = Array.from(
   { length: Math.floor((MAX_MINUTES - MIN_MINUTES) / DIAL_STEP) + 1 },
   (_, i) => MIN_MINUTES + i * DIAL_STEP,
 );
 
-/** Snaps an arbitrary minute value onto the ladder. */
-export function snapToLadder(minutes: number): number {
-  const stepped = Math.round((minutes - MIN_MINUTES) / DIAL_STEP) * DIAL_STEP + MIN_MINUTES;
-  return Math.min(MAX_MINUTES, Math.max(MIN_MINUTES, stepped));
-}
-
-/** Inner contours snap to this, so they are shared across dial positions. */
-const INNER_STEP = 5;
+/**
+ * Inner contours used to snap to five-minute marks so a handful of them were
+ * shared across every dial position. The whole ladder is prefetched at
+ * one-minute resolution now, so that saved nothing and only made the inner
+ * bands lurch while the outer one moved smoothly.
+ */
+const INNER_STEP = 1;
 const BAND_COUNT = 3;
 
 /**
@@ -61,24 +68,79 @@ const BAND_COUNT = 3;
  * budget itself. The inner marks snap to `INNER_STEP`, so every mark is a
  * ladder value and the warm-up covers all of them.
  */
-export function bandMinutes(budgetMinutes: number): number[] {
+function bandMinutes(budgetMinutes: number): number[] {
   const marks = new Set<number>();
   for (let k = 1; k < BAND_COUNT; k++) {
     const raw = (budgetMinutes * k) / BAND_COUNT;
-    const snapped = Math.max(INNER_STEP, Math.round(raw / INNER_STEP) * INNER_STEP);
+    // Floored at the ladder's own start, not at the step: a mark below
+    // MIN_MINUTES has no contour behind it and would strand the whole reach.
+    const snapped = Math.max(MIN_MINUTES, Math.round(raw / INNER_STEP) * INNER_STEP);
     // Keep a visible gap so two contours never render on top of each other.
     if (snapped <= budgetMinutes - 3) marks.add(snapped);
   }
-  return [...marks].sort((a, b) => a - b).concat(budgetMinutes);
+  return [...marks].toSorted((a, b) => a - b).concat(budgetMinutes);
+}
+
+/**
+ * Precomputed reach for the preset origins.
+ *
+ * A cold start on a known origin would otherwise spend the whole ladder on the
+ * engine: against an instance with the stock contour limit that is fourteen
+ * sequential queries before the first contour draws. The snapshots are built
+ * by `scripts/build-reach.mjs` and served as static files, so the same start
+ * costs one request the browser can also cache between visits.
+ *
+ * The filename is derived from the origin alone, so nothing here needs to know
+ * which origins are presets; an origin without a snapshot just takes the
+ * engine path. `version` guards the shape of the file, and a snapshot whose
+ * contours were built at a different walking speed is stale in a way no code
+ * can detect - regenerate it when WALKING_SPEED_KMH changes.
+ */
+/** @public - the generator stamps this into every file it writes. */
+export const SNAPSHOT_VERSION = 1;
+
+/**
+ * @public - the generator names its output files with this.
+ * Derived from `pointKey` so a snapshot is always filed under the same
+ * coordinates the cache looks it up by; the comma is only swapped out to keep
+ * the name plain.
+ */
+export function snapshotName(origin: LngLat): string {
+  return `${pointKey(origin).replace(",", "_")}.json`;
+}
+
+/** Seeds the contour cache from a snapshot. False when there is not one. */
+async function seedFromSnapshot(origin: LngLat): Promise<boolean> {
+  let payload: Json;
+  try {
+    const response = await fetch(`/reach/${snapshotName(origin)}`);
+    if (!response.ok) return false;
+    payload = await readJson(response);
+  } catch {
+    return false;
+  }
+
+  if (!isJsonObject(payload) || payload.version !== SNAPSHOT_VERSION) return false;
+  const contours = payload.contours;
+  if (!isJsonObject(contours)) return false;
+
+  let seeded = 0;
+  for (const minutes of LADDER) {
+    const polygons = collectPolygons(contours[String(minutes)] ?? null);
+    if (polygons.length === 0) continue;
+    cache.set(cacheKey(origin, minutes), polygons);
+    seeded++;
+  }
+  return seeded > 0;
 }
 
 /** The whole ladder for a couple of origins, times a safety margin. */
 const CACHE_LIMIT = 180;
-const cache = new Map<string, MultiPolygon>();
+const cache = new LruMap<string, MultiPolygon>(CACHE_LIMIT);
 const inFlight = new Map<string, Promise<MultiPolygon>>();
 
 function cacheKey(origin: LngLat, minutes: number): string {
-  return `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}|${minutes}`;
+  return `${pointKey(origin)}|${minutes}`;
 }
 
 /**
@@ -97,15 +159,15 @@ async function requestContours(
   });
 
   if (!response.ok) {
-    const failure: Json = await response.json().catch(() => null);
+    const failure = await readJson(response).catch(() => null);
     const detailValue = isJsonObject(failure) ? failure.detail : undefined;
     const detail = isString(detailValue) ? detailValue : undefined;
     if (response.status === 503) throw new NotConfiguredError(detail);
     throw new Error(detail ?? `Isochrone request failed (${response.status}).`);
   }
 
-  const payload: Json = await response.json();
-  const features = isJsonObject(payload) && Array.isArray(payload.features) ? payload.features : [];
+  const payload = await readJson(response);
+  const features = isJsonObject(payload) && isJsonArray(payload.features) ? payload.features : [];
   const byMinute = new Map<number, MultiPolygon>();
   for (const feature of features) {
     if (!isJsonObject(feature)) continue;
@@ -142,10 +204,6 @@ function ensureContours(
     const key = cacheKey(origin, minutes);
     const cached = cache.get(key);
     if (cached) {
-      // Map iterates in insertion order, so re-inserting moves this entry to
-      // the tail and keeps the eviction below honest.
-      cache.delete(key);
-      cache.set(key, cached);
       jobs.push(Promise.resolve(cached));
       continue;
     }
@@ -165,10 +223,6 @@ function ensureContours(
         .then((byMinute) => {
           const polygons = byMinute.get(minutes);
           if (!polygons) throw new Error(`No reachable area at ${minutes} minutes.`);
-          if (cache.size >= CACHE_LIMIT) {
-            const oldest = cache.keys().next();
-            if (!oldest.done) cache.delete(oldest.value);
-          }
           cache.set(key, polygons);
           return polygons;
         })
@@ -195,7 +249,7 @@ function ensureContours(
  * evicted still holds them by reference and stays correct.
  */
 const ASSEMBLED_LIMIT = 60;
-const assembled = new Map<string, Reach>();
+const assembled = new LruMap<string, Reach>(ASSEMBLED_LIMIT);
 
 /**
  * Assembles a reach from cache alone, or returns null if any contour is still
@@ -204,12 +258,14 @@ const assembled = new Map<string, Reach>();
  */
 export function cachedReach(origin: LngLat, budgetMinutes: number): Reach | null {
   const key = cacheKey(origin, budgetMinutes);
-  const memo = assembled.get(key);
+  // Peeked, not promoted: this runs on every render, and the identity these
+  // entries provide matters more than which one is oldest.
+  const memo = assembled.peek(key);
   if (memo) return memo;
 
   const bands: Band[] = [];
   for (const minutes of bandMinutes(budgetMinutes)) {
-    const polygons = cache.get(cacheKey(origin, minutes));
+    const polygons = cache.peek(cacheKey(origin, minutes));
     if (!polygons) return null;
     bands.push({ minutes, polygons });
   }
@@ -220,10 +276,6 @@ export function cachedReach(origin: LngLat, budgetMinutes: number): Reach | null
     bands,
     areaSqMeters: areaSqMeters(bands[bands.length - 1]!.polygons),
   };
-  if (assembled.size >= ASSEMBLED_LIMIT) {
-    const oldest = assembled.keys().next();
-    if (!oldest.done) assembled.delete(oldest.value);
-  }
   assembled.set(key, reach);
   return reach;
 }
@@ -269,6 +321,10 @@ export async function prefetchLadder(
   onProgress: (progress: PrefetchProgress) => void,
 ): Promise<void> {
   onProgress({ done: 0, total: 1 });
+  if (await seedFromSnapshot(origin)) {
+    onProgress({ done: 1, total: 1 });
+    return;
+  }
   const results = await ensureContours(origin, LADDER);
   onProgress({ done: 1, total: 1 });
 

@@ -1,4 +1,5 @@
 import { VIBES, type Terrain, type Vibe } from "../data/places";
+import { playTap, playThock } from "../lib/sound";
 
 const TERRAINS: { id: Terrain | "any"; label: string }[] = [
   { id: "any", label: "Any" },
@@ -23,13 +24,19 @@ export function Filters(props: FiltersProps) {
       <div className="switch-row">
         <Switch
           checked={props.roundTrip}
-          onChange={props.onToggleRoundTrip}
+          onChange={() => {
+            playThock(!props.roundTrip);
+            props.onToggleRoundTrip();
+          }}
           label="Round trip"
           hint="Split the budget across both legs"
         />
         <Switch
           checked={props.edgeOnly}
-          onChange={props.onToggleEdge}
+          onChange={() => {
+            playThock(!props.edgeOnly);
+            props.onToggleEdge();
+          }}
           label="Far edge only"
           hint="Only places in the outermost contour"
         />
@@ -43,7 +50,10 @@ export function Filters(props: FiltersProps) {
             type="button"
             className="chip"
             aria-pressed={props.terrain === option.id}
-            onClick={() => props.onTerrain(option.id)}
+            onClick={() => {
+              playTap(props.terrain !== option.id);
+              props.onTerrain(option.id);
+            }}
           >
             {option.label}
           </button>
@@ -58,7 +68,10 @@ export function Filters(props: FiltersProps) {
             type="button"
             className="chip"
             aria-pressed={props.vibes.includes(vibe.id)}
-            onClick={() => props.onToggleVibe(vibe.id)}
+            onClick={() => {
+              playTap(!props.vibes.includes(vibe.id));
+              props.onToggleVibe(vibe.id);
+            }}
           >
             {vibe.label}
           </button>

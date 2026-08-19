@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { playDetent } from "../lib/sound";
 import { MAX_MINUTES } from "../lib/isochrone";
 
 export type TimeDialProps = {
@@ -58,7 +59,13 @@ export function TimeDial(props: TimeDialProps) {
           aria-label="Walking time budget"
           aria-describedby={captionId}
           aria-valuetext={`${props.minutes} minutes`}
-          onChange={(event) => props.onChange(Number(event.target.value))}
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            // One detent per step the value actually moved, not per input
+            // event: a fast drag fires many events on the same minute.
+            if (next !== props.minutes) playDetent(next, props.minimum);
+            props.onChange(next);
+          }}
           // React maps onChange to `input`, which fires continuously during a
           // drag. These are the commit edges: the map re-frames on them so the
           // camera is not restarted on every pixel of the drag.

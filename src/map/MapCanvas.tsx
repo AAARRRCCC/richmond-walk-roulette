@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import type { FeatureCollection, MultiPolygon as MultiPolygonGeometry } from "geojson";
 import { darkBasemap } from "./basemap";
+import { smoothedForDisplay } from "./smooth";
 import type { LngLat, MultiPolygon } from "../lib/geometry";
 import { isString, type Json } from "../lib/json";
 import type { Reach } from "../lib/isochrone";
@@ -159,8 +160,10 @@ export function MapCanvas(props: MapCanvasProps) {
     });
 
     map.on("click", "places", (event) => {
-      // Feature properties round-trip through MapLibre as JSON values.
-      const id: Json | undefined = event.features?.[0]?.properties?.id;
+      // SAFETY: MapLibre parses feature properties out of the GeoJSON this
+      // component sets on the source, so they are Json values; isString then
+      // narrows to the string id the places source actually carries.
+      const id = event.features?.[0]?.properties?.["id"] as Json | undefined;
       if (isString(id) && !handlers.current.pickingOrigin) {
         event.preventDefault();
         handlers.current.onPickPlace(id);
@@ -367,9 +370,15 @@ function setData(map: MapLibreMap, id: string, data: FeatureCollection): void {
 }
 
 function multiPolygonCollection(polygons: MultiPolygon): FeatureCollection {
+  // Smoothed here and nowhere else: the raster staircase is an artefact of how
+  // the engine computes contours, so it is worth rounding off the drawing, but
+  // the reach itself is still decided against the engine's own geometry.
   // Position tuples are structurally assignable to GeoJSON's number[]
   // positions, so the geometry needs no copy and no assertion.
-  const geometry: MultiPolygonGeometry = { type: "MultiPolygon", coordinates: polygons };
+  const geometry: MultiPolygonGeometry = {
+    type: "MultiPolygon",
+    coordinates: smoothedForDisplay(polygons),
+  };
   return { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry }] };
 }
 

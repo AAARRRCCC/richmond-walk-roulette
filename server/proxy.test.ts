@@ -9,8 +9,8 @@
  */
 import { test, type TestContext } from "node:test";
 import assert from "node:assert/strict";
-import { handleApiRequest, WALKING_SPEED_KMH } from "./proxy.ts";
-import type { Json } from "../src/lib/json.ts";
+import { handleApiRequest, MAX_MINUTES, WALKING_SPEED_KMH } from "./proxy.ts";
+import { parseJson, readJson, type Json } from "../src/lib/json.ts";
 
 const MONROE = { latitude: 37.5464, longitude: -77.4517 };
 const LADDER = Array.from({ length: 56 }, (_, i) => i + 5);
@@ -46,28 +46,28 @@ async function reply(response: Response | null): Promise<ProxyReply> {
   // SAFETY: the proxy under test emits only its own JSON vocabulary — {error,
   // detail} failure bodies and GeoJSON FeatureCollections — and these tests
   // read just the fields that vocabulary guarantees.
-  return (await response.json()) as ProxyReply;
+  return (await readJson(response)) as ProxyReply;
 }
 
 /** Replaces fetch for one test; returns the log of upstream calls. */
 function stubFetch(t: TestContext, respond: (call: Upstream) => Response | Error): Upstream[] {
   const calls: Upstream[] = [];
   const original = globalThis.fetch;
-  // SAFETY: the stub covers the one (input, init) call pattern the proxy
-  // uses, and every body it parses back is one the proxy just serialized
-  // from the UpstreamBody request fields these tests assert on.
-  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    // SAFETY: every body reaching this stub was just serialized by the proxy
-    // from the UpstreamBody request fields these tests assert on.
+  globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    // Round-tripping through Request normalises every BodyInit the proxy
+    // could send into the JSON text it actually sends.
+    const sent = await new Request("http://stub.local", init).text();
+    // SAFETY: that body was just serialized by the proxy from the request
+    // fields UpstreamBody names and these tests assert on.
     const call: Upstream = {
-      url: String(input),
-      body: JSON.parse(String(init?.body)) as UpstreamBody,
+      url: input instanceof Request ? input.url : String(input),
+      body: parseJson(sent) as UpstreamBody,
     };
     calls.push(call);
     const out = respond(call);
     if (out instanceof Error) throw out;
     return out;
-  }) as typeof fetch;
+  };
   t.after(() => {
     globalThis.fetch = original;
   });
@@ -162,7 +162,9 @@ test("an origin outside the Richmond box never reaches the engine", async (t) =>
 test("malformed minutes are rejected without an upstream call", async (t) => {
   const calls = stubFetch(t, () => Response.json({}));
 
-  for (const minutes of [[], [2.5], [0], [91], "25", null]) {
+  // Derived from the cap rather than written out, so raising the ceiling
+  // cannot quietly turn this case into a legal request that reaches upstream.
+  for (const minutes of [[], [2.5], [0], [MAX_MINUTES + 1], "25", null]) {
     const response = await handleApiRequest(post("/api/isochrone", { location: MONROE, minutes }), ENV);
     assert.equal(response?.status, 400);
   }
@@ -200,7 +202,8 @@ test("route forwards the trip and pins the pedestrian costing", async (t) => {
   );
 
   assert.equal(response?.status, 200);
-  assert.deepEqual(await response!.json(), trip);
+  assert.ok(response);
+  assert.deepEqual(await readJson(response), trip);
 
   const sent = calls[0]!.body;
   assert.equal(calls[0]!.url, "http://engine.local:8002/route");

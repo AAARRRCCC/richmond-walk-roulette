@@ -9,6 +9,17 @@
  * cannot be turned into a general-purpose worldwide routing service.
  */
 
+import {
+  isFiniteNumber,
+  isJsonArray,
+  isJsonObject,
+  isString,
+  parseJson,
+  readJson,
+  type Json,
+  type JsonObject,
+} from "../src/lib/json.ts";
+
 export type ProxyEnv = {
   /** Base URL of a Valhalla instance, e.g. http://localhost:8002 */
   VALHALLA_URL?: string | undefined;
@@ -37,11 +48,17 @@ export type ProxyEnv = {
 export const WALKING_SPEED_KMH = 3.69;
 
 /** Valhalla accepts up to 120 min; we cap lower: this is a walking app. */
-export const MIN_MINUTES = 1;
-export const MAX_MINUTES = 90;
+const MIN_MINUTES = 1;
+// Matches the client ladder's ceiling. Public Valhalla instances cap this
+// themselves (FOSSGIS refuses past 100), so asking for more just earns a 400.
+export const MAX_MINUTES = 100;
 
-/** Most contour minutes accepted in one client request: the full dial ladder. */
-const MAX_LADDER = 60;
+/**
+ * Most contour minutes accepted in one client request. The dial ladder is
+ * every minute from 5 to 100, so this has to clear 96; the rest is headroom
+ * before it becomes an abuse limit rather than a correctness one.
+ */
+const MAX_LADDER = 120;
 
 const STOCK_MAX_CONTOURS = 4;
 
@@ -53,8 +70,6 @@ const STOCK_MAX_CONTOURS = 4;
 const BOUNDS = { south: 37.3, west: -77.9, north: 37.8, east: -77.1 };
 
 type LatLng = { latitude: number; longitude: number };
-
-import { isFiniteNumber, isJsonObject, isString, type Json, type JsonObject } from "../src/lib/json.ts";
 
 function json(body: Json, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -82,14 +97,14 @@ function readLatLng(value: Json | undefined): LatLng | null {
 
 /** Validated minute marks for one isochrone request: deduped, ascending. */
 function readMinutes(value: Json | undefined): number[] | null {
-  if (!Array.isArray(value) || value.length === 0 || value.length > MAX_LADDER) return null;
+  if (!isJsonArray(value) || value.length === 0 || value.length > MAX_LADDER) return null;
   const seen = new Set<number>();
   for (const mark of value) {
     if (!isFiniteNumber(mark) || !Number.isInteger(mark)) return null;
     if (mark < MIN_MINUTES || mark > MAX_MINUTES) return null;
     seen.add(mark);
   }
-  return [...seen].sort((a, b) => a - b);
+  return [...seen].toSorted((a, b) => a - b);
 }
 
 /**
@@ -105,7 +120,10 @@ async function callValhalla(base: string, path: string, body: Json): Promise<Res
   try {
     upstream = await fetch(`${base.replace(/\/+$/, "")}${path}`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      // FOSSGIS's community instance asks apps that call it to identify
+      // themselves with X-Client-Id. Harmless against a private engine, and
+      // the evaluation fallback in valhalla/README.md points here.
+      headers: { "content-type": "application/json", "x-client-id": "walk-roulette" },
       body: JSON.stringify(body),
     });
   } catch {
@@ -126,7 +144,7 @@ async function callValhalla(base: string, path: string, body: Json): Promise<Res
   // nothing sensitive, but the client only ever needs a short reason.
   let reason = `upstream ${upstream.status}`;
   try {
-    const parsed: Json = JSON.parse(text);
+    const parsed = parseJson(text);
     if (isJsonObject(parsed) && isString(parsed.error)) reason = parsed.error;
   } catch {
     // Non-JSON error body; the status alone will have to do.
@@ -188,12 +206,17 @@ async function isochrone(env: ProxyEnv, base: string, payload: JsonObject): Prom
       contours: slice.map((time) => ({ time })),
       polygons: true,
       denoise: 0.2,
-      generalize: 10,
+      // Douglas-Peucker tolerance in metres, and 0 means "do not simplify".
+      // At 10 the longest single chord came out at 768 m, which is what made
+      // contours read as blocky where the reachable edge is long and curved -
+      // most visibly along the river. Ungeneralised the longest is under 100 m
+      // for the same contour, at roughly 3.6x the vertices.
+      generalize: 0,
     });
     if (response.status !== 200) return response;
 
-    const body: Json = await response.json();
-    if (isJsonObject(body) && Array.isArray(body.features)) features.push(...body.features);
+    const body = await readJson(response);
+    if (isJsonObject(body) && isJsonArray(body.features)) features.push(...body.features);
   }
 
   return json({ type: "FeatureCollection", features }, 200);
@@ -239,7 +262,7 @@ export async function handleApiRequest(request: Request, env: ProxyEnv): Promise
 
   let payload: JsonObject;
   try {
-    const parsed: Json = await request.json();
+    const parsed = await readJson(request);
     if (!isJsonObject(parsed)) return badRequest("body must be a JSON object");
     payload = parsed;
   } catch {
