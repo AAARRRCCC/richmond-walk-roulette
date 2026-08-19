@@ -164,7 +164,7 @@ export function budgetStep(roundTrip: boolean): number {
 }
 
 /** Snaps a budget onto the dial's notches and inside its range. */
-export function clampBudget(minutes: number, roundTrip: boolean): number {
+function clampBudget(minutes: number, roundTrip: boolean): number {
   const low = dialMinimum(roundTrip);
   const step = budgetStep(roundTrip);
   const snapped = low + Math.round((minutes - low) / step) * step;

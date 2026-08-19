@@ -1,20 +1,19 @@
 /** Geometry helpers for isochrone polygons. All coordinates are [lng, lat]. */
 
-import { isFiniteNumber, isJsonObject, type Json } from "./json";
+import { isFiniteNumber, isJsonArray, isJsonObject, type Json } from "./json";
 
 /**
  * Mutable on purpose: these tuples are structurally assignable to GeoJSON's
  * `number[]` positions, so handing a MultiPolygon to MapLibre needs no
  * assertion. Nothing outside this module mutates them.
  */
-export type Position = [number, number];
+type Position = [number, number];
 /** Exterior ring first, interior rings (holes) after. */
-export type Ring = Position[];
-export type Polygon = Ring[];
+type Ring = Position[];
+type Polygon = Ring[];
 export type MultiPolygon = Polygon[];
 
 export type LngLat = { lng: number; lat: number };
-export type Bounds = { west: number; south: number; east: number; north: number };
 
 /**
  * Pulls every Polygon out of an arbitrary RFC 7946 document: a bare geometry,
@@ -34,14 +33,14 @@ function visit(node: Json | undefined, out: Polygon[], depth: number): void {
   switch (node.type) {
     case "FeatureCollection": {
       const features = node.features;
-      if (Array.isArray(features)) {
+      if (isJsonArray(features)) {
         for (const feature of features) visit(feature, out, depth + 1);
       }
       return;
     }
     case "GeometryCollection": {
       const geometries = node.geometries;
-      if (Array.isArray(geometries)) {
+      if (isJsonArray(geometries)) {
         for (const geometry of geometries) visit(geometry, out, depth + 1);
       }
       return;
@@ -56,7 +55,7 @@ function visit(node: Json | undefined, out: Polygon[], depth: number): void {
     }
     case "MultiPolygon": {
       const coordinates = node.coordinates;
-      if (!Array.isArray(coordinates)) return;
+      if (!isJsonArray(coordinates)) return;
       for (const candidate of coordinates) {
         const polygon = asPolygon(candidate);
         if (polygon) out.push(polygon);
@@ -69,13 +68,13 @@ function visit(node: Json | undefined, out: Polygon[], depth: number): void {
 }
 
 function asPolygon(coordinates: Json | undefined): Polygon | null {
-  if (!Array.isArray(coordinates)) return null;
+  if (!isJsonArray(coordinates)) return null;
   const rings: Ring[] = [];
   for (const rawRing of coordinates) {
-    if (!Array.isArray(rawRing) || rawRing.length < 4) continue;
+    if (!isJsonArray(rawRing) || rawRing.length < 4) continue;
     const ring: Position[] = [];
     for (const rawPosition of rawRing) {
-      if (!Array.isArray(rawPosition)) continue;
+      if (!isJsonArray(rawPosition)) continue;
       const [lng, lat] = rawPosition;
       if (isFiniteNumber(lng) && isFiniteNumber(lat)) ring.push([lng, lat]);
     }
@@ -113,22 +112,6 @@ export function contains(polygons: MultiPolygon, point: LngLat): boolean {
     if (!inHole) return true;
   }
   return false;
-}
-
-export function boundsOf(polygons: MultiPolygon): Bounds | null {
-  let west = Infinity;
-  let south = Infinity;
-  let east = -Infinity;
-  let north = -Infinity;
-  for (const rings of polygons) {
-    for (const position of rings[0] ?? []) {
-      if (position[0] < west) west = position[0];
-      if (position[0] > east) east = position[0];
-      if (position[1] < south) south = position[1];
-      if (position[1] > north) north = position[1];
-    }
-  }
-  return Number.isFinite(west) ? { west, south, east, north } : null;
 }
 
 const EARTH_RADIUS_M = 6_378_137;
@@ -173,13 +156,4 @@ function shoelace(ring: Ring): number {
     sum += (b[0] - a[0]) * DEG * ((a[1] + b[1]) * DEG);
   }
   return sum;
-}
-
-/** Great-circle distance in metres. */
-export function distanceMeters(a: LngLat, b: LngLat): number {
-  const dLat = (b.lat - a.lat) * DEG;
-  const dLng = (b.lng - a.lng) * DEG;
-  const meanLat = ((a.lat + b.lat) / 2) * DEG;
-  const x = dLng * Math.cos(meanLat);
-  return Math.hypot(x, dLat) * EARTH_RADIUS_M;
 }

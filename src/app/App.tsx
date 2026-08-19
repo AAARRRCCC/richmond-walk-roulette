@@ -33,6 +33,7 @@ import {
   initialSession,
   outboundMinutes,
   reduce,
+  type Failure,
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
 
@@ -43,8 +44,6 @@ import { randomIndex, useSpin } from "./useSpin";
  * `vite dev --host` from a phone still shows the dev instructions.
  */
 const isDevServer = import.meta.env.DEV;
-
-type Failure = { message: string; configured: boolean };
 
 const describe = (cause: unknown): Failure => ({
   configured: !(cause instanceof NotConfiguredError),
@@ -199,9 +198,9 @@ export function App() {
   const spin = () => {
     if (candidates.length === 0 || drawable.length === 0) return;
     const winner = candidates[randomIndex(candidates.length)]!;
-    const ready = fetchWalkingRoute(origin, winner).then((route) => {
+    const ready = fetchWalkingRoute(origin, winner).then((winnerRoute) => {
       bumpRoutes();
-      return route;
+      return winnerRoute;
     });
     dispatch({ type: "spinStart" });
     runSpin(winner, drawable, ready);

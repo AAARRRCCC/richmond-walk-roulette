@@ -88,7 +88,7 @@ const server = createServer((req, res) => {
       if (!a) return json(res, 400, { error: "no location" });
       const features = (body.contours ?? [])
         .map(({ time }) => time)
-        .sort((x, y) => y - x)
+        .toSorted((x, y) => y - x)
         .map((minutes) => ({
           type: "Feature",
           properties: { contour: minutes, metric: "time" },

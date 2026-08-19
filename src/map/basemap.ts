@@ -13,7 +13,7 @@ import type { StyleSpecification } from "maplibre-gl";
 const TILES = "https://tiles.openfreemap.org/planet";
 const GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 
-export const COLORS = {
+const COLORS = {
   land: "#0b1014",
   green: "#0e1715",
   water: "#05090e",

@@ -11,7 +11,7 @@
 
 import type { Json } from "./json";
 
-export class TransientError extends Error {
+class TransientError extends Error {
   constructor(readonly status: number) {
     super(`Request failed with ${status} after retries.`);
     this.name = "TransientError";

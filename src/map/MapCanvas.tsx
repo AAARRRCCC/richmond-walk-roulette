@@ -159,8 +159,10 @@ export function MapCanvas(props: MapCanvasProps) {
     });
 
     map.on("click", "places", (event) => {
-      // Feature properties round-trip through MapLibre as JSON values.
-      const id: Json | undefined = event.features?.[0]?.properties?.id;
+      // SAFETY: MapLibre parses feature properties out of the GeoJSON this
+      // component sets on the source, so they are Json values; isString then
+      // narrows to the string id the places source actually carries.
+      const id = event.features?.[0]?.properties?.["id"] as Json | undefined;
       if (isString(id) && !handlers.current.pickingOrigin) {
         event.preventDefault();
         handlers.current.onPickPlace(id);
