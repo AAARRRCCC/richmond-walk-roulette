@@ -1,4 +1,4 @@
-import { areaSqMeters, collectPolygons, type LngLat, type MultiPolygon } from "./geometry";
+import { areaSqMeters, collectPolygons, pointKey, type LngLat, type MultiPolygon } from "./geometry";
 import { postJson } from "./http";
 import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson, type Json } from "./json";
 import { LruMap } from "./lru";
@@ -99,9 +99,14 @@ function bandMinutes(budgetMinutes: number): number[] {
 /** @public - the generator stamps this into every file it writes. */
 export const SNAPSHOT_VERSION = 1;
 
-/** @public - the generator names its output files with this. */
+/**
+ * @public - the generator names its output files with this.
+ * Derived from `pointKey` so a snapshot is always filed under the same
+ * coordinates the cache looks it up by; the comma is only swapped out to keep
+ * the name plain.
+ */
 export function snapshotName(origin: LngLat): string {
-  return `${origin.lat.toFixed(5)}_${origin.lng.toFixed(5)}.json`;
+  return `${pointKey(origin).replace(",", "_")}.json`;
 }
 
 /** Seeds the contour cache from a snapshot. False when there is not one. */
@@ -135,7 +140,7 @@ const cache = new LruMap<string, MultiPolygon>(CACHE_LIMIT);
 const inFlight = new Map<string, Promise<MultiPolygon>>();
 
 function cacheKey(origin: LngLat, minutes: number): string {
-  return `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}|${minutes}`;
+  return `${pointKey(origin)}|${minutes}`;
 }
 
 /**

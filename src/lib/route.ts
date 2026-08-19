@@ -1,4 +1,4 @@
-import type { LngLat } from "./geometry";
+import { pointKey, type LngLat } from "./geometry";
 import { pooled } from "./pool";
 import { postJson } from "./http";
 import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson } from "./json";
@@ -16,7 +16,7 @@ const cache = new LruMap<string, WalkingRoute | null>(CACHE_LIMIT);
 const inFlight = new Map<string, Promise<WalkingRoute | null>>();
 
 function cacheKey(origin: LngLat, destination: LngLat): string {
-  return `${origin.lat.toFixed(5)},${origin.lng.toFixed(5)}|${destination.lat.toFixed(5)},${destination.lng.toFixed(5)}`;
+  return `${pointKey(origin)}|${pointKey(destination)}`;
 }
 
 async function requestRoute(origin: LngLat, destination: LngLat): Promise<WalkingRoute | null> {

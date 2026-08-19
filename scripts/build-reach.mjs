@@ -30,14 +30,14 @@ const vite = await createServer({
 });
 const { PRESET_ORIGINS } = await vite.ssrLoadModule("/src/data/places.ts");
 const { LADDER, SNAPSHOT_VERSION, snapshotName } = await vite.ssrLoadModule("/src/lib/isochrone.ts");
-const { collectPolygons } = await vite.ssrLoadModule("/src/lib/geometry.ts");
+const { collectPolygons, COORD_PRECISION } = await vite.ssrLoadModule("/src/lib/geometry.ts");
 
 const base = process.argv[2] ?? "http://localhost:5173";
 const OUT = new URL("../public/reach/", import.meta.url);
 
-/** 5 decimals is ~1.1 m: far finer than a contour drawn on a city map, and it
- *  drops roughly a tenth of the bytes versus the engine's 6. */
-const round = (n) => Number(n.toFixed(5));
+/** The app's own coordinate precision, ~1.1 m: far finer than a contour drawn
+ *  on a city map, and roughly a tenth fewer bytes than the engine's 6. */
+const round = (n) => Number(n.toFixed(COORD_PRECISION));
 
 async function snapshot(origin) {
   const response = await fetch(`${base}/api/isochrone`, {
