@@ -15,7 +15,7 @@
     "tools/oxlint/anti-slop/**",
     "dist/**",
     "design_handoff_walk_roulette/**",
-    "iter-log.html"
+    "docs/history/**"
   ],
   "jsPlugins": [
     { "name": "anti-slop", "specifier": "./tools/oxlint/anti-slop/index.ts" }

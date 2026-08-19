@@ -8,7 +8,7 @@ export default tseslint.config(
     ignores: [
       "dist",
       "design_handoff_walk_roulette",
-      "iter-log.html",
+      "docs/history",
       // Vendored lint plugin: third-party source, not this project's to lint.
       "tools/oxlint/anti-slop",
     ],
