@@ -18,20 +18,23 @@ docker compose up -d
 docker logs -f walk-roulette-valhalla   # first run builds tiles, ~10-20 min
 ```
 
-When the log says it is serving, raise the isochrone contour limit so the
-whole 5-60 minute dial ladder comes back in one query. Edit
-`data/valhalla.json` (the container generates it on first run):
+When the log says it is serving, raise two limits so the whole dial ladder
+comes back in one query. The ladder is every minute from 5 to 100, so that is
+96 contours, and the longest one is 100 minutes. Edit `data/valhalla.json`,
+which the container writes on first run:
 
 ```json
-"service_limits": { "isochrone": { "max_contours": 60 } }
+"service_limits": {
+  "isochrone": { "max_contours": 100, "max_time_contour": 100 }
+}
 ```
 
-then `docker compose restart`. A config edit does not rebuild the tiles.
+Then `docker compose restart`. A config edit does not rebuild the tiles.
 
 Point the app at it:
 
 - dev: in `.env.local` set `VALHALLA_URL=http://localhost:8002` and
-  `VALHALLA_MAX_CONTOURS=60`
+  `VALHALLA_MAX_CONTOURS=100`
 - prod: same two values in `wrangler.toml` `[vars]`, with the URL of wherever
   this Compose stack actually runs
 
@@ -64,9 +67,13 @@ curl 'http://localhost:8002/status'
 `https://valhalla1.openstreetmap.de` is FOSSGIS's community instance. It is
 fine for evaluating the app locally, and this repo's `.env.local` starts
 there so the map works before any of the above exists. It is shared
-infrastructure run by volunteers: its stock `max_contours` of 4 means one
-origin warm-up costs 14 sequential isochrone calls, plus a route per
-reachable place. Do not leave it configured under a deployed URL.
+infrastructure run by volunteers. Its stock `max_contours` of 4 means one
+origin warm-up costs 24 sequential isochrone calls, plus a route per reachable
+place, and it rate-limits to about one call a second. It also caps pedestrian
+isochrones at 100 minutes, which is where this app's dial ceiling comes from:
+ask for more and it answers `Exceeded max time: 100`. Their policy asks apps
+to identify themselves, so the proxy sends `X-Client-Id: walk-roulette`. Do
+not leave it configured under a deployed URL.
 
 ## Walking speed
 
@@ -74,15 +81,19 @@ The proxy pins `walking_speed` to 3.69 km/h for both isochrones and routes
 (`WALKING_SPEED_KMH` in `server/proxy.ts`). That is the pace at which
 Valhalla's 25 minute area from Monroe Park matched the Google contours the
 app shipped with, so the cutover preserved the assumed pace (the contour
-shapes still differ where the engines do; see LAUNCH.md). It is
-a product decision now; change it deliberately and re-measure the README's
-area figures if you do.
+shapes still differ where the engines do; see LAUNCH.md). It is a product decision now. Change it deliberately, and if you do,
+re-measure the README's area figures and regenerate `public/reach/` - every
+precomputed snapshot was built at this pace and nothing detects a stale
+one.
 
 ## Local development without any engine
 
 `node valhalla/stub.mjs` serves a fake Valhalla on port 8003: concentric,
-lightly irregular contours and straight-ish routes, instantly. It speaks
+lightly irregular contours and near-straight routes, instantly. Its routes are
+a straight line from A to B with a small sway, and its contours are noise
+around a circle. It speaks
 just enough of the API for the app (POST /isochrone, /route, /status). Point
 `.env.local` at it (`VALHALLA_URL=http://localhost:8003`,
-`VALHALLA_MAX_CONTOURS=60`) to work on UI, dial feel, or map rendering
-offline. The shapes are synthetic - never judge reachability with it.
+`VALHALLA_MAX_CONTOURS=100`) to work on UI, dial feel, or map rendering
+offline. The shapes are invented. Never judge reachability with it, and never
+judge a route line by it.
