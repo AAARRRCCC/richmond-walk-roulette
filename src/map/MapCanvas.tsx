@@ -199,6 +199,10 @@ export function MapCanvas(props: MapCanvasProps) {
       const step = NUDGES.get(event.key);
       if (!step) return;
       event.preventDefault();
+      // The marker lives inside the canvas container, so MapLibre's own
+      // keyboard handler is upstream of this one: without stopping here, one
+      // arrow press both nudges the origin and pans the map away from it.
+      event.stopPropagation();
       const { lng, lat } = marker.getLngLat();
       const meters = NUDGE_METERS * (event.shiftKey ? 8 : 1);
       marker.setLngLat([

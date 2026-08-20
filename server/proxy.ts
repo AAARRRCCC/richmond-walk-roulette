@@ -125,6 +125,12 @@ function badRequest(message: string): Response {
 }
 
 /**
+ * How many ladder rungs the engine did not answer for. Absent means whole.
+ * The Worker reads it to decide whether an answer is cacheable.
+ */
+export const LADDER_DROPPED_HEADER = "x-ladder-dropped";
+
+/**
  * One structured line on stderr per upstream problem. `wrangler tail` and the
  * dev server's terminal both pick it up, which is the difference between
  * diagnosing a deploy with one command and diagnosing it by loading the site
@@ -381,8 +387,16 @@ async function isochrone(env: ProxyEnv, base: string, payload: JsonObject): Prom
   }
 
   if (features.length > 0) {
-    if (dropped > 0) logUpstream("ladder-partial", { base, gathered: features.length, dropped });
-    return json({ type: "FeatureCollection", features }, 200);
+    if (dropped === 0) return json({ type: "FeatureCollection", features }, 200);
+    logUpstream("ladder-partial", { base, gathered: features.length, dropped });
+    // A partial answer is still worth returning - the client warms per minute
+    // and asks again for the gaps - but it must not be kept as if it were the
+    // whole ladder. The header says how many rungs are missing so the edge can
+    // decline to store it; a cached truncation would serve one blip to every
+    // later visitor for a day, and look exactly like a complete answer.
+    const partial = json({ type: "FeatureCollection", features }, 200);
+    partial.headers.set(LADDER_DROPPED_HEADER, String(dropped));
+    return partial;
   }
   if (firstFailure) return firstFailure;
   // Every chunk answered 200 and none carried contours. That is a broken

@@ -36,6 +36,7 @@ import {
   cachedRoute,
   fetchWalkingRoute,
   prefetchRoutes,
+  routeFailed as routeSettledFailed,
   type WalkingRoute,
 } from "../lib/route";
 import {
@@ -249,9 +250,9 @@ export function App() {
     if (!picked || !pickedRouteMissing || attempt >= ROUTE_ATTEMPTS) return;
     let cancelled = false;
     let timer = 0;
-    void fetchWalkingRoute(origin, picked).then((resolved) => {
+    void fetchWalkingRoute(origin, picked).then(() => {
       if (cancelled) return;
-      if (!routeMissed(origin, picked, resolved)) {
+      if (!routeMissed(origin, picked)) {
         bumpRoutes();
         return;
       }
@@ -437,6 +438,7 @@ export function App() {
         framingKey={state.framingKey}
         route={route}
         pickingOrigin={picking}
+        spinning={state.spinning}
         onPickPlace={(id) => dispatch({ type: "pickPlace", pickedId: id })}
         onMoveOrigin={moveOrigin}
       />
@@ -651,7 +653,13 @@ export function App() {
             arrived at an unnamed pile of names with no hint that pressing one
             draws a route. Closed, a disclosure holds no tab stops at all - and
             the list is worth having for everyone, not as a parallel UI.
-            Borrowing the origin menu's list vocabulary: same shape, same job. */}
+            Borrowing the origin menu's list vocabulary: same shape, same job.
+
+            Held back until there is a reach to count against: `candidates` is
+            empty while the ladder is warming and empty again on an engine
+            error, and "Places in reach (0)" reads as an answer in both. The
+            app does not know the count yet, so it does not offer one. */}
+        {reach !== null && (
         <details className="drawer" {...inertWhen(picking)}>
           <summary>Places in reach ({candidates.length})</summary>
           <ul className="origin-list">
@@ -669,6 +677,7 @@ export function App() {
             ))}
           </ul>
         </details>
+        )}
 
         {import.meta.env.DEV && <TuningPanel />}
 
@@ -686,15 +695,11 @@ export function App() {
  * `fetchWalkingRoute` resolves null for two different things: a destination
  * with no walking route at all, which it caches, and a transient failure,
  * which it deliberately does not - so the cache is what tells them apart. Only
- * the second is worth asking again. Kept as one function so that when route.ts
- * reports a settled failure outright, this body becomes a single call.
+ * the second is worth asking again, and `routeFailed` in route.ts is the one
+ * that knows which happened.
  */
-function routeMissed(
-  origin: LngLat,
-  destination: Place,
-  resolved: WalkingRoute | null,
-): boolean {
-  return resolved === null && cachedRoute(origin, destination) === undefined;
+function routeMissed(origin: LngLat, destination: Place): boolean {
+  return routeSettledFailed(origin, destination);
 }
 
 /**

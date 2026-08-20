@@ -653,6 +653,22 @@ code {
   color: var(--ink);
 }
 
+/* The two controls that belong to the rail itself rather than to any panel in
+   it: mute, and the collapse handle on mobile. A row so they sit at the end of
+   the title line, and shrink-proof so the h1 gives up space first. */
+.brand-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+/* The caret is turned in JSX rather than swapped for a second glyph. The
+   transition is the cue that it is the same control in two states, and it is
+   dropped with everything else under prefers-reduced-motion. */
+.rail-toggle svg {
+  transition: transform 160ms ease;
+}
+
 .link-button {
   /* Padding grows the hit area, the negative margin gives the space back to
      the layout, so "Clear filters" keeps its place on the baseline and stops

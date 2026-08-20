@@ -283,11 +283,16 @@ function cacheKey(origin: LngLat, minutes: number): string {
 async function requestContours(
   origin: LngLat,
   minutes: readonly number[],
+  signal: AbortSignal | undefined,
 ): Promise<Map<number, MultiPolygon>> {
-  const response = await postJson("/api/isochrone", {
-    location: { latitude: origin.lat, longitude: origin.lng },
-    minutes,
-  });
+  const response = await postJson(
+    "/api/isochrone",
+    {
+      location: { latitude: origin.lat, longitude: origin.lng },
+      minutes,
+    },
+    { signal },
+  );
 
   if (!response.ok) {
     const failure = await readJson(response).catch(() => null);
@@ -329,11 +334,17 @@ async function requestContours(
  * report a fraction it actually measured. Minutes already cached or already
  * in flight land on their own timing; the ones this call asks for arrive
  * together, because they arrive in one response.
+ *
+ * `signal` belongs to the caller that started this batch, and reaches the
+ * request itself: an abandoned origin stops costing the engine, rather than
+ * finishing a ladder into a cache nobody will read. Minutes already in flight
+ * for this origin keep whatever signal started them.
  */
 function ensureContours(
   origin: LngLat,
   wanted: readonly number[],
   onSettled?: () => void,
+  signal?: AbortSignal,
 ): Promise<PromiseSettledResult<MultiPolygon>[]> {
   const jobs: Promise<MultiPolygon>[] = [];
   const missing: number[] = [];
@@ -354,7 +365,7 @@ function ensureContours(
   }
 
   if (missing.length > 0) {
-    const batch = requestContours(origin, missing);
+    const batch = requestContours(origin, missing, signal);
     for (const minutes of missing) {
       const key = cacheKey(origin, minutes);
       const promise = batch
@@ -504,10 +515,15 @@ export async function prefetchLadder(
 
   const seeded = LADDER.length - missing.length;
   let settled = 0;
-  const results = await ensureContours(origin, missing, () => {
-    settled++;
-    onProgress({ done: seeded + settled, total: LADDER.length });
-  });
+  const results = await ensureContours(
+    origin,
+    missing,
+    () => {
+      settled++;
+      onProgress({ done: seeded + settled, total: LADDER.length });
+    },
+    signal,
+  );
   onProgress({ done: 1, total: 1 });
 
   const configFailure = results.find(

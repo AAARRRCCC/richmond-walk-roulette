@@ -198,3 +198,52 @@ test("a failing isochrone is neither cached nor silent", async (t) => {
   assert.ok(line.includes('"status":502'));
   assert.ok(!line.includes("engine.local"), "the log line the visitor cannot see is not the one that names the engine");
 });
+
+test("a partial ladder is answered but not kept", async (t) => {
+  const entries = stubEdgeCache(t);
+  // Two chunks against a 50-contour limit; the second one fails, so the
+  // answer carries 50 of the 96 rungs asked for.
+  let chunk = 0;
+  stubFetch(t, (call) => {
+    chunk += 1;
+    return chunk === 1 ? contourResponse(call.body) : new Response("upstream sulked", { status: 500 });
+  });
+
+  const response = await handleWorkerRequest(
+    post("/api/isochrone", { location: MONROE, minutes: FULL_LADDER }),
+    env({ VALHALLA_MAX_CONTOURS: "50" }),
+    CTX,
+  );
+
+  // Worth returning - the client warms per minute and asks again for the
+  // gaps - but a truncation stored as a whole ladder would serve one blip to
+  // every later visitor for a day.
+  assert.equal(response.status, 200);
+  assert.equal(entries.size, 0, "a partial ladder is not what the edge keeps");
+});
+
+test("an answer already at the edge is charged one, not the ladder's cost", async (t) => {
+  stubEdgeCache(t);
+  stubFetch(t, (call) => contourResponse(call.body));
+  const first = limiter();
+
+  await handleWorkerRequest(
+    post("/api/isochrone", { location: MONROE, minutes: FULL_LADDER }),
+    env({ VALHALLA_MAX_CONTOURS: "50", API_RATE_LIMIT: first.binding }),
+    CTX,
+  );
+  assert.equal(first.charged(), 2, "two chunks of engine work, two charges");
+
+  const second = limiter();
+  const hit = await handleWorkerRequest(
+    post("/api/isochrone", { location: MONROE, minutes: FULL_LADDER }),
+    env({ VALHALLA_MAX_CONTOURS: "50", API_RATE_LIMIT: second.binding }),
+    CTX,
+  );
+
+  assert.equal(hit.status, 200);
+  // The charge is meant to be what the request costs the engine, and a hit
+  // costs it nothing. It is still one, so a cache the whole internet can
+  // reach is not a way around the limit.
+  assert.equal(second.charged(), 1);
+});

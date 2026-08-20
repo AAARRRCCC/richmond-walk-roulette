@@ -2,6 +2,7 @@ import {
   handleApiRequest,
   isochroneCacheKey,
   isochroneQueryCost,
+  LADDER_DROPPED_HEADER,
   type ProxyEnv,
 } from "../server/proxy.ts";
 import { readJson, type Json } from "../src/lib/json.ts";
@@ -87,39 +88,45 @@ async function edgeCache(): Promise<Cache | null> {
  * and the copy handed back to the browser stays `no-store` too, because the
  * request it is answering was a POST.
  */
-async function cachedIsochrone(
-  request: Request,
-  env: Env,
-  ctx: WorkerContext,
-  payload: Json,
-): Promise<Response | null> {
+type IsochroneCache = {
+  /** The stored answer, already found. Null means the edge has nothing. */
+  hit: Response | null;
+  /** Stores a fresh answer under the same key. A no-op when there is no cache. */
+  fill(response: Response, ctx: WorkerContext): Promise<Response>;
+};
+
+async function isochroneCache(request: Request, payload: Json): Promise<IsochroneCache> {
   const key = isochroneCacheKey(payload);
   const cache = key === null ? null : await edgeCache();
   const cacheKey = cache === null || key === null ? null : new Request(new URL(key, request.url));
+  const hit = cache && cacheKey ? ((await cache.match(cacheKey)) ?? null) : null;
 
-  if (cache && cacheKey) {
-    const hit = await cache.match(cacheKey);
-    if (hit) return contours(await hit.arrayBuffer());
-  }
+  return {
+    hit: hit ? contours(await hit.arrayBuffer()) : null,
+    async fill(response, ctx) {
+      if (response.status !== 200) return response;
+      // A ladder the engine only partly answered is a truncation, not a
+      // cheaper answer. Storing it would serve one blip to every later
+      // visitor for a day, indistinguishable from a complete ladder.
+      if (response.headers.has(LADDER_DROPPED_HEADER)) return response;
 
-  const response = await handleApiRequest(request, env);
-  if (!response || response.status !== 200) return response;
-
-  const body = await response.arrayBuffer();
-  if (cache && cacheKey) {
-    ctx.waitUntil(
-      cache.put(
-        cacheKey,
-        new Response(body, {
-          headers: {
-            "content-type": "application/json; charset=utf-8",
-            "cache-control": `public, max-age=${ISOCHRONE_CACHE_SECONDS}`,
-          },
-        }),
-      ),
-    );
-  }
-  return contours(body);
+      const body = await response.arrayBuffer();
+      if (cache && cacheKey) {
+        ctx.waitUntil(
+          cache.put(
+            cacheKey,
+            new Response(body, {
+              headers: {
+                "content-type": "application/json; charset=utf-8",
+                "cache-control": `public, max-age=${ISOCHRONE_CACHE_SECONDS}`,
+              },
+            }),
+          ),
+        );
+      }
+      return contours(body);
+    },
+  };
 }
 
 /**
@@ -157,6 +164,10 @@ export async function handleWorkerRequest(
     payload = await readJson(request.clone()).catch(() => null);
   }
 
+  // Consulted before the limiter is charged, because the charge is meant to
+  // be what the request costs the engine and a hit costs it nothing.
+  const cache = isIsochrone ? await isochroneCache(request, payload) : null;
+
   const limiter = env.API_RATE_LIMIT;
   if (limiter) {
     const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
@@ -165,7 +176,9 @@ export async function handleWorkerRequest(
     // them. Charging the real cost is what stops a scraper from simply
     // preferring the expensive endpoint. The binding takes no weight
     // argument, so the charge is that many calls against the same key.
-    const cost = isIsochrone ? isochroneQueryCost(payload, env) : 1;
+    // An answer already at the edge still costs one, so a cache the whole
+    // internet can reach is not a way around the limit.
+    const cost = cache?.hit ? 1 : isIsochrone ? isochroneQueryCost(payload, env) : 1;
     const charged = await Promise.all(
       Array.from({ length: cost }, () => limiter.limit({ key: ip })),
     );
@@ -176,10 +189,11 @@ export async function handleWorkerRequest(
     }
   }
 
-  const response = isIsochrone
-    ? await cachedIsochrone(request, env, ctx, payload)
-    : await handleApiRequest(request, env);
-  if (!response) return env.ASSETS.fetch(request);
+  if (cache?.hit) return cache.hit;
+
+  const upstream = await handleApiRequest(request, env);
+  if (!upstream) return env.ASSETS.fetch(request);
+  const response = cache ? await cache.fill(upstream, ctx) : upstream;
 
   if (response.status >= 300) logApiFailure(request, url.pathname, response.status, Date.now() - started);
   return response;
