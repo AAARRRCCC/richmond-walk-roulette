@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useRef } from "react";
 import { playDetent } from "../lib/sound";
 import { MAX_MINUTES } from "../lib/isochrone";
 
@@ -13,6 +13,8 @@ export type TimeDialProps = {
   isWarm: (minutes: number) => boolean;
   /** 0 to 1 across the warm-up, for the progress hairline under the track. */
   warmedFraction: number;
+  /** Pin-drop mode owns the map; the dial goes with the rest of the rail. */
+  disabled?: boolean;
   onChange: (minutes: number) => void;
   /** Fires when a drag or keypress ends, so the map can re-frame exactly once. */
   onCommit: () => void;
@@ -26,6 +28,23 @@ export function TimeDial(props: TimeDialProps) {
     (_, i) => props.minimum + i * props.step,
   );
   const warming = props.warmedFraction < 1;
+
+  /**
+   * A commit re-frames the camera, so it has to mean "the value moved". Four
+   * events end a gesture and an ordinary mouse drag fires two of them; worse,
+   * blurring the dial after panning the map by hand would fly the camera back
+   * to the contour bounds and throw away the view the reader just set.
+   *
+   * Only tracks commits. A budget changed from elsewhere - the round trip
+   * switch re-snapping it - leaves this stale, and the reducer already
+   * re-frames for that itself.
+   */
+  const committed = useRef(props.minutes);
+  const commit = () => {
+    if (committed.current === props.minutes) return;
+    committed.current = props.minutes;
+    props.onCommit();
+  };
 
   return (
     <div className="dial">
@@ -56,9 +75,17 @@ export function TimeDial(props: TimeDialProps) {
           max={MAX_MINUTES}
           step={props.step}
           value={props.minutes}
+          disabled={props.disabled === true}
           aria-label="Walking time budget"
           aria-describedby={captionId}
-          aria-valuetext={`${props.minutes} minutes`}
+          // The split, not a restatement of the value: `value`, `min` and `max`
+          // already give a reader "50". What it cannot derive is that in round
+          // trip mode fifty minutes is a twenty-five minute walk out.
+          aria-valuetext={
+            props.roundTrip
+              ? `${props.minutes} minutes, ${props.outboundMinutes} out and ${props.outboundMinutes} back`
+              : `${props.minutes} minutes, one way`
+          }
           onChange={(event) => {
             const next = Number(event.target.value);
             // One detent per step the value actually moved, not per input
@@ -69,10 +96,10 @@ export function TimeDial(props: TimeDialProps) {
           // React maps onChange to `input`, which fires continuously during a
           // drag. These are the commit edges: the map re-frames on them so the
           // camera is not restarted on every pixel of the drag.
-          onPointerUp={props.onCommit}
-          onPointerCancel={props.onCommit}
-          onKeyUp={props.onCommit}
-          onBlur={props.onCommit}
+          onPointerUp={commit}
+          onPointerCancel={commit}
+          onKeyUp={commit}
+          onBlur={commit}
         />
       </div>
 
@@ -85,6 +112,17 @@ export function TimeDial(props: TimeDialProps) {
         ) : null}
         <span>{MAX_MINUTES}</span>
       </div>
+
+      {/* The warm-up used to be silent: the counter above sits inside an
+          aria-hidden scale, so a reader met a disabled Spin button and no
+          explanation. Announced in quarters rather than per contour, because
+          the fraction moves ninety-six times and a live region would read
+          every one of them. */}
+      <span className="sr-only" role="status">
+        {warming
+          ? `Loading reachable area, ${Math.round(props.warmedFraction * 4) * 25} percent`
+          : "Reachable area ready"}
+      </span>
     </div>
   );
 }

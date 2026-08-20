@@ -9,22 +9,33 @@ export type ResultCardProps = {
   place: Place;
   route: WalkingRoute | null;
   routeLoading: boolean;
+  /** The route request has settled without a line and has stopped retrying. */
+  routeFailed: boolean;
   roundTrip: boolean;
   /** False when the dial moved below what this walk actually costs. */
   withinBudget: boolean;
   onSpinAgain: () => void;
+  onRetryRoute: () => void;
   onDismiss: () => void;
 };
 
+/**
+ * Not a live region. The reel and the card sit inside the same slot, and both
+ * announcing meant the winner was read twice; App writes one composed sentence
+ * once the route has settled instead.
+ */
 export function ResultCard(props: ResultCardProps) {
   const { place, route } = props;
+  // A skeleton means "still coming". Once the attempts are spent it is a lie,
+  // and the honest answer is a dash next to something to press.
+  const pending = props.routeLoading && !props.routeFailed;
   const mapsUrl =
     "https://www.google.com/maps/dir/?api=1&travelmode=walking" +
     `&origin=${props.origin.lat},${props.origin.lng}` +
     `&destination=${place.lat},${place.lng}`;
 
   return (
-    <section className="result" aria-live="polite">
+    <section className="result">
       <header className="result-head">
         <p className="field-label">Your walk</p>
         <button type="button" className="icon-button" onClick={props.onDismiss} aria-label="Dismiss result">
@@ -38,7 +49,7 @@ export function ResultCard(props: ResultCardProps) {
         <Stat
           label={props.roundTrip ? "Out and back" : "Walk time"}
           value={
-            props.routeLoading
+            pending
               ? null
               : route
                 ? formatMinutes(props.roundTrip ? route.durationSeconds * 2 : route.durationSeconds)
@@ -48,7 +59,7 @@ export function ResultCard(props: ResultCardProps) {
         <Stat
           label="Distance"
           value={
-            props.routeLoading
+            pending
               ? null
               : route
                 ? formatMiles(props.roundTrip ? route.distanceMeters * 2 : route.distanceMeters)
@@ -57,6 +68,16 @@ export function ResultCard(props: ResultCardProps) {
         />
         <Stat label="Terrain" value={place.terrain === "hilly" ? "Hilly" : "Flat"} />
       </dl>
+
+      {props.routeFailed && (
+        <p className="result-warning">
+          <WarningIcon size={15} weight="fill" aria-hidden="true" />
+          Could not measure this walk.
+          <button type="button" className="link-button" onClick={props.onRetryRoute}>
+            Try again
+          </button>
+        </p>
+      )}
 
       {!props.withinBudget && (
         <p className="result-warning">

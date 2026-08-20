@@ -77,8 +77,25 @@ export const TUNING_RANGE = {
 
 const STORAGE_KEY = "walk-roulette:tuning";
 
+/**
+ * The defaults as this browser should first meet them. Only sound differs:
+ * someone who has asked the system for less motion is asking for less
+ * incidental feedback as well, and Web Audio ignores the hardware silent
+ * switch on iOS, so the quiet has to be seeded rather than assumed. Once the
+ * mute has been touched the stored value wins, here as everywhere.
+ */
+function seeded(): Tuning {
+  let quiet = false;
+  try {
+    quiet = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    // No matchMedia: nothing has been asked for, so the plain default stands.
+  }
+  return { ...TUNING_DEFAULTS, soundEnabled: TUNING_DEFAULTS.soundEnabled && !quiet };
+}
+
 function restore(): Tuning {
-  const next = { ...TUNING_DEFAULTS };
+  const next = seeded();
   let stored: string | null = null;
   try {
     stored = window.localStorage.getItem(STORAGE_KEY);
@@ -106,7 +123,7 @@ function restore(): Tuning {
       if (isFiniteNumber(value) && value >= min && value <= max) next[key] = value;
     }
   } catch {
-    return { ...TUNING_DEFAULTS };
+    return seeded();
   }
   return next;
 }
@@ -132,7 +149,7 @@ export function setTuning<K extends keyof Tuning>(key: K, value: Tuning[K]): voi
 }
 
 export function resetTuning(): void {
-  Object.assign(tuning, TUNING_DEFAULTS);
+  Object.assign(tuning, seeded());
   try {
     window.localStorage.removeItem(STORAGE_KEY);
   } catch {
