@@ -19,26 +19,35 @@ test("with a floor the marks divide the range, not the budget", () => {
   // The bug this fixes: dividing the budget put a 15-to-25 range's inner
   // marks at 8 and 17 - one outside the range entirely, the other a minute
   // inside it - so the band lost its gradient exactly when it became a band.
-  const marks = bandMinutes(25, 15);
+  const marks = bandMinutes(50, 30);
 
   for (const mark of marks) {
-    assert.ok(mark > 15, `mark ${mark} is inside the excluded middle`);
-    assert.ok(mark <= 25, `mark ${mark} is past the budget`);
+    assert.ok(mark > 30, `mark ${mark} is inside the excluded middle`);
+    assert.ok(mark <= 50, `mark ${mark} is past the budget`);
   }
-  assert.deepEqual(marks, [18, 22, 25]);
+  assert.deepEqual(marks, [37, 43, 50]);
 });
 
-test("marks stay clear of both ends, so no two contours draw on top of each other", () => {
-  // A range too narrow to fit an inner mark three minutes clear of each end
-  // draws one contour rather than three stacked in the same place.
+test("a narrow range draws fewer contours rather than crowding three in", () => {
+  // Three shapes only read as three while they are far enough apart to be
+  // told apart. Closer than five minutes of walking the fills stack into one
+  // wash and the lines crowd into a single fuzzy edge.
+  assert.deepEqual(bandMinutes(25, 15), [20, 25], "ten minutes carries two");
+  assert.deepEqual(bandMinutes(25, 20), [25], "five carries only its own edge");
   assert.deepEqual(bandMinutes(20, 18), [20]);
 
-  for (const [budget, floor] of [[25, 15], [40, 10], [100, 60], [30, 0]] as const) {
-    for (const mark of bandMinutes(budget, floor)) {
-      const isOutermost = mark === budget;
+  // The same rule without a floor: a small budget was crowded too.
+  assert.deepEqual(bandMinutes(10), [5, 10]);
+});
+
+test("no two marks are closer than the readable minimum", () => {
+  for (const [budget, floor] of [[25, 15], [40, 10], [100, 60], [30, 0], [12, 0], [50, 44]] as const) {
+    const marks = bandMinutes(budget, floor);
+    const edges = [floor, ...marks];
+    for (let i = 1; i < edges.length; i++) {
       assert.ok(
-        isOutermost || (mark <= budget - 3 && mark >= floor + 3),
-        `mark ${mark} crowds an end of ${floor}-${budget}`,
+        edges[i]! - edges[i - 1]! >= 5,
+        `${floor}-${budget} put contours ${edges[i - 1]} and ${edges[i]} together`,
       );
     }
   }

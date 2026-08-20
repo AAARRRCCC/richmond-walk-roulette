@@ -89,18 +89,38 @@ const BAND_COUNT = 3;
 const bandMarks = new Map<string, readonly number[]>();
 
 /**
- * Keeps two contours from landing on top of each other. Below this the fill
- * of one is inside the line of the next and the gradient reads as one edge.
+ * The least walking, in minutes, that may separate two contours.
+ *
+ * Three nested shapes are what make a reach read as territory rather than a
+ * blob, but only while they are far enough apart to be read as three. Packed
+ * closer than this the fills stack into one flat wash and the lines crowd
+ * into a single fuzzy edge, which looks worse than simply drawing fewer.
+ *
+ * It is a floor on the gap, not on the count. A narrow range draws two
+ * contours, a very narrow one draws only its own edge, and the app says less
+ * rather than saying it illegibly.
  */
-const MIN_BAND_GAP = 3;
+const MIN_BAND_SPAN = 5;
+
+/**
+ * How many contours a span of minutes can carry. The most `BAND_COUNT` allows
+ * and the fewest the span demands.
+ */
+function bandCount(span: number): number {
+  for (let n = BAND_COUNT; n > 1; n--) {
+    if (span / n >= MIN_BAND_SPAN) return n;
+  }
+  return 1;
+}
 
 /**
  * Minute marks to draw, innermost first, always ending at the budget itself.
  * Marks snap to `INNER_STEP`, so every one is a ladder value the warm-up
  * already covers.
  *
- * The marks divide the RANGE, not the budget. Without a floor those are the
- * same thing and this is thirds of the budget, as it always was. With one,
+ * The marks divide the RANGE, not the budget, and how many of them there are
+ * comes from how wide that range is. Without a floor the range is the budget
+ * and a normal one is still drawn in thirds, as it always was. With one,
  * dividing the budget instead would pile every mark against the outer edge:
  * a 15 to 25 minute range would put its inner bands at 8 and 17, one of them
  * outside the range entirely and the other a minute inside it, so the reach
@@ -117,17 +137,16 @@ export function bandMinutes(budgetMinutes: number, floorMinutes = 0): readonly n
   if (memo) return memo;
 
   const span = budgetMinutes - floorMinutes;
+  const count = bandCount(span);
   const marks = new Set<number>();
-  for (let k = 1; k < BAND_COUNT; k++) {
-    const raw = floorMinutes + (span * k) / BAND_COUNT;
+  for (let k = 1; k < count; k++) {
+    const raw = floorMinutes + (span * k) / count;
     // Floored at the ladder's own start, not at the step: a mark below
     // MIN_MINUTES has no contour behind it and would strand the whole reach.
     const snapped = Math.max(MIN_MINUTES, Math.round(raw / INNER_STEP) * INNER_STEP);
-    // Clear of both ends of the range, so an inner band is never drawn on top
-    // of the budget's own contour or of the hole punched by the floor.
-    if (snapped <= budgetMinutes - MIN_BAND_GAP && snapped >= floorMinutes + MIN_BAND_GAP) {
-      marks.add(snapped);
-    }
+    // Snapping can pull a mark back onto an end it was clear of before it was
+    // rounded onto the ladder.
+    if (snapped < budgetMinutes && snapped > floorMinutes) marks.add(snapped);
   }
 
   const computed = Object.freeze([...marks].toSorted((a, b) => a - b).concat(budgetMinutes));
