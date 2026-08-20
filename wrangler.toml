@@ -2,8 +2,8 @@ name = "walk-roulette"
 main = "worker/index.ts"
 compatibility_date = "2026-07-01"
 
-# The Worker serves the built site and forwards the two API endpoints to the
-# Valhalla instance named below.
+# The Worker serves the built site and forwards the three API endpoints to
+# the Valhalla instance named below.
 [assets]
 directory = "./dist"
 binding = "ASSETS"
@@ -13,19 +13,34 @@ binding = "ASSETS"
 # secret in the usual sense, but the engine should still only ever be
 # reachable through this Worker; firewall it to Cloudflare or bind it to a
 # private network if the host allows.
+#
+# 100 is the number valhalla/README.md, LAUNCH.md and .env.example all name,
+# and the dial ladder is 96 contours, so the whole warm-up is one upstream
+# query. It must match the instance's own
+# service_limits.isochrone.max_contours: set here higher than the engine
+# allows and every batch is rejected upstream.
 [vars]
 VALHALLA_URL = ""
-VALHALLA_MAX_CONTOURS = "60"
+VALHALLA_MAX_CONTOURS = "100"
 
 # Per-IP rate limit on /api/*. The engine is self-hosted so the exposure is
 # CPU rather than a bill, but an open endpoint would still let one scraper
-# saturate a small box. It has to admit one honest origin warm-up, which is
-# one ladder request plus a route to every reachable place: call it 40
-# requests over a few seconds.
+# saturate a small box.
 #
-# 240 per minute therefore allows several full origin changes per minute per
-# IP and throttles sustained scraping. The client retries 429 with backoff,
-# so a user who does trip it sees a slower warm-up rather than a broken map.
+# The unit is one upstream graph expansion, not one client request: the
+# Worker charges an isochrone call ceil(minutes / max_contours) times, so a
+# ladder cannot be billed as if it cost what a route costs. That is what
+# stops a scraper from simply choosing the expensive endpoint.
+#
+# One honest origin warm-up is one ladder (1 query at max_contours 100, 24
+# against a stock instance) plus a route to every reachable place, so call it
+# 60 to 90 queries over a few seconds. 240 a minute admits several origin
+# changes and throttles sustained scraping. The client retries 429 with
+# jittered backoff, so a user who does trip it sees a slower warm-up rather
+# than a broken map.
+#
+# `period` is also what worker/index.ts sends as Retry-After. Change one and
+# change the other; server/worker.test.ts checks the range.
 [[unsafe.bindings]]
 name = "API_RATE_LIMIT"
 type = "ratelimit"

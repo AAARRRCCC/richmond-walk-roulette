@@ -24,8 +24,9 @@ shows the not-configured panel. Dropped pins and every route need the engine.
       can reach. A small VPS is plenty. Stadia Maps is fine if you would
       rather not run one.
 - [ ] Set `max_contours: 100` and `max_time_contour: 100` in the engine
-      config, and `VALHALLA_MAX_CONTOURS=100`. Leave them stock and each
-      warm-up becomes 24 chunked queries instead of one.
+      config, and `VALHALLA_MAX_CONTOURS=100` in `wrangler.toml` `[vars]`.
+      Those three numbers must agree. Leave them stock and each warm-up
+      becomes 24 chunked queries instead of one.
 - [ ] Put TLS in front of the engine, and firewall it so only the Worker
       reaches it. The engine enforces no geographic bounds itself. The proxy
       does.
@@ -44,11 +45,19 @@ each:
       clamps contour minutes. `npm test` covers both against a stubbed engine.
 - [ ] It forces pedestrian costing and pins the walking speed. The client
       cannot choose a travel mode.
-- [ ] The rate-limit binding in `wrangler.toml` is present and deployed.
-      Check that it fires: hit `/api/isochrone` more than 240 times in a
-      minute from one IP and expect a `429`.
+- [ ] The rate-limit binding in `wrangler.toml` is present and deployed. The
+      unit is one upstream graph expansion, not one client request: the
+      Worker charges an isochrone call `ceil(minutes / max_contours)` times,
+      so a full ladder against a stock instance spends 24. `npm test` covers
+      the charging and the `Retry-After` it answers with; only the binding
+      itself needs checking here.
 - [ ] Spot-check a bad request. It should return a status and a short reason,
       never the engine's raw error body.
+- [ ] Confirm an outage says nothing about your infrastructure. Point
+      `VALHALLA_URL` at a dead host and read the response body: it must say
+      the engine is not answering and must not name it. The address belongs
+      in `wrangler tail`, which is also where the one structured line per
+      non-2xx `/api/*` answer shows up.
 
 ## Measured: how Valhalla's contours compare to Google's
 
@@ -80,6 +89,9 @@ Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re
       came back 2.597 km against 2.310 km straight-line, a 1.12× detour.
 - [x] A preset origin cold-starts from its snapshot: measured 3-7 ms, zero
       `/api/isochrone` calls.
+- [ ] `curl <deployed>/api/health` answers `{"ok":true,...}` with a version
+      and a tileset date. That is the whole reachability check in one
+      command, and what an uptime monitor should poll.
 - [x] Full-dial scrub is instant once warm, and the contour and readout track
       every minute.
 - [x] Spin end to end: reel, route line, result card with walk time and
@@ -91,7 +103,9 @@ Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re
 ## Ship
 
 - [x] `npm run build` clean, `npm run typecheck` clean, `npm run lint` clean
-      (eslint, oxlint, knip), `npm test` green at 24 tests.
+      (eslint, oxlint, knip), `npm test` green. CI runs all four on every
+      push (`.github/workflows/ci.yml`), so this is a green check rather
+      than a thing to remember.
 - [ ] `npx wrangler deploy`.
 - [ ] Hit the deployed URL once with `VALHALLA_URL` unset, to confirm the
       not-configured panel appears rather than a blank map.
@@ -115,7 +129,10 @@ Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re
   all of it.
 - **Custom origins pay full price.** Only the 11 presets have snapshots. A
   dropped pin still warms the whole ladder from the engine, which against a
-  stock-limit instance is 24 sequential queries.
+  stock-limit instance is 24 sequential queries. The Worker caches the answer
+  at the edge for a day, keyed on the origin rounded to 5 decimals, so the
+  second person to drop a pin on the same block pays nothing - but the first
+  one pays in full.
 - **The warm-up progress bar is binary.** The ladder arrives as one response,
   so it jumps 0 to 100 rather than filling. Cosmetic. Revisit if a slow engine
   makes the wait feel dead.
