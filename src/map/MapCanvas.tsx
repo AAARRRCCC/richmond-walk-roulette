@@ -11,6 +11,14 @@ import type { Reach } from "../lib/isochrone";
 import type { WalkingRoute } from "../lib/route";
 import { PRESET_ORIGINS, type Place } from "../data/places";
 
+/**
+ * Both place layers answer a click. Out-of-reach dots are drawn dimmer, not
+ * made inert: the dial is a question, and asking one about a place outside the
+ * current answer is reasonable. The result card says the walk exceeds the
+ * budget rather than the map refusing to respond.
+ */
+const PLACE_LAYERS = ["places", "places-out"];
+
 /** Slot 0 renders at the bottom and always holds the outermost contour. */
 const SLOTS = [0, 1, 2] as const;
 const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
@@ -253,9 +261,10 @@ export function MapCanvas(props: MapCanvasProps) {
       );
 
       map.addSource("places", { type: "geojson", data: EMPTY });
-      // Two layers over one source so the interactive one can be filtered.
-      // Offering a hand cursor and a route to a place the same frame draws as
-      // out of reach is the map contradicting itself.
+      // Two layers over one source so out-of-reach places can be drawn dimmer.
+      // Both are interactive: a place beyond the budget is still a place, and
+      // asking about one is a fair question. The card answers it honestly by
+      // saying the walk is longer than the dial allows.
       map.addLayer({
         id: "places-out",
         type: "circle",
@@ -271,8 +280,11 @@ export function MapCanvas(props: MapCanvasProps) {
         paint: {
           "circle-radius": weighted(["match", ["get", "state"], "picked", 8, 4.5]),
           "circle-color": ["match", ["get", "state"], "picked", "#ffffff", ACCENT],
-          "circle-stroke-width": ["match", ["get", "state"], "picked", 3, 1.5],
-          "circle-stroke-color": ["match", ["get", "state"], "picked", ACCENT, "#0b1014"],
+          // Only the winner carries a ring, and it is the accent rather than a
+          // dark cut-out: a halo the colour of the background reads as a hole
+          // punched in the contour it sits on.
+          "circle-stroke-width": ["match", ["get", "state"], "picked", 3, 0],
+          "circle-stroke-color": ACCENT,
         },
       });
       map.addLayer({
@@ -315,7 +327,7 @@ export function MapCanvas(props: MapCanvasProps) {
       if (event.sourceId === "omt" && event.isSourceLoaded) setBasemapDown(false);
     });
 
-    map.on("click", "places", (event) => {
+    map.on("click", PLACE_LAYERS, (event) => {
       // SAFETY: MapLibre parses feature properties out of the GeoJSON this
       // component sets on the source, so they are Json values; isString then
       // narrows to the string id the places source actually carries.
@@ -325,10 +337,10 @@ export function MapCanvas(props: MapCanvasProps) {
         handlers.current.onPickPlace(id);
       }
     });
-    map.on("mouseenter", "places", () => {
+    map.on("mouseenter", PLACE_LAYERS, () => {
       if (!handlers.current.pickingOrigin) map.getCanvas().style.cursor = "pointer";
     });
-    map.on("mouseleave", "places", () => {
+    map.on("mouseleave", PLACE_LAYERS, () => {
       map.getCanvas().style.cursor = handlers.current.pickingOrigin ? "crosshair" : "";
     });
     map.on("click", (event) => {

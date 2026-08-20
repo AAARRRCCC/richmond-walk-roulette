@@ -81,11 +81,35 @@ test("a slow route keeps the reel turning instead of parking it", () => {
   }
 });
 
+/**
+ * One frame at 60fps. A flip interval shorter than this cannot be drawn one
+ * name at a time, however the reel is written - the browser simply is not
+ * asked to paint that often.
+ */
+const FRAME_MS = 16;
+
 test("every draw advances exactly one slot, so it reads as rotation", () => {
-  const { drawn } = replay(5500);
+  // Held at one frame rather than the shipped default, which is deliberately
+  // faster than a frame. Below the frame budget the invariant is not the
+  // reel's to keep; the test below covers what is true down there.
+  const settings = { ...SETTINGS, spinFirstFlipMs: FRAME_MS };
+  const { drawn } = replay(5500, settings);
   for (let i = 1; i < drawn.length; i++) {
     const step = (drawn[i]!.slot - drawn[i - 1]!.slot + SLOTS) % SLOTS;
     assert.equal(step, 1, `draw ${i} moved ${step} slots`);
+  }
+});
+
+test("a sub-frame flip interval still sweeps forward, never back or still", () => {
+  // The shipped default opens at 10ms, so the early reel owes more than one
+  // flip per frame and draws the slot it has reached. It must still travel in
+  // one direction and keep moving: a sweep that stutters or reverses reads as
+  // a glitch rather than a wheel.
+  assert.ok(SETTINGS.spinFirstFlipMs < FRAME_MS, "the default is a sub-frame interval");
+  const { drawn } = replay(5500);
+  for (let i = 1; i < drawn.length; i++) {
+    const step = (drawn[i]!.slot - drawn[i - 1]!.slot + SLOTS) % SLOTS;
+    assert.ok(step >= 1, `draw ${i} did not advance`);
   }
 });
 

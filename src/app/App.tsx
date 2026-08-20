@@ -74,6 +74,18 @@ const ROUTE_ATTEMPTS = 3;
 const ROUTE_BACKOFF_MS = 900;
 
 /**
+ * How long Spin waits for the whole pool before it opens on a partial one.
+ *
+ * Waiting is the right default - a reel that turns through a subset is a reel
+ * misreporting the pool - but waiting forever is worse. A throttled engine
+ * answers routes minutes apart, and against one the strict gate never opens
+ * at all, which reads as the app being broken rather than the engine being
+ * busy. So the wait is bounded, and when it runs out the app says plainly
+ * that the reel is short rather than quietly turning through what it has.
+ */
+const ROUTE_WARM_GRACE_MS = 12_000;
+
+/**
  * `inert`, written by hand. React 18 has no boolean handling for the attribute
  * and its types do not know it at all, so the present-means-on empty string is
  * spread in instead of passed as a prop. This is what takes the dimmed rail
@@ -228,6 +240,42 @@ export function App() {
    */
   const drawable = candidates.filter((place) => cachedRoute(origin, place));
 
+  /**
+   * A candidate has settled when the question has an answer, whatever it is: a
+   * route, a cached "there is no walking route here", or attempts spent on a
+   * failure. Spin waits for all of them.
+   *
+   * It used to open as soon as one route landed, which meant the reel ticked
+   * through whichever places happened to be back and silently skipped the
+   * rest - so the same origin gave a different set of possible winners
+   * depending on when you pressed it. That is the reel misrepresenting the
+   * pool, which is the one thing this app is built not to do. Waiting costs a
+   * second or two on a cold origin and makes the throw honest.
+   */
+  const settledRoutes = candidates.filter(
+    (place) => cachedRoute(origin, place) !== undefined || routeSettledFailed(origin, place),
+  ).length;
+  const routesPending = candidates.length > 0 && settledRoutes < candidates.length;
+
+  /**
+   * Which pool the wait has run out for, rather than a flag that has to be
+   * cleared. A new origin or a new filter set makes its own key, so it starts
+   * its own full wait simply by not matching - nothing has to remember to
+   * reset, and a timer left over from the previous pool cannot open the gate
+   * for this one.
+   */
+  const poolKey = `${pointKey(origin)}|${candidateKey}`;
+  const [graceOverFor, setGraceOverFor] = useState<string | null>(null);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setGraceOverFor(poolKey), ROUTE_WARM_GRACE_MS);
+    return () => window.clearTimeout(timer);
+  }, [poolKey]);
+  const warmGraceOver = graceOverFor === poolKey;
+
+  const routesWarming = routesPending && !warmGraceOver;
+  /** The wait ran out with routes still missing, so the reel will be short. */
+  const reelIsShort = routesPending && warmGraceOver;
+
   const { showing, run: runSpin, cancel: cancelSpin } = useSpin(
     useCallback((place: Place) => dispatch({ type: "spinEnd", pickedId: place.id }), []),
   );
@@ -283,7 +331,7 @@ export function App() {
    * the result card calls this directly.
    */
   const spin = () => {
-    if (candidates.length === 0 || drawable.length === 0) return;
+    if (candidates.length === 0 || drawable.length === 0 || routesWarming) return;
     playPress();
     const winner = candidates[randomIndex(candidates.length)]!;
     const ready = fetchWalkingRoute(origin, winner).then((winnerRoute) => {
@@ -558,12 +606,13 @@ export function App() {
             className="button is-spin"
             onClick={spin}
             aria-describedby={emptyNotice ? emptyNoticeId : undefined}
-            // Routes lag the contours by a second or two on a cold origin, and
-            // spinning before any of them land would tick through names with
-            // no line on the map. That is the thing the reel exists to show.
+            // Routes lag the contours by a second or two on a cold origin. The
+            // reel exists to show a real walk per tick, so it waits for the
+            // whole pool rather than turning through whichever routes are back.
             disabled={
               candidates.length === 0 ||
               drawable.length === 0 ||
+              routesWarming ||
               state.spinning ||
               picking ||
               status !== "ready"
@@ -572,10 +621,21 @@ export function App() {
             <ShuffleIcon size={18} weight="bold" aria-hidden="true" />
             {state.spinning
               ? "Spinning"
-              : status === "ready" && candidates.length > 0 && drawable.length === 0
-                ? "Loading routes"
+              : status === "ready" && routesWarming
+                ? `Loading routes ${settledRoutes}/${candidates.length}`
                 : "Spin"}
           </button>
+
+          {reelIsShort && !emptyNotice && (
+            /* Said rather than hidden. The reel can only turn through walks it
+               can draw, so with routes still missing it is showing a subset -
+               and a wheel that quietly omits some of its own pool is the same
+               lie as a circle. */
+            <div className="notice" {...inertWhen(picking)} role="status">
+              {drawable.length} of {candidates.length} routes are ready. The reel turns
+              through those; the rest are still coming from the engine.
+            </div>
+          )}
 
           {emptyNotice && (
             <div className="notice" id={emptyNoticeId} {...inertWhen(picking)}>

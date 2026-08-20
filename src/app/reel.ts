@@ -64,8 +64,9 @@ export function orderAroundOrigin<T extends Point>(origin: Point, places: readon
 /** Interval until the next flip at this point in the throw, in ms. */
 function flipInterval(elapsed: number, settings: Tuning): number {
   const progress = Math.min(1, elapsed / settings.spinDurationMs);
-  // Ease-out, so the reel visibly slows. A higher exponent holds the fast
-  // phase longer and then drops off harder.
+  // Ease-out, so the reel visibly slows. The exponent is on the REMAINING
+  // progress, so a value below 1 holds the fast phase almost to the end and
+  // then drops hard, and a value above 1 begins slowing immediately.
   const eased = 1 - Math.pow(1 - progress, settings.spinEaseExponent);
   return settings.spinFirstFlipMs + (settings.spinLastFlipMs - settings.spinFirstFlipMs) * eased;
 }

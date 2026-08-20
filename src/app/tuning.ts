@@ -19,7 +19,11 @@ export type Tuning = {
   spinFirstFlipMs: number;
   /** Interval between the last two flips, ms. The gap to first is the slowdown. */
   spinLastFlipMs: number;
-  /** Ease exponent on the flip interval: 1 is linear, higher slows later and harder. */
+  /**
+   * Ease exponent on the flip interval. The curve is
+   * `1 - (1 - progress) ** exponent`, so 1 is linear, BELOW 1 holds the fast
+   * phase longer and drops at the end, and above 1 starts slowing at once.
+   */
   spinEaseExponent: number;
   /** Longest the reel keeps turning while waiting on the winner's route, ms. */
   spinMaxHoldMs: number;
@@ -42,12 +46,12 @@ export type Tuning = {
 };
 
 export const TUNING_DEFAULTS: Tuning = {
-  spinDurationMs: 4000,
-  spinFirstFlipMs: 30,
-  spinLastFlipMs: 320,
-  spinEaseExponent: 3,
+  spinDurationMs: 3000,
+  spinFirstFlipMs: 10,
+  spinLastFlipMs: 100,
+  spinEaseExponent: 1,
   spinMaxHoldMs: 4000,
-  spinSettleMs: 340,
+  spinSettleMs: 420,
   soundVolume: 0.5,
   soundEnabled: true,
   spinCircularOrder: true,
@@ -62,7 +66,10 @@ export const TUNING_RANGE = {
   spinDurationMs: { min: 500, max: 10000, step: 100 },
   spinFirstFlipMs: { min: 10, max: 300, step: 5 },
   spinLastFlipMs: { min: 40, max: 1200, step: 10 },
-  spinEaseExponent: { min: 1, max: 6, step: 0.1 },
+  // Below 1 is the interesting half: the reel holds its top speed almost the
+  // whole throw and then falls off a cliff onto the winner. Not zero, which
+  // would be no slowdown at all and so no landing to watch.
+  spinEaseExponent: { min: 0.2, max: 6, step: 0.1 },
   spinMaxHoldMs: { min: 0, max: 10000, step: 250 },
   // Not zero: the settle is what puts the winner on screen before the card
   // takes over, and a dwell under about a tenth of a second is a flicker

@@ -33,7 +33,7 @@ const SLIDERS: { key: NumericTuningKey; label: string; hint: string; unit: strin
   { key: "spinDurationMs", label: "Spin length", hint: "how long the reel turns", unit: "ms" },
   { key: "spinFirstFlipMs", label: "Start interval", hint: "gap between the first flips", unit: "ms" },
   { key: "spinLastFlipMs", label: "End interval", hint: "gap between the last flips", unit: "ms" },
-  { key: "spinEaseExponent", label: "Slowdown", hint: "higher stays fast, then drops", unit: "" },
+  { key: "spinEaseExponent", label: "Slowdown", hint: "below 1 stays fast, then drops", unit: "" },
   { key: "spinSettleMs", label: "Settle", hint: "how long it rests on the winner", unit: "ms" },
   { key: "spinMaxHoldMs", label: "Route grace", hint: "extra turning while a route loads", unit: "ms" },
   { key: "soundVolume", label: "Cue level", hint: "master volume for every sound", unit: "" },
