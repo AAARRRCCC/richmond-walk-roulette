@@ -2,6 +2,7 @@ import {
   handleApiRequest,
   isochroneCacheKey,
   isochroneQueryCost,
+  routeCacheKey,
   LADDER_DROPPED_HEADER,
   type ProxyEnv,
 } from "../server/proxy.ts";
@@ -32,6 +33,14 @@ const RETRY_AFTER_JITTER_SECONDS = 5;
  * rebuild that ends it early.
  */
 const ISOCHRONE_CACHE_SECONDS = 86_400;
+
+/**
+ * A single walk keeps longer than a ladder. It is a few hundred bytes rather
+ * than a couple of megabytes, and the same handful are asked for by every
+ * visitor who picks the same preset, so the hit rate is what makes the engine
+ * quiet rather than the size saved.
+ */
+const ROUTE_CACHE_SECONDS = 7 * 86_400;
 
 /**
  * One structured line per non-2xx `/api/*` answer. `wrangler tail` picks it
@@ -88,15 +97,20 @@ async function edgeCache(): Promise<Cache | null> {
  * and the copy handed back to the browser stays `no-store` too, because the
  * request it is answering was a POST.
  */
-type IsochroneCache = {
+type EdgeEntry = {
   /** The stored answer, already found. Null means the edge has nothing. */
   hit: Response | null;
   /** Stores a fresh answer under the same key. A no-op when there is no cache. */
   fill(response: Response, ctx: WorkerContext): Promise<Response>;
 };
 
-async function isochroneCache(request: Request, payload: Json): Promise<IsochroneCache> {
-  const key = isochroneCacheKey(payload);
+async function edgeEntry(
+  request: Request,
+  payload: Json,
+  keyFor: (payload: Json) => string | null,
+  seconds: number,
+): Promise<EdgeEntry> {
+  const key = keyFor(payload);
   const cache = key === null ? null : await edgeCache();
   const cacheKey = cache === null || key === null ? null : new Request(new URL(key, request.url));
   const hit = cache && cacheKey ? ((await cache.match(cacheKey)) ?? null) : null;
@@ -118,7 +132,7 @@ async function isochroneCache(request: Request, payload: Json): Promise<Isochron
             new Response(body, {
               headers: {
                 "content-type": "application/json; charset=utf-8",
-                "cache-control": `public, max-age=${ISOCHRONE_CACHE_SECONDS}`,
+                "cache-control": `public, max-age=${seconds}`,
               },
             }),
           ),
@@ -157,16 +171,23 @@ export async function handleWorkerRequest(
   const started = Date.now();
   const isIsochrone = url.pathname === "/api/isochrone";
 
+  const isRoute = url.pathname === "/api/route";
+
   // Read once and use twice: the ladder's size decides what the request costs
   // the limiter, and its contents decide what it is cached under.
   let payload: Json = null;
-  if (isIsochrone && request.method === "POST") {
+  if ((isIsochrone || isRoute) && request.method === "POST") {
     payload = await readJson(request.clone()).catch(() => null);
   }
 
   // Consulted before the limiter is charged, because the charge is meant to
   // be what the request costs the engine and a hit costs it nothing.
-  const cache = isIsochrone ? await isochroneCache(request, payload) : null;
+  let cache: EdgeEntry | null = null;
+  if (isIsochrone) {
+    cache = await edgeEntry(request, payload, isochroneCacheKey, ISOCHRONE_CACHE_SECONDS);
+  } else if (isRoute) {
+    cache = await edgeEntry(request, payload, routeCacheKey, ROUTE_CACHE_SECONDS);
+  }
 
   const limiter = env.API_RATE_LIMIT;
   if (limiter) {

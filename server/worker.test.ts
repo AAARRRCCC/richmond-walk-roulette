@@ -247,3 +247,43 @@ test("an answer already at the edge is charged one, not the ladder's cost", asyn
   // reach is not a way around the limit.
   assert.equal(second.charged(), 1);
 });
+
+test("the same walk is asked for once, however many visitors want it", async (t) => {
+  const entries = stubEdgeCache(t);
+  // "shape" is Valhalla's wire key for a leg's encoded polyline, assigned
+  // rather than declared so the name stays the engine's without becoming a
+  // symbol in this codebase.
+  const leg: Record<string, string> = {};
+  leg["shape"] = "abc";
+  const calls = stubFetch(t, () =>
+    Response.json({ trip: { legs: [leg], summary: { length: 1.2, time: 900 } } }),
+  );
+
+  const walk = { origin: MONROE, destination: { latitude: 37.5407, longitude: -77.4360 } };
+  const first = await handleWorkerRequest(post("/api/route", walk), env({}), CTX);
+
+  assert.equal(first.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(entries.size, 1);
+  // The browser's copy answers a POST, so nothing downstream may keep it.
+  assert.equal(first.headers.get("cache-control"), "no-store");
+
+  const second = await handleWorkerRequest(post("/api/route", walk), env({}), CTX);
+  assert.equal(second.status, 200);
+  assert.equal(calls.length, 1, "the second visitor never reached the engine");
+  assert.deepEqual(await readJson(second), await readJson(first));
+});
+
+test("a route the engine could not answer is not kept", async (t) => {
+  const entries = stubEdgeCache(t);
+  stubFetch(t, () => new Response("no", { status: 500 }));
+
+  const response = await handleWorkerRequest(
+    post("/api/route", { origin: MONROE, destination: { latitude: 37.54, longitude: -77.43 } }),
+    env({}),
+    CTX,
+  );
+
+  assert.ok(response.status >= 400);
+  assert.equal(entries.size, 0);
+});

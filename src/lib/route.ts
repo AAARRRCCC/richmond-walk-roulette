@@ -3,6 +3,7 @@ import { pooled } from "./pool";
 import { postJson } from "./http";
 import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson } from "./json";
 import { LruMap } from "./lru";
+import { flush, rememberRoute, storedRoute } from "./route-store.ts";
 
 export type WalkingRoute = {
   coords: LngLat[];
@@ -36,7 +37,10 @@ function cacheKey(origin: LngLat, destination: LngLat): string {
   return `${pointKey(origin)}|${pointKey(destination)}`;
 }
 
-async function requestRoute(origin: LngLat, destination: LngLat): Promise<WalkingRoute | null> {
+/** The route, plus the engine's own encoded legs, which is what gets stored. */
+type FetchedRoute = { route: WalkingRoute; encodedLegs: string[] } | null;
+
+async function requestRoute(origin: LngLat, destination: LngLat): Promise<FetchedRoute> {
   const response = await postJson("/api/route", {
     origin: { latitude: origin.lat, longitude: origin.lng },
     destination: { latitude: destination.lat, longitude: destination.lng },
@@ -54,11 +58,14 @@ async function requestRoute(origin: LngLat, destination: LngLat): Promise<Walkin
   const trip = isJsonObject(payload) && isJsonObject(payload.trip) ? payload.trip : undefined;
   const legs = trip && isJsonArray(trip.legs) ? trip.legs : [];
 
+  const encodedLegs: string[] = [];
   const coords: LngLat[] = [];
   for (const leg of legs) {
     if (!isJsonObject(leg)) continue;
     const encodedPolyline = leg["shape"];
-    if (isString(encodedPolyline)) coords.push(...decodePolyline(encodedPolyline));
+    if (!isString(encodedPolyline)) continue;
+    encodedLegs.push(encodedPolyline);
+    coords.push(...decodePolyline(encodedPolyline));
   }
   if (coords.length === 0) return null;
 
@@ -67,10 +74,38 @@ async function requestRoute(origin: LngLat, destination: LngLat): Promise<Walkin
   const timeSeconds = summary && isFiniteNumber(summary.time) ? summary.time : 0;
 
   return {
-    coords,
-    distanceMeters: Math.round(lengthKm * 1000),
-    durationSeconds: timeSeconds,
+    route: {
+      coords,
+      distanceMeters: Math.round(lengthKm * 1000),
+      durationSeconds: timeSeconds,
+    },
+    encodedLegs,
   };
+}
+
+/**
+ * The in-memory answer, falling back to what a previous visit stored.
+ *
+ * Decoded on the way through and kept in memory afterwards, so the cost is
+ * paid once per pair per session rather than on every render.
+ */
+function entryFor(key: string): CacheEntry | undefined {
+  const live = cache.peek(key);
+  if (live !== undefined) return live;
+
+  const stored = storedRoute(key);
+  if (!stored) return undefined;
+
+  const entry: CacheEntry =
+    stored.encodedLegs === null
+      ? null
+      : {
+          coords: stored.encodedLegs.flatMap((leg) => decodePolyline(leg)),
+          distanceMeters: stored.distanceMeters,
+          durationSeconds: stored.durationSeconds,
+        };
+  cache.set(key, entry);
+  return entry;
 }
 
 /**
@@ -89,15 +124,22 @@ export function fetchWalkingRoute(
 ): Promise<WalkingRoute | null> {
   const key = cacheKey(origin, destination);
 
-  const settled = cache.get(key);
+  const settled = entryFor(key);
   if (settled !== undefined && settled !== FAILED) return Promise.resolve(settled);
 
   const pending = inFlight.get(key);
   if (pending) return pending;
 
   const promise = requestRoute(origin, destination)
-    .then((route) => {
+    .then((fetched) => {
+      const route = fetched?.route ?? null;
       cache.set(key, route);
+      // Only settled answers are kept. A transient failure never reaches here.
+      rememberRoute(key, {
+        encodedLegs: fetched?.encodedLegs ?? null,
+        distanceMeters: route?.distanceMeters ?? 0,
+        durationSeconds: route?.durationSeconds ?? 0,
+      });
       return route;
     })
     .catch(() => {
@@ -121,7 +163,7 @@ export function fetchWalkingRoute(
  * either. `routeFailed` is what separates the two.
  */
 export function cachedRoute(origin: LngLat, destination: LngLat): WalkingRoute | null | undefined {
-  const entry = cache.peek(cacheKey(origin, destination));
+  const entry = entryFor(cacheKey(origin, destination));
   return entry === FAILED ? undefined : entry;
 }
 
@@ -137,6 +179,18 @@ export function cachedRoute(origin: LngLat, destination: LngLat): WalkingRoute |
 export function routeFailed(origin: LngLat, destination: LngLat): boolean {
   const key = cacheKey(origin, destination);
   return cache.peek(key) === FAILED && !inFlight.has(key);
+}
+
+/**
+ * Writes are batched, so a tab closed inside that window would throw away
+ * everything the visit just learned. `pagehide` rather than `unload`, which
+ * browsers no longer fire reliably and which disqualifies a page from the
+ * back-forward cache.
+ */
+try {
+  window.addEventListener("pagehide", flush);
+} catch {
+  // No window: nothing to flush on the way out either.
 }
 
 /**

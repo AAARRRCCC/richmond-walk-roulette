@@ -236,6 +236,24 @@ export function isochroneCacheKey(payload: Json): string | null {
 }
 
 /**
+ * The same idea for a single walk. A route between two fixed points is as
+ * deterministic as a ladder and far cheaper to store, and the app asks for the
+ * same few dozen of them from every visitor who picks the same preset.
+ *
+ * Rounded to five decimals like the isochrone key, which is about a metre and
+ * well inside the engine's own snapping to the road network.
+ */
+export function routeCacheKey(payload: Json): string | null {
+  if (!isJsonObject(payload)) return null;
+  const origin = readLatLng(payload.origin);
+  const destination = readLatLng(payload.destination);
+  if (!origin || !destination) return null;
+  const from = `${origin.latitude.toFixed(5)},${origin.longitude.toFixed(5)}`;
+  const to = `${destination.latitude.toFixed(5)},${destination.longitude.toFixed(5)}`;
+  return `/api/route/${CACHE_VERSION}-${WALKING_SPEED_KMH}/${from}/${to}`;
+}
+
+/**
  * Calls Valhalla and translates failure into this proxy's own vocabulary.
  *
  * Every attempt carries a deadline. Without one the only failure modelled is
