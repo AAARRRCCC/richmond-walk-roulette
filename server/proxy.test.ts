@@ -6,14 +6,35 @@
  * fan-out respects the instance's contour limit, the costing is pinned
  * server-side, bad requests never reach the engine, and failures map onto
  * the status classes the client's retry logic keys on.
+ *
+ * The second half is the failure edges, which is where this slice's risk
+ * actually lives: a chunk that dies mid-ladder, an engine answering 200 with
+ * nonsense, a misconfigured contour limit, and what the visitor-facing body
+ * is allowed to say about the engine's address.
  */
-import { test, type TestContext } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
-import { handleApiRequest, MAX_MINUTES, WALKING_SPEED_KMH } from "./proxy.ts";
-import { parseJson, readJson, type Json } from "../src/lib/json.ts";
+import {
+  handleApiRequest,
+  isochroneCacheKey,
+  isochroneQueryCost,
+  MAX_LADDER,
+  MAX_MINUTES,
+  WALKING_SPEED_KMH,
+} from "./proxy.ts";
+import {
+  contourResponse,
+  stubConsoleError,
+  stubFetch,
+  timeoutError,
+  type UpstreamBody,
+} from "./test-stubs.ts";
+import { readJson, type Json } from "../src/lib/json.ts";
 
 const MONROE = { latitude: 37.5464, longitude: -77.4517 };
 const LADDER = Array.from({ length: 56 }, (_, i) => i + 5);
+/** The real dial ladder: every minute from 5 to 100. */
+const FULL_LADDER = Array.from({ length: 96 }, (_, i) => i + 5);
 
 function post(path: string, body: Json): Request {
   return new Request(`http://app.local${path}`, {
@@ -23,66 +44,27 @@ function post(path: string, body: Json): Request {
   });
 }
 
-/** The request body this proxy sends upstream; the stub parses it back. */
-type UpstreamBody = {
-  contours?: { time: number }[];
-  costing?: string;
-  costing_options?: Json;
-  locations?: Json[];
-  units?: string;
-};
-
-type Upstream = { url: string; body: UpstreamBody };
-
 /** The proxy's own reply vocabulary: {error, detail} plus GeoJSON features. */
 type ProxyReply = {
   error?: string;
   detail?: string;
+  ok?: boolean;
+  upstreamMs?: number;
+  version?: string | null;
+  tileset_last_modified?: number | null;
   features?: { properties: { contour: number } }[];
 };
 
 async function reply(response: Response | null): Promise<ProxyReply> {
   assert.ok(response);
   // SAFETY: the proxy under test emits only its own JSON vocabulary — {error,
-  // detail} failure bodies and GeoJSON FeatureCollections — and these tests
-  // read just the fields that vocabulary guarantees.
+  // detail} failure bodies, the health summary, and GeoJSON FeatureCollections
+  // — and these tests read just the fields that vocabulary guarantees.
   return (await readJson(response)) as ProxyReply;
 }
 
-/** Replaces fetch for one test; returns the log of upstream calls. */
-function stubFetch(t: TestContext, respond: (call: Upstream) => Response | Error): Upstream[] {
-  const calls: Upstream[] = [];
-  const original = globalThis.fetch;
-  globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    // Round-tripping through Request normalises every BodyInit the proxy
-    // could send into the JSON text it actually sends.
-    const sent = await new Request("http://stub.local", init).text();
-    // SAFETY: that body was just serialized by the proxy from the request
-    // fields UpstreamBody names and these tests assert on.
-    const call: Upstream = {
-      url: input instanceof Request ? input.url : String(input),
-      body: parseJson(sent) as UpstreamBody,
-    };
-    calls.push(call);
-    const out = respond(call);
-    if (out instanceof Error) throw out;
-    return out;
-  };
-  t.after(() => {
-    globalThis.fetch = original;
-  });
-  return calls;
-}
-
-function contourResponse(body: UpstreamBody): Response {
-  return Response.json({
-    type: "FeatureCollection",
-    features: (body.contours ?? []).map(({ time }) => ({
-      type: "Feature",
-      properties: { contour: time, metric: "time" },
-      geometry: { type: "Polygon", coordinates: [[]] },
-    })),
-  });
+function contourMinutes(body: UpstreamBody): number[] {
+  return (body.contours ?? []).map((c) => c.time);
 }
 
 const ENV = { VALHALLA_URL: "http://engine.local:8002" };
@@ -92,7 +74,7 @@ test("full ladder is one upstream query when the limit allows", async (t) => {
 
   const response = await handleApiRequest(
     post("/api/isochrone", { location: MONROE, minutes: LADDER }),
-    { ...ENV, VALHALLA_MAX_CONTOURS: "60" },
+    { ...ENV, VALHALLA_MAX_CONTOURS: "100" },
   );
 
   assert.equal(response?.status, 200);
@@ -102,10 +84,7 @@ test("full ladder is one upstream query when the limit allows", async (t) => {
   const sent = calls[0]!.body;
   assert.equal(sent.costing, "pedestrian");
   assert.deepEqual(sent.costing_options, { pedestrian: { walking_speed: WALKING_SPEED_KMH } });
-  assert.deepEqual(
-    (sent.contours ?? []).map((c) => c.time),
-    LADDER,
-  );
+  assert.deepEqual(contourMinutes(sent), LADDER);
 
   const payload = await reply(response);
   assert.equal((payload.features ?? []).length, LADDER.length);
@@ -137,14 +116,11 @@ test("duplicate and unordered minutes are normalised before the engine sees them
 
   const response = await handleApiRequest(
     post("/api/isochrone", { location: MONROE, minutes: [25, 5, 25, 15] }),
-    { ...ENV, VALHALLA_MAX_CONTOURS: "60" },
+    { ...ENV, VALHALLA_MAX_CONTOURS: "100" },
   );
 
   assert.equal(response?.status, 200);
-  assert.deepEqual(
-    (calls[0]!.body.contours ?? []).map((c) => c.time),
-    [5, 15, 25],
-  );
+  assert.deepEqual(contourMinutes(calls[0]!.body), [5, 15, 25]);
 });
 
 test("an origin outside the Richmond box never reaches the engine", async (t) => {
@@ -152,7 +128,7 @@ test("an origin outside the Richmond box never reaches the engine", async (t) =>
 
   const response = await handleApiRequest(
     post("/api/isochrone", { location: { latitude: 48.8566, longitude: 2.3522 }, minutes: [25] }),
-    { ...ENV, VALHALLA_MAX_CONTOURS: "60" },
+    { ...ENV, VALHALLA_MAX_CONTOURS: "100" },
   );
 
   assert.equal(response?.status, 400);
@@ -162,13 +138,53 @@ test("an origin outside the Richmond box never reaches the engine", async (t) =>
 test("malformed minutes are rejected without an upstream call", async (t) => {
   const calls = stubFetch(t, () => Response.json({}));
 
-  // Derived from the cap rather than written out, so raising the ceiling
-  // cannot quietly turn this case into a legal request that reaches upstream.
-  for (const minutes of [[], [2.5], [0], [MAX_MINUTES + 1], "25", null]) {
+  // Derived from the caps rather than written out, so raising either ceiling
+  // cannot quietly turn a case into a legal request that reaches upstream.
+  const tooLong = Array.from({ length: MAX_LADDER + 1 }, () => 25);
+  for (const minutes of [[], [2.5], [0], [MAX_MINUTES + 1], tooLong, "25", null]) {
     const response = await handleApiRequest(post("/api/isochrone", { location: MONROE, minutes }), ENV);
     assert.equal(response?.status, 400);
   }
   assert.equal(calls.length, 0);
+});
+
+test("garbage VALHALLA_MAX_CONTOURS falls back to the stock limit", async (t) => {
+  const calls = stubFetch(t, (call) => contourResponse(call.body));
+
+  // "0" and "-5" are integers and would pass a bare Number.isInteger check;
+  // an instance accepting zero or minus five contours a call does not exist.
+  for (const VALHALLA_MAX_CONTOURS of ["abc", "0", "-5", "", "4.5"]) {
+    calls.length = 0;
+    const response = await handleApiRequest(
+      post("/api/isochrone", { location: MONROE, minutes: LADDER }),
+      { ...ENV, VALHALLA_MAX_CONTOURS },
+    );
+    assert.equal(response?.status, 200);
+    assert.equal(calls.length, Math.ceil(LADDER.length / 4), VALHALLA_MAX_CONTOURS);
+  }
+});
+
+test("a ladder needing more upstream queries than allowed is refused, not attempted", async (t) => {
+  const calls = stubFetch(t, (call) => contourResponse(call.body));
+
+  // One contour per query is a misconfiguration, not a mode: 100 minutes
+  // would be 100 sequential graph expansions for one client request.
+  const response = await handleApiRequest(
+    post("/api/isochrone", { location: MONROE, minutes: Array.from({ length: 100 }, (_, i) => i + 1) }),
+    { ...ENV, VALHALLA_MAX_CONTOURS: "1" },
+  );
+
+  assert.equal(response?.status, 400);
+  assert.equal(calls.length, 0);
+
+  // The honest worst case — the real ladder against a stock instance — still
+  // goes through at 24 queries.
+  const stock = await handleApiRequest(
+    post("/api/isochrone", { location: MONROE, minutes: FULL_LADDER }),
+    ENV,
+  );
+  assert.equal(stock?.status, 200);
+  assert.equal(calls.length, 24);
 });
 
 test("no VALHALLA_URL means 503 not-configured, before any fetch", async (t) => {
@@ -182,14 +198,87 @@ test("no VALHALLA_URL means 503 not-configured, before any fetch", async (t) => 
   assert.equal(calls.length, 0);
 });
 
-test("an unreachable engine reads as not-configured, naming the URL", async (t) => {
+test("an unreachable engine is 502 and never names the engine to the visitor", async (t) => {
+  const logs = stubConsoleError(t);
   stubFetch(t, () => new Error("ECONNREFUSED"));
 
   const response = await handleApiRequest(post("/api/isochrone", { location: MONROE, minutes: [25] }), ENV);
 
-  assert.equal(response?.status, 503);
+  // 502, not 503: 503 is reserved for "VALHALLA_URL is unset", which is the
+  // one thing the client must not retry. An engine that is configured but
+  // down is worth retrying and is not a setup problem.
+  assert.equal(response?.status, 502);
   const payload = await reply(response);
-  assert.ok(payload.detail?.includes("http://engine.local:8002"));
+  assert.equal(payload.error, "upstream-unreachable");
+  assert.ok(!JSON.stringify(payload).includes("engine.local"));
+
+  // The address the visitor must not see is exactly what the operator needs.
+  assert.ok(logs.some((line) => line.includes("http://engine.local:8002")));
+  assert.ok(logs.some((line) => line.includes("upstream-unreachable")));
+});
+
+test("an engine that accepts the socket and never answers is 504", async (t) => {
+  stubConsoleError(t);
+  stubFetch(t, () => timeoutError());
+
+  const response = await handleApiRequest(post("/api/route", { origin: MONROE, destination: MONROE }), ENV);
+
+  assert.equal(response?.status, 504);
+  const payload = await reply(response);
+  assert.equal(payload.error, "upstream-timeout");
+  assert.ok(!JSON.stringify(payload).includes("engine.local"));
+});
+
+test("one failed chunk does not throw the rest of the ladder away", async (t) => {
+  stubConsoleError(t);
+  let seen = 0;
+  stubFetch(t, (call) => {
+    seen += 1;
+    // Query 5 of 14 blips. The other thirteen computed fine and the client
+    // is best-effort per contour, so discarding them would be pure load
+    // amplification against an engine that is already struggling.
+    return seen === 5 ? Response.json({ error: "internal" }, { status: 500 }) : contourResponse(call.body);
+  });
+
+  const response = await handleApiRequest(
+    post("/api/isochrone", { location: MONROE, minutes: LADDER }),
+    ENV,
+  );
+
+  assert.equal(response?.status, 200);
+  const payload = await reply(response);
+  const got = (payload.features ?? []).map((f) => f.properties.contour);
+  assert.equal(got.length, LADDER.length - 4);
+  assert.ok(!got.includes(LADDER[16]!));
+  assert.ok(got.includes(LADDER[0]!) && got.includes(LADDER[LADDER.length - 1]!));
+});
+
+test("when every chunk fails, the first failure's status is the answer", async (t) => {
+  stubConsoleError(t);
+  stubFetch(t, () => Response.json({ error: "internal" }, { status: 500 }));
+
+  const response = await handleApiRequest(
+    post("/api/isochrone", { location: MONROE, minutes: LADDER }),
+    ENV,
+  );
+
+  assert.equal(response?.status, 502);
+});
+
+test("a 200 that is not a FeatureCollection reads as a broken engine, not an empty city", async (t) => {
+  stubConsoleError(t);
+  stubFetch(t, () => Response.json({ hello: "world" }));
+
+  const response = await handleApiRequest(
+    post("/api/isochrone", { location: MONROE, minutes: [25] }),
+    { ...ENV, VALHALLA_MAX_CONTOURS: "100" },
+  );
+
+  // 200 with zero features would be indistinguishable from "nothing is
+  // reachable", which is a claim the engine never made.
+  assert.equal(response?.status, 502);
+  const payload = await reply(response);
+  assert.equal(payload.error, "upstream-empty");
 });
 
 test("route forwards the trip and pins the pedestrian costing", async (t) => {
@@ -214,6 +303,7 @@ test("route forwards the trip and pins the pedestrian costing", async (t) => {
 });
 
 test("engine 4xx stays final (400); 429 and 5xx read transient", async (t) => {
+  stubConsoleError(t);
   let status = 400;
   stubFetch(t, () =>
     Response.json(
@@ -246,10 +336,93 @@ test("engine 4xx stays final (400); 429 and 5xx read transient", async (t) => {
   assert.equal(flaky?.status, 502);
 });
 
+test("a 429 with no retry-after keeps its status and sends no header", async (t) => {
+  stubConsoleError(t);
+  stubFetch(t, () => Response.json({ error: "slow down" }, { status: 429 }));
+
+  const response = await handleApiRequest(
+    post("/api/route", { origin: MONROE, destination: MONROE }),
+    ENV,
+  );
+
+  // The client falls back to its own exponential backoff. Inventing a header
+  // here would be asserting a wait the engine never asked for.
+  assert.equal(response?.status, 429);
+  assert.equal(response?.headers.get("retry-after"), null);
+});
+
+test("health forwards /status and answers without naming the engine", async (t) => {
+  const calls = stubFetch(t, () =>
+    Response.json({ version: "3.5.1", tileset_last_modified: 1_753_660_800, bbox: "secret" }),
+  );
+
+  const response = await handleApiRequest(new Request("http://app.local/api/health"), ENV);
+
+  assert.equal(response?.status, 200);
+  assert.equal(calls[0]!.url, "http://engine.local:8002/status");
+  assert.equal(calls[0]!.method, "GET");
+
+  const payload = await reply(response);
+  assert.equal(payload.ok, true);
+  assert.equal(payload.version, "3.5.1");
+  assert.equal(payload.tileset_last_modified, 1_753_660_800);
+  assert.ok(Number.isFinite(payload.upstreamMs));
+  // Nothing else the engine said gets forwarded, and never its address.
+  const body = JSON.stringify(payload);
+  assert.ok(!body.includes("engine.local"));
+  assert.ok(!body.includes("secret"));
+});
+
+test("health reports a dead engine as not ok, and an unset one as not configured", async (t) => {
+  stubConsoleError(t);
+  stubFetch(t, () => Response.json({ error: "down" }, { status: 503 }));
+
+  const down = await handleApiRequest(new Request("http://app.local/api/health"), ENV);
+  assert.equal(down?.status, 502);
+  assert.equal((await reply(down)).ok, false);
+
+  const unset = await handleApiRequest(new Request("http://app.local/api/health"), {});
+  assert.equal(unset?.status, 503);
+  assert.equal((await reply(unset)).error, "not-configured");
+});
+
 test("non-API paths fall through, non-POST is rejected", async (t) => {
   stubFetch(t, () => Response.json({}));
 
   assert.equal(await handleApiRequest(new Request("http://app.local/index.html"), ENV), null);
+  assert.equal(await handleApiRequest(new Request("http://app.local/api/nope"), ENV), null);
   const got = await handleApiRequest(new Request("http://app.local/api/isochrone"), ENV);
   assert.equal(got?.status, 405);
+  const health = await handleApiRequest(post("/api/health", {}), ENV);
+  assert.equal(health?.status, 405);
+});
+
+test("the query cost is what the engine will actually be asked for", () => {
+  const payload = { location: MONROE, minutes: FULL_LADDER };
+  assert.equal(isochroneQueryCost(payload, ENV), 24);
+  assert.equal(isochroneQueryCost(payload, { ...ENV, VALHALLA_MAX_CONTOURS: "100" }), 1);
+  // Deduped first: 96 distinct minutes however many times they were listed.
+  assert.equal(isochroneQueryCost({ location: MONROE, minutes: [...FULL_LADDER, 5, 25, 100] }, ENV), 24);
+  // A request that is about to be a 400 costs one, not nothing and not many.
+  assert.equal(isochroneQueryCost({ location: MONROE, minutes: [] }, ENV), 1);
+  assert.equal(isochroneQueryCost(null, ENV), 1);
+});
+
+test("the cache key is canonical, coarse to 5 decimals, and refuses bad requests", () => {
+  const key = isochroneCacheKey({ location: MONROE, minutes: [25, 5, 25] });
+  assert.ok(key?.startsWith("/api/isochrone/"));
+  assert.ok(key?.includes("37.54640,-77.45170"));
+  assert.ok(key?.endsWith("/5,25"));
+  // Same request written differently is the same entry.
+  assert.equal(isochroneCacheKey({ location: MONROE, minutes: [5, 25] }), key);
+  // The walking speed is in the key, so changing the pace empties the cache.
+  assert.ok(key?.includes(String(WALKING_SPEED_KMH)));
+  // A sixth decimal is a metre-scale difference the engine's 25 m grid cannot
+  // express; two pins that close share the ladder.
+  assert.equal(
+    isochroneCacheKey({ location: { ...MONROE, latitude: MONROE.latitude + 0.000_001 }, minutes: [5, 25] }),
+    key,
+  );
+  assert.equal(isochroneCacheKey({ location: { latitude: 48.8566, longitude: 2.3522 }, minutes: [25] }), null);
+  assert.equal(isochroneCacheKey({ location: MONROE, minutes: [] }), null);
 });

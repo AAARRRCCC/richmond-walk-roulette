@@ -38,11 +38,18 @@ Point the app at it:
 - prod: same two values in `wrangler.toml` `[vars]`, with the URL of wherever
   this Compose stack actually runs
 
-Sanity check:
+Sanity check the engine, then the app's own view of it:
 
 ```bash
 curl 'http://localhost:8002/status'
+curl 'http://localhost:5173/api/health'
 ```
+
+The second goes through the proxy and answers
+`{ok, upstreamMs, version, tileset_last_modified}` - no URL, no secrets - so
+it is also what to point an uptime check at once this is deployed. `ok: false`
+with a 502 means the engine is configured and not answering; a 503 means
+`VALHALLA_URL` was never set.
 
 ## Where to run it
 
@@ -60,7 +67,9 @@ curl 'http://localhost:8002/status'
   the app's proxy does.
 - **Stadia Maps** runs hosted Valhalla with the same API, if operating a box
   is not worth it. Their contour limit applies; set `VALHALLA_MAX_CONTOURS`
-  to whatever their plan allows and the proxy chunks accordingly.
+  to whatever their plan allows and the proxy chunks accordingly. Leave it
+  unset or set it to anything that is not a positive integer and the proxy
+  assumes the stock limit of 4, which works against any instance.
 
 ## The evaluation fallback
 
@@ -84,7 +93,8 @@ app shipped with, so the cutover preserved the assumed pace (the contour
 shapes still differ where the engines do; see LAUNCH.md). It is a product decision now. Change it deliberately, and if you do,
 re-measure the README's area figures and regenerate `public/reach/` - every
 precomputed snapshot was built at this pace and nothing detects a stale
-one.
+one. The pace is part of the Worker's isochrone cache key, so changing it
+does at least empty the edge cache on its own.
 
 ## Local development without any engine
 

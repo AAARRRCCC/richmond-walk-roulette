@@ -2,6 +2,17 @@ import type { Plugin } from "vite";
 import { handleApiRequest, type ProxyEnv } from "./proxy";
 
 /**
+ * Largest request body the dev proxy will buffer.
+ *
+ * Everything the proxy validates happens after the body is fully in memory,
+ * so without a cap the validation is behind the very thing it protects: one
+ * large POST is a heap the dev server never gets back. The biggest legitimate
+ * body here is a 120-integer minute array and two lat/lngs, comfortably under
+ * a kilobyte, so 256 KB is a bound on abuse rather than on use.
+ */
+const MAX_BODY_BYTES = 256 * 1024;
+
+/**
  * Mounts the API proxy on the Vite dev server so `npm run dev` hits the same
  * code path as production. The env is passed in from the config's `loadEnv`
  * rather than read from `process.env` at request time, so a restart always
@@ -16,8 +27,48 @@ export function apiProxy(env: ProxyEnv): Plugin {
         if (!req.url?.startsWith("/api/")) return next();
 
         const chunks: Buffer[] = [];
-        req.on("data", (chunk: Buffer) => chunks.push(chunk));
+        let received = 0;
+        // Set the moment this request has an answer, or has stopped being
+        // one. "end" does not fire on an aborted or errored request, so
+        // without it the buffered chunks and the listeners outlive the
+        // socket.
+        let settled = false;
+
+        const fail = (status: number, error: string): void => {
+          if (settled) return;
+          settled = true;
+          chunks.length = 0;
+          res.statusCode = status;
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ error }));
+        };
+
+        req.on("data", (chunk: Buffer) => {
+          // Past the cap the stream is drained rather than buffered, so the
+          // connection closes on its own without holding the bytes.
+          if (settled) return;
+          received += chunk.length;
+          if (received > MAX_BODY_BYTES) {
+            fail(413, `request body must be under ${MAX_BODY_BYTES} bytes`);
+            return;
+          }
+          chunks.push(chunk);
+        });
+
+        req.on("aborted", () => {
+          settled = true;
+          chunks.length = 0;
+        });
+
+        req.on("error", (cause) => {
+          console.error("[api-proxy] request stream failed", cause);
+          fail(400, "request failed");
+        });
+
         req.on("end", () => {
+          if (settled) return;
+          settled = true;
+
           const request = new Request(`http://localhost${req.url}`, {
             method: req.method ?? "GET",
             headers: { "content-type": req.headers["content-type"] ?? "application/json" },
@@ -32,9 +83,13 @@ export function apiProxy(env: ProxyEnv): Plugin {
               res.end(await response.text());
             })
             .catch((cause: unknown) => {
+              // The cause can carry filesystem paths and the engine's URL.
+              // It belongs in the terminal running the dev server, not in a
+              // response body.
+              console.error("[api-proxy] request failed", cause);
               res.statusCode = 500;
               res.setHeader("content-type", "application/json");
-              res.end(JSON.stringify({ error: "proxy failed", detail: String(cause) }));
+              res.end(JSON.stringify({ error: "proxy failed" }));
             });
         });
       });

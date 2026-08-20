@@ -1,0 +1,34 @@
+# Runs what the repo already asks a contributor to run, on every push and
+# every pull request, so "npm test is green" stops being something someone
+# has to remember.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 23+: the test suite is TypeScript run directly through
+      # `node --test`, which needs the built-in type stripping.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      # eslint, oxlint and knip. Knip is why an unused export fails here.
+      - run: npm run lint
+
+      - run: npm test
+
+      # Last, because it is the slowest and the one least likely to be the
+      # thing that broke.
+      - run: npm run build
