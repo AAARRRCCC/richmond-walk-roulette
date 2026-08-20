@@ -525,6 +525,42 @@ code {
     linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
 }
 
+/* Two range inputs share one track. The lower one is painted last so its
+   thumb sits on top and can always be grabbed - including when it is parked
+   at the minimum, where the upper input's track would otherwise swallow the
+   press. It is transparent to the pointer everywhere except that thumb, so
+   the upper dial keeps its whole track: a click on the rail still jumps the
+   budget the way it always did. */
+.dial-input.is-floor {
+  pointer-events: none;
+}
+.dial-input.is-floor::-webkit-slider-thumb {
+  pointer-events: auto;
+}
+.dial-input.is-floor::-moz-range-thumb {
+  pointer-events: auto;
+}
+
+/* Parked at the minimum the lower thumb is a hint, not a value: it says the
+   range has a near end you can drag in. Once moved it reads as the accent,
+   like the thumb it now pairs with. */
+.dial-input.is-floor::-webkit-slider-thumb {
+  background:
+    linear-gradient(var(--ink-3), var(--ink-3)) center / 3px 100% no-repeat;
+}
+.dial-input.is-floor::-moz-range-thumb {
+  background:
+    linear-gradient(var(--ink-3), var(--ink-3)) center / 3px 100% no-repeat;
+}
+.dial-track.has-floor .dial-input.is-floor::-webkit-slider-thumb {
+  background:
+    linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
+}
+.dial-track.has-floor .dial-input.is-floor::-moz-range-thumb {
+  background:
+    linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
+}
+
 .dial-scale {
   display: flex;
   justify-content: space-between;

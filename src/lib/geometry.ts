@@ -1,6 +1,6 @@
 /** Geometry helpers for isochrone polygons. All coordinates are [lng, lat]. */
 
-import { isFiniteNumber, isJsonArray, isJsonObject, type Json } from "./json";
+import { isFiniteNumber, isJsonArray, isJsonObject, type Json } from "./json.ts";
 
 /**
  * Mutable on purpose: these tuples are structurally assignable to GeoJSON's
@@ -137,6 +137,38 @@ export function contains(polygons: MultiPolygon, point: LngLat): boolean {
     if (!inHole) return true;
   }
   return false;
+}
+
+/**
+ * The outer reach with the inner one punched out of it: everywhere you can get
+ * to within the upper bound but NOT within the lower one.
+ *
+ * Isochrones from one origin are strictly nested - the 20 minute shape lies
+ * wholly inside the 60 minute shape - so the difference needs no clipping
+ * library. The inner shape's exterior ring becomes a hole in whichever outer
+ * polygon contains it, which is the same thing the engine already does for an
+ * unreachable pocket, and every reader of a MultiPolygon here already honours
+ * holes: `contains` tests them, `areaSqMeters` subtracts them, and MapLibre
+ * renders them with the even-odd rule.
+ *
+ * An inner polygon that matches no outer polygon is dropped rather than kept,
+ * because a hole with nothing around it is not a hole.
+ */
+export function subtract(outer: MultiPolygon, inner: MultiPolygon): MultiPolygon {
+  if (inner.length === 0) return outer;
+
+  const innerExteriors = inner.map((rings) => rings[0]).filter((ring) => ring !== undefined);
+  if (innerExteriors.length === 0) return outer;
+
+  return outer.map((rings) => {
+    const exterior = rings[0];
+    if (!exterior) return rings;
+    const holes = innerExteriors.filter((ring) => {
+      const anchor = ring[0];
+      return anchor !== undefined && ringContains(exterior, anchor[0], anchor[1]);
+    });
+    return holes.length === 0 ? rings : [...rings, ...holes];
+  });
 }
 
 const EARTH_RADIUS_M = 6_378_137;

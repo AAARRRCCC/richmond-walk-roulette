@@ -13,6 +13,13 @@ export type Session = {
   origin: Origin;
   /** Total minutes the walker has. Split across both legs when roundTrip. */
   budgetMinutes: number;
+  /**
+   * The lower end of the range, in the same total-minutes units as
+   * `budgetMinutes`. Equal to the dial's minimum means no lower bound at all;
+   * above it, the reach becomes a band - reachable inside the budget and NOT
+   * inside this - and the map draws the inner contour as a hole.
+   */
+  floorMinutes: number;
   roundTrip: boolean;
   /** Restrict the pool to the outermost contour: "go as far as you can". */
   edgeOnly: boolean;
@@ -56,6 +63,7 @@ export type Session = {
 export type Action =
   | { type: "origin"; origin: Origin }
   | { type: "budget"; minutes: number }
+  | { type: "floor"; minutes: number }
   | { type: "toggleRoundTrip" }
   | { type: "toggleEdge" }
   | { type: "terrain"; terrain: Terrain | "any" }
@@ -93,6 +101,7 @@ const DEFAULT_BUDGET_MINUTES = 50;
 export const initialSession: Session = {
   origin: DEFAULT_ORIGIN,
   budgetMinutes: clampBudget(DEFAULT_BUDGET_MINUTES, DEFAULT_ROUND_TRIP),
+  floorMinutes: dialMinimum(DEFAULT_ROUND_TRIP),
   roundTrip: DEFAULT_ROUND_TRIP,
   edgeOnly: false,
   terrain: "any",
@@ -141,17 +150,31 @@ export function reduce(state: Session, action: Action): Session {
       //
       // Clearing the failure matters as much: one contour that exhausted its
       // retries must not lock every other dial position out of trying.
+      {
+        const budgetMinutes = clampBudget(action.minutes, state.roundTrip);
+        return {
+          ...state,
+          budgetMinutes,
+          // The floor cannot overtake the budget: a range whose ends crossed
+          // would ask for a band with nothing in it.
+          floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, state.roundTrip),
+          failure: null,
+        };
+      }
+    case "floor":
       return {
         ...state,
-        budgetMinutes: clampBudget(action.minutes, state.roundTrip),
+        floorMinutes: clampFloor(action.minutes, state.budgetMinutes, state.roundTrip),
         failure: null,
       };
     case "toggleRoundTrip": {
       const roundTrip = !state.roundTrip;
+      const budgetMinutes = clampBudget(state.budgetMinutes, roundTrip);
       return {
         ...state,
         roundTrip,
-        budgetMinutes: clampBudget(state.budgetMinutes, roundTrip),
+        budgetMinutes,
+        floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, roundTrip),
         // Halves or doubles the outbound contour with no dial commit to
         // piggyback on, so the map has to be told to re-frame.
         failure: null,
@@ -243,9 +266,33 @@ function clampBudget(minutes: number, roundTrip: boolean): number {
   return Math.min(MAX_MINUTES, Math.max(low, snapped));
 }
 
+/**
+ * Snaps the range's lower end onto the notches, and keeps it at least one
+ * whole band below the budget. A floor equal to the dial minimum is the
+ * "no lower bound" position rather than a 5 minute hole.
+ */
+function clampFloor(minutes: number, budgetMinutes: number, roundTrip: boolean): number {
+  const low = dialMinimum(roundTrip);
+  const step = budgetStep();
+  const snapped = low + Math.round((minutes - low) / step) * step;
+  return Math.min(Math.max(low, budgetMinutes - step), Math.max(low, snapped));
+}
+
 /** Minutes of *outbound* walking, which is what the isochrone measures. */
 export function outboundMinutes(state: Pick<Session, "budgetMinutes" | "roundTrip">): number {
   return state.roundTrip ? Math.floor(state.budgetMinutes / 2) : state.budgetMinutes;
+}
+
+/**
+ * The outbound minutes of the range's lower end, or null when there is no
+ * lower bound. Null rather than the dial minimum so callers cannot accidentally
+ * punch a 5 minute hole in every reach.
+ */
+export function outboundFloorMinutes(
+  state: Pick<Session, "floorMinutes" | "roundTrip">,
+): number | null {
+  if (state.floorMinutes <= dialMinimum(state.roundTrip)) return null;
+  return state.roundTrip ? Math.floor(state.floorMinutes / 2) : state.floorMinutes;
 }
 
 export function customOrigin(at: LngLat): Origin {

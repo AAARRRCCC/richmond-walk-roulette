@@ -21,7 +21,14 @@ import { Filters } from "../ui/Filters";
 import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
 import { ResultCard } from "../ui/ResultCard";
 import { PLACES, type Place, type Terrain, type Vibe } from "../data/places";
-import { contains, pointKey, type LngLat } from "../lib/geometry";
+import {
+  areaSqMeters,
+  contains,
+  pointKey,
+  subtract,
+  type LngLat,
+  type MultiPolygon,
+} from "../lib/geometry";
 import { formatMiles, formatMinutes } from "../lib/format";
 import {
   MAX_MINUTES,
@@ -44,6 +51,7 @@ import {
   customOrigin,
   dialMinimum,
   initialSession,
+  outboundFloorMinutes,
   outboundMinutes,
   reduce,
   type Failure,
@@ -165,9 +173,41 @@ export function App() {
   // bookkeeping memoising them would need against an external cache. The
   // whole ladder is prefetched, so during a scrub this is a hit on every
   // frame and the contour and the readout track the dial exactly.
-  const reach = cachedReach(origin, outbound);
+  const fullReach = cachedReach(origin, outbound);
 
-  const candidates = selectCandidates(reach, state.terrain, state.vibes, state.edgeOnly);
+  /**
+   * The lower end of the range, as a shape to punch out of the reach.
+   *
+   * It is a normal contour off the same warmed ladder, so a range costs the
+   * engine nothing beyond what a single budget already cost. Null when the
+   * floor is parked at the dial minimum, which is the "no lower bound"
+   * position.
+   */
+  const floorOutbound = outboundFloorMinutes(state);
+  const floorPolygons =
+    floorOutbound === null ? null : (cachedReach(origin, floorOutbound)?.bands.at(-1)?.polygons ?? null);
+
+  /**
+   * The reach as the dial now describes it: every band with the floor removed
+   * from it. Bands entirely inside the floor collapse to nothing and simply
+   * stop drawing, which is correct - they describe walks shorter than the
+   * range asked for.
+   */
+  const reach = useMemo(
+    () =>
+      fullReach === null || floorPolygons === null || floorOutbound === null
+        ? fullReach
+        : bandedAbove(fullReach, floorPolygons, floorOutbound),
+    [fullReach, floorPolygons, floorOutbound],
+  );
+
+  const candidates = selectCandidates(
+    reach,
+    state.terrain,
+    state.vibes,
+    state.edgeOnly,
+    floorPolygons,
+  );
   const candidateKey = candidates.map((p) => p.id).join(",");
   const picked = PLACES.find((place) => place.id === state.pickedId) ?? null;
 
@@ -561,6 +601,7 @@ export function App() {
 
           <TimeDial
             minutes={state.budgetMinutes}
+            floorMinutes={state.floorMinutes}
             minimum={dialMinimum(state.roundTrip)}
             step={budgetStep()}
             outboundMinutes={outbound}
@@ -569,6 +610,7 @@ export function App() {
             warmedFraction={state.warmed}
             disabled={picking}
             onChange={(minutes) => dispatch({ type: "budget", minutes })}
+            onFloorChange={(minutes) => dispatch({ type: "floor", minutes })}
             onCommit={() => dispatch({ type: "frame" })}
           />
 
@@ -793,11 +835,36 @@ function describeResult(
  * `edgeOnly`, a place must also fall outside the next contour in, which is the
  * "walk as far as you can" pool.
  */
+/**
+ * Re-cuts every band so the range's lower end is a hole in it, and re-measures
+ * the area from the shape actually drawn. The readout says "sq mi", and after
+ * a floor is set the honest number is the band's area, not the disc's.
+ */
+function bandedAbove(reach: Reach, floorPolygons: MultiPolygon, floorMinutes: number): Reach {
+  const bands = reach.bands
+    // A band at or under the floor describes walks shorter than the range
+    // asked for, so it does not draw. Subtracting would not remove it: the
+    // floor contour is larger than that band and so lies outside it, leaving
+    // nothing to punch through, and the band would fill the hole back in.
+    .filter((band) => band.minutes > floorMinutes)
+    .map((band) => ({
+      minutes: band.minutes,
+      polygons: subtract(band.polygons, floorPolygons),
+    }));
+  return {
+    origin: reach.origin,
+    budgetMinutes: reach.budgetMinutes,
+    bands,
+    areaSqMeters: areaSqMeters(bands[bands.length - 1]?.polygons ?? []),
+  };
+}
+
 function selectCandidates(
   reach: Reach | null,
   terrain: Terrain | "any",
   vibes: readonly Vibe[],
   edgeOnly: boolean,
+  floorPolygons: MultiPolygon | null,
 ): Place[] {
   const bands = reach?.bands;
   if (!bands || bands.length === 0) return [];
@@ -809,6 +876,10 @@ function selectCandidates(
     if (vibes.length > 0 && !place.tags.some((tag) => vibes.includes(tag))) return false;
     if (!contains(outer.polygons, place)) return false;
     if (inner && contains(inner.polygons, place)) return false;
+    // The range's lower end. Tested against the floor contour rather than
+    // relying on the hole in `outer`, so this reads the same whether or not
+    // the caller handed in a band that was already cut.
+    if (floorPolygons && contains(floorPolygons, place)) return false;
     return true;
   });
 }

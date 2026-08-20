@@ -4,6 +4,11 @@ import { MAX_MINUTES } from "../lib/isochrone";
 
 export type TimeDialProps = {
   minutes: number;
+  /**
+   * The range's lower end, in the same units as `minutes`. Equal to `minimum`
+   * means no lower bound: the reach is a disc rather than a band.
+   */
+  floorMinutes: number;
   minimum: number;
   /** How far one notch moves the budget. Doubled for round trips. */
   step: number;
@@ -16,6 +21,7 @@ export type TimeDialProps = {
   /** Pin-drop mode owns the map; the dial goes with the rest of the rail. */
   disabled?: boolean;
   onChange: (minutes: number) => void;
+  onFloorChange: (minutes: number) => void;
   /** Fires when a drag or keypress ends, so the map can re-frame exactly once. */
   onCommit: () => void;
 };
@@ -39,17 +45,23 @@ export function TimeDial(props: TimeDialProps) {
    * switch re-snapping it - leaves this stale, and the reducer already
    * re-frames for that itself.
    */
-  const committed = useRef(props.minutes);
+  const committed = useRef(`${props.floorMinutes}-${props.minutes}`);
   const commit = () => {
-    if (committed.current === props.minutes) return;
-    committed.current = props.minutes;
+    const now = `${props.floorMinutes}-${props.minutes}`;
+    if (committed.current === now) return;
+    committed.current = now;
     props.onCommit();
   };
+
+  const hasFloor = props.floorMinutes > props.minimum;
+  const asPercent = (value: number) => ((value - props.minimum) / span) * 100;
 
   return (
     <div className="dial">
       <div className="dial-head">
-        <span className="dial-value">{props.minutes}</span>
+        <span className="dial-value">
+          {hasFloor ? `${props.floorMinutes}-${props.minutes}` : props.minutes}
+        </span>
         <span className="dial-unit">min</span>
         <span className="dial-caption" id={captionId}>
           {props.roundTrip
@@ -58,16 +70,17 @@ export function TimeDial(props: TimeDialProps) {
         </span>
       </div>
 
-      <div className="dial-track">
+      <div className={`dial-track${hasFloor ? " has-floor" : ""}`}>
         <div className="dial-marks" aria-hidden="true">
           {ticks.map((tick) => (
             <span
               key={tick}
-              className={tickClass(tick, props.minutes, props.isWarm(tick))}
-              style={{ left: `${((tick - props.minimum) / span) * 100}%` }}
+              className={tickClass(tick, props.floorMinutes, props.minutes, props.isWarm(tick))}
+              style={{ left: `${asPercent(tick)}%` }}
             />
           ))}
         </div>
+
         <input
           className="dial-input"
           type="range"
@@ -96,6 +109,35 @@ export function TimeDial(props: TimeDialProps) {
           // React maps onChange to `input`, which fires continuously during a
           // drag. These are the commit edges: the map re-frames on them so the
           // camera is not restarted on every pixel of the drag.
+          onPointerUp={commit}
+          onPointerCancel={commit}
+          onKeyUp={commit}
+          onBlur={commit}
+        />
+
+        {/* The lower thumb rides the same track. Two inputs rather than one
+            custom control: each keeps its own keyboard behaviour, its own
+            value announcement and its own focus ring, which a div with
+            pointer handlers would have to reimplement and get wrong. */}
+        <input
+          className="dial-input is-floor"
+          type="range"
+          min={props.minimum}
+          max={MAX_MINUTES}
+          step={props.step}
+          value={props.floorMinutes}
+          disabled={props.disabled === true}
+          aria-label="Shortest walk worth taking"
+          aria-valuetext={
+            hasFloor
+              ? `from ${props.floorMinutes} minutes`
+              : "no lower limit, everything inside the budget"
+          }
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            if (next !== props.floorMinutes) playDetent(next, props.minimum);
+            props.onFloorChange(next);
+          }}
           onPointerUp={commit}
           onPointerCancel={commit}
           onKeyUp={commit}
@@ -132,7 +174,10 @@ export function TimeDial(props: TimeDialProps) {
  * positions respond instantly, and it turns the warm-up into something the
  * reader can watch fill in rather than a spinner over the whole panel.
  */
-function tickClass(tick: number, minutes: number, warm: boolean): string {
+function tickClass(tick: number, floorMinutes: number, minutes: number, warm: boolean): string {
   const weight = tick % 10 === 0 ? " is-major" : tick % 5 === 0 ? " is-mid" : "";
-  return `dial-tick${weight}${tick <= minutes ? " is-reached" : ""}${warm ? " is-warm" : ""}`;
+  // Reached means inside the range, so a floor darkens the near end again:
+  // those minutes are no longer part of the answer.
+  const reached = tick <= minutes && tick >= floorMinutes ? " is-reached" : "";
+  return `dial-tick${weight}${reached}${warm ? " is-warm" : ""}`;
 }
