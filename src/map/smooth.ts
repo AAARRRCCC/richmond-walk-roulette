@@ -28,16 +28,29 @@ import type { MultiPolygon, Ring } from "../lib/geometry";
  * Each pass halves the visible step and doubles the vertices.
  */
 function cutCorners(ring: Ring): Ring {
+  // GeoJSON rings repeat their first position as their last, and cutting that
+  // duplicate as if it were a corner is a no-op that leaves the start point
+  // exactly where the engine put it. Three corners of a square round off and
+  // the fourth stays a hard 25 m step - the artefact this module exists to
+  // remove - so open the ring, cut it, and close it again.
+  const open = isClosed(ring) ? ring.slice(0, -1) : ring;
   const out: Ring = [];
-  for (let i = 0; i < ring.length; i++) {
-    const a = ring[i]!;
-    const b = ring[(i + 1) % ring.length]!;
+  for (let i = 0; i < open.length; i++) {
+    const a = open[i]!;
+    const b = open[(i + 1) % open.length]!;
     out.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25]);
     out.push([a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]);
   }
   // Chaikin leaves the ring open; close it so it is still a valid polygon.
   out.push(out[0]!);
   return out;
+}
+
+/** Tested rather than assumed: an unclosed ring must not lose its last vertex. */
+function isClosed(ring: Ring): boolean {
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+  return first !== undefined && last !== undefined && first[0] === last[0] && first[1] === last[1];
 }
 
 /**
