@@ -9,12 +9,19 @@
  * route for the rest of the session.
  */
 
-import type { Json } from "./json";
+import type { Json } from "./json.ts";
 
 class TransientError extends Error {
-  constructor(readonly status: number) {
+  // Declared and assigned rather than a constructor parameter property:
+  // `node --test` runs these files by stripping types, and a parameter
+  // property is syntax it cannot strip, so anything importing this module
+  // becomes untestable.
+  readonly status: number;
+
+  constructor(status: number) {
     super(`Request failed with ${status} after retries.`);
     this.name = "TransientError";
+    this.status = status;
   }
 }
 

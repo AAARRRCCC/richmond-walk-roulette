@@ -1,4 +1,4 @@
-import type { LngLat } from "../lib/geometry";
+import type { LngLat } from "../lib/geometry.ts";
 
 export type Terrain = "flat" | "hilly";
 export type Vibe = "river" | "park" | "museum" | "history" | "food" | "scenic";

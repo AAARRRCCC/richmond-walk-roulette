@@ -1,6 +1,13 @@
-import { PRESET_ORIGINS } from "../data/places";
-import { areaSqMeters, collectPolygons, pointKey, type LngLat, type MultiPolygon } from "./geometry";
-import { postJson } from "./http";
+import { PRESET_ORIGINS } from "../data/places.ts";
+import {
+  areaSqMeters,
+  collectPolygons,
+  pointKey,
+  subtract,
+  type LngLat,
+  type MultiPolygon,
+} from "./geometry.ts";
+import { postJson } from "./http.ts";
 import {
   isFiniteNumber,
   isJsonArray,
@@ -9,9 +16,9 @@ import {
   parseJson,
   readJson,
   type Json,
-} from "./json";
-import { LruMap } from "./lru";
-import { WALKING_SPEED_KMH } from "./speed";
+} from "./json.ts";
+import { LruMap } from "./lru.ts";
+import { WALKING_SPEED_KMH } from "./speed.ts";
 
 type Band = {
   /** Walking minutes this contour represents. */
@@ -79,33 +86,52 @@ const BAND_COUNT = 3;
  * 96 Sets and ran 96 sorts per render of the panel, on the same thread that
  * is parsing a snapshot.
  */
-const bandMarks = new Map<number, readonly number[]>();
+const bandMarks = new Map<string, readonly number[]>();
 
 /**
- * Minute marks to draw for a budget, innermost first, always ending at the
- * budget itself. The inner marks snap to `INNER_STEP`, so every mark is a
- * ladder value and the warm-up covers all of them.
- *
- * A pure function of one small integer over a fixed domain, so it is memoised
- * and the arrays are frozen: every caller gets the same array back, and none
- * of them can make the memo lie.
+ * Keeps two contours from landing on top of each other. Below this the fill
+ * of one is inside the line of the next and the gradient reads as one edge.
  */
-function bandMinutes(budgetMinutes: number): readonly number[] {
-  const memo = bandMarks.get(budgetMinutes);
+const MIN_BAND_GAP = 3;
+
+/**
+ * Minute marks to draw, innermost first, always ending at the budget itself.
+ * Marks snap to `INNER_STEP`, so every one is a ladder value the warm-up
+ * already covers.
+ *
+ * The marks divide the RANGE, not the budget. Without a floor those are the
+ * same thing and this is thirds of the budget, as it always was. With one,
+ * dividing the budget instead would pile every mark against the outer edge:
+ * a 15 to 25 minute range would put its inner bands at 8 and 17, one of them
+ * outside the range entirely and the other a minute inside it, so the reach
+ * lost its gradient exactly when it became a band. Dividing the range puts
+ * them at 18 and 22, evenly across the shape actually drawn.
+ *
+ * A pure function of two small integers over a fixed domain, so it is
+ * memoised and the arrays are frozen: every caller gets the same array back,
+ * and none of them can make the memo lie.
+ */
+export function bandMinutes(budgetMinutes: number, floorMinutes = 0): readonly number[] {
+  const key = `${floorMinutes}|${budgetMinutes}`;
+  const memo = bandMarks.get(key);
   if (memo) return memo;
 
+  const span = budgetMinutes - floorMinutes;
   const marks = new Set<number>();
   for (let k = 1; k < BAND_COUNT; k++) {
-    const raw = (budgetMinutes * k) / BAND_COUNT;
+    const raw = floorMinutes + (span * k) / BAND_COUNT;
     // Floored at the ladder's own start, not at the step: a mark below
     // MIN_MINUTES has no contour behind it and would strand the whole reach.
     const snapped = Math.max(MIN_MINUTES, Math.round(raw / INNER_STEP) * INNER_STEP);
-    // Keep a visible gap so two contours never render on top of each other.
-    if (snapped <= budgetMinutes - 3) marks.add(snapped);
+    // Clear of both ends of the range, so an inner band is never drawn on top
+    // of the budget's own contour or of the hole punched by the floor.
+    if (snapped <= budgetMinutes - MIN_BAND_GAP && snapped >= floorMinutes + MIN_BAND_GAP) {
+      marks.add(snapped);
+    }
   }
 
   const computed = Object.freeze([...marks].toSorted((a, b) => a - b).concat(budgetMinutes));
-  bandMarks.set(budgetMinutes, computed);
+  bandMarks.set(key, computed);
   return computed;
 }
 
@@ -415,24 +441,42 @@ const assembled = new LruMap<string, Reach>(ASSEMBLED_LIMIT);
  * outstanding. This is the path the dial takes, which is why moving it repaints
  * within a frame instead of after a round trip.
  */
-export function cachedReach(origin: LngLat, budgetMinutes: number): Reach | null {
-  const key = cacheKey(origin, budgetMinutes);
+export function cachedReach(
+  origin: LngLat,
+  budgetMinutes: number,
+  floorMinutes = 0,
+): Reach | null {
+  // The floor is part of the shape, so it is part of the identity. Two reaches
+  // for the same budget and different floors are different geometry, and
+  // MapCanvas re-uploads a band only when this reference changes.
+  const key = `${cacheKey(origin, budgetMinutes)}|${floorMinutes}`;
   // Peeked, not promoted: this runs on every render, and the identity these
   // entries provide matters more than which one is oldest.
   const memo = assembled.peek(key);
   if (memo) return memo;
 
+  // The shape the range excludes. Fetched like any other rung, because that is
+  // what it is; missing means the ladder is not warm here yet, and a band
+  // drawn without its hole would claim the middle is in range.
+  let hole: MultiPolygon | null = null;
+  if (floorMinutes > 0) {
+    hole = cache.peek(cacheKey(origin, floorMinutes)) ?? null;
+    if (!hole) return null;
+  }
+
   const bands: Band[] = [];
-  for (const minutes of bandMinutes(budgetMinutes)) {
+  for (const minutes of bandMinutes(budgetMinutes, floorMinutes)) {
     const polygons = cache.peek(cacheKey(origin, minutes));
     if (!polygons) return null;
-    bands.push({ minutes, polygons });
+    bands.push({ minutes, polygons: hole ? subtract(polygons, hole) : polygons });
   }
 
   const reach: Reach = {
     origin,
     budgetMinutes,
     bands,
+    // Measured from the shape actually drawn, so a range reports the band's
+    // area rather than the disc's.
     areaSqMeters: areaSqMeters(bands[bands.length - 1]!.polygons),
   };
   assembled.set(key, reach);
@@ -451,9 +495,17 @@ export function isWarm(origin: LngLat, budgetMinutes: number): boolean {
  * Fetches only the contours a single budget needs, then assembles from cache
  * so the result shares identity with every later read of the same position.
  */
-export async function fetchReach(origin: LngLat, budgetMinutes: number): Promise<Reach> {
-  const results = await ensureContours(origin, bandMinutes(budgetMinutes));
-  const reach = cachedReach(origin, budgetMinutes);
+export async function fetchReach(
+  origin: LngLat,
+  budgetMinutes: number,
+  floorMinutes = 0,
+): Promise<Reach> {
+  const wanted = bandMinutes(budgetMinutes, floorMinutes);
+  const results = await ensureContours(
+    origin,
+    floorMinutes > 0 ? [floorMinutes, ...wanted] : wanted,
+  );
+  const reach = cachedReach(origin, budgetMinutes, floorMinutes);
   if (reach) return reach;
 
   // Every band this budget needs was requested; if the reach still cannot be
