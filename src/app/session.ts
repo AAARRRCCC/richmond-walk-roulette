@@ -20,10 +20,31 @@ export type Session = {
   vibes: Vibe[];
   pickedId: string | null;
   spinning: boolean;
+  /**
+   * A throw cancelled because its pool moved out from under it. `spinStart`
+   * has already cleared the pick by then, so without this the reel simply
+   * vanishes: a press cue and no landing cue.
+   */
+  spinAborted: boolean;
+  /**
+   * How many times the picked place's route has been asked for. A transient
+   * route failure is deliberately not cached, so nothing else in the app
+   * changes when one happens and this is the only thing that can make the
+   * fetch run again. Every action that changes which walk is on screen resets
+   * it, which is why it lives here rather than beside the effect.
+   */
+  routeAttempt: number;
   pickingOrigin: boolean;
   /** 0 to 1 across the contour warm-up for the current origin. */
   warmed: number;
   failure: Failure | null;
+  /**
+   * Why the browser would not share a location. Lives here rather than beside
+   * the geolocation call so it is cleared by the same origin change that
+   * clears `failure`: the advice it gives is "drop a pin instead", and it used
+   * to still be on screen after the pin was dropped.
+   */
+  locationError: string | null;
   /**
    * Bumped when the map should re-frame: a new origin, or a dial that has come
    * to rest. Not every dial value, or a drag would restart the camera on every
@@ -47,8 +68,10 @@ export type Action =
   | { type: "clearPick" }
   | { type: "beginPickOrigin" }
   | { type: "cancelPickOrigin" }
+  | { type: "routeAttempt"; attempt: number }
   | { type: "warmProgress"; fraction: number }
   | { type: "failed"; failure: Failure }
+  | { type: "locationError"; message: string | null }
   | { type: "frame" };
 
 /**
@@ -76,9 +99,12 @@ export const initialSession: Session = {
   vibes: [],
   pickedId: null,
   spinning: false,
+  spinAborted: false,
+  routeAttempt: 0,
   pickingOrigin: false,
   warmed: 0,
   failure: null,
+  locationError: null,
   framingKey: 0,
 };
 
@@ -93,13 +119,18 @@ export function reduce(state: Session, action: Action): Session {
         origin: action.origin,
         pickedId: null,
         spinning: false,
+        spinAborted: false,
+        routeAttempt: 0,
         pickingOrigin: false,
         warmed: 0,
         failure: null,
+        locationError: null,
         framingKey: state.framingKey + 1,
       };
     case "warmProgress":
       return { ...state, warmed: action.fraction };
+    case "locationError":
+      return { ...state, locationError: action.message };
     case "failed":
       return { ...state, failure: action.failure, spinning: false };
     case "frame":
@@ -140,16 +171,32 @@ export function reduce(state: Session, action: Action): Session {
       };
     case "clearFilters":
       return { ...state, terrain: "any", vibes: [], edgeOnly: false };
+    // Every one of these changes which walk is on screen, so each starts the
+    // route's retry budget over and clears the cancelled-throw notice.
     case "spinStart":
-      return { ...state, spinning: true, pickedId: null };
+      return { ...state, spinning: true, pickedId: null, spinAborted: false, routeAttempt: 0 };
     case "spinCancel":
-      return { ...state, spinning: false };
+      return { ...state, spinning: false, spinAborted: true };
     case "spinEnd":
-      return { ...state, spinning: false, pickedId: action.pickedId };
+      return {
+        ...state,
+        spinning: false,
+        pickedId: action.pickedId,
+        spinAborted: false,
+        routeAttempt: 0,
+      };
     case "pickPlace":
-      return { ...state, spinning: false, pickedId: action.pickedId };
+      return {
+        ...state,
+        spinning: false,
+        pickedId: action.pickedId,
+        spinAborted: false,
+        routeAttempt: 0,
+      };
     case "clearPick":
-      return { ...state, spinning: false, pickedId: null };
+      return { ...state, spinning: false, pickedId: null, spinAborted: false, routeAttempt: 0 };
+    case "routeAttempt":
+      return { ...state, routeAttempt: action.attempt };
     case "beginPickOrigin":
       return { ...state, pickingOrigin: true };
     case "cancelPickOrigin":

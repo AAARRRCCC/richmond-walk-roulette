@@ -1,13 +1,19 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useReducer,
   useRef,
   useState,
 } from "react";
-import { ShuffleIcon } from "@phosphor-icons/react";
+import {
+  CaretDownIcon,
+  ShuffleIcon,
+  SpeakerSimpleHighIcon,
+  SpeakerSimpleSlashIcon,
+} from "@phosphor-icons/react";
 import { MapCanvas } from "../map/MapCanvas";
 import { TimeDial } from "../ui/TimeDial";
 import { OriginPicker } from "../ui/OriginPicker";
@@ -16,6 +22,7 @@ import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
 import { ResultCard } from "../ui/ResultCard";
 import { PLACES, type Place, type Terrain, type Vibe } from "../data/places";
 import { contains, pointKey, type LngLat } from "../lib/geometry";
+import { formatMiles, formatMinutes } from "../lib/format";
 import {
   MAX_MINUTES,
   NotConfiguredError,
@@ -25,7 +32,12 @@ import {
   prefetchLadder,
   type Reach,
 } from "../lib/isochrone";
-import { cachedRoute, fetchWalkingRoute, prefetchRoutes } from "../lib/route";
+import {
+  cachedRoute,
+  fetchWalkingRoute,
+  prefetchRoutes,
+  type WalkingRoute,
+} from "../lib/route";
 import {
   budgetStep,
   customOrigin,
@@ -37,15 +49,37 @@ import {
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
 import { TuningPanel } from "../ui/TuningPanel";
-import { playPress } from "../lib/sound";
+import { onSoundChange, playPress, playTap, setSoundOn, soundOn } from "../lib/sound";
 
 /**
- * Picks the remediation the reader can actually act on: locally the engine
- * URL lives in .env.local, on the deployed Worker it is a var and there is no
- * such file. Compile-time, so the unused branch is stripped and
+ * Whether the maintainer instructions are worth showing at all. A stranger
+ * meeting an engine outage cannot set an environment variable, and the
+ * server's own message names the engine's address, so neither belongs on a
+ * deployed page. Compile-time, so the unused branch is stripped and
  * `vite dev --host` from a phone still shows the dev instructions.
  */
 const isDevServer = import.meta.env.DEV;
+
+/** Where the rail stops being a bottom sheet. Must match the stylesheet. */
+const WIDE = "(min-width: 900px)";
+
+/**
+ * How many times a picked route may be asked for before the card says so, and
+ * how long the first wait is. `fetchWalkingRoute` deliberately does not cache a
+ * transient failure, so nothing about the app's state changes when one happens
+ * and the effect that asked would otherwise never ask again.
+ */
+const ROUTE_ATTEMPTS = 3;
+const ROUTE_BACKOFF_MS = 900;
+
+/**
+ * `inert`, written by hand. React 18 has no boolean handling for the attribute
+ * and its types do not know it at all, so the present-means-on empty string is
+ * spread in instead of passed as a prop. This is what takes the dimmed rail
+ * out of the tab order during a pin drop; opacity and `pointer-events: none`
+ * left every control in it focusable and silently dead.
+ */
+const inertWhen = (on: boolean): Record<string, string> => (on ? { inert: "" } : {});
 
 const describe = (cause: unknown): Failure => ({
   configured: !(cause instanceof NotConfiguredError),
@@ -55,10 +89,29 @@ const describe = (cause: unknown): Failure => ({
 export function App() {
   const [state, dispatch] = useReducer(reduce, initialSession);
   const [locating, setLocating] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [filtersOpen, setFiltersOpen] = useState(
-    () => window.matchMedia("(min-width: 900px)").matches,
-  );
+  const [wide, setWide] = useState(() => window.matchMedia(WIDE).matches);
+  const [filtersOpen, setFiltersOpen] = useState(wide);
+  const [railCollapsed, setRailCollapsed] = useState(false);
+  const emptyNoticeId = useId();
+  const spinRef = useRef<HTMLButtonElement>(null);
+
+  /**
+   * The sheet breakpoint, watched rather than sampled once at mount. Rotating
+   * a tablet across it used to leave the drawer at the other layout's default
+   * and the sheet's collapse control on a rail that is no longer a sheet, so
+   * the drawer's default moves with it.
+   */
+  useEffect(() => {
+    const query = window.matchMedia(WIDE);
+    const onChange = (event: MediaQueryListEvent) => {
+      setWide(event.matches);
+      setFiltersOpen(event.matches);
+    };
+    query.addEventListener("change", onChange);
+    return () => {
+      query.removeEventListener("change", onChange);
+    };
+  }, []);
 
   /**
    * The contour and route caches are mutable module state, so these counters
@@ -68,6 +121,12 @@ export function App() {
    */
   const [, bumpContours] = useReducer((n: number) => n + 1, 0);
   const [, bumpRoutes] = useReducer((n: number) => n + 1, 0);
+
+  // The mute is stored, not React state, because the sound engine reads it
+  // outside render. This is how a change reaches the icon.
+  const [, bumpSound] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => onSoundChange(bumpSound), []);
+  const sound = soundOn();
 
   const { origin, failure } = state;
   const outbound = outboundMinutes(state);
@@ -182,17 +241,34 @@ export function App() {
   // The warm-up covers every reachable place, but a pick can outrun it.
   const pickedId = picked?.id ?? null;
   const pickedRouteMissing = picked !== null && cachedRoute(origin, picked) === undefined;
+  const attempt = state.routeAttempt;
+  /** Attempts spent with nothing to draw. The card says so rather than shimmering. */
+  const routeFailed = pickedRouteMissing && attempt >= ROUTE_ATTEMPTS;
+
   useEffect(() => {
-    if (!picked || !pickedRouteMissing) return;
+    if (!picked || !pickedRouteMissing || attempt >= ROUTE_ATTEMPTS) return;
     let cancelled = false;
-    void fetchWalkingRoute(origin, picked).then(() => {
-      if (!cancelled) bumpRoutes();
+    let timer = 0;
+    void fetchWalkingRoute(origin, picked).then((resolved) => {
+      if (cancelled) return;
+      if (!routeMissed(origin, picked, resolved)) {
+        bumpRoutes();
+        return;
+      }
+      // Backed off rather than re-asked at once: a warm-up burst is exactly
+      // when the engine is most likely to be rate limiting, and the attempt
+      // count is the only thing here that can make this effect run again.
+      timer = window.setTimeout(
+        () => dispatch({ type: "routeAttempt", attempt: attempt + 1 }),
+        ROUTE_BACKOFF_MS * (attempt + 1),
+      );
     });
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pickedId, pickedRouteMissing, origin]);
+  }, [pickedId, pickedRouteMissing, origin, attempt]);
   /**
    * Plain function: `candidates` and `drawable` are rebuilt each render from
    * the caches, so a useCallback would memoise on values the compiler cannot
@@ -225,6 +301,10 @@ export function App() {
     lastKeyRef.current = candidateKey;
     if (state.spinning) {
       cancelSpin();
+      // `spinCancel` raises `spinAborted`: `spinStart` already cleared the
+      // pick, so without a word in the slot the reel simply vanishes - a press
+      // cue and no landing cue, the one gesture in the app that opens and
+      // never closes.
       dispatch({ type: "spinCancel" });
     }
   }, [candidateKey, state.spinning, cancelSpin]);
@@ -243,13 +323,29 @@ export function App() {
     if (!state.spinning) cancelSpin();
   }, [state.spinning, cancelSpin]);
 
+  /**
+   * Pin drop had no keyboard exit at all: the marker is aria-hidden and not
+   * focusable, and the only other ways out are a map click or a marker drag.
+   * The reducer's cancel case was written and never dispatched.
+   */
+  useEffect(() => {
+    if (!state.pickingOrigin) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") dispatch({ type: "cancelPickOrigin" });
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [state.pickingOrigin]);
+
   const useMyLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setLocationError("This browser cannot share a location.");
+      dispatch({ type: "locationError", message: "This browser cannot share a location." });
       return;
     }
     setLocating(true);
-    setLocationError(null);
+    dispatch({ type: "locationError", message: null });
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocating(false);
@@ -265,7 +361,10 @@ export function App() {
       },
       () => {
         setLocating(false);
-        setLocationError("Location unavailable. Drop a pin instead.");
+        dispatch({
+          type: "locationError",
+          message: "Location unavailable. Drop a pin instead.",
+        });
       },
       { enableHighAccuracy: true, timeout: 8000 },
     );
@@ -287,6 +386,26 @@ export function App() {
         ? "error"
         : "not-configured"
       : "loading";
+
+  /**
+   * The one line a screen reader gets, derived rather than queued.
+   *
+   * The reel is aria-hidden and the card is no longer a live region: between
+   * them the winner was read twice and every one of the forty name flips
+   * before it. This stays empty for the length of a throw and fills once the
+   * route settles, so the sentence is complete on first read and a second
+   * throw onto the same place still reads as a new result.
+   *
+   * A skeleton means "still coming"; once the attempts are spent it is a lie,
+   * which is why a failed route composes a line rather than holding this back.
+   */
+  const routePending = routeLoading && !routeFailed;
+  const announcement = state.spinAborted
+    ? "Filters changed, spin again."
+    : state.spinning || !picked || routePending
+      ? ""
+      : describeResult(picked, route, routeFailed, state.roundTrip, withinBudget);
+
   // Rebuilt each render rather than memoised: it is read during TimeDial's
   // render, and App already re-renders whenever the contour cache changes.
   const dialWarm = (minutes: number) =>
@@ -299,8 +418,16 @@ export function App() {
     [candidateKey],
   );
 
+  const picking = state.pickingOrigin;
+  const collapsed = railCollapsed && !wide;
+  const emptyNotice = status === "ready" && candidates.length === 0;
+  // A phone starts with the drawer shut, and a bare "Filters" over a shrunken
+  // count is a cause the reader cannot see.
+  const activeFilters =
+    (state.terrain === "any" ? 0 : 1) + state.vibes.length + (state.edgeOnly ? 1 : 0);
+
   return (
-    <div className={`shell${state.pickingOrigin ? " is-picking" : ""}`}>
+    <div className={`shell${picking ? " is-picking" : ""}`}>
       <MapCanvas
         origin={origin}
         reach={reach}
@@ -309,29 +436,78 @@ export function App() {
         pickedId={active?.id ?? null}
         framingKey={state.framingKey}
         route={route}
-        pickingOrigin={state.pickingOrigin}
+        pickingOrigin={picking}
         onPickPlace={(id) => dispatch({ type: "pickPlace", pickedId: id })}
         onMoveOrigin={moveOrigin}
       />
 
-      <div className="rail">
-        <header className="brand">
+      <div className={`rail${collapsed ? " is-collapsed" : ""}`}>
+        <header className="brand" {...inertWhen(picking)}>
           <h1>
             Walk Roulette
             <span className="brand-place">Richmond</span>
           </h1>
+          <div className="brand-actions">
+            <button
+              type="button"
+              className="icon-button"
+              aria-label={sound ? "Mute sound cues" : "Unmute sound cues"}
+              onClick={() => {
+                const next = !sound;
+                setSoundOn(next);
+                // The only cue that can confirm itself: you cannot hear a mute.
+                if (next) playTap(true);
+              }}
+            >
+              {sound ? (
+                <SpeakerSimpleHighIcon size={16} aria-hidden="true" />
+              ) : (
+                <SpeakerSimpleSlashIcon size={16} aria-hidden="true" />
+              )}
+            </button>
+            {/* The sheet can cover most of the map, which is the one thing the
+                app exists to show. One control, one cue; the stylesheet does
+                the rest through `.rail.is-collapsed`. */}
+            {!wide && (
+              <button
+                type="button"
+                className="icon-button rail-toggle"
+                aria-expanded={!collapsed}
+                aria-label={collapsed ? "Show controls" : "Hide controls"}
+                onClick={() => {
+                  playPress();
+                  setRailCollapsed((value) => !value);
+                }}
+              >
+                {/* Turned rather than swapped for a second glyph: the caret is
+                    already in the bundle for the origin chip, and a second one
+                    is a kilobyte for a shape we have. */}
+                <CaretDownIcon
+                  size={16}
+                  weight="bold"
+                  aria-hidden="true"
+                  style={collapsed ? { transform: "rotate(180deg)" } : undefined}
+                />
+              </button>
+            )}
+          </div>
         </header>
 
         <div className="panel">
           <OriginPicker
             origin={origin}
-            pickingOrigin={state.pickingOrigin}
+            pickingOrigin={picking}
             locating={locating}
             onSelect={(next) => dispatch({ type: "origin", origin: next })}
             onBeginPickOnMap={() => dispatch({ type: "beginPickOrigin" })}
+            onCancelPickOnMap={() => dispatch({ type: "cancelPickOrigin" })}
             onUseMyLocation={useMyLocation}
           />
-          {locationError && <p className="notice is-warn">{locationError}</p>}
+          {state.locationError && (
+            <p className="notice is-warn" role="alert">
+              {state.locationError}
+            </p>
+          )}
 
           <TimeDial
             minutes={state.budgetMinutes}
@@ -341,27 +517,24 @@ export function App() {
             roundTrip={state.roundTrip}
             isWarm={dialWarm}
             warmedFraction={state.warmed}
+            disabled={picking}
             onChange={(minutes) => dispatch({ type: "budget", minutes })}
             onCommit={() => dispatch({ type: "frame" })}
           />
 
           {status === "not-configured" ? (
             <div className="notice is-setup">
-              <strong>{failure?.message ?? "The routing engine is not configured."}</strong>
-              <p>
-                Contours and routes come from a Valhalla instance.{" "}
-                {isDevServer ? (
-                  <>
-                    Set <code>VALHALLA_URL</code> in <code>.env.local</code>, then restart the dev
-                    server. See <code>valhalla/README.md</code>.
-                  </>
-                ) : (
-                  <>
-                    Set <code>VALHALLA_URL</code> on the Worker, then redeploy. See{" "}
-                    <code>valhalla/README.md</code>.
-                  </>
-                )}
-              </p>
+              <strong>The routing engine is not answering.</strong>
+              {isDevServer ? (
+                <p>
+                  Contours and routes come from a Valhalla instance. Set{" "}
+                  <code>VALHALLA_URL</code> in <code>.env.local</code>, then restart the dev
+                  server. See <code>valhalla/README.md</code>. The server said:{" "}
+                  {failure?.message}
+                </p>
+              ) : (
+                <p>Reachable areas and routes are unavailable right now. Try again shortly.</p>
+              )}
             </div>
           ) : status === "error" ? (
             <p className="notice is-warn" role="alert">
@@ -373,13 +546,16 @@ export function App() {
               areaSqMeters={reach?.areaSqMeters ?? 0}
               placeCount={candidates.length}
               outerMinutes={outer?.minutes ?? outbound}
+              commitKey={state.framingKey}
             />
           )}
 
           <button
             type="button"
+            ref={spinRef}
             className="button is-spin"
             onClick={spin}
+            aria-describedby={emptyNotice ? emptyNoticeId : undefined}
             // Routes lag the contours by a second or two on a cold origin, and
             // spinning before any of them land would tick through names with
             // no line on the map. That is the thing the reel exists to show.
@@ -387,6 +563,7 @@ export function App() {
               candidates.length === 0 ||
               drawable.length === 0 ||
               state.spinning ||
+              picking ||
               status !== "ready"
             }
           >
@@ -398,8 +575,8 @@ export function App() {
                 : "Spin"}
           </button>
 
-          {status === "ready" && candidates.length === 0 && (
-            <div className="notice">
+          {emptyNotice && (
+            <div className="notice" id={emptyNoticeId} {...inertWhen(picking)}>
               Nothing matches inside {outer?.minutes ?? outbound} minutes.
               <button
                 type="button"
@@ -412,12 +589,18 @@ export function App() {
           )}
         </div>
 
-        <div className="spin-slot" aria-live="polite" aria-atomic="true">
+        <div className="spin-slot" {...inertWhen(picking)}>
           {state.spinning && showing && (
-            <p className="spin-reel">
+            // A randomising metaphor, not information. It changes name twenty
+            // to forty times a throw, and each flip used to queue its own
+            // announcement, long outlasting the throw itself.
+            <p className="spin-reel" aria-hidden="true">
               <span className="field-label">Choosing</span>
               <span className="spin-name">{showing.name}</span>
             </p>
+          )}
+          {!state.spinning && !picked && state.spinAborted && (
+            <p className="notice is-warn">Filters changed, spin again.</p>
           )}
           {!state.spinning && picked && (
             <ResultCard
@@ -425,10 +608,18 @@ export function App() {
               place={picked}
               route={route}
               routeLoading={routeLoading}
+              routeFailed={routeFailed}
               roundTrip={state.roundTrip}
               withinBudget={withinBudget}
               onSpinAgain={spin}
-              onDismiss={() => dispatch({ type: "clearPick" })}
+              onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
+              onDismiss={() => {
+                // The button being pressed is inside the card this unmounts.
+                // Without moving focus first it lands on the body and the next
+                // Tab restarts from the top of the page.
+                spinRef.current?.focus();
+                dispatch({ type: "clearPick" });
+              }}
             />
           )}
         </div>
@@ -437,8 +628,11 @@ export function App() {
           className="drawer"
           open={filtersOpen}
           onToggle={(event) => setFiltersOpen(event.currentTarget.open)}
+          {...inertWhen(picking)}
         >
-          <summary>Filters</summary>
+          <summary>
+            {activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}
+          </summary>
           <Filters
             terrain={state.terrain}
             vibes={state.vibes}
@@ -451,23 +645,82 @@ export function App() {
           />
         </details>
 
+        {/* This was a bare sr-only <ul> of up to sixty buttons. A sighted
+            keyboard user tabbing off the drawer fell into dozens of invisible
+            stops with the focus ring clipped to a pixel, and a screen reader
+            arrived at an unnamed pile of names with no hint that pressing one
+            draws a route. Closed, a disclosure holds no tab stops at all - and
+            the list is worth having for everyone, not as a parallel UI.
+            Borrowing the origin menu's list vocabulary: same shape, same job. */}
+        <details className="drawer" {...inertWhen(picking)}>
+          <summary>Places in reach ({candidates.length})</summary>
+          <ul className="origin-list">
+            {candidates.map((place) => (
+              <li key={place.id}>
+                <button
+                  type="button"
+                  className="origin-option"
+                  aria-current={place.id === state.pickedId}
+                  onClick={() => dispatch({ type: "pickPlace", pickedId: place.id })}
+                >
+                  {place.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+
         {import.meta.env.DEV && <TuningPanel />}
 
-        <ul className="sr-only">
-          {candidates.map((place) => (
-            <li key={place.id}>
-              <button
-                type="button"
-                onClick={() => dispatch({ type: "pickPlace", pickedId: place.id })}
-              >
-                {place.name}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <p className="sr-only" role="status">
+          {announcement}
+        </p>
       </div>
     </div>
   );
+}
+
+/**
+ * Did that request settle without leaving anything to draw?
+ *
+ * `fetchWalkingRoute` resolves null for two different things: a destination
+ * with no walking route at all, which it caches, and a transient failure,
+ * which it deliberately does not - so the cache is what tells them apart. Only
+ * the second is worth asking again. Kept as one function so that when route.ts
+ * reports a settled failure outright, this body becomes a single call.
+ */
+function routeMissed(
+  origin: LngLat,
+  destination: Place,
+  resolved: WalkingRoute | null,
+): boolean {
+  return resolved === null && cachedRoute(origin, destination) === undefined;
+}
+
+/**
+ * The one line a screen reader gets for a result: what the reel and the card
+ * say between them, in a sentence.
+ */
+function describeResult(
+  place: Place,
+  route: WalkingRoute | null,
+  routeFailed: boolean,
+  roundTrip: boolean,
+  withinBudget: boolean,
+): string {
+  const parts = [place.name];
+  if (route) {
+    parts.push(
+      `${formatMinutes(roundTrip ? route.durationSeconds * 2 : route.durationSeconds)} ${
+        roundTrip ? "out and back" : "on foot"
+      }`,
+      formatMiles(roundTrip ? route.distanceMeters * 2 : route.distanceMeters),
+    );
+  } else {
+    parts.push(routeFailed ? "walk time unavailable" : "no walking route");
+  }
+  if (!withinBudget) parts.push("outside your current time budget");
+  return `${parts.join(", ")}.`;
 }
 
 /**
@@ -494,4 +747,3 @@ function selectCandidates(
     return true;
   });
 }
-

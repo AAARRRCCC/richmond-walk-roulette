@@ -14,10 +14,33 @@
  * policy would reject it and the console warning is worse than the silence.
  */
 
-import { tuning } from "../app/tuning";
+import { onTuningChange, setTuning, tuning } from "../app/tuning";
 
 let context: AudioContext | null = null;
 let master: GainNode | null = null;
+
+/**
+ * The mute, as the rest of the app should ask for it.
+ *
+ * It rides on the same stored setting the dev panel's Sound switch writes, so
+ * there is one answer to "is sound on" rather than two that can disagree, and
+ * `audio()` below stays its only reader. It persists per browser, and it is
+ * seeded off when the system asks for reduced motion - see `seeded()` in
+ * tuning.ts. Muting does not tear the context down: it is a few kilobytes and
+ * rebuilding it on unmute would need another gesture to be allowed to start.
+ */
+export function soundOn(): boolean {
+  return tuning.soundEnabled;
+}
+
+export function setSoundOn(on: boolean): void {
+  setTuning("soundEnabled", on);
+}
+
+/** Subscribe for re-render when the mute moves; returns the unsubscribe. */
+export function onSoundChange(listener: () => void): () => void {
+  return onTuningChange(listener);
+}
 
 /**
  * Lazily built on the first cue, which by construction follows a click or a
