@@ -1,0 +1,17 @@
+# Response headers for the static assets, read by Cloudflare Workers Assets
+# in production and ignored by the Vite dev server.
+
+# The reach snapshots.
+#
+# These are by far the largest thing the site serves - a couple of megabytes
+# each, one per preset origin - and every one of them is a deterministic
+# answer for a fixed origin. Revalidating them on each visit is the entire
+# cost of going back to a preset already loaded once.
+#
+# Immutable is safe here because the URL changes when the content does: the
+# file name is derived from the origin's coordinates and cannot move, so the
+# app appends the snapshot build number as a query (?v=N, SNAPSHOT_VERSION in
+# src/lib/isochrone.ts). Regenerating public/reach/ means bumping that number,
+# and the new build ships under a URL nobody has cached.
+/reach/*
+  Cache-Control: public, max-age=31536000, immutable

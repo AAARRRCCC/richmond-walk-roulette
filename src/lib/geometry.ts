@@ -25,8 +25,13 @@ export type LngLat = { lng: number; lat: number };
  * so these have to agree or a snapshot silently stops matching the key the
  * app looks it up by. Changing it means regenerating `public/reach/`.
  *
- * @public - also read by scripts/build-reach.mjs, which rounds the coordinates
- * it writes to the same precision.
+ * This is identity, not display. The vertices inside a snapshot are rounded
+ * coarser than this by scripts/build-reach.mjs, because a contour vertex is a
+ * point on a 25 m grid that gets smoothed before it is drawn, while an origin
+ * has to hash to the same string everywhere or the snapshot goes missing.
+ *
+ * @public - the snapshot file names that generator writes come from here
+ * through `snapshotName`, so changing it means regenerating public/reach/.
  */
 export const COORD_PRECISION = 5;
 
