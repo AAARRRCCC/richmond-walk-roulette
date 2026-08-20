@@ -1,13 +1,14 @@
-import { useEffect, useRef } from "react";
-import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import maplibregl, { type ExpressionSpecification, type Map as MapLibreMap } from "maplibre-gl";
 import type { FeatureCollection, MultiPolygon as MultiPolygonGeometry } from "geojson";
 import { darkBasemap } from "./basemap";
 import { smoothedForDisplay } from "./smooth";
-import type { LngLat, MultiPolygon } from "../lib/geometry";
+import { pointKey, type LngLat, type MultiPolygon } from "../lib/geometry";
+import { formatArea, pluralize } from "../lib/format";
 import { isString, type Json } from "../lib/json";
 import type { Reach } from "../lib/isochrone";
 import type { WalkingRoute } from "../lib/route";
-import type { Place } from "../data/places";
+import { PRESET_ORIGINS, type Place } from "../data/places";
 
 /** Slot 0 renders at the bottom and always holds the outermost contour. */
 const SLOTS = [0, 1, 2] as const;
@@ -15,6 +16,74 @@ const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 const ACCENT = "#ffb043";
 const ACCENT_SOFT = "#ffd7a0";
+
+/**
+ * Everything the app fills or strokes goes underneath the basemap's labels.
+ * The route casing is a 7px near-black line, so where it crossed a
+ * neighbourhood name it painted the name out - and neighbourhood names are
+ * what let a contour be read as territory ("the 20 minute ring reaches Church
+ * Hill") rather than as a blob. The place dots and the picked label are the
+ * answer to the question, so they stay on top.
+ */
+const UNDER_LABELS = "water-label";
+
+/**
+ * The basemap's roads interpolate their width `["exponential", 1.4]` from z11
+ * to z18, so a fixed overlay weight inverts its relationship with the map
+ * across the range: a thread over a 6px service road at z18, heavier than an
+ * arterial at z11. This is the same curve, normalised to 1 at the zooms the
+ * app frames into (13.4 on load, at most 15.5 after a fit), so every pixel
+ * value written below is still the value that lands on screen.
+ */
+const ZOOM_WEIGHT: ExpressionSpecification = [
+  "interpolate",
+  ["exponential", 1.4],
+  ["zoom"],
+  11,
+  0.75,
+  18,
+  2.56,
+];
+
+function weighted(pixels: number | ExpressionSpecification): ExpressionSpecification {
+  return ["*", pixels, ZOOM_WEIGHT];
+}
+
+/** How far one arrow-key press moves the origin marker, in metres. */
+const NUDGE_METERS = 15;
+/** Metres per degree of latitude, near enough for a nudge. */
+const METERS_PER_DEGREE = 111_320;
+/**
+ * A run of arrow presses commits once, the way a drag does. Committing per
+ * keystroke would fire a whole 96-contour warm-up for every tap.
+ */
+const NUDGE_COMMIT_MS = 500;
+const NUDGES = new Map<string, [number, number]>([
+  ["ArrowUp", [0, 1]],
+  ["ArrowDown", [0, -1]],
+  ["ArrowLeft", [-1, 0]],
+  ["ArrowRight", [1, 0]],
+]);
+
+/**
+ * The stylesheet does not own this node. It is a failure state belonging to
+ * the map rather than a part of the instrument panel, and it exists only for
+ * as long as the tiles are missing.
+ */
+const NOTICE_STYLE = {
+  position: "absolute",
+  left: 8,
+  bottom: 8,
+  zIndex: 2,
+  margin: 0,
+  maxWidth: "17rem",
+  padding: "5px 9px",
+  borderRadius: 5,
+  background: "rgba(11, 16, 20, 0.82)",
+  color: "#93a6b5",
+  fontSize: 11,
+  pointerEvents: "none",
+} as const;
 
 export type MapCanvasProps = {
   origin: LngLat;
@@ -26,6 +95,17 @@ export type MapCanvasProps = {
   framingKey: number;
   route: WalkingRoute | null;
   pickingOrigin: boolean;
+  /**
+   * True while the reel is turning. `pickedId` then changes on every tick, and
+   * MapLibre places symbols on its own asynchronous cadence, so the name on the
+   * map strobes and lags a tick behind the name in the rail - two different
+   * answers on screen during the one moment the app asks you to watch. The
+   * circle highlight keeps ticking; the label waits for the landing.
+   *
+   * Optional so the prop can be adopted without a lockstep change; the label
+   * simply never hides until it is passed.
+   */
+  spinning?: boolean;
   onPickPlace: (id: string) => void;
   onMoveOrigin: (at: LngLat) => void;
 };
@@ -37,6 +117,17 @@ export function MapCanvas(props: MapCanvasProps) {
   const readyRef = useRef(false);
   /** Bounds of the last framed contour, replayed when the rail resizes. */
   const boundsRef = useRef<maplibregl.LngLatBounds | null>(null);
+  /**
+   * The last MultiPolygon handed to each band source. `cachedReach` returns
+   * the same object for a given origin and minute, which is the identity the
+   * display smoothing already keys its WeakMap on, so comparing references
+   * here is what stops a reel tick from re-serialising and re-tiling three
+   * contours that did not change.
+   */
+  const bandsRef = useRef<(MultiPolygon | null)[]>([null, null, null]);
+  const [basemapDown, setBasemapDown] = useState(false);
+  const [summary, setSummary] = useState("");
+  const summaryId = useId();
   /**
    * Latest props for the map event handlers, which are registered once on
    * mount and would otherwise close over the first render's props. Declared
@@ -59,6 +150,9 @@ export function MapCanvas(props: MapCanvasProps) {
       attributionControl: false,
       dragRotate: false,
       pitchWithRotate: false,
+      // Belt and braces beside the keyboard call below: pitch breaks the
+      // fixed-size circles the places layer assumes.
+      maxPitch: 0,
     });
     mapRef.current = map;
 
@@ -67,10 +161,21 @@ export function MapCanvas(props: MapCanvasProps) {
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     map.touchZoomRotate.disableRotation();
+    // The last rotation path left open. MapLibre's keyboard handler binds
+    // shift+arrow to bearing and pitch, and the compass was deliberately
+    // removed, so north-up would be unrecoverable short of a reload.
+    map.keyboard.disableRotation();
 
-    const element = document.createElement("div");
+    const element = document.createElement("button");
+    element.type = "button";
     element.className = "origin-marker";
-    element.setAttribute("aria-hidden", "true");
+    // A real name and a real keyboard path. It used to be an aria-hidden div,
+    // so the one control that moves the origin on the map was reachable only
+    // by dragging it, and announced as nothing.
+    element.setAttribute(
+      "aria-label",
+      "Start of the walk. Drag it, or nudge it with the arrow keys.",
+    );
     const marker = new maplibregl.Marker({ element, draggable: true, anchor: "center" })
       .setLngLat([handlers.current.origin.lng, handlers.current.origin.lat])
       .addTo(map);
@@ -80,60 +185,110 @@ export function MapCanvas(props: MapCanvasProps) {
     });
     markerRef.current = marker;
 
+    // Arrow keys move the marker the way a drag does: freely, committing once
+    // the movement stops, so a run of presses is one origin change and one
+    // warm-up rather than a ladder request per keystroke.
+    let nudgeTimer = 0;
+    const commitNudge = () => {
+      window.clearTimeout(nudgeTimer);
+      nudgeTimer = 0;
+      const { lng, lat } = marker.getLngLat();
+      handlers.current.onMoveOrigin({ lng, lat });
+    };
+    element.addEventListener("keydown", (event) => {
+      const step = NUDGES.get(event.key);
+      if (!step) return;
+      event.preventDefault();
+      const { lng, lat } = marker.getLngLat();
+      const meters = NUDGE_METERS * (event.shiftKey ? 8 : 1);
+      marker.setLngLat([
+        lng + (step[0] * meters) / (METERS_PER_DEGREE * Math.cos((lat * Math.PI) / 180)),
+        lat + (step[1] * meters) / METERS_PER_DEGREE,
+      ]);
+      window.clearTimeout(nudgeTimer);
+      nudgeTimer = window.setTimeout(commitNudge, NUDGE_COMMIT_MS);
+    });
+    element.addEventListener("blur", () => {
+      if (nudgeTimer) commitNudge();
+    });
+
     map.on("load", () => {
       for (const slot of SLOTS) {
         map.addSource(`band-${slot}`, { type: "geojson", data: EMPTY });
-        map.addLayer({
-          id: `band-fill-${slot}`,
-          type: "fill",
-          source: `band-${slot}`,
-          // Uniform opacity on purpose: the contours are nested, so stacking
-          // them builds a gradient that gets hotter toward the origin without
-          // any per-slot tuning. Kept low so the street grid stays readable
-          // underneath, which is the whole reason for a real isochrone.
-          paint: { "fill-color": ACCENT, "fill-opacity": 0.085 },
-        });
+        map.addLayer(
+          {
+            id: `band-fill-${slot}`,
+            type: "fill",
+            source: `band-${slot}`,
+            // Uniform opacity on purpose: the contours are nested, so stacking
+            // them builds a gradient that gets hotter toward the origin without
+            // any per-slot tuning. Kept low so the street grid stays readable
+            // underneath, which is the whole reason for a real isochrone.
+            paint: { "fill-color": ACCENT, "fill-opacity": 0.085 },
+          },
+          UNDER_LABELS,
+        );
       }
       for (const slot of SLOTS) {
-        map.addLayer({
-          id: `band-line-${slot}`,
-          type: "line",
-          source: `band-${slot}`,
-          paint: {
-            // Slot 0 is the budget itself, the one contour that answers the
-            // question, so it is the only bright line.
-            "line-color": slot === 0 ? ACCENT : ACCENT_SOFT,
-            "line-width": slot === 0 ? 1.8 : 1,
-            "line-opacity": slot === 0 ? 0.9 : 0.45,
+        map.addLayer(
+          {
+            id: `band-line-${slot}`,
+            type: "line",
+            source: `band-${slot}`,
+            paint: {
+              // Slot 0 is the budget itself, the one contour that answers the
+              // question, so it is the only bright line.
+              "line-color": slot === 0 ? ACCENT : ACCENT_SOFT,
+              "line-width": weighted(slot === 0 ? 1.8 : 1),
+              "line-opacity": slot === 0 ? 0.9 : 0.45,
+            },
           },
-        });
+          UNDER_LABELS,
+        );
       }
 
       map.addSource("route", { type: "geojson", data: EMPTY });
-      map.addLayer({
-        id: "route-casing",
-        type: "line",
-        source: "route",
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#05090e", "line-width": 7, "line-opacity": 0.9 },
-      });
-      map.addLayer({
-        id: "route-line",
-        type: "line",
-        source: "route",
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#ffffff", "line-width": 2.6 },
-      });
+      map.addLayer(
+        {
+          id: "route-casing",
+          type: "line",
+          source: "route",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: { "line-color": "#05090e", "line-width": weighted(7), "line-opacity": 0.9 },
+        },
+        UNDER_LABELS,
+      );
+      map.addLayer(
+        {
+          id: "route-line",
+          type: "line",
+          source: "route",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: { "line-color": "#ffffff", "line-width": weighted(2.6) },
+        },
+        UNDER_LABELS,
+      );
 
       map.addSource("places", { type: "geojson", data: EMPTY });
+      // Two layers over one source so the interactive one can be filtered.
+      // Offering a hand cursor and a route to a place the same frame draws as
+      // out of reach is the map contradicting itself.
+      map.addLayer({
+        id: "places-out",
+        type: "circle",
+        source: "places",
+        filter: ["==", ["get", "state"], "out"],
+        paint: { "circle-radius": weighted(3), "circle-color": "#4a5c6d" },
+      });
       map.addLayer({
         id: "places",
         type: "circle",
         source: "places",
+        filter: ["!=", ["get", "state"], "out"],
         paint: {
-          "circle-radius": ["match", ["get", "state"], "picked", 8, "in", 4.5, 3],
-          "circle-color": ["match", ["get", "state"], "picked", "#ffffff", "in", ACCENT, "#4a5c6d"],
-          "circle-stroke-width": ["match", ["get", "state"], "picked", 3, "in", 1.5, 0],
+          "circle-radius": weighted(["match", ["get", "state"], "picked", 8, 4.5]),
+          "circle-color": ["match", ["get", "state"], "picked", "#ffffff", ACCENT],
+          "circle-stroke-width": ["match", ["get", "state"], "picked", 3, 1.5],
           "circle-stroke-color": ["match", ["get", "state"], "picked", ACCENT, "#0b1014"],
         },
       });
@@ -151,12 +306,30 @@ export function MapCanvas(props: MapCanvasProps) {
           "text-offset": [0, 1.4],
           "text-anchor": "top",
         },
-        paint: { "text-color": "#ffffff", "text-halo-color": "#05090e", "text-halo-width": 1.6 },
+        paint: {
+          "text-color": "#ffffff",
+          "text-halo-color": "#05090e",
+          "text-halo-width": 1.6,
+          "text-opacity": handlers.current.spinning ? 0 : 1,
+        },
       });
 
       readyRef.current = true;
-      const p = handlers.current;
-      sync(map, p.reach, p.places, p.inReachIds, p.pickedId, p.route);
+      syncAll(map, handlers.current, bandsRef.current);
+    });
+
+    /**
+     * The basemap is a third-party tile host with no SLA, and losing it is not
+     * losing the app: the contours, the route and the dots are GeoJSON this
+     * component owns and they draw perfectly well over the bare background.
+     * So this is a notice, not a failure. Raised only when the basemap is
+     * actually missing, because one dropped tile is not an outage.
+     */
+    map.on("error", () => {
+      setBasemapDown(basemapMissing(map));
+    });
+    map.on("sourcedata", (event) => {
+      if (event.sourceId === "omt" && event.isSourceLoaded) setBasemapDown(false);
     });
 
     map.on("click", "places", (event) => {
@@ -182,6 +355,7 @@ export function MapCanvas(props: MapCanvasProps) {
 
     return () => {
       readyRef.current = false;
+      window.clearTimeout(nudgeTimer);
       marker.remove();
       map.remove();
       mapRef.current = null;
@@ -194,12 +368,39 @@ export function MapCanvas(props: MapCanvasProps) {
     markerRef.current?.setLngLat([props.origin.lng, props.origin.lat]);
   }, [props.origin.lng, props.origin.lat]);
 
+  /**
+   * One effect per source, on its own dependencies. They used to share one,
+   * so a reel tick - which changes `pickedId` and `route` many times a second
+   * - re-uploaded all three contour geometries byte for byte, and a dial
+   * scrub re-uploaded the 62-feature places collection and the whole route on
+   * every frame. Those are precisely the two moments this app budgets its
+   * feel for.
+   */
   const { reach, places, inReachIds, pickedId, route } = props;
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !readyRef.current) return;
-    sync(map, reach, places, inReachIds, pickedId, route);
-  }, [reach, places, inReachIds, pickedId, route]);
+    syncBands(map, reach, bandsRef.current);
+  }, [reach]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !readyRef.current) return;
+    syncPlaces(map, places, inReachIds, pickedId);
+  }, [places, inReachIds, pickedId]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !readyRef.current) return;
+    syncRoute(map, route);
+  }, [route]);
+
+  const spinning = props.spinning ?? false;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !readyRef.current) return;
+    map.setPaintProperty("picked-place-label", "text-opacity", spinning ? 0 : 1);
+  }, [spinning]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -232,8 +433,30 @@ export function MapCanvas(props: MapCanvasProps) {
     if (!bounds) return;
     framedStampRef.current = stamp;
     boundsRef.current = bounds;
-    map.fitBounds(bounds, { padding: framePadding(map), duration: 700, maxZoom: 15.5 });
+    map.fitBounds(bounds, {
+      padding: framePadding(map),
+      duration: cameraDuration(700),
+      maxZoom: 15.5,
+    });
   }, [props.framingKey, outerBand]);
+
+  /**
+   * The isochrone is what this app exists to show and it lives entirely in
+   * canvas pixels, so it needs a text equivalent. Written on the same commit
+   * edge that re-frames the camera rather than on every scrub frame: the point
+   * is the settled answer, not a running commentary.
+   */
+  const originName = useMemo(() => originLabel(props.origin), [props.origin]);
+  const summaryStampRef = useRef<string | null>(null);
+  useEffect(() => {
+    const stamp = `${props.framingKey}`;
+    if (!reach || !outerBand || summaryStampRef.current === stamp) return;
+    summaryStampRef.current = stamp;
+    setSummary(
+      `Reachable on foot from ${originName}: ${formatArea(reach.areaSqMeters)} within ` +
+        `${outerBand.minutes} minutes, ${pluralize(inReachIds.size, "place")} in reach.`,
+    );
+  }, [props.framingKey, reach, outerBand, inReachIds, originName]);
 
   /**
    * The rail's height is part of the framing, and on mobile it changes without
@@ -245,15 +468,28 @@ export function MapCanvas(props: MapCanvasProps) {
     if (!rail || !("ResizeObserver" in window)) return;
 
     let timer = 0;
-    const observer = new ResizeObserver(() => {
+    let lastSize = "";
+    const observer = new ResizeObserver((entries) => {
+      // The observer fires on observe() and on every box change, including the
+      // rail's own content settling during the first load's 700ms fitBounds.
+      // Re-framing then cut the opening ease off mid-flight - racing the very
+      // framing this exists to correct.
+      const box = entries.at(-1)?.contentRect;
+      const size = box ? `${Math.round(box.width)}x${Math.round(box.height)}` : "";
+      if (size === lastSize) return;
+      lastSize = size;
+
       window.clearTimeout(timer);
       // The sheet animates open, so wait for it to settle before measuring.
       timer = window.setTimeout(() => {
         const map = mapRef.current;
         const bounds = boundsRef.current;
-        if (map && bounds) {
-          map.fitBounds(bounds, { padding: framePadding(map), duration: 400, maxZoom: 15.5 });
-        }
+        if (!map || !bounds || map.isEasing()) return;
+        map.fitBounds(bounds, {
+          padding: framePadding(map),
+          duration: cameraDuration(400),
+          maxZoom: 15.5,
+        });
       }, 180);
     });
     observer.observe(rail);
@@ -265,19 +501,62 @@ export function MapCanvas(props: MapCanvasProps) {
 
   return (
     <div className="map-shell">
-      <div ref={containerRef} className="map-canvas" />
+      <div
+        ref={containerRef}
+        className="map-canvas"
+        role="region"
+        aria-label={`Map of what is reachable on foot from ${originName}`}
+        aria-describedby={summaryId}
+      />
+      <p id={summaryId} className="sr-only">
+        {summary}
+      </p>
+      {basemapDown && (
+        <p className="map-notice" role="status" style={NOTICE_STYLE}>
+          Basemap unavailable. The reachable area is still shown.
+        </p>
+      )}
       {/*
         The contours and routes are computed by Valhalla from OpenStreetMap
         data, and OSM's ODbL asks derived works to credit the contributors.
         The basemap credit belongs to the map's own attribution control; this
         one is for the reachable area, visually separated from it.
       */}
-      <p className="gmp-attribution">
-        <span className="gmp-source">Reachable area</span>
-        <span className="gmp-brand">Valhalla / OpenStreetMap</span>
+      <p className="reach-attribution">
+        <span className="reach-source">Reachable area</span>
+        <span className="reach-brand">Valhalla / OpenStreetMap</span>
       </p>
     </div>
   );
+}
+
+/**
+ * True when the basemap is not on screen at all: either its style never
+ * arrived or its vector source is holding no tiles. Asked rather than assumed,
+ * so a single failed tile request does not raise a notice.
+ */
+function basemapMissing(map: MapLibreMap): boolean {
+  if (!map.isStyleLoaded()) return true;
+  return map.getSource("omt") ? !map.isSourceLoaded("omt") : true;
+}
+
+/**
+ * Read per call, never once at module load. Someone can turn the setting on
+ * mid-session, and a value captured at startup would keep flying the camera at
+ * them for the rest of it.
+ */
+function cameraDuration(ms: number): number {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : ms;
+}
+
+/**
+ * Names the origin for the map's accessible name. A preset is named; anything
+ * else is a dropped pin and its coordinates are the only honest label for it.
+ */
+function originLabel(origin: LngLat): string {
+  const key = pointKey(origin);
+  const preset = PRESET_ORIGINS.find((candidate) => pointKey(candidate) === key);
+  return preset ? preset.name : `${origin.lat.toFixed(4)}, ${origin.lng.toFixed(4)}`;
 }
 
 /** Smallest strip of map worth framing a contour into. */
@@ -307,21 +586,33 @@ function framePadding(map: MapLibreMap) {
   return { top: edge, right: edge, bottom: Math.max(edge, Math.round(bottom)), left: edge };
 }
 
-function sync(
+function syncAll(map: MapLibreMap, props: MapCanvasProps, lastBands: (MultiPolygon | null)[]): void {
+  syncBands(map, props.reach, lastBands);
+  syncPlaces(map, props.places, props.inReachIds, props.pickedId);
+  syncRoute(map, props.route);
+}
+
+function syncBands(
   map: MapLibreMap,
   reach: Reach | null,
-  places: readonly Place[],
-  inReachIds: ReadonlySet<string>,
-  pickedId: string | null,
-  route: WalkingRoute | null,
+  lastBands: (MultiPolygon | null)[],
 ): void {
   const bands = reach?.bands ?? [];
   for (const slot of SLOTS) {
     // bands runs innermost first; slot 0 is drawn first and must be outermost.
-    const band = bands[bands.length - 1 - slot];
-    setData(map, `band-${slot}`, band ? multiPolygonCollection(band.polygons) : EMPTY);
+    const polygons = bands[bands.length - 1 - slot]?.polygons ?? null;
+    if (lastBands[slot] === polygons) continue;
+    lastBands[slot] = polygons;
+    setData(map, `band-${slot}`, polygons ? multiPolygonCollection(polygons) : EMPTY);
   }
+}
 
+function syncPlaces(
+  map: MapLibreMap,
+  places: readonly Place[],
+  inReachIds: ReadonlySet<string>,
+  pickedId: string | null,
+): void {
   setData(map, "places", {
     type: "FeatureCollection",
     features: places.map((place) => ({
@@ -334,7 +625,9 @@ function sync(
       },
     })),
   });
+}
 
+function syncRoute(map: MapLibreMap, route: WalkingRoute | null): void {
   setData(
     map,
     "route",
