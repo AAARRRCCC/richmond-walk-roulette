@@ -10,12 +10,29 @@
       name="description"
       content="Pick how long you want to walk in Richmond, see exactly how far you can actually get, and spin for somewhere to go."
     />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta property="og:title" content="Walk Roulette | Richmond" />
     <meta
       property="og:description"
       content="Pick how long you want to walk, see exactly how far you can actually get, and spin for somewhere to go."
     />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Walk Roulette" />
+    <!--
+      The share image is the real thing: contours 15, 30 and 45 minutes on foot
+      from Monroe Park, straight out of public/reach. The path is root-relative
+      because the repo does not know its own deploy domain; give og:image and
+      og:url absolute URLs once it has one.
+    -->
+    <meta property="og:image" content="/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Three nested walking-reach contours around a point in Richmond, drawn in amber on near-black."
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
   </head>

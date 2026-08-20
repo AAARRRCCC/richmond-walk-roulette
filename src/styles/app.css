@@ -25,7 +25,12 @@
 
   --ink: #e9eef3;
   --ink-2: #93a6b5;
-  --ink-3: #647a8a;
+  /* Every small label in the app is this colour, and none of them are large
+     text, so it has to clear 4.5:1 on the darkest surface it lands on. It
+     measures 6.2:1 on --bg, 5.8:1 on --surface, 5.3:1 on --raise. The
+     previous #647a8a was 4.3, 4.0 and 3.7 — under AA everywhere, including on
+     the drawer summary, which is a control. */
+  --ink-3: #8195a4;
 
   --accent: #ffb043;
   --accent-soft: #ffd7a0;
@@ -95,6 +100,21 @@ code {
   border: 0;
 }
 
+/* Text-only content is safe to leave clipped, but a focusable child is not:
+   clipping it to a 1px box takes the focus ring with it, so a keyboard user
+   lands somewhere invisible with no way to tell what they are on. Anything
+   that takes focus in here comes back on screen. */
+.sr-only:focus,
+.sr-only:focus-within {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+}
+
 /* ---------------------------------------------------------------- shell */
 
 .shell {
@@ -110,14 +130,14 @@ code {
 }
 
 /*
- * Google Maps attribution for the isochrone contours. The policy fixes most of
- * this: the words "Google Maps" unmodified and unwrapped, weight 400, 12 to
- * 16px, one of three approved colours at 4.5:1 against the background, and
- * visually separated from other content. White is the only approved colour
- * that clears contrast on this basemap. It sits above MapLibre's own
- * attribution so the two credits read as separate claims, because they are.
+ * Credit for the reachable area. The contours are computed by Valhalla from
+ * OpenStreetMap data, and OSM's ODbL asks derived works to credit the
+ * contributors. The basemap has its own attribution control; this credit is
+ * for the reachable area specifically, so it sits above that control and the
+ * two read as separate claims, because they are. Nothing here is a brand
+ * requirement: the type is the app's own.
  */
-.gmp-attribution {
+.reach-attribution {
   position: absolute;
   right: 8px;
   bottom: 26px;
@@ -132,20 +152,17 @@ code {
   pointer-events: none;
 }
 
-.gmp-source {
-  font-family: var(--font);
+.reach-source {
   font-size: 11px;
   color: var(--ink-3);
 }
 
-.gmp-brand {
-  font-family: Roboto, var(--font), sans-serif;
-  font-style: normal;
-  font-weight: 400;
+.reach-brand {
   font-size: 12px;
-  letter-spacing: normal;
+  /* Two credits on one line, over a map: wrapping would turn a footnote into
+     a block. */
   white-space: nowrap;
-  color: #ffffff;
+  color: var(--ink);
 }
 
 .shell.is-picking .rail {
@@ -175,12 +192,34 @@ code {
   transition: opacity 200ms var(--ease);
 }
 
+/* Collapsed sheet. The brand row is the only thing that stays, which makes it
+   the handle: the control that folded the panel away is the one still on
+   screen to bring it back. Everything else leaves the layout rather than
+   scrolling out of view, so the map underneath is genuinely free — the shape
+   is the whole argument, and the sheet was covering most of it. */
+.rail.is-collapsed {
+  overflow: hidden;
+}
+/* Named rather than "everything but the brand", so whatever the toggle itself
+   is cannot hide itself. */
+.rail.is-collapsed > .panel,
+.rail.is-collapsed > .spin-slot,
+.rail.is-collapsed > .drawer {
+  display: none;
+}
+
 .brand {
   position: relative;
   /* Bounds the scrim below: without a stacking context, z-index -1 escapes to
      the root and the pseudo-element paints behind the map instead. */
   isolation: isolate;
   padding: 2px 4px 0;
+  /* A row, so the collapse control sits at the end of the title line rather
+     than starting a second one. */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 /* The brand floats directly on the map, so a basemap label can land behind it.
@@ -453,6 +492,12 @@ code {
   appearance: none;
   -webkit-appearance: none;
   cursor: ew-resize;
+  /* The dial lives inside a scroll container on mobile. Without this, a thumb
+     scrub that wanders a few degrees off horizontal is handed to the sheet
+     and the drag is abandoned mid-gesture, on the one control the app is
+     built around. */
+  touch-action: pan-x;
+  -webkit-tap-highlight-color: transparent;
 }
 .dial-input::-webkit-slider-runnable-track {
   height: 34px;
@@ -601,6 +646,7 @@ code {
   background: none;
   color: var(--ink-3);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .icon-button:hover {
   background: rgba(255, 255, 255, 0.08);
@@ -608,7 +654,11 @@ code {
 }
 
 .link-button {
-  padding: 0;
+  /* Padding grows the hit area, the negative margin gives the space back to
+     the layout, so "Clear filters" keeps its place on the baseline and stops
+     being an 18px-tall target. */
+  padding: 4px 2px;
+  margin: -4px -2px;
   border: 0;
   background: none;
   color: var(--accent);
@@ -869,6 +919,7 @@ code {
   color: var(--ink-2);
   font-size: 12.5px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition: color 140ms var(--ease), border-color 140ms var(--ease),
     background 140ms var(--ease);
 }
@@ -925,18 +976,21 @@ code {
 /* ------------------------------------------------------------- responsive */
 
 /* The bottom sheet covers the map's bottom-right corner, so the attribution
-   moves to the free space at the top. Pinch zoom makes the zoom buttons
-   redundant on touch, and dropping them clears the corner. */
+   moves to the free space at the top — past the status bar and the notch,
+   because the page paints into the cutouts and an attribution behind a
+   Dynamic Island is an obscured attribution, which is the thing moving it was
+   avoiding. Pinch zoom makes the zoom buttons redundant on touch, and
+   dropping them clears the corner. */
 @media (max-width: 899px) {
   .maplibregl-ctrl-bottom-right {
-    top: 10px;
+    top: calc(10px + env(safe-area-inset-top));
     bottom: auto;
   }
 
   /* The bottom sheet covers the map's lower half, and attribution must never
      be obscured, so it moves up under MapLibre's own credit. */
-  .gmp-attribution {
-    top: 38px;
+  .reach-attribution {
+    top: calc(38px + env(safe-area-inset-top));
     bottom: auto;
   }
   .maplibregl-ctrl-top-right .maplibregl-ctrl-group {
@@ -952,7 +1006,10 @@ code {
     bottom: 0;
     width: auto;
     max-height: 72dvh;
-    padding: 0 12px calc(12px + env(safe-area-inset-bottom));
+    /* Landscape on a notched phone is still this layout, and a flat 12px puts
+       the origin chip under the notch. */
+    padding: 0 max(12px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
     gap: 10px;
     background: linear-gradient(to bottom, transparent, rgba(11, 16, 20, 0.75) 34px);
   }
@@ -963,6 +1020,22 @@ code {
 
   .dial-value {
     font-size: 38px;
+  }
+
+  /* Thumb targets. Desktop keeps its density; here the chips are what a thumb
+     reaches for and a mis-tap silently changes the candidate pool. Both land
+     at about 41px, matching the origin chip rather than inventing a number. */
+  .chips {
+    gap: 8px;
+  }
+
+  .chip {
+    padding: 10px 14px;
+  }
+
+  .icon-button {
+    width: 40px;
+    height: 40px;
   }
 }
 
