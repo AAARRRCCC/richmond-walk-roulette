@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import maplibregl, { type ExpressionSpecification, type Map as MapLibreMap } from "maplibre-gl";
+import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import type { FeatureCollection, MultiPolygon as MultiPolygonGeometry } from "geojson";
 import { darkBasemap } from "./basemap";
+import { weighted } from "./weight";
 import { smoothedForDisplay } from "./smooth";
 import { pointKey, type LngLat, type MultiPolygon } from "../lib/geometry";
 import { formatArea, pluralize } from "../lib/format";
@@ -26,28 +27,6 @@ const ACCENT_SOFT = "#ffd7a0";
  * answer to the question, so they stay on top.
  */
 const UNDER_LABELS = "water-label";
-
-/**
- * The basemap's roads interpolate their width `["exponential", 1.4]` from z11
- * to z18, so a fixed overlay weight inverts its relationship with the map
- * across the range: a thread over a 6px service road at z18, heavier than an
- * arterial at z11. This is the same curve, normalised to 1 at the zooms the
- * app frames into (13.4 on load, at most 15.5 after a fit), so every pixel
- * value written below is still the value that lands on screen.
- */
-const ZOOM_WEIGHT: ExpressionSpecification = [
-  "interpolate",
-  ["exponential", 1.4],
-  ["zoom"],
-  11,
-  0.75,
-  18,
-  2.56,
-];
-
-function weighted(pixels: number | ExpressionSpecification): ExpressionSpecification {
-  return ["*", pixels, ZOOM_WEIGHT];
-}
 
 /** How far one arrow-key press moves the origin marker, in metres. */
 const NUDGE_METERS = 15;
