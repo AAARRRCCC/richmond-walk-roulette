@@ -1,7 +1,17 @@
+import { PRESET_ORIGINS } from "../data/places";
 import { areaSqMeters, collectPolygons, pointKey, type LngLat, type MultiPolygon } from "./geometry";
 import { postJson } from "./http";
-import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson, type Json } from "./json";
+import {
+  isFiniteNumber,
+  isJsonArray,
+  isJsonObject,
+  isString,
+  parseJson,
+  readJson,
+  type Json,
+} from "./json";
 import { LruMap } from "./lru";
+import { WALKING_SPEED_KMH } from "./speed";
 
 type Band = {
   /** Walking minutes this contour represents. */
@@ -64,11 +74,26 @@ const INNER_STEP = 1;
 const BAND_COUNT = 3;
 
 /**
+ * One entry per dial position, computed once. `isWarm` is called for every
+ * one of the dial's 96 ticks on every render, so the uncached version built
+ * 96 Sets and ran 96 sorts per render of the panel, on the same thread that
+ * is parsing a snapshot.
+ */
+const bandMarks = new Map<number, readonly number[]>();
+
+/**
  * Minute marks to draw for a budget, innermost first, always ending at the
  * budget itself. The inner marks snap to `INNER_STEP`, so every mark is a
  * ladder value and the warm-up covers all of them.
+ *
+ * A pure function of one small integer over a fixed domain, so it is memoised
+ * and the arrays are frozen: every caller gets the same array back, and none
+ * of them can make the memo lie.
  */
-function bandMinutes(budgetMinutes: number): number[] {
+function bandMinutes(budgetMinutes: number): readonly number[] {
+  const memo = bandMarks.get(budgetMinutes);
+  if (memo) return memo;
+
   const marks = new Set<number>();
   for (let k = 1; k < BAND_COUNT; k++) {
     const raw = (budgetMinutes * k) / BAND_COUNT;
@@ -78,7 +103,10 @@ function bandMinutes(budgetMinutes: number): number[] {
     // Keep a visible gap so two contours never render on top of each other.
     if (snapped <= budgetMinutes - 3) marks.add(snapped);
   }
-  return [...marks].toSorted((a, b) => a - b).concat(budgetMinutes);
+
+  const computed = Object.freeze([...marks].toSorted((a, b) => a - b).concat(budgetMinutes));
+  bandMarks.set(budgetMinutes, computed);
+  return computed;
 }
 
 /**
@@ -90,14 +118,32 @@ function bandMinutes(budgetMinutes: number): number[] {
  * by `scripts/build-reach.mjs` and served as static files, so the same start
  * costs one request the browser can also cache between visits.
  *
- * The filename is derived from the origin alone, so nothing here needs to know
- * which origins are presets; an origin without a snapshot just takes the
- * engine path. `version` guards the shape of the file, and a snapshot whose
- * contours were built at a different walking speed is stale in a way no code
- * can detect - regenerate it when WALKING_SPEED_KMH changes.
+ * A snapshot is best effort in both directions: an origin without one takes
+ * the engine path, and a file that carries only part of the ladder seeds the
+ * part it has while the engine fills the rest.
  */
-/** @public - the generator stamps this into every file it writes. */
-export const SNAPSHOT_VERSION = 1;
+
+/**
+ * Snapshot build number. Stamped into every file the generator writes, and
+ * sent as the query the app fetches the file under.
+ *
+ * Two jobs, and the second is why it must move: the file name is derived from
+ * the origin's coordinates and cannot change, so this query is the only thing
+ * that distinguishes one build of a snapshot from the next. `public/_headers`
+ * grants `/reach/*` a year of immutable caching on the strength of it. Bump
+ * it for *any* regeneration - a new walking speed, a coarser coordinate
+ * precision, fresher tiles - or returning visitors keep the file they have.
+ *
+ * @public - the generator stamps this into every file it writes.
+ */
+export const SNAPSHOT_VERSION = 2;
+
+/**
+ * The oldest build this reader still understands. Every version so far is the
+ * same document with more stamped onto it, so an older file loads unchanged;
+ * a file claiming a *newer* build might not, and takes the engine path.
+ */
+const MIN_SNAPSHOT_VERSION = 1;
 
 /**
  * @public - the generator names its output files with this.
@@ -109,33 +155,118 @@ export function snapshotName(origin: LngLat): string {
   return `${pointKey(origin).replace(",", "_")}.json`;
 }
 
-/** Seeds the contour cache from a snapshot. False when there is not one. */
-async function seedFromSnapshot(origin: LngLat): Promise<boolean> {
+/**
+ * The snapshots that actually exist. Without this every dropped pin, dragged
+ * marker and "use my location" fetched a 404 to completion before the first
+ * byte of the engine request went out - a serial round trip bolted onto the
+ * path that is already the slowest one.
+ */
+const PRESET_SNAPSHOTS = new Set(PRESET_ORIGINS.map(snapshotName));
+
+/** 0 to 1 as a ratio, in whatever unit the current phase can honestly count. */
+export type PrefetchProgress = { done: number; total: number };
+
+/**
+ * Reads a JSON body, reporting bytes as they land.
+ *
+ * A snapshot is the one download in the app big enough for a fraction to mean
+ * anything, and `Response.json()` says nothing at all until the last byte. A
+ * response with no stream or no declared length has nothing to be a fraction
+ * of, and takes the plain path.
+ *
+ * `content-length` counts bytes on the wire, and when the server compressed
+ * them there are fewer of those than of the bytes read out here. So the total
+ * is held one above whatever has arrived once the two disagree: the fraction
+ * climbs and then stalls just short of full rather than reading 100% with a
+ * megabyte still to come.
+ */
+async function readJsonWithProgress(
+  response: Response,
+  onProgress: (progress: PrefetchProgress) => void,
+): Promise<Json> {
+  const declared = Number(response.headers.get("content-length"));
+  const body = response.body;
+  if (!body || !Number.isFinite(declared) || declared <= 0) return readJson(response);
+
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let text = "";
+  let received = 0;
+  let reported = -1;
+
+  for (;;) {
+    const chunk = await reader.read();
+    if (chunk.done) break;
+    text += decoder.decode(chunk.value, { stream: true });
+    received += chunk.value.length;
+    const total = Math.max(declared, received + 1);
+    // Coarsened to whole percent: a callback per chunk is a render per chunk,
+    // and nothing on screen can show a finer distinction than that.
+    const percent = Math.floor((received / total) * 100);
+    if (percent !== reported) {
+      reported = percent;
+      onProgress({ done: received, total });
+    }
+  }
+  return parseJson(text + decoder.decode());
+}
+
+/**
+ * Seeds the contour cache from a snapshot, for as many ladder minutes as the
+ * file actually carries.
+ *
+ * Returns nothing on purpose. It used to answer "did that work", and one
+ * seeded contour out of ninety-six counted as yes, which presented a
+ * truncated file as a fully warm dial. The only thing that knows what is
+ * still missing is the cache, so the caller asks it.
+ */
+async function seedFromSnapshot(
+  origin: LngLat,
+  onProgress: (progress: PrefetchProgress) => void,
+  signal: AbortSignal | undefined,
+): Promise<void> {
   let payload: Json;
   try {
-    const response = await fetch(`/reach/${snapshotName(origin)}`);
-    if (!response.ok) return false;
-    payload = await readJson(response);
+    const response = await fetch(`/reach/${snapshotName(origin)}?v=${SNAPSHOT_VERSION}`, {
+      signal: signal ?? null,
+    });
+    if (!response.ok) return;
+    payload = await readJsonWithProgress(response, onProgress);
   } catch {
-    return false;
+    return;
   }
 
-  if (!isJsonObject(payload) || payload.version !== SNAPSHOT_VERSION) return false;
-  const contours = payload.contours;
-  if (!isJsonObject(contours)) return false;
+  if (!isJsonObject(payload)) return;
+  const version = payload.version;
+  if (!isFiniteNumber(version)) return;
+  if (version < MIN_SNAPSHOT_VERSION || version > SNAPSHOT_VERSION) return;
 
-  let seeded = 0;
+  // A file built at a different pace is a different answer to "25 minutes",
+  // and serving it beside dropped pins that get the current pace puts two
+  // definitions on the same map. Rejecting it is a cache miss, which the
+  // engine path already handles. A file that records no pace predates the
+  // stamp and is exactly the drift nothing could see; regenerating it stamps
+  // one on.
+  const speedKmh = payload.speedKmh;
+  if (isFiniteNumber(speedKmh) && speedKmh !== WALKING_SPEED_KMH) return;
+
+  const contours = payload.contours;
+  if (!isJsonObject(contours)) return;
+
   for (const minutes of LADDER) {
     const polygons = collectPolygons(contours[String(minutes)] ?? null);
     if (polygons.length === 0) continue;
     cache.set(cacheKey(origin, minutes), polygons);
-    seeded++;
   }
-  return seeded > 0;
 }
 
-/** The whole ladder for a couple of origins, times a safety margin. */
-const CACHE_LIMIT = 180;
+/**
+ * Three whole ladders: the origin on screen, the one before it, and room for
+ * a third. Derived rather than picked, because the previous fixed 180 was
+ * twelve short of two ladders, so alternating between two presets evicted and
+ * re-seeded both of them forever.
+ */
+const CACHE_LIMIT = 3 * LADDER.length;
 const cache = new LruMap<string, MultiPolygon>(CACHE_LIMIT);
 const inFlight = new Map<string, Promise<MultiPolygon>>();
 
@@ -187,15 +318,22 @@ async function requestContours(
  *
  * Deliberately not abortable: a batch already in flight is about to warm the
  * whole dial, which is worth finishing whatever the user does next. Callers
- * discard stale results by comparing the origin instead.
+ * discard stale results by comparing the origin instead, and `prefetchLadder`
+ * stops a batch from *starting* for an origin nobody is looking at.
  *
  * Returns one settled result per requested minute. A minute can fail alone,
  * because Valhalla drops a contour it considers degenerate; the callers
  * decide whether that is fatal.
+ *
+ * `onSettled` fires once per requested minute as it lands, so a caller can
+ * report a fraction it actually measured. Minutes already cached or already
+ * in flight land on their own timing; the ones this call asks for arrive
+ * together, because they arrive in one response.
  */
 function ensureContours(
   origin: LngLat,
   wanted: readonly number[],
+  onSettled?: () => void,
 ): Promise<PromiseSettledResult<MultiPolygon>[]> {
   const jobs: Promise<MultiPolygon>[] = [];
   const missing: number[] = [];
@@ -234,6 +372,10 @@ function ensureContours(
     }
   }
 
+  // Both arms, so a rejection reported as progress is still handled here and
+  // never surfaces as an unhandled rejection alongside the settled result.
+  if (onSettled) for (const job of jobs) void job.then(onSettled, onSettled);
+
   return Promise.allSettled(jobs);
 }
 
@@ -247,8 +389,14 @@ function ensureContours(
  * cache only ever fills a missing key, so a newly arrived contour cannot
  * stale an already assembled reach. An entry whose contours have since been
  * evicted still holds them by reference and stays correct.
+ *
+ * The limit bounds how many *origins* stay assembled, not how far the dial
+ * can travel. Two whole dials, because an entry is three references and a
+ * number: a limit under the dial's own 96 positions meant a scrub to the end
+ * evicted the positions it started from, and scrubbing back re-assembled them
+ * as new objects, which is the exact thing this cache exists to prevent.
  */
-const ASSEMBLED_LIMIT = 60;
+const ASSEMBLED_LIMIT = LADDER.length * 2;
 const assembled = new LruMap<string, Reach>(ASSEMBLED_LIMIT);
 
 /**
@@ -304,8 +452,6 @@ export async function fetchReach(origin: LngLat, budgetMinutes: number): Promise
   throw new Error("Contours resolved but could not be assembled.");
 }
 
-export type PrefetchProgress = { done: number; total: number };
-
 /**
  * Warms every contour on the ladder for an origin so the dial becomes a cache
  * read. One request against a self-hosted engine; the proxy splits it only
@@ -315,17 +461,53 @@ export type PrefetchProgress = { done: number; total: number };
  * not warm, and the dial falls back to fetching it on demand, which surfaces
  * the error in context. Only a configuration failure aborts the warm-up,
  * because nothing else will succeed until it is fixed.
+ *
+ * Progress is measured, not asserted: bytes while a snapshot downloads, then
+ * contours while the engine fills whatever the snapshot did not carry. Only
+ * the ratio means anything, and the unit behind it changes between the two
+ * phases.
+ *
+ * `signal` is for an origin nobody is looking at any more. It aborts the
+ * snapshot download and stops the engine batch from starting; it does not
+ * cancel a batch already in flight, which is one request away from making the
+ * whole dial instant. Never pass the current origin's signal.
  */
 export async function prefetchLadder(
   origin: LngLat,
   onProgress: (progress: PrefetchProgress) => void,
+  options?: { signal?: AbortSignal },
 ): Promise<void> {
-  onProgress({ done: 0, total: 1 });
-  if (await seedFromSnapshot(origin)) {
+  const signal = options?.signal;
+  const gaps = (): number[] => LADDER.filter((m) => !cache.has(cacheKey(origin, m)));
+
+  // An origin that is already warm is already done. Seeding it again would
+  // re-download and re-parse a couple of megabytes of JSON, and re-allocate
+  // every position in it, to arrive at the cache it is holding.
+  if (gaps().length === 0) {
     onProgress({ done: 1, total: 1 });
     return;
   }
-  const results = await ensureContours(origin, LADDER);
+
+  onProgress({ done: 0, total: 1 });
+  if (PRESET_SNAPSHOTS.has(snapshotName(origin))) {
+    await seedFromSnapshot(origin, onProgress, signal);
+  }
+  if (signal?.aborted) return;
+
+  // Whatever the snapshot did not carry is the engine's job: a file with
+  // holes in it, a file rejected for its pace, or no file at all.
+  const missing = gaps();
+  if (missing.length === 0) {
+    onProgress({ done: 1, total: 1 });
+    return;
+  }
+
+  const seeded = LADDER.length - missing.length;
+  let settled = 0;
+  const results = await ensureContours(origin, missing, () => {
+    settled++;
+    onProgress({ done: seeded + settled, total: LADDER.length });
+  });
   onProgress({ done: 1, total: 1 });
 
   const configFailure = results.find(
