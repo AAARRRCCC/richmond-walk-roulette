@@ -3,7 +3,6 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
-  useMemo,
   useReducer,
   useRef,
   useState,
@@ -20,7 +19,7 @@ import { OriginPicker } from "../ui/OriginPicker";
 import { Filters } from "../ui/Filters";
 import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
 import { ResultCard, type ResultLine } from "../ui/ResultCard";
-import { PLACES, type Place, type Terrain, type Vibe } from "../data/places";
+import { PLACES, type Place } from "../data/places";
 import { contains, pointKey, type LngLat } from "../lib/geometry";
 import {
   MAX_MINUTES,
@@ -29,7 +28,6 @@ import {
   fetchReach,
   isWarm,
   prefetchLadder,
-  type Reach,
 } from "../lib/isochrone";
 import {
   cachedRoute,
@@ -49,6 +47,17 @@ import {
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
 import { describeResult, walkClauses } from "./announce";
+import {
+  REASON_COPY,
+  conditionsSignature,
+  poolReport,
+  suggestFix,
+  type PoolConditions,
+  type PoolFix,
+  type PoolRule,
+} from "./eligibility";
+import { PoolList } from "../ui/PoolList";
+import { EmptyPoolNotice } from "../ui/EmptyPoolNotice";
 import { TuningPanel } from "../ui/TuningPanel";
 import { onSoundChange, playPress, playTap, setSoundOn, soundOn } from "../lib/sound";
 
@@ -93,6 +102,37 @@ const ROUTE_WARM_GRACE_MS = 12_000;
  * left every control in it focusable and silently dead.
  */
 const inertWhen = (on: boolean): Record<string, string> => (on ? { inert: "" } : {});
+
+/**
+ * A standalone sentence, folded into the middle of a longer one.
+ *
+ * `REASON_COPY` sentences are written to be read on their own - the card shows
+ * them as rows - so they carry a capital and a full stop. `describeResult`
+ * joins its clauses and terminates the whole thing, so passing one in whole
+ * produced "further than your budget walks.." on screen readers.
+ */
+const asClause = (sentence: string): string =>
+  sentence.replace(/\.$/, "").toLowerCase();
+
+/** One object, so a healthy pool does not allocate a fix it will never read. */
+const NO_FIX: PoolFix = { kind: "none" };
+
+/**
+ * Outbound walking minutes to every place, from the route cache.
+ *
+ * Over all of PLACES, deliberately, and not folded into the sweep that computes
+ * `drawable` and `settledRoutes`: those run over the *included* pool, which is
+ * empty at exactly the moment `suggestFix` needs this. One pass of Map lookups,
+ * at the one moment nothing else is happening.
+ */
+function cachedWalkMinutes(origin: LngLat): Map<string, number> {
+  const minutes = new Map<string, number>();
+  for (const place of PLACES) {
+    const cached = cachedRoute(origin, place);
+    if (cached) minutes.set(place.id, cached.durationSeconds / 60);
+  }
+  return minutes;
+}
 
 const describe = (cause: unknown): Failure => ({
   configured: !(cause instanceof NotConfiguredError),
@@ -174,10 +214,42 @@ export function App() {
   const floorOutbound = outboundFloorMinutes(state);
   const reach = cachedReach(origin, outbound, floorOutbound ?? 0);
 
-  // No floor argument needed: the bands already carry the hole, and `contains`
-  // reads holes, so a place in the excluded middle fails the outer test.
-  const candidates = selectCandidates(reach, state.terrain, state.vibes, state.edgeOnly);
-  const candidateKey = candidates.map((p) => p.id).join(",");
+  /**
+   * The floor contour itself, so "too close" can be told apart from "too far".
+   * The bands already carry the floor as a hole, so containment alone cannot
+   * distinguish them. A warm-cache lookup on a rung the prefetch already holds.
+   */
+  const floorPolygons =
+    floorOutbound === null
+      ? null
+      : (cachedReach(origin, floorOutbound)?.bands.at(-1)?.polygons ?? null);
+
+  /**
+   * Where siblings plug in. Chunks 3, 6, 7 and 8 each push one `PoolRule` here
+   * rather than adding an argument to a filter function, which is what keeps
+   * seven filters down to one explanation.
+   *
+   * Anything added here owes a `signature` that changes exactly when its
+   * verdicts could and never per render - see `signature.test.ts`.
+   *
+   * Readonly, and built as a literal rather than pushed into: the React
+   * Compiler traces this array through `conditions` to `pool` to `candidates`
+   * to `candidateKey`. A mutable binding along that path is a value the
+   * compiler cannot prove stable.
+   */
+  const rules: readonly PoolRule[] = [];
+
+  const conditions: PoolConditions = {
+    reach,
+    floorPolygons,
+    terrain: state.terrain,
+    vibes: state.vibes,
+    edgeOnly: state.edgeOnly,
+    rules,
+  };
+  const pool = poolReport(PLACES, conditions);
+  const candidates = pool.included;
+  const candidateKey = pool.includedKey;
   const picked = PLACES.find((place) => place.id === state.pickedId) ?? null;
 
   /**
@@ -217,8 +289,8 @@ export function App() {
     const key = `${pointKey(origin)}|${candidateKey}`;
     if (candidateKey === "" || warmedNow.current === key) return;
     warmedNow.current = key;
-    const pool = PLACES.filter((place) => candidateKey.split(",").includes(place.id));
-    void prefetchRoutes(origin, pool, bumpRoutes);
+    const warming = PLACES.filter((place) => candidateKey.split(",").includes(place.id));
+    void prefetchRoutes(origin, warming, bumpRoutes);
   }, [candidateKey, origin]);
 
   /**
@@ -458,6 +530,7 @@ export function App() {
    * which is why a failed route composes a line rather than holding this back.
    */
   const routePending = routeLoading && !routeFailed;
+  const pickedVerdict = picked ? (pool.verdicts.get(picked.id) ?? null) : null;
 
   /**
    * The card's shared line block, in the fixed order the plan sets: conditions,
@@ -474,6 +547,12 @@ export function App() {
           picked.name,
           ...walkClauses(route, routeFailed, state.roundTrip),
           withinBudget ? "" : "outside your current time budget",
+          // The only way an exclusion reaches a screen reader on a result. The
+          // card shows it as a row; this is the same sentence, lowercased into
+          // the middle of one.
+          pickedVerdict === null || pickedVerdict.included || pickedVerdict.reasons[0] === undefined
+            ? ""
+            : `not in the pool: ${asClause(REASON_COPY[pickedVerdict.reasons[0]].sentence)}`,
         ]);
 
   // Rebuilt each render rather than memoised: it is read during TimeDial's
@@ -481,20 +560,57 @@ export function App() {
   const dialWarm = (minutes: number) =>
     isWarm(origin, state.roundTrip ? Math.floor(minutes / 2) : minutes);
 
-  // Built from the key so its identity is stable while the pool is unchanged,
-  // which keeps MapCanvas from resending every place on every render.
-  const candidateIds = useMemo(
-    () => new Set(candidateKey === "" ? [] : candidateKey.split(",")),
-    [candidateKey],
-  );
-
   const picking = state.pickingOrigin;
   const collapsed = railCollapsed && !wide;
-  const emptyNotice = status === "ready" && candidates.length === 0;
+  const emptyPool = status === "ready" && candidates.length === 0;
+
+  /**
+   * Outbound walking minutes to each place, built only when the pool is empty
+   * and over all of PLACES.
+   *
+   * Deliberately not folded into the sweep that computes `drawable` and
+   * `settledRoutes`: those run over the *included* pool, which is empty at
+   * exactly the moment `suggestFix` needs this. One pass of Map lookups, at the
+   * one moment nothing else is happening.
+   */
+  const fix: PoolFix = emptyPool
+    ? suggestFix(PLACES, conditions, cachedWalkMinutes(origin), { roundTrip: state.roundTrip })
+    : NO_FIX;
+
+  /**
+   * What the empty-pool notice's one button does.
+   *
+   * The three chips this app already owns are resolved by reason, because
+   * clearing them is a dispatch and `eligibility.ts` is deliberately free of
+   * the reducer's vocabulary. Anything a sibling contributed brought its own
+   * callback.
+   */
+  const applyFix = (): void => {
+    switch (fix.kind) {
+      case "drop-rule":
+        if (fix.reason === "wrong-terrain") dispatch({ type: "terrain", terrain: "any" });
+        else if (fix.reason === "no-matching-vibe") dispatch({ type: "clearVibes" });
+        else if (fix.reason === "not-far-edge") dispatch({ type: "toggleEdge" });
+        else fix.clear();
+        return;
+      case "widen-budget":
+        dispatch({ type: "budget", minutes: fix.budgetMinutes });
+        return;
+      case "lower-floor":
+        dispatch({ type: "floor", minutes: 0 });
+        return;
+      case "none":
+        dispatch({ type: "clearFilters" });
+        return;
+    }
+  };
   // A phone starts with the drawer shut, and a bare "Filters" over a shrunken
   // count is a cause the reader cannot see.
   const activeFilters =
-    (state.terrain === "any" ? 0 : 1) + state.vibes.length + (state.edgeOnly ? 1 : 0);
+    (state.terrain === "any" ? 0 : 1) +
+    state.vibes.length +
+    (state.edgeOnly ? 1 : 0) +
+    rules.filter((rule) => rule.active).length;
 
   return (
     <div className={`shell${picking ? " is-picking" : ""}`}>
@@ -502,7 +618,7 @@ export function App() {
         origin={origin}
         reach={reach}
         places={PLACES}
-        inReachIds={candidateIds}
+        inReachIds={pool.includedIds}
         pickedId={active?.id ?? null}
         framingKey={state.framingKey}
         route={route}
@@ -617,7 +733,8 @@ export function App() {
             <ReachReadout
               status={status}
               areaSqMeters={reach?.areaSqMeters ?? 0}
-              placeCount={candidates.length}
+              pool={pool}
+              filterKey={conditionsSignature(conditions)}
               outerMinutes={outer?.minutes ?? outbound}
               commitKey={state.framingKey}
             />
@@ -628,7 +745,7 @@ export function App() {
             ref={spinRef}
             className="button is-spin"
             onClick={spin}
-            aria-describedby={emptyNotice ? emptyNoticeId : undefined}
+            aria-describedby={emptyPool ? emptyNoticeId : undefined}
             // Routes lag the contours by a second or two on a cold origin. The
             // reel exists to show a real walk per tick, so it waits for the
             // whole pool rather than turning through whichever routes are back.
@@ -649,7 +766,7 @@ export function App() {
                 : "Spin"}
           </button>
 
-          {reelIsShort && !emptyNotice && (
+          {reelIsShort && !emptyPool && (
             /* Said rather than hidden. The reel can only turn through walks it
                can draw, so with routes still missing it is showing a subset -
                and a wheel that quietly omits some of its own pool is the same
@@ -660,17 +777,15 @@ export function App() {
             </div>
           )}
 
-          {emptyNotice && (
-            <div className="notice" id={emptyNoticeId} {...inertWhen(picking)}>
-              Nothing matches inside {outer?.minutes ?? outbound} minutes.
-              <button
-                type="button"
-                className="link-button"
-                onClick={() => dispatch({ type: "clearFilters" })}
-              >
-                Clear filters
-              </button>
-            </div>
+          {emptyPool && (
+            <EmptyPoolNotice
+              id={emptyNoticeId}
+              fix={fix}
+              outerMinutes={outer?.minutes ?? outbound}
+              inReach={pool.inReach}
+              onFix={applyFix}
+              {...inertWhen(picking)}
+            />
           )}
         </div>
 
@@ -697,6 +812,7 @@ export function App() {
               roundTrip={state.roundTrip}
               withinBudget={withinBudget}
               lines={resultLines}
+              verdict={pickedVerdict}
               onSpinAgain={spin}
               onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
               onDismiss={() => {
@@ -741,25 +857,17 @@ export function App() {
 
             Held back until there is a reach to count against: `candidates` is
             empty while the ladder is warming and empty again on an engine
-            error, and "Places in reach (0)" reads as an answer in both. The
-            app does not know the count yet, so it does not offer one. */}
+            error, and "All places (0)" reads as an answer in both. The app does
+            not know the count yet, so it does not offer one. */}
         {reach !== null && (
         <details className="drawer" {...inertWhen(picking)}>
-          <summary>Places in reach ({candidates.length})</summary>
-          <ul className="origin-list">
-            {candidates.map((place) => (
-              <li key={place.id}>
-                <button
-                  type="button"
-                  className="origin-option"
-                  aria-current={place.id === state.pickedId}
-                  onClick={() => dispatch({ type: "pickPlace", pickedId: place.id })}
-                >
-                  {place.name}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <summary>All places ({pool.total})</summary>
+          <PoolList
+            pool={pool}
+            places={PLACES}
+            pickedId={state.pickedId}
+            onPick={(id) => dispatch({ type: "pickPlace", pickedId: id })}
+          />
         </details>
         )}
 
@@ -786,29 +894,4 @@ function routeMissed(origin: LngLat, destination: Place): boolean {
   return routeSettledFailed(origin, destination);
 }
 
-/**
- * Places that pass the filters and sit inside the reachable area. With
- * `edgeOnly`, a place must also fall outside the next contour in, which is the
- * "walk as far as you can" pool.
- */
-function selectCandidates(
-  reach: Reach | null,
-  terrain: Terrain | "any",
-  vibes: readonly Vibe[],
-  edgeOnly: boolean,
-): Place[] {
-  const bands = reach?.bands;
-  if (!bands || bands.length === 0) return [];
-  const outer = bands[bands.length - 1]!;
-  const inner = edgeOnly && bands.length > 1 ? bands[bands.length - 2] : undefined;
 
-  return PLACES.filter((place) => {
-    if (terrain !== "any" && place.terrain !== terrain) return false;
-    if (vibes.length > 0 && !place.tags.some((tag) => vibes.includes(tag))) return false;
-    // `outer` carries the range's lower end as a hole when there is one, and
-    // `contains` reads holes, so this one test covers both ends of the range.
-    if (!contains(outer.polygons, place)) return false;
-    if (inner && contains(inner.polygons, place)) return false;
-    return true;
-  });
-}

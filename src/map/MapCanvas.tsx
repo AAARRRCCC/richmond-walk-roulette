@@ -270,7 +270,16 @@ export function MapCanvas(props: MapCanvasProps) {
         type: "circle",
         source: "places",
         filter: ["==", ["get", "state"], "out"],
-        paint: { "circle-radius": weighted(3), "circle-color": "#4a5c6d" },
+        paint: {
+          "circle-radius": weighted(3),
+          "circle-color": "#4a5c6d",
+          // A transparent halo that paints nothing and widens the hit test.
+          // A 3px dot is a target nobody lands on a phone, and this dot is now
+          // the thing a reader taps to ask why the place is not in the pool -
+          // so it has to be hittable from a thumb's width away.
+          "circle-stroke-width": weighted(7),
+          "circle-stroke-color": "rgba(0,0,0,0)",
+        },
       });
       map.addLayer({
         id: "places",

@@ -143,6 +143,12 @@ never touched.
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
 
+**Chunk 2 — two boxes.** 68 of 70 ticked.
+
+- [ ] *It was seen with `prefers-reduced-motion` on.* Section 5.1. This chunk adds no animation.
+- [ ] *`pool-reasoning` criterion 5 — the `widen-budget` notice, on screen.* Section 5.2. Asserted by
+  three tests; never reached in a browser.
+
 **Chunk 1 — one box, and it is section 5.1's.** 59 of 60 ticked.
 
 - [ ] *It was seen with `prefers-reduced-motion` on.* Not observable here; see 5.1. Chunk 1 renders
@@ -174,6 +180,17 @@ walkthrough with the setting on.
 `@media (prefers-reduced-motion: reduce)` block, and chunk 0 added no animation, transition or
 transform of any kind — its only new render path is a `<div>` of `<p>` elements. The risk this box
 covers is real for chunks 2, 3 and 11, and near zero for chunk 0.
+
+### 5.2 The `widen-budget` empty-pool notice, in the browser
+
+`pool-reasoning`'s acceptance criterion 5 asks for the dial to be wound down until nothing is in
+reach, so the notice names the nearest match and offers a budget. Every origin this session could
+construct kept at least one place at the dial's floor — Home holds 3 at 10 minutes, Scott's Addition
+1 — so the state was never reached on screen.
+
+It is asserted by three tests instead (20, 21, 22), including the `MAX_MINUTES` refusal that a
+post-clamp check silently passes. What is owed is one look at the real notice, from an origin far
+enough out that ten minutes reaches nothing. The walkthrough should name a pin that produces it.
 
 **Two things that were nearly in this section and are not**, because a way to observe them was found
 rather than assumed:
@@ -210,8 +227,26 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Elevation tiles | one (`N37W078`), 25 MB on disk | Chunk 1 |
 | Graph rebuild | a single pass; no second run needed | Chunk 1 |
 | Walking-speed fixture | 1025.7 s → **963.5 s** on the same 1.047 km | Chunk 1 — see 6.1 |
+| App JS after chunk 2 | 74,644 B (72.9 KiB) | +2,784 B on chunk 1 — see 6.2 |
+| Tests after chunk 2 | 163 passing | |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
+
+### 6.2 Chunk 2 spent 2.8 KB against an estimate of 1.6 KB
+
+Not a problem yet, and worth watching. Chunks 0, 1 and 2 have spent 3,439 B against estimates
+totalling 3.0 KB, so the run is 0.4 KB over across three chunks — inside the noise. But chunk 2 alone
+is 1.2 KB over its own line, and the plan has nine chunks left including one estimated at 10 KB.
+
+The bytes are real and mostly copy: `REASON_COPY` is eight reasons × three strings, and two new
+components. Nothing to cut without cutting the feature. Recorded so the trend has a starting point
+rather than so anybody does something about it.
+
+| Chunk | Estimated | Measured |
+| --- | --- | --- |
+| 0 Foundations | +0.9 KB | +110 B (deferred to chunk 5 — nothing imports it yet) |
+| 1 Elevation wire | +0.7 KB | +545 B |
+| 2 `pool-reasoning` | +1.4 KB | **+2,784 B** |
 
 ### 6.1 Every walking time in the app changed, and nothing on screen says so
 

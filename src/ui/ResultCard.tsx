@@ -1,4 +1,5 @@
 import { ArrowSquareOutIcon, ShuffleIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
+import { REASON_COPY, REASON_ORDER, type PlaceVerdict } from "../app/eligibility";
 import type { Place } from "../data/places";
 import type { LngLat } from "../lib/geometry";
 import type { WalkingRoute } from "../lib/route";
@@ -42,6 +43,11 @@ export type ResultCardProps = {
    * handoff, meet. Empty until chunk 4 puts the first one in it.
    */
   lines: readonly ResultLine[];
+  /**
+   * Why this place is not in the pool, when it is not. A dimmed dot on the map
+   * is clickable precisely so the reader can ask, and this is the answer.
+   */
+  verdict?: PlaceVerdict | null;
   onSpinAgain: () => void;
   onRetryRoute: () => void;
   onDismiss: () => void;
@@ -57,6 +63,11 @@ export function ResultCard(props: ResultCardProps) {
   // A skeleton means "still coming". Once the attempts are spent it is a lie,
   // and the honest answer is a dash next to something to press.
   const pending = props.routeLoading && !props.routeFailed;
+  const verdict = props.verdict ?? null;
+  const reasons =
+    verdict === null || verdict.included
+      ? []
+      : REASON_ORDER.filter((reason) => verdict.reasons.includes(reason));
   const mapsUrl =
     "https://www.google.com/maps/dir/?api=1&travelmode=walking" +
     `&origin=${props.origin.lat},${props.origin.lng}` +
@@ -110,6 +121,18 @@ export function ResultCard(props: ResultCardProps) {
         </div>
       )}
 
+      {reasons
+        .filter((reason) => reason !== "out-of-reach" && reason !== "inside-floor")
+        .map((reason) => (
+          /* Geometry is deliberately absent here: the budget row below is the
+             same test, and two rows saying one thing in two vocabularies is
+             worse than one row saying it once. */
+          <p className="result-warning" key={reason}>
+            <WarningIcon size={15} weight="fill" aria-hidden="true" />
+            {REASON_COPY[reason].sentence}
+          </p>
+        ))}
+
       {props.routeFailed && (
         <p className="result-warning">
           <WarningIcon size={15} weight="fill" aria-hidden="true" />
@@ -121,9 +144,13 @@ export function ResultCard(props: ResultCardProps) {
       )}
 
       {!props.withinBudget && (
+        /* The same test as `out-of-reach`, so it stays one row and changes its
+           words rather than gaining a second row that says the same thing. */
         <p className="result-warning">
           <WarningIcon size={15} weight="fill" aria-hidden="true" />
-          Outside your current time budget.
+          {reasons.includes("inside-floor")
+            ? "Closer than your range's lower end."
+            : "Outside your current time budget."}
         </p>
       )}
 

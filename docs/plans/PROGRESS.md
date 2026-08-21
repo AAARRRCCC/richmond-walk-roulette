@@ -264,3 +264,91 @@ which README §5 consequence 2 makes chunk 1's job.
 file at 59/60 with the one open box recorded. It touches no engine. Its first deliverable is
 `verify-signature`, deferred here since chunk 0 and owed now: the memo contract it guards is the
 plan's single biggest risk, and four later chunks plug rules into the registry it protects.
+
+---
+
+## Chunk 2 — `pool-reasoning` — done
+
+The app used to answer one question honestly and a second not at all: tick *Hilly* and *Food* at the
+same dial and it handed you a Spin button that did not press and one sentence, "Nothing matches
+inside 25 minutes", which is true and useless. It now says **"0 to spin · 20 wrong terrain · 6 no
+match"** and offers a button labelled **"Clear what you are looking for (6 back)"** — a number it
+measured by re-running the verdict with that one cause dropped. Pressing it took the pool from 0 to 6.
+
+### What landed
+
+| Piece | Note |
+| --- | --- |
+| `src/app/eligibility.ts` | `derivePool`, `explainPlace`, `poolReport`, `conditionsSignature`, `suggestFix`, `summaryLine`. Every place gets a verdict, not a yes-or-no |
+| `src/app/signature.test.ts` + `scripts/verify-signature.mjs` | The memo contract, owed since Step 1 |
+| `src/ui/PoolList.tsx` | The "All places" drawer: the pool, then every exclusion grouped by reason with a count and an expander past twelve |
+| `src/ui/EmptyPoolNotice.tsx` | Four branches, each naming a measured fix |
+| `ReachReadout` | `.readout` names what geometry allows; a second line names what the filters left |
+| `ResultCard` | One row per non-geometry reason; the budget row became reason-aware rather than gaining a twin |
+| `MapCanvas` | A transparent hit halo on `places-out`, so a 3 px dim dot is tappable |
+| `session.ts` | `clearVibes`, `clampBudget` exported, and the `clearFilters` contract written down at the case |
+
+`selectCandidates` is deleted. README §2.3's three amendments — rule `id`, `deferred`, and
+`baseIncluded`/`baseKey` — are implemented here rather than deferred, so chunks 3 and 7 plug in
+rather than amend.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm run lint` | eslint, oxlint, knip all clean |
+| `npm test` | **163 passing**, 0 failing (131 before) |
+| `npm run build` | succeeds |
+| `verify-bundle` | **74,644 B** gz, **+2,784 B**. Over the spec's +1.6 KB estimate — HUMAN-REVIEW 6.2 |
+| `verify-signature` | 6 tests pass |
+| `verify-places`, `verify-engine`, `verify-drift` | clean |
+| `npm run verify` | all 6 steps clean |
+
+### The two checks the spec flagged as unverified, both now measured
+
+1. **Does MapLibre count `circle-stroke-width` in its hit test?** Yes, at the pinned version. A 3 px
+   dim dot was hit from about 12.7 px away. The `places-out-hit` fallback layer the spec described as
+   the contingency is not needed and was not added.
+2. **Does the counts line wrap past two lines at 320px?** No. The two-clause worst case renders 41.5
+   px tall against an 18.75 px line-height — two lines — at a 316 px viewport, with no horizontal
+   overflow. No narrow-breakpoint cut needed.
+
+And the memo contract, instrumented rather than assumed: ticking a vibe chip produces **exactly one**
+imperative announcement carrying both sentences; twenty scrub frames with no commit produce **zero**.
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-02.md`: **68 of 70 ticked**. Two open: `prefers-reduced-motion`
+(HUMAN-REVIEW 5.1) and the spec's criterion 5, the `widen-budget` notice on screen, which no origin
+this session could construct would produce (HUMAN-REVIEW 5.2) and which three tests assert instead.
+
+Criterion 13 was proven by breaking it: adding a member to `ExclusionReason` without copy fails `tsc`
+at the `satisfies` on `REASON_COPY`; removing one from `REASON_ORDER` while leaving its copy fails
+test 1. Both put back.
+
+### Spec corrections
+
+- **Criterion 2 was wrong.** It asked that `.readout` and `.pool-summary` both read `PLACES.length` on
+  a default session — but the default budget is 50 minutes and reaches 26 of 62 places. Rewritten to
+  the check that matters: the two numbers agree with each other, and a whole pool shows no clauses.
+- **Criteria 7 and 12 carry stale numbers.** `All places (61)` is 62 (README §2.6 already corrected
+  the count); the "64 KB gzipped budget" is the stale claim chunk 1 replaced with a measured 70 KB.
+- **The spec's claim that `eligibility.ts`'s three runtime imports "all load cleanly under
+  `node --test`" was false.** `session.ts` imported `../lib/isochrone` with no extension, which Vite
+  resolves and Node does not, so the first run of `eligibility.test.ts` died in the module loader.
+  Three specifiers gained `.ts`.
+- `README.md` gained the paragraph the spec asks for, under the feature list.
+
+### Deferred
+
+- HUMAN-REVIEW 5.2 — the `widen-budget` notice was never reached on screen.
+- HUMAN-REVIEW 6.2 — chunk 2 spent 2.8 KB against an estimate of 1.6 KB. Three chunks in, the run is
+  0.4 KB over in total, which is noise; the per-chunk overspend is what is being watched.
+
+### Next
+
+**Chunk 3 — `elevation-profile`, the visible half.** Preconditions: `npm run verify` green (met);
+chunk 2 landed with the rule registry it needs. It contributes the first real `PoolRule` — the climb
+rule, `deferred: true` — so it also owes the first new entry in `signature.test.ts`'s REGISTERED
+table, which is already seeded with the case it must satisfy.

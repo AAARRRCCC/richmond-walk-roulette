@@ -370,6 +370,13 @@ code {
   text-align: left;
   font-size: 14px;
 }
+
+/* Dimmer, and only dimmer. A third grey to distinguish "filtered" from "out of
+   reach" would be the one this design refuses: reasons live in text, and the
+   heading above each group is already carrying that information. */
+.origin-option.is-excluded {
+  color: var(--ink-3);
+}
 .origin-action:hover:not(:disabled),
 .origin-option:hover {
   background: rgba(255, 255, 255, 0.06);
@@ -596,6 +603,35 @@ code {
 }
 .readout.is-loading {
   gap: 10px;
+}
+
+/*
+ * A different sentence about a different number from the .readout above it:
+ * that one says what geometry allows, this says what the filters left. Each
+ * number is named once and the two lines compose.
+ */
+.pool-summary {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.pool-summary strong {
+  color: var(--ink-2);
+  font-weight: 500;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A rule that set itself aside rather than emptying the pool. Doing that
+   silently would be the same failure as filtering silently. */
+.pool-withdrawn {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
 }
 
 .skeleton {

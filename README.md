@@ -51,6 +51,12 @@ whole argument for the app.
   loading it keeps turning rather than parking on a name. A wheel that has
   stopped has already decided, and it should not have.
 - **Far edge only** narrows the pool to places between the last two contours.
+- **The panel always says how many places are in reach, and why the rest are
+  not.** Every place gets a verdict rather than a yes-or-no, so the line under
+  the readout reads "6 to spin - 12 shut - 20 wrong terrain" instead of leaving
+  you to guess which of the things you touched did it. When nothing is left it
+  names the single change that recovers the most places and puts the button
+  right there, with the number it measured written on it.
   Go as far as the time allows.
 
 ## Sound

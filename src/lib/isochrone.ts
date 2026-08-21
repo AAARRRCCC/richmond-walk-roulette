@@ -20,7 +20,11 @@ import {
 import { LruMap } from "./lru.ts";
 import { WALKING_SPEED_KMH } from "./speed.ts";
 
-type Band = {
+/**
+ * @public - `eligibility.ts`'s tests build reaches by hand, and a fixture that
+ * restated this shape would be a second definition of what a band is.
+ */
+export type Band = {
   /** Walking minutes this contour represents. */
   minutes: number;
   polygons: MultiPolygon;

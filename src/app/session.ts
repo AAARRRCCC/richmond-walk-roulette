@@ -1,6 +1,6 @@
-import type { LngLat } from "../lib/geometry";
-import { DIAL_STEP, MAX_MINUTES, MIN_MINUTES } from "../lib/isochrone";
-import { DEFAULT_ORIGIN, type Origin, type Terrain, type Vibe } from "../data/places";
+import type { LngLat } from "../lib/geometry.ts";
+import { DIAL_STEP, MAX_MINUTES, MIN_MINUTES } from "../lib/isochrone.ts";
+import { DEFAULT_ORIGIN, type Origin, type Terrain, type Vibe } from "../data/places.ts";
 
 /**
  * What the user has chosen. Everything derived from it, the reachable area and
@@ -68,6 +68,7 @@ export type Action =
   | { type: "toggleEdge" }
   | { type: "terrain"; terrain: Terrain | "any" }
   | { type: "toggleVibe"; vibe: Vibe }
+  | { type: "clearVibes" }
   | { type: "clearFilters" }
   | { type: "spinStart" }
   | { type: "spinCancel" }
@@ -192,6 +193,17 @@ export function reduce(state: Session, action: Action): Session {
           ? state.vibes.filter((vibe) => vibe !== action.vibe)
           : [...state.vibes, action.vibe],
       };
+    // The offered fix for `no-matching-vibe` clears the vibes and nothing else.
+    // `clearFilters` is a sledgehammer aimed at an unknown nail, and toggling
+    // each vibe off one at a time is N dispatches and N renders.
+    case "clearVibes":
+      return state.vibes.length === 0 ? state : { ...state, vibes: [] };
+    // THE CONTRACT: every sibling filter field must be reset here, and must
+    // also expose itself as a `PoolRule` with a `clear` callback. A filter that
+    // resets here but contributes no rule is invisible in the pool summary; a
+    // rule that clears but does not reset here survives "Clear filters", which
+    // is the trap `beforeDark` is deliberately allowed to fall into and nothing
+    // else is.
     case "clearFilters":
       return { ...state, terrain: "any", vibes: [], edgeOnly: false };
     // Every one of these changes which walk is on screen, so each starts the
@@ -258,8 +270,15 @@ export function budgetStep(): number {
   return DIAL_STEP;
 }
 
-/** Snaps a budget onto the dial's notches and inside its range. */
-function clampBudget(minutes: number, roundTrip: boolean): number {
+/**
+ * Snaps a budget onto the dial's notches and inside its range.
+ *
+ * @public - exported so `suggestFix` can snap a proposed budget onto the same
+ * notches. Without it the empty-pool fix can offer a budget the dial
+ * immediately re-snaps to something else, and the button lies about the number
+ * written on its own face.
+ */
+export function clampBudget(minutes: number, roundTrip: boolean): number {
   const low = dialMinimum(roundTrip);
   const step = budgetStep();
   const snapped = low + Math.round((minutes - low) / step) * step;
