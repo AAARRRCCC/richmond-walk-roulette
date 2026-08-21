@@ -581,7 +581,7 @@ holds contours and knows nothing about places (§3.9).
 - [x] Chunk 5 — daylight-budget — `506d096`, 67/69
 - [x] Chunk 6 — geolocate — `e575427`, 65/71
 - [x] Chunk 7 — weather-filters — `e62f166`, 81/83
-- [x] Chunk 8 — places-expansion — `PENDING`, 84/85
+- [x] Chunk 8 — places-expansion — `0817b7b`, 84/85
 - [ ] Chunk 9 — opening-hours
 - [ ] Chunk 10 — shareable-spins
 - [ ] Chunk 11 — multiplayer-links + meet-in-the-middle, one landing
