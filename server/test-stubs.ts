@@ -18,6 +18,9 @@ export type UpstreamBody = {
   units?: string;
   /** Metres, because the proxy pins `units: "kilometers"`. */
   elevation_interval?: number;
+  /** `/locate` only, and not optional in practice: every field that endpoint
+   *  reads lives in the verbose branch of Valhalla's serialiser. */
+  verbose?: boolean;
 };
 
 export type Upstream = { url: string; method: string; body: UpstreamBody };

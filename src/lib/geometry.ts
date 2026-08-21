@@ -309,3 +309,28 @@ export function pointAtMeters(
   }
   return last;
 }
+
+/**
+ * Metres between two points, equirectangular.
+ *
+ * The same approximation `cumulativeMeters` uses on a route's vertices, and for
+ * the same reason: at city scale it disagrees with haversine by well under a
+ * metre, and this app refuses a geo library over the byte budget. The cosine is
+ * taken at the midpoint of the pair.
+ *
+ * Every caller wants a threshold rather than a measurement — "is this within
+ * DEDUP_METERS of a place that already exists", "which ninety are nearest" —
+ * so sub-metre accuracy is not what is being bought. What is being bought is
+ * one distance function rather than three: `MapCanvas` carries its own copy for
+ * keyboard nudging and that one stays where it is, because it is about pixels
+ * of intent rather than distance between places.
+ *
+ * @public - consumed by `places-expansion` (chunk 8): dedup, the gate-node
+ * ladder and the nearest-first prefetch cap.
+ */
+export function metersBetween(a: LngLat, b: LngLat): number {
+  const midLat = ((a.lat + b.lat) / 2) * (Math.PI / 180);
+  const dy = (b.lat - a.lat) * metersPerDegree();
+  const dx = (b.lng - a.lng) * metersPerDegree() * Math.cos(midLat);
+  return Math.hypot(dx, dy);
+}

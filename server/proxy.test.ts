@@ -19,6 +19,7 @@ import {
   handleApiRequest,
   isochroneCacheKey,
   isochroneQueryCost,
+  locateCacheKey,
   routeCacheKey,
   MAX_LADDER,
   MAX_MINUTES,
@@ -31,7 +32,7 @@ import {
   timeoutError,
   type UpstreamBody,
 } from "./test-stubs.ts";
-import { readJson, type Json } from "../src/lib/json.ts";
+import { isJsonObject, readJson, type Json } from "../src/lib/json.ts";
 
 const MONROE = { latitude: 37.5464, longitude: -77.4517 };
 const VMFA = { latitude: 37.556058, longitude: -77.474895 };
@@ -482,4 +483,226 @@ test("the cache key is canonical, coarse to 5 decimals, and refuses bad requests
   );
   assert.equal(isochroneCacheKey({ location: { latitude: 48.8566, longitude: 2.3522 }, minutes: [25] }), null);
   assert.equal(isochroneCacheKey({ location: MONROE, minutes: [] }), null);
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/locate - the anchor snapper.
+//
+// The nesting in Valhalla's verbose /locate response is not uniform, and
+// getting it wrong fails *silently*: every field reads undefined, every edge is
+// rejected, and the endpoint answers a perfectly plausible 404. Test "reads the
+// verbose nesting" is the one that catches it. The shape below was captured
+// from a real instance rather than reasoned about.
+// ---------------------------------------------------------------------------
+
+const HOME = { latitude: 37.5388, longitude: -77.4336 };
+
+type LocateEdge = {
+  distance?: number;
+  outbound_reach?: number;
+  correlated_lat?: number;
+  correlated_lon?: number;
+  edge?: Json;
+  edge_info?: Json;
+};
+
+/** One verbose edge entry, in the real nesting, with the parts a case varies. */
+function locateEdge(over: LocateEdge = {}): Json {
+  return {
+    distance: 3.8,
+    outbound_reach: 50,
+    inbound_reach: 50,
+    correlated_lat: 37.53372,
+    correlated_lon: -77.43141,
+    edge: {
+      access: { pedestrian: true, bicycle: true, car: false },
+      classification: { classification: "service_other", use: "sidewalk", surface: "compacted" },
+    },
+    edge_info: {
+      way_id: 1422377342,
+      names: ["East Cary Street"],
+      mean_elevation: 6,
+    },
+    ...over,
+  };
+}
+
+const locateBody = (...edges: Json[]): Json => [
+  { input_lat: HOME.latitude, input_lon: HOME.longitude, edges, nodes: [] },
+];
+
+/** The proxy's own locate reply. */
+type LocateReply = {
+  error?: string;
+  detail?: string;
+  point?: { latitude: number; longitude: number };
+  distanceMeters?: number;
+  use?: string;
+  wayId?: number | null;
+  outboundReach?: number;
+  names?: string[];
+};
+
+async function locateReply(response: Response): Promise<LocateReply> {
+  const parsed = await readJson(response);
+  assert.ok(isJsonObject(parsed), "the proxy answers /api/locate with a JSON object");
+  return parsed;
+}
+
+test("locate reads the verbose nesting", async (t) => {
+  // The whole documented 200 body, from the one shape that gets it wrong.
+  const calls = stubFetch(t, () => Response.json(locateBody(locateEdge())));
+  const response = await handleApiRequest(post("/api/locate", { point: HOME }), ENV);
+
+  assert.equal(response?.status, 200);
+  assert.equal(calls.length, 1);
+  const body = await locateReply(response ?? new Response("{}"));
+  assert.deepEqual(body.point, { latitude: 37.53372, longitude: -77.43141 });
+  assert.equal(body.distanceMeters, 3.8);
+  assert.equal(body.use, "sidewalk");
+  assert.equal(body.wayId, 1422377342);
+  assert.equal(body.outboundReach, 50);
+  assert.deepEqual(body.names, ["East Cary Street"]);
+});
+
+test("locate pins pedestrian costing, the walking speed and verbose", async (t) => {
+  const calls = stubFetch(t, () => Response.json(locateBody(locateEdge())));
+  await handleApiRequest(post("/api/locate", { point: HOME }), ENV);
+
+  const sent = calls[0];
+  assert.match(sent?.url ?? "", /\/locate$/);
+  assert.equal(sent?.body.costing, "pedestrian");
+  assert.deepEqual(sent?.body.costing_options, { pedestrian: { walking_speed: WALKING_SPEED_KMH } });
+  // Verbose is not optional: every field this endpoint reads lives only there.
+  assert.equal(sent?.body.verbose, true);
+});
+
+test("locate refuses a point outside Richmond without calling upstream", async (t) => {
+  const calls = stubFetch(t, () => Response.json(locateBody(locateEdge())));
+  const response = await handleApiRequest(
+    post("/api/locate", { point: { latitude: 38.9072, longitude: -77.0369 } }),
+    ENV,
+  );
+
+  assert.equal(response?.status, 400);
+  assert.equal(calls.length, 0);
+});
+
+test("locate refuses a non-POST", async (t) => {
+  const calls = stubFetch(t, () => Response.json(locateBody(locateEdge())));
+  const response = await handleApiRequest(
+    new Request("http://app.local/api/locate", { method: "GET" }),
+    ENV,
+  );
+
+  assert.equal(response?.status, 405);
+  assert.equal(calls.length, 0);
+});
+
+test("locate is 404 when nothing returned is walkable", async (t) => {
+  // Three ways to fail the gate, each on its own edge, so a single 404 proves
+  // all three rather than only whichever comes first.
+  const inaccessible = locateEdge({
+    edge: {
+      access: { pedestrian: false },
+      classification: { use: "sidewalk" },
+    },
+  });
+  const driveway = locateEdge({
+    edge: {
+      access: { pedestrian: true },
+      classification: { use: "driveway" },
+    },
+  });
+  const tooFar = locateEdge({ distance: 400 });
+
+  for (const [name, edge] of [
+    ["pedestrian access is false", inaccessible],
+    ["the only edge is a driveway", driveway],
+    ["the edge is beyond the distance ceiling", tooFar],
+  ] as const) {
+    stubFetch(t, () => Response.json(locateBody(edge)));
+    const response = await handleApiRequest(post("/api/locate", { point: HOME }), ENV);
+    assert.equal(response?.status, 404, name);
+    assert.equal((await locateReply(response ?? new Response("{}"))).error, "no-pedestrian-edge", name);
+  }
+});
+
+test("locate takes the first usable edge, not the first edge", async (t) => {
+  // A parking aisle in front of a sidewalk is the ordinary case, and taking
+  // edges[0] on faith is how an anchor lands behind a maintenance yard.
+  const aisle = locateEdge({
+    edge: { access: { pedestrian: true }, classification: { use: "parking_aisle" } },
+  });
+  stubFetch(t, () => Response.json(locateBody(aisle, locateEdge())));
+  const response = await handleApiRequest(post("/api/locate", { point: HOME }), ENV);
+
+  assert.equal(response?.status, 200);
+  assert.equal((await locateReply(response ?? new Response("{}"))).use, "sidewalk");
+});
+
+test("locate refuses an edge with no correlated point", async (t) => {
+  // A zero here would put the place in the Gulf of Guinea, and nothing
+  // downstream could tell that from an answer.
+  // Built by omission rather than by an explicit `undefined`: what an engine
+  // sends is a body with no such key, and `exactOptionalPropertyTypes` is right
+  // to say those are different things.
+  // SAFETY: `locateEdge` returns an object literal built in this file; the
+  // assertion only widens it to the index signature the rest destructures.
+  const full = locateEdge() as Record<string, Json>;
+  const { correlated_lat: _lat, correlated_lon: _lon, ...nowhere } = full;
+  void _lat;
+  void _lon;
+  stubFetch(t, () => Response.json(locateBody(nowhere)));
+  const response = await handleApiRequest(post("/api/locate", { point: HOME }), ENV);
+
+  assert.equal(response?.status, 404);
+});
+
+test("locate is not configured without VALHALLA_URL", async (t) => {
+  const calls = stubFetch(t, () => Response.json(locateBody(locateEdge())));
+  const response = await handleApiRequest(post("/api/locate", { point: HOME }), {});
+
+  assert.equal(response?.status, 503);
+  assert.equal(calls.length, 0);
+});
+
+test("locate never leaks the engine URL", async (t) => {
+  stubConsoleError(t);
+  const env = { VALHALLA_URL: "http://engine.internal:8002" };
+
+  for (const outcome of [
+    () => new Error("ECONNREFUSED"),
+    () => timeoutError(),
+    () => new Response("nope", { status: 500 }),
+    () => Response.json(locateBody()),
+  ]) {
+    stubFetch(t, outcome);
+    const response = await handleApiRequest(post("/api/locate", { point: HOME }), env);
+    const text = await (response ?? new Response("")).text();
+    assert.equal(text.includes("engine.internal"), false, text);
+  }
+});
+
+test("locateCacheKey rounds to four decimals and is null on bad input", () => {
+  // The bound on cache growth, not an accident of formatting: at five decimals
+  // the Richmond box holds ~10^10 keys and a scraper can fill it forever.
+  //
+  // Two points a few metres apart inside one cell share an entry. Note the
+  // qualifier: this is a grid, so a pair either side of a boundary lands in two
+  // cells however close it is. That is not a defect - the bound is on the
+  // number of cells, not on any pair - and stating it here stops the next
+  // reader from "fixing" it.
+  const a = locateCacheKey({ point: { latitude: 37.53368, longitude: -77.43121 } });
+  const b = locateCacheKey({ point: { latitude: 37.53372, longitude: -77.43124 } });
+  assert.equal(a, b);
+  assert.match(String(a), /^\/api\/locate\/v1-3\.69\/37\.5337,-77\.4312$/);
+
+  // Two hundred metres apart is a different anchor and a different key.
+  const far = locateCacheKey({ point: { latitude: 37.5355, longitude: -77.43121 } });
+  assert.notEqual(a, far);
+
+  assert.equal(locateCacheKey({ point: { latitude: 38.9072, longitude: -77.0369 } }), null);
+  assert.equal(locateCacheKey({ nope: true }), null);
+  assert.equal(locateCacheKey(null), null);
 });

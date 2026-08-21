@@ -2,6 +2,7 @@ import {
   handleApiRequest,
   isochroneCacheKey,
   isochroneQueryCost,
+  locateCacheKey,
   routeCacheKey,
   weatherCacheKey,
   LADDER_DROPPED_HEADER,
@@ -43,6 +44,14 @@ const ISOCHRONE_CACHE_SECONDS = 86_400;
  * quiet rather than the size saved.
  */
 const ROUTE_CACHE_SECONDS = 7 * 86_400;
+
+/**
+ * An anchor keeps a month. It is a property of the graph rather than of a
+ * moment - it changes only when tiles are rebuilt, which `CACHE_VERSION`
+ * already covers - and the proposer asks for the same few hundred of them every
+ * time somebody runs it.
+ */
+const LOCATE_CACHE_SECONDS = 30 * 86_400;
 
 /**
  * One structured line per non-2xx `/api/*` answer. `wrangler tail` picks it
@@ -188,11 +197,12 @@ export async function handleWorkerRequest(
 
   const isRoute = url.pathname === "/api/route";
   const isWeather = url.pathname === "/api/weather";
+  const isLocate = url.pathname === "/api/locate";
 
   // Read once and use twice: the ladder's size decides what the request costs
   // the limiter, and its contents decide what it is cached under.
   let payload: Json = null;
-  if ((isIsochrone || isRoute) && request.method === "POST") {
+  if ((isIsochrone || isRoute || isLocate) && request.method === "POST") {
     payload = await readJson(request.clone()).catch(() => null);
   }
 
@@ -203,6 +213,8 @@ export async function handleWorkerRequest(
     cache = await edgeEntry(request, payload, isochroneCacheKey, ISOCHRONE_CACHE_SECONDS);
   } else if (isRoute) {
     cache = await edgeEntry(request, payload, routeCacheKey, ROUTE_CACHE_SECONDS);
+  } else if (isLocate) {
+    cache = await edgeEntry(request, payload, locateCacheKey, LOCATE_CACHE_SECONDS);
   } else if (isWeather) {
     // The body pre-read above stays POST-only; weather has none. The key
     // refuses to exist for a query string, which is what makes the 400 in the

@@ -4,6 +4,7 @@ import {
   areaSqMeters,
   contains,
   cumulativeMeters,
+  metersBetween,
   pointAtMeters,
   subtract,
   type MultiPolygon,
@@ -121,4 +122,25 @@ test("pointAtMeters: beyond the end clamps rather than returning null", () => {
   const meters = cumulativeMeters(line);
   assert.deepEqual(pointAtMeters(line, meters, 1e9), line[1]);
   assert.deepEqual(pointAtMeters(line, meters, -50), line[0]);
+});
+
+test("metersBetween is zero for a point and itself", () => {
+  const at = { lat: 37.5388, lng: -77.4336 };
+  assert.equal(metersBetween(at, at), 0);
+});
+
+test("metersBetween matches a known Richmond pair", () => {
+  // downtown to St. John's Church. The walking route measures 1,085 m, and a
+  // straight line between them must be shorter than the walk and not by much -
+  // which is the only accuracy this function is ever asked for.
+  const home = { lat: 37.5388, lng: -77.4336 };
+  const stJohns = { lat: 37.5306, lng: -77.4197 };
+  const meters = metersBetween(home, stJohns);
+  assert.ok(meters > 1000 && meters < 1120, `${meters} m is not between 1000 and 1120`);
+});
+
+test("metersBetween is symmetric", () => {
+  const home = { lat: 37.5388, lng: -77.4336 };
+  const maymont = { lat: 37.535784, lng: -77.477576 };
+  assert.equal(metersBetween(home, maymont), metersBetween(maymont, home));
 });

@@ -401,3 +401,61 @@ test("a failed forecast is not stored", async (t) => {
   assert.equal(cacheEntries(caches, ISOCHRONE_CACHE).size, 0);
   assert.ok(lines.some((line) => line.includes('"at":"api"')));
 });
+
+/**
+ * `/api/locate` at the edge.
+ *
+ * An anchor is a graph property, so a month is a conservative TTL, and the
+ * proposer asks for the same few hundred every run. The cost is one unit
+ * because a locate is a single correlation rather than a graph expansion -
+ * `isochroneQueryCost` is not involved.
+ */
+const LOCATE_BODY = [
+  {
+    input_lat: 37.5388,
+    input_lon: -77.4336,
+    edges: [
+      {
+        distance: 3.8,
+        outbound_reach: 50,
+        correlated_lat: 37.53372,
+        correlated_lon: -77.43141,
+        edge: {
+          access: { pedestrian: true },
+          classification: { use: "sidewalk" },
+        },
+        edge_info: { way_id: 1422377342, names: ["East Cary Street"] },
+      },
+    ],
+    nodes: [],
+  },
+];
+
+test("an anchor is asked for once, however many runs want it", async (t) => {
+  const caches = stubEdgeCache(t);
+  const calls = stubFetch(t, () => Response.json(LOCATE_BODY));
+  const at = { point: { latitude: 37.5388, longitude: -77.4336 } };
+
+  const first = await handleWorkerRequest(post("/api/locate", at), env({}), CTX);
+  assert.equal(first.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(cacheEntries(caches, ISOCHRONE_CACHE).size, 1);
+
+  const second = await handleWorkerRequest(post("/api/locate", at), env({}), CTX);
+  assert.equal(second.status, 200);
+  assert.equal(calls.length, 1, "the second run never reached the engine");
+  assert.deepEqual(await readJson(second), await readJson(first));
+});
+
+test("a locate costs the limiter exactly one", async (t) => {
+  stubEdgeCache(t);
+  stubFetch(t, () => Response.json(LOCATE_BODY));
+  const anchor = limiter();
+
+  await handleWorkerRequest(
+    post("/api/locate", { point: { latitude: 37.5388, longitude: -77.4336 } }),
+    env({ API_RATE_LIMIT: anchor.binding }),
+    CTX,
+  );
+  assert.equal(anchor.charged(), 1);
+});

@@ -139,6 +139,47 @@ const ROUTE_CACHE_VERSION = "v2";
 const ELEVATION_INTERVAL_M = 30;
 
 /**
+ * How wide a net `/locate` casts for a walkable edge.
+ *
+ * Valhalla's `radius` does **not** bound the answer, which is the trap this
+ * endpoint exists to contain: a locate at 37.5200,-77.5400 with `radius: 10`
+ * came back with a correlated point about 30 m away, on the far side of the
+ * James. So the radius is a hint about where to look and `LOCATE_MAX_DISTANCE_M`
+ * is the rule, read off the response's own `distance` field.
+ */
+const LOCATE_RADIUS_M = 60;
+
+/**
+ * A server-side ceiling on how far an anchor may move. Callers apply their own,
+ * tighter, feature-shaped gate on top - a point feature has no business moving
+ * as far as a park outline's centroid does - but nothing gets past this one.
+ */
+const LOCATE_MAX_DISTANCE_M = 150;
+
+/**
+ * Valhalla `Use` strings a walker can stand on, from
+ * `valhalla/baldr/graphconstants.h` (`UseStrings`) - **not** OSM `highway`
+ * values, and the two vocabularies differ exactly where it matters. Valhalla
+ * spells the service road `"service_road"`, never `"service"`; `"steps"` and
+ * `"pedestrian"` are distinct `Use` values from `"footway"` and `"path"`, so
+ * all four are listed separately.
+ *
+ * `"road"` admits any ordinary street, which is most of what a bad snap lands
+ * on, so this allowlist is a weak gate by itself. The real protection is the
+ * distance ceiling above. `driveway`, `parking_aisle` and `alley` are refused
+ * by omission, and a test says so.
+ */
+const LOCATE_USES: ReadonlySet<string> = new Set([
+  "sidewalk",
+  "footway",
+  "path",
+  "steps",
+  "pedestrian",
+  "living_street",
+  "road",
+]);
+
+/**
  * Richmond's centre, pinned here for exactly the reason `RICHMOND_BOUNDS` is
  * pinned: an endpoint that takes coordinates is a worldwide weather service
  * with this app's name on it, and this one takes none.
@@ -546,6 +587,141 @@ async function weather(env: ProxyEnv): Promise<Response> {
 }
 
 /**
+ * The edge key for one anchor lookup.
+ *
+ * **Four decimals, not the five the isochrone and route keys use, and that is a
+ * bound rather than a formatting choice.** At five decimals the Richmond box
+ * holds on the order of 10^10 distinct keys, so "the worst case is a warm edge
+ * cache" would be a hope: a scraper could fill it indefinitely with keys that
+ * never repeat. Four decimals is about 11 m at this latitude, which makes the
+ * whole box roughly 2,200 x 2,300 = ~5 million keys - a real ceiling.
+ *
+ * It costs the caller nothing. An anchor is a property of the graph rather than
+ * a metre-precise measurement, and two points 11 m apart correlate to the same
+ * edge in nearly every case. The response still carries the exact correlated
+ * point for whichever request warmed the entry, so a caller must read `point`
+ * as "an anchor near where I asked" and `distanceMeters` as the authority on
+ * how far it moved - which is what the anchor ladder already does.
+ *
+ * @public - consumed by `worker/index.ts` and `proxy.test.ts`.
+ */
+export function locateCacheKey(payload: Json): string | null {
+  if (!isJsonObject(payload)) return null;
+  const point = readLatLng(payload.point);
+  if (!point) return null;
+  const at = `${point.latitude.toFixed(4)},${point.longitude.toFixed(4)}`;
+  return `/api/locate/${CACHE_VERSION}-${WALKING_SPEED_KMH}/${at}`;
+}
+
+/**
+ * The point Valhalla actually correlated to, which is what an anchor is.
+ *
+ * Null rather than a fallback when the pair is missing: a zero here would put a
+ * place in the Gulf of Guinea, and a caller cannot tell that from an answer.
+ */
+function readCorrelated(entry: JsonObject): LatLng | null {
+  const latitude = entry.correlated_lat;
+  const longitude = entry.correlated_lon;
+  if (!isFiniteNumber(latitude) || !isFiniteNumber(longitude)) return null;
+  return { latitude, longitude };
+}
+
+/**
+ * The first returned edge a walker can actually use, flattened, or null.
+ *
+ * `distance` and the two reach counts sit directly on the edge entry;
+ * `access` and `classification` are one level down in `edge`, and `way_id` and
+ * `names` one level down in `edge_info`. Getting that nesting wrong is the
+ * easiest mistake in this endpoint and it fails *silently* - every field reads
+ * undefined, every edge is rejected, and the answer is a plausible 404.
+ */
+function bestPedestrianEdge(body: Json): JsonObject | null {
+  // Valhalla answers /locate with an array, one entry per requested location.
+  if (!isJsonArray(body)) return null;
+  const first = body[0];
+  if (!isJsonObject(first) || !isJsonArray(first.edges)) return null;
+
+  for (const entry of first.edges) {
+    if (!isJsonObject(entry)) continue;
+
+    const distance = entry.distance;
+    if (!isFiniteNumber(distance) || distance > LOCATE_MAX_DISTANCE_M) continue;
+
+    const edge = entry.edge;
+    if (!isJsonObject(edge)) continue;
+    const access = edge.access;
+    if (!isJsonObject(access) || access.pedestrian !== true) continue;
+    const classification = edge.classification;
+    if (!isJsonObject(classification) || !isString(classification.use)) continue;
+    if (!LOCATE_USES.has(classification.use)) continue;
+
+    const at = readCorrelated(entry);
+    if (at === null) continue;
+
+    const info = isJsonObject(entry.edge_info) ? entry.edge_info : {};
+    const names: string[] = [];
+    if (isJsonArray(info.names)) {
+      for (const name of info.names) if (isString(name)) names.push(name);
+    }
+
+    return {
+      point: { latitude: at.latitude, longitude: at.longitude },
+      distanceMeters: distance,
+      use: classification.use,
+      wayId: isFiniteNumber(info.way_id) ? info.way_id : null,
+      outboundReach: isFiniteNumber(entry.outbound_reach) ? entry.outbound_reach : 0,
+      names,
+    };
+  }
+  return null;
+}
+
+/**
+ * `POST /api/locate { point }`. Where can a walker actually stand near here?
+ *
+ * A build-time endpoint that happens to be public. `places-expansion`'s proposer
+ * asks it once per candidate, because `out center` on a park way returns the
+ * bounding-box centre - a spot in the middle of a lawn, or for Hollywood
+ * Cemetery a spot with no path to it. The snap goes through this proxy rather
+ * than straight at the engine for the same reason `build-reach.mjs` does: an
+ * anchor is the endpoint of a route this app will later draw, and a snap taken
+ * under different costing can disagree with the route.
+ *
+ * `meanElevation` is deliberately **not** in the response, though Valhalla
+ * returns it. An earlier plan had the proposer derive `Place.terrain` from nine
+ * elevation probes per candidate; `elevation-profile` deleted `Place.terrain`
+ * outright, because a tag on a dot cannot express a property of a route. Climb
+ * is measured per walk now, so this endpoint is called once rather than nine
+ * times and answers with no elevation at all.
+ */
+async function locate(base: string, payload: JsonObject): Promise<Response> {
+  const point = readLatLng(payload.point);
+  if (!point) return badRequest("point must be a lat/lng inside the Richmond area");
+
+  const response = await callValhalla(
+    base,
+    "/locate",
+    {
+      locations: [{ lat: point.latitude, lon: point.longitude, radius: LOCATE_RADIUS_M }],
+      costing: "pedestrian",
+      costing_options: { pedestrian: { walking_speed: WALKING_SPEED_KMH } },
+      verbose: true,
+    },
+    UPSTREAM_TIMEOUT_MS,
+  );
+  if (response.status !== 200) return response;
+
+  const best = bestPedestrianEdge(await readJson(response).catch(() => null));
+  if (best === null) {
+    // 404 rather than 400: it is final, it is not in `http.ts`'s retry set, and
+    // it reads correctly - there is no answer here and asking again will not
+    // produce one.
+    return json({ error: "no-pedestrian-edge", detail: "Nothing walkable is near that point." }, 404);
+  }
+  return json(best, 200);
+}
+
+/**
  * Calls Valhalla and translates failure into this proxy's own vocabulary.
  *
  * Every attempt carries a deadline. Without one the only failure modelled is
@@ -802,7 +978,10 @@ export async function handleApiRequest(request: Request, env: ProxyEnv): Promise
   const isIsochrone = pathname === "/api/isochrone";
   const isHealth = pathname === "/api/health";
   const isWeather = pathname === "/api/weather";
-  if (!isIsochrone && !isHealth && !isWeather && pathname !== "/api/route") return null;
+  const isLocate = pathname === "/api/locate";
+  if (!isIsochrone && !isHealth && !isWeather && !isLocate && pathname !== "/api/route") {
+    return null;
+  }
 
   // Beside `isHealth`, which is the existing precedent for a GET endpoint.
   if (isWeather) {
@@ -836,5 +1015,6 @@ export async function handleApiRequest(request: Request, env: ProxyEnv): Promise
     return notConfigured("VALHALLA_URL is unset. See .env.example and valhalla/README.md.");
   }
 
-  return isIsochrone ? isochrone(env, base, payload) : route(base, payload);
+  if (isIsochrone) return isochrone(env, base, payload);
+  return isLocate ? locate(base, payload) : route(base, payload);
 }
