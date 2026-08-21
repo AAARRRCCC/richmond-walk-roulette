@@ -157,6 +157,36 @@ test("placeName refuses a name that cannot stand on its own", () => {
   assert.equal(placeName(candidate({ leisure: "park", name: "x".repeat(NAME_MAX) })), "x".repeat(NAME_MAX));
 });
 
+test("a name that is really a street address is refused", () => {
+  // Measured: of 52 markers the first propose run accepted, 38 were Historic
+  // Richmond house plaques named like this. "Marker: 635 North 27th Street" is
+  // an address, not an offer.
+  assert.equal(placeName(candidate({ historic: "memorial", name: "2816 E. Grace" })), null);
+  assert.equal(placeName(candidate({ historic: "memorial", name: "605 N. 25th Street" })), null);
+  assert.equal(placeName(candidate({ historic: "memorial", name: "314 N. 32nd St" })), null);
+  assert.equal(placeName(candidate({ historic: "memorial", name: "3013 Libby Terrace" })), null);
+
+  // A number that is part of the name survives, because it is not an address.
+  assert.equal(placeName(candidate({ amenity: "marketplace", name: "17th Street Market" })), "17th Street Market");
+  assert.equal(placeName(candidate({ tourism: "gallery", name: "1708 Gallery" })), "1708 Gallery");
+});
+
+test("a ghost bike is refused by name", () => {
+  // A memorial to one named cyclist killed in traffic. Four are in the box, and
+  // the first propose run accepted three - drawn at random and presented as a
+  // small delight, with no room on the card to say what the place is.
+  const bike = candidate({
+    historic: "memorial",
+    memorial: "ghost_bike",
+    name: "Robyn Hightman",
+  });
+  assert.equal(rejection(classify(bike)), "in-memoriam");
+
+  // And the ordinary plaque beside it is untouched.
+  const plaque = candidate({ historic: "memorial", memorial: "plaque", name: "Powhatan Stone" });
+  assert.ok(classify(plaque).ok);
+});
+
 test("placeId is slugged, stable and deduped", () => {
   const church = candidate({ historic: "church", name: "St. John's Church" });
   assert.equal(placeId(church, "St. John's Church", new Set()), "st-johns-church");

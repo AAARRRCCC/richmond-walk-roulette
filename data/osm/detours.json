@@ -1,0 +1,4964 @@
+{
+  "elements": [
+    {
+      "type": "node",
+      "id": 356602284,
+      "lat": 37.5376466,
+      "lon": -77.4447055,
+      "tags": {
+        "ele": "44",
+        "gnis:feature_id": "1780480",
+        "name": "Gambles Hill",
+        "natural": "peak"
+      }
+    },
+    {
+      "type": "node",
+      "id": 898600545,
+      "lat": 37.5343086,
+      "lon": -77.4487065,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 898650652,
+      "lat": 37.5347543,
+      "lon": -77.4436738,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Tredegar Iron Works",
+        "subject:wikidata": "Q7837469"
+      }
+    },
+    {
+      "type": "node",
+      "id": 898650689,
+      "lat": 37.5339802,
+      "lon": -77.4427873,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "John Jasper",
+        "subject:wikidata": "Q26251063",
+        "subject:wikipedia": "en:John Jasper"
+      }
+    },
+    {
+      "type": "node",
+      "id": 898650761,
+      "lat": 37.5340738,
+      "lon": -77.4435467,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Powhatan Chiefdom"
+      }
+    },
+    {
+      "type": "node",
+      "id": 898650767,
+      "lat": 37.5338117,
+      "lon": -77.4414895,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Manchester & Free Bridges"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2179727313,
+      "lat": 37.5342074,
+      "lon": -77.4254897,
+      "tags": {
+        "check_date": "2026-05-07",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Lockwood Double House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:1809 E Grace St, Lockwood Double House plaque.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2722730584,
+      "lat": 37.5338951,
+      "lon": -77.4364013,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "cross",
+        "name": "Christopher Newport Cross",
+        "note": "Originally erected 1907 on Gamble's Hill by the Association for the Preservation of Virginia Antiquities. Moved to Shockoe Slip in 1983. Moved to 12th St in 2000.",
+        "ref:hmdb": "23818",
+        "start_date": "1907",
+        "subject:wikidata": "Q1086874",
+        "subject:wikipedia": "en:Christopher Newport",
+        "wikidata": "Q140686835",
+        "wikimedia_commons": "File:Richmond C Newport Cross 2009 Jeff Weese.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2975967750,
+      "lat": 37.5268756,
+      "lon": -77.4351872,
+      "tags": {
+        "name": "Floodwall Overlook",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2975967763,
+      "lat": 37.5295426,
+      "lon": -77.4459585,
+      "tags": {
+        "direction": "25",
+        "name": "Old Manchester Bridge Overlook",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2975991287,
+      "lat": 37.5336915,
+      "lon": -77.4444502,
+      "tags": {
+        "name": "TDIA 1895 James River Overlook",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2975991294,
+      "lat": 37.531522,
+      "lon": -77.4478226,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2975991296,
+      "lat": 37.5341288,
+      "lon": -77.4498346,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3000313549,
+      "lat": 37.6170055,
+      "lon": -77.4319337,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3000313643,
+      "lat": 37.6173028,
+      "lon": -77.4282096,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3000313646,
+      "lat": 37.6177523,
+      "lon": -77.4306897,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3017455573,
+      "lat": 37.5352756,
+      "lon": -77.4505097,
+      "tags": {
+        "name": "Oregon Hill Overlook",
+        "tourism": "viewpoint",
+        "website": "https://oregonhill.net/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3017991713,
+      "lat": 37.5909175,
+      "lon": -77.5661734,
+      "tags": {
+        "name": "Highest Point In Henrico County",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3025126982,
+      "lat": 37.5246794,
+      "lon": -77.412846,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3068824552,
+      "lat": 37.5189812,
+      "lon": -77.4180827,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3070522846,
+      "lat": 37.5332396,
+      "lon": -77.4359529,
+      "tags": {
+        "name": "Pipeline Overlook",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3072222428,
+      "lat": 37.5388823,
+      "lon": -77.4929607,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3072224228,
+      "lat": 37.5343355,
+      "lon": -77.4459341,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3086272675,
+      "lat": 37.5272686,
+      "lon": -77.4535615,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3103680164,
+      "lat": 37.5333489,
+      "lon": -77.4769084,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3500856477,
+      "lat": 37.5347091,
+      "lon": -77.4325291,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "obelisk",
+        "name": "General Assembly of Virginia",
+        "source": "survey"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3645025324,
+      "lat": 37.5291093,
+      "lon": -77.4688825,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3645025328,
+      "lat": 37.5295602,
+      "lon": -77.4727288,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3645025334,
+      "lat": 37.5340653,
+      "lon": -77.4845251,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3645025363,
+      "lat": 37.5336471,
+      "lon": -77.4844622,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3698797307,
+      "lat": 37.5334707,
+      "lon": -77.4761514,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3731204224,
+      "lat": 37.5564755,
+      "lon": -77.4753511,
+      "tags": {
+        "artist:wikidata": "Q153920",
+        "artist_name": "Aristide Maillol",
+        "artwork_type": "sculpture",
+        "material": "bronze",
+        "name": "La Riviere",
+        "start_date": "1944",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:Aristide_Maillol_-_La_Rivière_-_VMFA_Sculpture_Garden.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3731204225,
+      "lat": 37.5566575,
+      "lon": -77.4754063,
+      "tags": {
+        "artist:wikidata": "Q151097",
+        "artist_name": "Henry Moore",
+        "artwork_type": "sculpture",
+        "material": "bronze",
+        "name": "Reclining Figure",
+        "start_date": "1954",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3731204226,
+      "lat": 37.5567234,
+      "lon": -77.4758896,
+      "tags": {
+        "artist_name": "Rubin Peacock",
+        "artwork_type": "sculpture",
+        "name": "Untitled Totem",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3732461331,
+      "lat": 37.5607589,
+      "lon": -77.4661544,
+      "tags": {
+        "artist_name": "Science Museum of Virginia",
+        "artwork_type": "sculpture",
+        "material": "granite",
+        "name": "Grand Kugel",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3741870436,
+      "lat": 37.5367001,
+      "lon": -77.4341453,
+      "tags": {
+        "artist_name": "James Rosati",
+        "artwork_subject": "A large red abstract tripod",
+        "artwork_type": "sculpture",
+        "material": "aluminium",
+        "name": "Future",
+        "start_date": "1974-10-09",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4261144427,
+      "lat": 37.5389419,
+      "lon": -77.4326162,
+      "tags": {
+        "artwork_type": "statue",
+        "name": "Civil Rights Memorial",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4261144428,
+      "lat": 37.5391046,
+      "lon": -77.4328712,
+      "tags": {
+        "artwork_type": "statue",
+        "name": "Dr. Hunter Holmes McGuire",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4261144429,
+      "lat": 37.5392577,
+      "lon": -77.4331302,
+      "tags": {
+        "artwork_type": "statue",
+        "name": "Thomas J. \"Stonewall\" Jackson",
+        "tourism": "artwork",
+        "wikidata": "Q136388584"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4261144430,
+      "lat": 37.5394207,
+      "lon": -77.4333828,
+      "tags": {
+        "artist_name": "William Ludwell Sheppard",
+        "artwork_type": "statue",
+        "material": "metal",
+        "name": "Governor William Smith",
+        "subject:wikidata": "Q650795",
+        "subject:wikipedia": "en:William Smith (Virginia governor)",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590239369,
+      "lat": 37.5345524,
+      "lon": -77.4429652,
+      "tags": {
+        "artist_name": "Paul DiPasquale",
+        "artwork_type": "sculpture",
+        "historic": "memorial",
+        "material": "bronze",
+        "memorial": "statue",
+        "name": "The Headman",
+        "start_date": "1993-11-25",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590239374,
+      "lat": 37.5345679,
+      "lon": -77.4432961,
+      "tags": {
+        "artist_name": "Thomas Jay Warren",
+        "artwork_type": "sculpture",
+        "historic": "memorial",
+        "material": "bronze",
+        "memorial": "statue",
+        "name": "Emancipation and Freedom Monument",
+        "start_date": "2021-09-22",
+        "tourism": "artwork",
+        "website": "http://mlkcommission.dls.virginia.gov/lincoln/monument.html"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5209437090,
+      "lat": 37.5651676,
+      "lon": -77.4790606,
+      "tags": {
+        "artwork_type": "statue",
+        "name": "Arthur Ashe Statue",
+        "tourism": "artwork",
+        "wikidata": "Q97166627"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5417333240,
+      "lat": 37.5575792,
+      "lon": -77.4531841,
+      "tags": {
+        "artwork_type": "bust",
+        "material": "metal",
+        "name": "Maggie Lena Walker",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5418265040,
+      "lat": 37.5446172,
+      "lon": -77.4811187,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5418690392,
+      "lat": 37.5414373,
+      "lon": -77.4727486,
+      "tags": {
+        "amenity": "bench",
+        "armrest": "yes",
+        "backrest": "yes",
+        "colour": "gray",
+        "historic": "memorial",
+        "inscription:1": "Phillip Powers Woodson - 09/17/22 to 04/14/16 - Don't be afraid of death, be afrad of an unlived life. You don't have to live forever... you just have to live.",
+        "inscription:2": "Dorothy E. H. Woodson - 01/15/28 to 11/05/15 - Your life was a blessing, your memory a treasure, you are loved beyond words and missed beyond measure.",
+        "material": "composite",
+        "memorial": "bench",
+        "seats": "3"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5420002328,
+      "lat": 37.540013,
+      "lon": -77.4343066,
+      "tags": {
+        "artwork_type": "statue",
+        "historic": "memorial",
+        "material": "bronze",
+        "memorial": "statue",
+        "name": "Edgar Allan Poe",
+        "tourism": "artwork",
+        "wikidata": "Q141130993"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5775290150,
+      "lat": 37.5344228,
+      "lon": -77.473865,
+      "tags": {
+        "amenity": "clock",
+        "artist_name": "Ernest S. Leland",
+        "artwork_type": "sculpture",
+        "check_date": "2025-10-10",
+        "display": "sundial",
+        "material": "stone",
+        "name": "Dooley sundial",
+        "start_date": "1930",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6375121336,
+      "lat": 37.5357797,
+      "lon": -77.4214398,
+      "tags": {
+        "artist_name": "Jack Witt",
+        "artwork_type": "statue",
+        "material": "bronze",
+        "name": "Mr. Smedley Statue",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6568119689,
+      "lat": 37.5455061,
+      "lon": -77.4408004,
+      "tags": {
+        "name": "Change the Narrative",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6618860841,
+      "lat": 37.6393929,
+      "lon": -77.5878804,
+      "tags": {
+        "artwork_type": "statue",
+        "description": "Copy of David statue by Michelangelo",
+        "name": "David",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6755269391,
+      "lat": 37.5051124,
+      "lon": -77.5284001,
+      "tags": {
+        "addr:housenumber": "7200",
+        "addr:postcode": "23225",
+        "addr:street": "Beaufont Spring Drive",
+        "name": "Beaufont Springs",
+        "natural": "spring"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7095866277,
+      "lat": 37.5568281,
+      "lon": -77.4749972,
+      "tags": {
+        "artist_name": "Janet Scudder",
+        "artwork_type": "sculpture",
+        "material": "bronze",
+        "name": "Little Lady of the Sea",
+        "start_date": "1913",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7095866278,
+      "lat": 37.5566867,
+      "lon": -77.4752574,
+      "tags": {
+        "artist:wikidata": "Q613380",
+        "artist_name": "Dale Chihuly",
+        "artwork_type": "sculpture",
+        "material": "glass",
+        "name": "Red Reeds",
+        "start_date": "2012",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7095866279,
+      "lat": 37.5574399,
+      "lon": -77.4751695,
+      "tags": {
+        "artist:wikidata": "Q659858",
+        "artist_name": "Seymour Lipton",
+        "artwork_type": "sculpture",
+        "name": "Oracle",
+        "start_date": "1966",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7095866280,
+      "lat": 37.5569758,
+      "lon": -77.4753224,
+      "tags": {
+        "artist:wikidata": "Q1396516",
+        "artist_name": "Jaume Plensa",
+        "artwork_type": "sculpture",
+        "name": "Chloe",
+        "start_date": "2016",
+        "tourism": "artwork",
+        "wikidata": "Q127820194",
+        "wikimedia_commons": "File:08_-_Richmond_-_VMFA_(39923871531).jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7095866281,
+      "lat": 37.5571295,
+      "lon": -77.4748282,
+      "tags": {
+        "artist:wikidata": "Q763368",
+        "artist_name": "Sandro Chia",
+        "artwork_type": "sculpture",
+        "name": "Man and Vegetation",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7095866282,
+      "lat": 37.5569392,
+      "lon": -77.4749362,
+      "tags": {
+        "artist:wikidata": "Q47027128",
+        "artist_name": "Paul DiPasquale",
+        "artwork_type": "sculpture",
+        "name": "Neptune Virginia Beach Maquette",
+        "start_date": "2004",
+        "tourism": "artwork",
+        "wikidata": "Q127833546"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7095879702,
+      "lat": 37.5565957,
+      "lon": -77.4739861,
+      "tags": {
+        "artist_name": "Kehinde Wiley",
+        "artwork_type": "statue",
+        "name": "Rumors of War",
+        "start_date": "2019-12-10",
+        "tourism": "artwork",
+        "wikidata": "Q85798167"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7678791212,
+      "lat": 37.5330796,
+      "lon": -77.4447692,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7678791213,
+      "lat": 37.5323442,
+      "lon": -77.4450177,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7678791214,
+      "lat": 37.5316627,
+      "lon": -77.4453057,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7678867202,
+      "lat": 37.5462573,
+      "lon": -77.4425529,
+      "tags": {
+        "artwork_type": "statue",
+        "name": "Maggie Lena Walker Statue",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7682158122,
+      "lat": 37.5370514,
+      "lon": -77.4370716,
+      "tags": {
+        "artist_name": "Lloyd Lillie",
+        "artwork_type": "statue",
+        "material": "bronze",
+        "name": "Wind's Up",
+        "start_date": "1986-11",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9658766468,
+      "lat": 37.5410844,
+      "lon": -77.4007076,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Armstrong High School Historical Park"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9785880012,
+      "lat": 37.5327554,
+      "lon": -77.4228918,
+      "tags": {
+        "direction": "315",
+        "name": "Church Hill Overlook",
+        "tourism": "viewpoint",
+        "wikidata": "Q138822784"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10162688920,
+      "lat": 37.5343995,
+      "lon": -77.4441685,
+      "tags": {
+        "artist_name": "Brad Robinson",
+        "artwork_type": "sculpture",
+        "name": "The Mill",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10164803057,
+      "lat": 37.5343171,
+      "lon": -77.4424144,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Confederate Laboratory"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10164803156,
+      "lat": 37.5345031,
+      "lon": -77.4446111,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Haxall Headgates"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10164803158,
+      "lat": 37.5337144,
+      "lon": -77.4381975,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Haxall Millrace",
+        "name:etymology:wikidata": "Q66011854",
+        "name:etymology:wikipedia": "en:Bolling Walker Haxall"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10164803159,
+      "lat": 37.5336932,
+      "lon": -77.437319,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Hydroelectric Plant"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10253486981,
+      "lat": 37.5151346,
+      "lon": -77.4073524,
+      "tags": {
+        "name": "Powhatan Hill Overlook",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10656135919,
+      "lat": 37.5240251,
+      "lon": -77.4839874,
+      "tags": {
+        "drinking_water": "yes",
+        "drinking_water:legal": "no",
+        "name": "Wayside Spring",
+        "natural": "spring"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10966042589,
+      "lat": 37.5471036,
+      "lon": -77.4513023,
+      "tags": {
+        "historic": "memorial",
+        "inscription": "in 1851 the City of Richmond planned a series of parks including Western Square now known a Monroe Park.",
+        "material": "metal",
+        "memorial": "plaque",
+        "name": "Monroe Park",
+        "openplaques:id": "58733"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10966377707,
+      "lat": 37.5468707,
+      "lon": -77.4542206,
+      "tags": {
+        "artist_name": "Craig R. Wedderspoon",
+        "artwork_type": "sculpture",
+        "date": "2006",
+        "name": "Soft",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10966980667,
+      "lat": 37.5529125,
+      "lon": -77.4544554,
+      "tags": {
+        "direction": "36",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Ezekiel & Weilman Company Inc. Established 1924"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10968066382,
+      "lat": 37.5295676,
+      "lon": -77.4459363,
+      "tags": {
+        "description": "One of central Virginia's premier rock climbing areas, offering multiple routes for trad climbing, sport climbing, and top roping. The sixty-foot granite wall is a remnant of the Richmond and Petersburg Railroad Bridge which spanned the James River.",
+        "height": "17",
+        "name": "Manchester Wall Rock Climbing",
+        "natural": "cliff",
+        "sport": "climbing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10969244925,
+      "lat": 37.6179009,
+      "lon": -77.4961284,
+      "tags": {
+        "artwork_type": "mural",
+        "name": "See Richmond By Rail",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11082221505,
+      "lat": 37.5366896,
+      "lon": -77.4495481,
+      "tags": {
+        "artwork_type": "sculpture",
+        "material": "steel",
+        "name": "Park Guardian II",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11089269438,
+      "lat": 37.5417133,
+      "lon": -77.4494391,
+      "tags": {
+        "artist_name": "Charles Pool",
+        "artwork_type": "sculpture",
+        "material": "steel",
+        "name": "Park Guardian I",
+        "start_date": "1993",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11181019545,
+      "lat": 37.5323139,
+      "lon": -77.4946833,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11214923823,
+      "lat": 37.5680907,
+      "lon": -77.5313394,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "ghost_bike",
+        "name": "Lanie Kruszewski"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11214923824,
+      "lat": 37.5497384,
+      "lon": -77.4671339,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "ghost_bike",
+        "name": "Corey Frazier"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11214923825,
+      "lat": 37.5312939,
+      "lon": -77.4161635,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "ghost_bike",
+        "name": "Robyn Hightman"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11229751280,
+      "lat": 37.5611503,
+      "lon": -77.4668121,
+      "tags": {
+        "artist_name": "Shane Allbritton and Norman Lee",
+        "artwork_type": "sculpture",
+        "check_date": "2026-08-06",
+        "name": "Cosmic Perception",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11276064866,
+      "lat": 37.5957388,
+      "lon": -77.4662073,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11308739736,
+      "lat": 37.5237876,
+      "lon": -77.4599715,
+      "tags": {
+        "drinking_water": "no",
+        "name": "Buttermilk Spring",
+        "natural": "spring"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11376212075,
+      "lat": 37.5336992,
+      "lon": -77.43752,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11393260639,
+      "lat": 37.5243181,
+      "lon": -77.4100374,
+      "tags": {
+        "name": "Chimborazo Spring",
+        "natural": "spring"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11964861703,
+      "lat": 37.5446916,
+      "lon": -77.4759232,
+      "tags": {
+        "historic": "memorial",
+        "inscription": "Wilfred Cutshaw graduated from the Virginia Military Institute in 1858 and servedas a lieutenant colonel of artillery in the Confederate army. As Richmond's city engineer (1873-1907), he instituted an innovative system of civic planning...",
+        "material": "metal",
+        "memorial": "plaque",
+        "name": "Wilfred Emory Cutshaw (1838-1907)"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11992817469,
+      "lat": 37.5506631,
+      "lon": -77.4430501,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Richmond's First African American Police Officers"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11992817472,
+      "lat": 37.5501873,
+      "lon": -77.4418719,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Ebenezer Baptist Church"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12077955097,
+      "lat": 37.5276848,
+      "lon": -77.4563537,
+      "tags": {
+        "direction": "350",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12509521453,
+      "lat": 37.5185866,
+      "lon": -77.3639714,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "ghost_bike",
+        "source": "https://www.wtvr.com/news/local-news/williamsburg-road-millers-lane-teen-killed-august-8-2023",
+        "subject": "Geormond \"Geo\" Morton"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12542224572,
+      "lat": 37.5402559,
+      "lon": -77.4772168,
+      "tags": {
+        "access": "no",
+        "drinking_water": "no",
+        "name": "Byrd Park Spring",
+        "natural": "spring",
+        "refitted": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12542224573,
+      "lat": 37.5166697,
+      "lon": -77.4606034,
+      "tags": {
+        "drinking_water": "no",
+        "name": "Fonticello Lithia Spring",
+        "natural": "spring",
+        "refitted": "yes",
+        "water_characteristic": "mineral"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12542224575,
+      "lat": 37.5199029,
+      "lon": -77.475151,
+      "tags": {
+        "drinking_water": "no",
+        "name": "Forest Hill Spring",
+        "natural": "spring",
+        "refitted": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12542224576,
+      "lat": 37.5991715,
+      "lon": -77.4649864,
+      "tags": {
+        "drinking_water": "no",
+        "name": "Sulphur spring",
+        "natural": "spring",
+        "refitted": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12650730926,
+      "lat": 37.5396953,
+      "lon": -77.4832893,
+      "tags": {
+        "drinking_water:legal": "no",
+        "name": "Dogwood Dell Spring",
+        "natural": "spring"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13046921398,
+      "lat": 37.5330313,
+      "lon": -77.4568295,
+      "tags": {
+        "direction": "154",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13235715546,
+      "lat": 37.5603275,
+      "lon": -77.5464764,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13289799964,
+      "lat": 37.6178313,
+      "lon": -77.433107,
+      "tags": {
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13294886983,
+      "lat": 37.5246996,
+      "lon": -77.4128295,
+      "tags": {
+        "historic": "memorial",
+        "material": "stone",
+        "memorial": "stone",
+        "name": "Powhatan Stone",
+        "wikidata": "Q136757087"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13430985501,
+      "lat": 37.5288706,
+      "lon": -77.4162438,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "220",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2816 E. Grace",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:HRF_plaque_2816_E_Grace.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13585970444,
+      "lat": 37.5506562,
+      "lon": -77.4519922,
+      "tags": {
+        "artist_name": "Michał Sepe Wrega;Daniel Chazme Kalinowski",
+        "artwork_type": "mural",
+        "name": "Crash Dummies",
+        "start_date": "2014",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13585979417,
+      "lat": 37.5510627,
+      "lon": -77.453637,
+      "tags": {
+        "artist:wikidata": "Q117212924",
+        "artist_name": "Etam Cru; Bezt; Sainer",
+        "description": "Woman in a jar of strawberries",
+        "name": "Moonshine",
+        "start_date": "2013",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13585988894,
+      "lat": 37.5505028,
+      "lon": -77.4527317,
+      "tags": {
+        "artist_name": "Marshall Higgins;Brad Bacon Art",
+        "artwork_subject": "Art materials",
+        "artwork_type": "mural",
+        "direction": "130",
+        "name": "Plaza Art",
+        "start_date": "2016",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:New_Plaza_Art_Mural.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13585998968,
+      "lat": 37.5516008,
+      "lon": -77.4528069,
+      "tags": {
+        "artist_name": "Ever (Nicolás Romero Escalada)",
+        "artwork_type": "mural",
+        "description": "Beams emerge from the eyes of four faces into two colorful circles",
+        "name": "La Comunidad II",
+        "start_date": "2013",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13586024167,
+      "lat": 37.5516102,
+      "lon": -77.4483764,
+      "tags": {
+        "artist:wikidata": "Q114890636",
+        "artist_name": "Nils Westergard",
+        "description": "A grayscale man's head with two faces",
+        "name": "Dan (Janus)",
+        "start_date": "2015",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13588416210,
+      "lat": 37.5746557,
+      "lon": -77.5395116,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "stone"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13598206687,
+      "lat": 37.5766512,
+      "lon": -77.5383617,
+      "tags": {
+        "historic": "memorial",
+        "material": "concrete",
+        "memorial": "bench"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13598209212,
+      "lat": 37.5765934,
+      "lon": -77.5383323,
+      "tags": {
+        "historic": "memorial",
+        "material": "reinforced_concrete",
+        "memorial": "bench"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13598209216,
+      "lat": 37.5768087,
+      "lon": -77.5384654,
+      "tags": {
+        "historic": "memorial",
+        "material": "concrete",
+        "memorial": "bench"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13598209219,
+      "lat": 37.5767003,
+      "lon": -77.5383937,
+      "tags": {
+        "historic": "memorial",
+        "material": "concrete",
+        "memorial": "bench"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13599643336,
+      "lat": 37.5575966,
+      "lon": -77.4625641,
+      "tags": {
+        "artist:website": "https://davidmeggshooke.com/",
+        "artist_name": "David “Meggs” Hooke",
+        "artwork_type": "mural",
+        "direction": "300",
+        "name": "A Pearl of Wisdom",
+        "start_date": "2014",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:The_Pig_and_Pearl.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13609366937,
+      "lat": 37.5269021,
+      "lon": -77.4174116,
+      "tags": {
+        "check_date": "2026-02-28",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149666",
+        "name": "Libby House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149666",
+        "wikimedia_commons": "File:Historic Richmond Foundation plaque of Libby House.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13614768825,
+      "lat": 37.5259734,
+      "lon": -77.4165948,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149667",
+        "name": "3013 Libby Terrace",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149667",
+        "wikimedia_commons": "File:3013 Libby Terrace.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13614768826,
+      "lat": 37.5259073,
+      "lon": -77.4164969,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=302041",
+        "name": "3015 Libby Terrace",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "302041",
+        "wikimedia_commons": "File:3015 Libby Terrace.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13614768827,
+      "lat": 37.5265091,
+      "lon": -77.4168243,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149668",
+        "name": "2916 Libby Terrace",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149668",
+        "wikimedia_commons": "File:HRF plaque 2916 Libby Terrace.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615520971,
+      "lat": 37.5260164,
+      "lon": -77.4164617,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Bloody Run",
+        "operator": "Preservation Virginia",
+        "operator:wikidata": "Q7241041",
+        "wikimedia_commons": "File:Bloody Run Plaque.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615585198,
+      "lat": 37.5280318,
+      "lon": -77.4170655,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "fixme": "missing wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2814 E. Franklin Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615585199,
+      "lat": 37.5281233,
+      "lon": -77.4172338,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "fixme": "missing wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2810 E. Franklin Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615585200,
+      "lat": 37.5291036,
+      "lon": -77.4188319,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "fixme": "missing wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149660",
+        "name": "2610 E. Franklin Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149660"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589401,
+      "lat": 37.529406,
+      "lon": -77.4193024,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149659",
+        "name": "Royster House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149659",
+        "wikimedia_commons": "File:Historic marker at Royster House in Richmond, VA.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589403,
+      "lat": 37.5297163,
+      "lon": -77.4199004,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149656",
+        "name": "2510 E. Franklin Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149656",
+        "wikimedia_commons": "file:Historic marker at 2510 E Franklin Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589404,
+      "lat": 37.5309667,
+      "lon": -77.4202994,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "fixme": "missing wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2407 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589405,
+      "lat": 37.5301973,
+      "lon": -77.4189431,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2519 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic markeon at 2519 E Grace St.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589406,
+      "lat": 37.5300489,
+      "lon": -77.4187066,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2601 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic plaque at 2601 E. Grace St.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589407,
+      "lat": 37.5294136,
+      "lon": -77.4171927,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "The Parsons House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historical marker at the Parsons House.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589408,
+      "lat": 37.5293752,
+      "lon": -77.4171293,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2712 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 2712 E Grace Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589409,
+      "lat": 37.5292814,
+      "lon": -77.4169741,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2718 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 2718 E Grace Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589410,
+      "lat": 37.5332373,
+      "lon": -77.4212384,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149673",
+        "name": "2200 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149673",
+        "wikimedia_commons": "File:Historic Marker at 2200 E. Broad St.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589411,
+      "lat": 37.5331339,
+      "lon": -77.4210178,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "fixme": "missing wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2204 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589412,
+      "lat": 37.5330552,
+      "lon": -77.4208786,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "fixme": "missing wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2210 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589413,
+      "lat": 37.5327293,
+      "lon": -77.4209049,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149677",
+        "name": "2215 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149677",
+        "wikimedia_commons": "File:Historic Marker at 2215 E. Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589414,
+      "lat": 37.5325592,
+      "lon": -77.4200917,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Burton-Farrar House",
+        "wikimedia_commons": "File:Burton-Farrar House plaque from National Register of Historic Places - 55126353074.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589415,
+      "lat": 37.5332872,
+      "lon": -77.4199115,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "fixme": "missing wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "315 N. 23rd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589416,
+      "lat": 37.5333226,
+      "lon": -77.419835,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "fixme": "missing wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "317 N. 23rd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589417,
+      "lat": 37.5335509,
+      "lon": -77.4194118,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Adams Row 2306 E. Marshall Street",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historic Marker at Adams Row 2306 E. Marshall Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589418,
+      "lat": 37.5334636,
+      "lon": -77.4192693,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Adams Row 2312 E. Marshall Street",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historic Marker at Adams Row 2312 E. Marshall Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589419,
+      "lat": 37.5334188,
+      "lon": -77.4191963,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Adams Row 2314 E. Marshall Street",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historic Marker at Adams Row 2314 E. Marshall Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589420,
+      "lat": 37.5333926,
+      "lon": -77.4191535,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Adams Row 2316 E. Marshall Street",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historic Marker at Adams Row 2316 E. Marshall Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589425,
+      "lat": 37.5344567,
+      "lon": -77.4159171,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=180203",
+        "name": "605 N. 25th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "180203",
+        "wikimedia_commons": "File:Historic Marker at 605 N. 25th Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615698239,
+      "lat": 37.527006,
+      "lon": -77.4173159,
+      "tags": {
+        "check_date": "2026-02-28",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149665",
+        "name": "5 North 29th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149665",
+        "wikimedia_commons": "File:5_North_29th_Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615830662,
+      "lat": 37.5295626,
+      "lon": -77.4077129,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "609 Chimborazo Boulevard",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 609 Chimborazo Boulevard, 2026-03-14.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245526,
+      "lat": 37.5282083,
+      "lon": -77.4129152,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=216540",
+        "name": "3108 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "216540",
+        "wikimedia_commons": "File:3108 E Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245527,
+      "lat": 37.5286698,
+      "lon": -77.4182088,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149664",
+        "name": "2708 E. Franklin Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149664",
+        "wikimedia_commons": "File:2708 E. Franklin Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245528,
+      "lat": 37.5286393,
+      "lon": -77.4181583,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149663",
+        "name": "2710 E. Franklin Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149663",
+        "wikimedia_commons": "File:2710 E. Franklin Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245529,
+      "lat": 37.528581,
+      "lon": -77.4185586,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2703 E Franklin Street",
+        "wikimedia_commons": "File:2703 E Franklin Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245530,
+      "lat": 37.5296451,
+      "lon": -77.4197771,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149635",
+        "name": "2514 E. Franklin Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149635",
+        "wikimedia_commons": "File:2514 E Franklin Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245531,
+      "lat": 37.529158,
+      "lon": -77.4194883,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2601 E. Franklin Street",
+        "wikimedia_commons": "File:2601 E. Franklin Street - 55126496175.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245532,
+      "lat": 37.5316142,
+      "lon": -77.4207294,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2310 E Grace Street",
+        "wikimedia_commons": "File:2310 E Grace Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245533,
+      "lat": 37.5317147,
+      "lon": -77.4209092,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Ann Carrington House",
+        "wikimedia_commons": "File:Ann Carrington House.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245534,
+      "lat": 37.5317325,
+      "lon": -77.4209002,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2306 E. Grace Street",
+        "wikimedia_commons": "File:2306 E. Grace Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245535,
+      "lat": 37.5318963,
+      "lon": -77.4212232,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Thomas Hardgrove Building",
+        "wikimedia_commons": "File:Thomas Hardgrove Building.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245536,
+      "lat": 37.5320876,
+      "lon": -77.4214873,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=235981",
+        "name": "2214-2220 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "235981",
+        "wikimedia_commons": "File:2218 E. Grace Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245538,
+      "lat": 37.532354,
+      "lon": -77.4219574,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=166011",
+        "name": "2204 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "166011",
+        "wikimedia_commons": "File:2204 E. Grace Street plaque from Historic Richmond.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245539,
+      "lat": 37.5321986,
+      "lon": -77.4217849,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=235983",
+        "name": "2210 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "235983",
+        "wikimedia_commons": "File:2210 E. Grace Street plaque from Historic Richmond.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245540,
+      "lat": 37.5327446,
+      "lon": -77.4218953,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "C.W. Hardwicke Carriage House",
+        "wikimedia_commons": "File:C.W. Hardwicke Carriage House plaque.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245541,
+      "lat": 37.5330805,
+      "lon": -77.421845,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=235984",
+        "name": "260 N. 22nd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "235984",
+        "wikimedia_commons": "File:260 N. 22nd Street plaque from Historic Richmond - 55126287623.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245542,
+      "lat": 37.5332905,
+      "lon": -77.4217129,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=235973",
+        "name": "2119 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "235973",
+        "wikimedia_commons": "File:2119 E. Broad Street plaque from Historic Richmond - 55126287673.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245543,
+      "lat": 37.533046,
+      "lon": -77.4213022,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149674",
+        "name": "2205 East Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149674",
+        "wikimedia_commons": "File:2205 East Broad Street plaque from Historic Richmond - 55125225262.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245544,
+      "lat": 37.5329382,
+      "lon": -77.4211237,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149676",
+        "name": "Miles Turpin House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149676",
+        "wikimedia_commons": "File:2209 East Broad Street - Miles Turpin House - 55126353054.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245545,
+      "lat": 37.5324328,
+      "lon": -77.4203222,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=67425",
+        "name": "2307 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "67425",
+        "wikimedia_commons": "File:2307 E. Broad Street plaque from Historic Richmond - 55125225267.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245546,
+      "lat": 37.5331617,
+      "lon": -77.4204019,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "308 N. 23rd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:308 N. 23rd Street plaque from Historic Richmond - 55126496395.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245547,
+      "lat": 37.5333126,
+      "lon": -77.4202656,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "312 N. 23rd",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:312 N. 23rd plaque from Historic Richmond.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245548,
+      "lat": 37.5334904,
+      "lon": -77.4200936,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "318 N. 23rd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:318 N. 23rd Street plaque from Historic Richmond.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245549,
+      "lat": 37.5334151,
+      "lon": -77.419754,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "321 N. 23rd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:321 N. 23rd Street plaque from Historic Richmond.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245550,
+      "lat": 37.5305474,
+      "lon": -77.4195242,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2505 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:2505 E. Grace Street plaque from Historic Richmond - 55126287773.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245551,
+      "lat": 37.5304501,
+      "lon": -77.4187992,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2516 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:2516 E. Grace Street plaque from Historic Richmond - 55126287803.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245552,
+      "lat": 37.5300645,
+      "lon": -77.4181964,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2608 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:2608 E. Grace Street plaque from Historic Richmond - 55126353154.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245553,
+      "lat": 37.5300262,
+      "lon": -77.4181342,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2610 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:2610 E. Grace Street plaque from Historic Richmond - 55126496495.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245554,
+      "lat": 37.52997,
+      "lon": -77.4180551,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Netherwood House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:2612 E. Grace Street Netherwood House plaque from Historic Richmond - 55126353174.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245555,
+      "lat": 37.5293024,
+      "lon": -77.4175317,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2709 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:2709 E. Grace Street plaque from Historic Richmond - 55126353179.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245556,
+      "lat": 37.5292626,
+      "lon": -77.4174677,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2711 East Grace Street",
+        "wikimedia_commons": "File:2711 East Grace Street plaque from Virginia Board of Historic Resources - 55126496520.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245557,
+      "lat": 37.5292092,
+      "lon": -77.4173559,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "fixme": "needs clearer wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2715 E. Grace",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:2715 E. Grace plaque from Historic Richmond - 55126287858.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245558,
+      "lat": 37.5295417,
+      "lon": -77.4167041,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149670",
+        "name": "208 North 28th",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149670",
+        "wikimedia_commons": "File:208 North 28th plaque from Historic Richmond - 55126353219.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245559,
+      "lat": 37.5295743,
+      "lon": -77.4166717,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149669",
+        "name": "210 N. 28th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149669",
+        "wikimedia_commons": "File:210 N. 28th Street plaque from Historic Richmond - 55126097661.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245560,
+      "lat": 37.5300879,
+      "lon": -77.4165664,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149671",
+        "name": "2715 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149671",
+        "wikimedia_commons": "File:2715 E. Broad Street plaque from Historic Richmond - 55126097696.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245561,
+      "lat": 37.5307207,
+      "lon": -77.4174581,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Gen'l Joseph L Johnston",
+        "wikimedia_commons": "File:Gen. Joseph L Johnston plaque from Confederate Memorial Literary Society - 55126353284.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245562,
+      "lat": 37.5311122,
+      "lon": -77.4166081,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Adams-Crump House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Adams-Crump House plaque from Historic Richmond.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245563,
+      "lat": 37.5310782,
+      "lon": -77.4166469,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Jackson Turpin House",
+        "wikimedia_commons": "File:Jackson Turpin House marker.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245564,
+      "lat": 37.5345376,
+      "lon": -77.415875,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "The J.M. Carter House",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:The J.M. Carter House plaque from National Register for Historic Places - 55126353319.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245565,
+      "lat": 37.5345915,
+      "lon": -77.4158158,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "The J.M. Carter House",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:The J.M. Carter House plaque from National Register for Historic Places - 55126287983.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13618355751,
+      "lat": 37.5265723,
+      "lon": -77.4102398,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "3406 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 3406 E. Broad Street, 2026-03-14.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13618355752,
+      "lat": 37.5288921,
+      "lon": -77.414051,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=216544",
+        "name": "3000 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "216544",
+        "wikimedia_commons": "File:Historical Marker at 3000 E. Broad St.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13618355753,
+      "lat": 37.5303188,
+      "lon": -77.4059741,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "720 N. 35th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 720 N. 35th Street, 2026-03-14.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13618518431,
+      "lat": 37.5299713,
+      "lon": -77.4073052,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "623 Chimborazo Boulevard",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 623 Chimborazo Boulevard, 2026-03-14.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13623872840,
+      "lat": 37.5362259,
+      "lon": -77.4114024,
+      "tags": {
+        "check_date": "2026-03-06",
+        "direction": "315",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "917 N 27th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13630474048,
+      "lat": 37.5316169,
+      "lon": -77.4100149,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "625 North 31st Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic_marker_at_625_N_31st_Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13630474049,
+      "lat": 37.5338243,
+      "lon": -77.4136536,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "315",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "635 North 27th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13630474050,
+      "lat": 37.5343584,
+      "lon": -77.4145808,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "315",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "625 North 26th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13630474051,
+      "lat": 37.5314656,
+      "lon": -77.4158811,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "315",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "403 North 27th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13630474052,
+      "lat": 37.5323259,
+      "lon": -77.4174416,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=256389",
+        "name": "2508 East Marshall Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "256389",
+        "wikimedia_commons": "File:Historic Marker at 2508 E. Marshall Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13630474053,
+      "lat": 37.5304787,
+      "lon": -77.4144015,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=256388",
+        "name": "2822 East Marshall Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "256388",
+        "wikimedia_commons": "File:Historical marker at 2822 E. Marshall Street, 2026-03-10.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13630474054,
+      "lat": 37.5295701,
+      "lon": -77.4134285,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=256385",
+        "name": "3001 East Marshall Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "256385",
+        "wikimedia_commons": "File:Historic Marker at 3001 E. Marshall Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13631363276,
+      "lat": 37.529827,
+      "lon": -77.4183442,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2611 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 2611 East Grace St.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13632907505,
+      "lat": 37.5300624,
+      "lon": -77.4115147,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Richardson's Drug Store",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 501 N 31st street, 2026-03-09.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058558,
+      "lat": 37.5287234,
+      "lon": -77.416544,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2813 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 2813 East Grace Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058559,
+      "lat": 37.5288037,
+      "lon": -77.4166753,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2809 E. Grace Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 2809 East Grace Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058560,
+      "lat": 37.5306279,
+      "lon": -77.4196176,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Adams Double House",
+        "wikimedia_commons": "File:Historic Marker on Adams Double House.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058561,
+      "lat": 37.5362877,
+      "lon": -77.4184869,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "270",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "613 N 22nd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 613 N 22nd Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058562,
+      "lat": 37.5360206,
+      "lon": -77.4188505,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "90",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "602 N 22nd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 602 N 22nd Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058563,
+      "lat": 37.5359614,
+      "lon": -77.4195775,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "180",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2108 E. Leigh Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 2108 East Leigh Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058564,
+      "lat": 37.5359538,
+      "lon": -77.4194864,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "180",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2110 E. Leigh Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 2110 E Leigh Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058565,
+      "lat": 37.536142,
+      "lon": -77.420104,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "125",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "522 N 21st Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 522 N 21st Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058566,
+      "lat": 37.5367428,
+      "lon": -77.4196537,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "290",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "605 N 21st Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 605 N 21st Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058567,
+      "lat": 37.5371878,
+      "lon": -77.4188571,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "20",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2109 Cedar Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 2109 Cedar Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058568,
+      "lat": 37.5371919,
+      "lon": -77.4186264,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "20",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2115 Cedar Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 2115 Cedar Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058569,
+      "lat": 37.5362291,
+      "lon": -77.4146104,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "135",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "802 N. 25th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058570,
+      "lat": 37.5341674,
+      "lon": -77.4136675,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "135",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "700 N. 27th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058571,
+      "lat": 37.5334321,
+      "lon": -77.4143811,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "135",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "606 N. 27th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058572,
+      "lat": 37.5330447,
+      "lon": -77.4147586,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "135",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "522 N. 27th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058573,
+      "lat": 37.5326498,
+      "lon": -77.4151311,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "135",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "506 N. 27th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058574,
+      "lat": 37.5322917,
+      "lon": -77.415131,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "315",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "501 N. 27th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058575,
+      "lat": 37.5281429,
+      "lon": -77.4133639,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=180192",
+        "name": "3101 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "180192",
+        "wikimedia_commons": "File:Historic marker at 3101 E. Broad St.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058576,
+      "lat": 37.5280324,
+      "lon": -77.4131359,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=180191",
+        "name": "3107 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "180191",
+        "wikimedia_commons": "File:Historic marker at 3107 E. Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13634058577,
+      "lat": 37.5277927,
+      "lon": -77.4093963,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "411 Chimborazo Boulevard",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 411 Chimborazo Boulevard, 2026-03-14.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13636183194,
+      "lat": 37.5325869,
+      "lon": -77.4162388,
+      "tags": {
+        "check_date": "2026-03-10",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "425 N. 26th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historical marker at 425 N 26th Street.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13636183195,
+      "lat": 37.5362527,
+      "lon": -77.4170926,
+      "tags": {
+        "check_date": "2026-03-10",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Hiram Oliver House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historical marker at Hiram Oliver House, 2026-03-10.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13636183196,
+      "lat": 37.5363796,
+      "lon": -77.4169907,
+      "tags": {
+        "check_date": "2026-03-10",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "705 N. 23rd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historic marker at 705 N. 23rd Street, 2026-03-10.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321239,
+      "lat": 37.5280291,
+      "lon": -77.4163139,
+      "tags": {
+        "check_date": "2023-02-18",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Myrtle Terrace",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historical Marker at Myrtle Terrace.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321240,
+      "lat": 37.5286233,
+      "lon": -77.4186426,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "The Pulliam House",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historic Marker at The Pulliam House.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321241,
+      "lat": 37.5318219,
+      "lon": -77.4210785,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Hilary Baker House",
+        "operator": "Association for the Preservation of Virginia Antiquities",
+        "operator:wikidata": "Q7241041",
+        "wikimedia_commons": "File:Historic marker at Hilary Baker House.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321242,
+      "lat": 37.5262503,
+      "lon": -77.4097301,
+      "tags": {
+        "check_date": "2026-03-03",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=180195",
+        "name": "3420 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "180195",
+        "wikimedia_commons": "File:Historic Marker at 3420 East Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321243,
+      "lat": 37.528717,
+      "lon": -77.4142618,
+      "tags": {
+        "check_date": "2023-02-18",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=216541",
+        "name": "3001 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "216541",
+        "wikimedia_commons": "File:Historical Marker at 3001 E. Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321244,
+      "lat": 37.5285366,
+      "lon": -77.4139625,
+      "tags": {
+        "check_date": "2021-08-21",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=180190",
+        "name": "3009 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "180190",
+        "wikimedia_commons": "File:Historical Marker at 3009 E. Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321245,
+      "lat": 37.5288703,
+      "lon": -77.4145246,
+      "tags": {
+        "check_date": "2023-02-18",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=216575",
+        "name": "2917 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "216575",
+        "wikimedia_commons": "File:Historical Marker at 2917 E. Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321246,
+      "lat": 37.5291804,
+      "lon": -77.4145041,
+      "tags": {
+        "check_date": "2023-02-18",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=216577",
+        "name": "2910 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "216577",
+        "wikimedia_commons": "File:Historical Marker at 2910 E. Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321247,
+      "lat": 37.5298729,
+      "lon": -77.4156883,
+      "tags": {
+        "check_date": "2023-02-18",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=216584",
+        "name": "2808 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "216584",
+        "wikimedia_commons": "File:Historic Marker at 2808 East Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321248,
+      "lat": 37.5337623,
+      "lon": -77.4220245,
+      "tags": {
+        "check_date": "2023-11-10",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=235972",
+        "name": "2106 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "235972",
+        "wikimedia_commons": "File:Historic Marker at 2106 E. Broad Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857190,
+      "lat": 37.5336151,
+      "lon": -77.4195166,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Adams Row 2302 E. Marshall Street",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historical Marker at Adams Row 2302 East Marshall Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857191,
+      "lat": 37.5334806,
+      "lon": -77.4192972,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Adams Row 2310 E. Marshall Street",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historic Marker at Adams Row 2310 E. Marshall Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857192,
+      "lat": 37.5298703,
+      "lon": -77.414929,
+      "tags": {
+        "check_date": "2016-07-02",
+        "direction": "135",
+        "fixme": "needs Wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "The Lewis Doughty House"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857193,
+      "lat": 37.532795,
+      "lon": -77.4175167,
+      "tags": {
+        "check_date": "2026-03-10",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=236003",
+        "name": "411 N. 25th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "236003",
+        "wikimedia_commons": "File:Historic Marker at 411 N. 25th Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857194,
+      "lat": 37.5337539,
+      "lon": -77.4179945,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=236004",
+        "name": "2401 E. Clay Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "236004",
+        "wikimedia_commons": "File:Historic Marker at 2401 E. Clay Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857195,
+      "lat": 37.5340524,
+      "lon": -77.4191571,
+      "tags": {
+        "check_date": "2023-11-10",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=235989",
+        "name": "411 N. 23rd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "235989",
+        "wikimedia_commons": "File:Historic Marker at 411 N. 23rd Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857196,
+      "lat": 37.5343389,
+      "lon": -77.4192788,
+      "tags": {
+        "check_date": "2023-11-10",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=235986",
+        "name": "414 N. 23rd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "235986",
+        "wikimedia_commons": "File:Historic Marker at 414 N. 23rd Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857197,
+      "lat": 37.5344496,
+      "lon": -77.4191724,
+      "tags": {
+        "check_date": "2023-11-10",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=235987",
+        "name": "420 N. 23rd Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "235987",
+        "wikimedia_commons": "File:Historic Marker at 420 N. 23rd Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857198,
+      "lat": 37.5359729,
+      "lon": -77.420503,
+      "tags": {
+        "check_date": "2024-09-07",
+        "direction": "180",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=256384",
+        "name": "2014 Princess Anne Avenue",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "256384",
+        "wikimedia_commons": "File:Historic Marker at 2014 Princess Anne Avenue.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857199,
+      "lat": 37.5359716,
+      "lon": -77.4203787,
+      "tags": {
+        "check_date": "2024-09-07",
+        "direction": "180",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=256383",
+        "name": "2018 Princess Anne Avenue",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "256383",
+        "wikimedia_commons": "File:Historic Marker at 2418 Princess Anne Avenue.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857200,
+      "lat": 37.5333658,
+      "lon": -77.4150773,
+      "tags": {
+        "check_date": "2019-05-11",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Elliott House",
+        "wikimedia_commons": "File:Historic Marker at Elliott House 2609 E. Leigh Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645862301,
+      "lat": 37.5321905,
+      "lon": -77.4126843,
+      "tags": {
+        "check_date": "2016-07-02",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=133686",
+        "name": "600 N. 29th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "133686",
+        "wikimedia_commons": "File:Historic Marker at 600 N. 29th St.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645862302,
+      "lat": 37.5325805,
+      "lon": -77.4166321,
+      "tags": {
+        "check_date": "2026-03-10",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "416 N. 26th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historical marker at 416 N 26th St.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645862303,
+      "lat": 37.5339593,
+      "lon": -77.4167599,
+      "tags": {
+        "check_date": "2026-03-10",
+        "direction": "135",
+        "fixme": "needs Wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "514 N. 25th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645862304,
+      "lat": 37.5341593,
+      "lon": -77.415945,
+      "tags": {
+        "check_date": "2026-03-10",
+        "direction": "225",
+        "fixme": "needs Wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2506 E. Leigh St.",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645862305,
+      "lat": 37.5341301,
+      "lon": -77.4158966,
+      "tags": {
+        "check_date": "2026-03-10",
+        "direction": "225",
+        "fixme": "needs Wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2508 E. Leigh St.",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13646021692,
+      "lat": 37.5442748,
+      "lon": -77.4526098,
+      "tags": {
+        "artist_name": "NILS",
+        "artwork_type": "mural",
+        "description": "Topless Woman",
+        "name": "Icarus Fallen",
+        "note": "Behind building. West wall",
+        "tourism": "artwork",
+        "website": "https://www.nilswestergard.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658855185,
+      "lat": 37.5486283,
+      "lon": -77.4637094,
+      "tags": {
+        "artist_name": "David Marion, MeMe",
+        "artwork_type": "mural",
+        "inscription": "Water Rights For All",
+        "name": "Silence Isn't Golden",
+        "note": "East Wall",
+        "start_date": "2020",
+        "tourism": "artwork",
+        "website": "https://www.mendingwallsrva.com/walls/water-rights-for-all"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658880381,
+      "lat": 37.5604514,
+      "lon": -77.4760402,
+      "tags": {
+        "artist_name": "Steve Hedberg",
+        "artwork_type": "mural",
+        "name": "The Roots of Richmond",
+        "note": "West wall",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658881408,
+      "lat": 37.5443521,
+      "lon": -77.4387386,
+      "tags": {
+        "artist_name": "Noah Scalin, Alfonso Perez",
+        "artwork_type": "mural",
+        "name": "Together We Rise",
+        "note": "South (Back) Wall",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658908095,
+      "lat": 37.5713961,
+      "lon": -77.4338032,
+      "tags": {
+        "artist:website": "https://www.auzmiles.com",
+        "artist_name": "Auz Miles",
+        "artwork_type": "mural",
+        "name": "I Can Because I Said So",
+        "note": "West Wall",
+        "start_date": "2020",
+        "tourism": "artwork",
+        "website": "https://www.auzmiles.com/murals?pgid=kjtbvls12-33eaa23c-712c-4059-a6c7-6d460ac17cfd",
+        "wikimedia_commons": "File:Mural on 23 W Brookland Park Boulevard, Richmond, Virginia.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658908505,
+      "lat": 37.5717524,
+      "lon": -77.4356421,
+      "tags": {
+        "artist_name": "Silly Genius",
+        "artwork_type": "mural",
+        "name": "Happy Children",
+        "note": "West Wall",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658910260,
+      "lat": 37.5717588,
+      "lon": -77.4349737,
+      "tags": {
+        "artwork_type": "mural",
+        "name": "Brookland Park Blvd at Ninja Kombucha",
+        "note": "West Wall",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658911353,
+      "lat": 37.5715408,
+      "lon": -77.4323922,
+      "tags": {
+        "artwork_type": "mural",
+        "name": "Hope",
+        "note": "South Wall",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13666091333,
+      "lat": 37.5482297,
+      "lon": -77.4708183,
+      "tags": {
+        "artist_name": "Noah Scalin",
+        "artwork_type": "sculpture",
+        "material": "steel",
+        "name": "Cardinal Points",
+        "start_date": "2026-02-13",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13676646947,
+      "lat": 37.5156307,
+      "lon": -77.454841,
+      "tags": {
+        "historic": "memorial",
+        "inscription": "Here rest more than one hundred South Carolina soldiers who died in the hospital in Manchester VA. 1861-1865 Elliot Grays Chapter United Daughters of the Confederacy Erected October 6, 1939",
+        "material": "stone",
+        "memorial": "war_memorial",
+        "start_date": "1939-10-06"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13682257168,
+      "lat": 37.5628946,
+      "lon": -77.466169,
+      "tags": {
+        "artwork_type": "sculpture",
+        "material": "granite",
+        "name": "Kugel",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13705985480,
+      "lat": 37.5305064,
+      "lon": -77.4167488,
+      "tags": {
+        "check_date": "2026-04-04",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "T. Wiley Davis House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:2700_E_Broad_St_Historic_Richmond_plaque.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13706073070,
+      "lat": 37.5301958,
+      "lon": -77.4157288,
+      "tags": {
+        "check_date": "2026-04-04",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "305 N. 28th St.",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:305_N_28th_St_plaque_from_Historic_Richmond.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13816475479,
+      "lat": 37.5307339,
+      "lon": -77.4175074,
+      "tags": {
+        "check_date": "2026-05-09",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2613 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 2613 E Broad St, 2026-05-09.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13816475480,
+      "lat": 37.5296679,
+      "lon": -77.4157828,
+      "tags": {
+        "check_date": "2026-05-09",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "2811 E. Broad Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 2811 E Broad St, 2026-05-09.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13816475481,
+      "lat": 37.528442,
+      "lon": -77.4120143,
+      "tags": {
+        "check_date": "2026-05-09",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "314 N. 32nd St",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 314 N 32nd St, 2026-05-09.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13816475482,
+      "lat": 37.529499,
+      "lon": -77.4110189,
+      "tags": {
+        "check_date": "2026-05-09",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "426 N. 32nd St",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 426 N 32nd St, 2026-05-09.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13901460039,
+      "lat": 37.531251,
+      "lon": -77.4107633,
+      "tags": {
+        "check_date": "2026-31-05",
+        "direction": "135",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "606 N. 31st Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13901460040,
+      "lat": 37.5312774,
+      "lon": -77.4103472,
+      "tags": {
+        "check_date": "2026-31-05",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "611 N. 31st Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:611_N_31st_St_historical_marker.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13901460041,
+      "lat": 37.5310964,
+      "lon": -77.4109101,
+      "tags": {
+        "check_date": "2026-31-05",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "600 N. 31st Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:600_N_31st_St_historical_marker.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13908007193,
+      "lat": 37.5365237,
+      "lon": -77.415337,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "225",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "801 N 24th St",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13908007194,
+      "lat": 37.5344826,
+      "lon": -77.4172893,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "315",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "517 N 24th St",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13908007195,
+      "lat": 37.5358085,
+      "lon": -77.4135579,
+      "tags": {
+        "check_date": "2026-06-03",
+        "direction": "135",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "810 N 26th St",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historical_marker_at_810_N_26th_Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13909825733,
+      "lat": 37.5340052,
+      "lon": -77.4148747,
+      "tags": {
+        "check_date": "2026-06-03",
+        "direction": "315",
+        "fixme": "needs wikimedia photo",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "611 North 26th Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13915751435,
+      "lat": 37.5273246,
+      "lon": -77.4097418,
+      "tags": {
+        "check_date": "2026-06-05",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "3403 E. Marshall Street",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historical marker at 3403 E Marshall St.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13919159240,
+      "lat": 37.5339513,
+      "lon": -77.4201006,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=235985",
+        "name": "2214 E. Marshall St.",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "235985",
+        "wikimedia_commons": "File:Photo759526o.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13969039809,
+      "lat": 37.5983766,
+      "lon": -77.4684059,
+      "tags": {
+        "name": "Young's Spring",
+        "natural": "spring"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13978497119,
+      "lat": 37.5368446,
+      "lon": -77.4367679,
+      "tags": {
+        "artist:website": "https://phillipssculpture.com/",
+        "artist_name": "David Phillips",
+        "artwork_subject": "A briefcase, calculator, and fedora",
+        "artwork_type": "sculpture",
+        "material": "bronze",
+        "name": "The Case of the Missing Executive",
+        "start_date": "1985-05-13",
+        "tourism": "artwork",
+        "wikidata": "Q141130946"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13978497121,
+      "lat": 37.5365941,
+      "lon": -77.4361061,
+      "tags": {
+        "amenity": "clock",
+        "artist_name": "Koninkiijke Eijsbouts",
+        "artwork_type": "architecture",
+        "description": "A 45-foot limestown tower featuring a clock, 25 bells, and sculptures of bronze canal bargemen that rotate every 15 minutes.",
+        "display": "analog",
+        "faces": "3",
+        "man_made": "tower",
+        "material": "stone",
+        "name": "Boatman's Tower",
+        "start_date": "1987",
+        "tourism": "artwork",
+        "tower:type": "bell_tower"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13993023412,
+      "lat": 37.557734,
+      "lon": -77.4742845,
+      "tags": {
+        "artist_name": "Tessa Pullan",
+        "artwork_type": "statue",
+        "historic": "memorial",
+        "inscription": "In memory of the one and one half million horses and mules of the Confederate and Union armies who were killed, were wounded or died from disease in the Civil War.",
+        "material": "bronze",
+        "memorial": "statue",
+        "name": "The War Horse",
+        "start_date": "1997-09-17",
+        "subject:wikidata": "Q726",
+        "subject:wikipedia": "en:Horse",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14077416778,
+      "lat": 37.5613166,
+      "lon": -77.4666302,
+      "tags": {
+        "artwork_type": "statue",
+        "name": "Spinosaurus Aegyptiacus",
+        "panoramax": "0ae766fb-9ff3-4f2b-ae07-d34681fd07a9",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14087716103,
+      "lat": 37.5622208,
+      "lon": -77.4292943,
+      "tags": {
+        "drinking_water:legal": "no",
+        "name": "Mitchell Spring",
+        "natural": "spring"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 12435112,
+      "center": {
+        "lat": 37.539217,
+        "lon": -77.4962354
+      },
+      "tags": {
+        "layer": "1",
+        "man_made": "bridge",
+        "name": "Powhite Parkway Bridge",
+        "type": "multipolygon",
+        "wikidata": "Q14713096",
+        "wikipedia": "en:Powhite Parkway Bridge"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 16271271,
+      "center": {
+        "lat": 37.5307285,
+        "lon": -77.4507725
+      },
+      "tags": {
+        "layer": "2",
+        "man_made": "bridge",
+        "name": "Robert E. Lee Memorial Bridge",
+        "name:etymology": "Robert E. Lee",
+        "name:etymology:wikidata": "Q165557",
+        "name:etymology:wikipedia": "en:Robert E. Lee",
+        "type": "multipolygon",
+        "wikidata": "Q7343851"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76167516,
+      "center": {
+        "lat": 37.5344269,
+        "lon": -77.4426005
+      },
+      "tags": {
+        "access": "private",
+        "handrail": "yes",
+        "highway": "steps",
+        "incline": "down",
+        "name": "Canal Walk",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "ramp": "no",
+        "step_count": "17",
+        "surface": "concrete"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76211910,
+      "center": {
+        "lat": 37.5243347,
+        "lon": -77.4696449
+      },
+      "tags": {
+        "highway": "steps",
+        "name": "Reedy Creek Trail",
+        "surface": "ground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76227376,
+      "center": {
+        "lat": 37.525011,
+        "lon": -77.4563338
+      },
+      "tags": {
+        "highway": "steps",
+        "name": "22nd Street Pedestrian Stairs",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "concrete"
+      }
+    },
+    {
+      "type": "way",
+      "id": 167824983,
+      "center": {
+        "lat": 37.5271214,
+        "lon": -77.4393485
+      },
+      "tags": {
+        "bicycle": "yes",
+        "foot": "yes",
+        "highway": "steps",
+        "motor_vehicle": "no",
+        "name": "Manchester Floodwall Walk",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "concrete"
+      }
+    },
+    {
+      "type": "way",
+      "id": 167824987,
+      "center": {
+        "lat": 37.5270572,
+        "lon": -77.4390739
+      },
+      "tags": {
+        "bicycle": "yes",
+        "foot": "yes",
+        "highway": "steps",
+        "motor_vehicle": "no",
+        "name": "Manchester Floodwall Walk",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "concrete"
+      }
+    },
+    {
+      "type": "way",
+      "id": 294031479,
+      "center": {
+        "lat": 37.5325089,
+        "lon": -77.4344672
+      },
+      "tags": {
+        "bicycle": "no",
+        "foot": "yes",
+        "highway": "steps",
+        "name": "Pipeline Trail",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539"
+      }
+    },
+    {
+      "type": "way",
+      "id": 296545526,
+      "center": {
+        "lat": 37.530505,
+        "lon": -77.4642599
+      },
+      "tags": {
+        "bicycle": "no",
+        "foot": "yes",
+        "highway": "steps",
+        "incline": "down",
+        "name": "North Bank Trail",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "ground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 303800625,
+      "center": {
+        "lat": 37.5242666,
+        "lon": -77.4570236
+      },
+      "tags": {
+        "bicycle": "dismount",
+        "foot": "yes",
+        "highway": "steps",
+        "name": "Buttermilk Connector",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "sidewalk": "none",
+        "surface": "dirt"
+      }
+    },
+    {
+      "type": "way",
+      "id": 305179078,
+      "center": {
+        "lat": 37.524602,
+        "lon": -77.4564536
+      },
+      "tags": {
+        "bicycle": "dismount",
+        "foot": "yes",
+        "highway": "steps",
+        "name": "Buttermilk Connector",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "sidewalk": "none",
+        "surface": "dirt"
+      }
+    },
+    {
+      "type": "way",
+      "id": 369177609,
+      "center": {
+        "lat": 37.5886735,
+        "lon": -77.4460167
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "4515",
+        "addr:postcode": "23222",
+        "addr:street": "North Avenue",
+        "building": "water_tower",
+        "communication:mobile_phone": "yes",
+        "man_made": "water_tower",
+        "name": "Ginter Park Elevated Tank",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q29093055"
+      }
+    },
+    {
+      "type": "way",
+      "id": 561126205,
+      "center": {
+        "lat": 37.5908005,
+        "lon": -77.4963808
+      },
+      "tags": {
+        "area": "yes",
+        "man_made": "pier",
+        "name": "Libbie Landing"
+      }
+    },
+    {
+      "type": "way",
+      "id": 603735933,
+      "center": {
+        "lat": 37.6241399,
+        "lon": -77.5871054
+      },
+      "tags": {
+        "bench": "yes",
+        "man_made": "pier",
+        "name": "Fishing Dock",
+        "trash": "yes"
+      }
+    },
+    {
+      "type": "way",
+      "id": 658621480,
+      "center": {
+        "lat": 37.5395159,
+        "lon": -77.4339714
+      },
+      "tags": {
+        "area": "yes",
+        "artwork_type": "statue",
+        "historic": "memorial",
+        "name": "Virginia Washington Monument",
+        "ref:nhrp": "03001421",
+        "ref:vlr": "127-0189",
+        "tourism": "artwork",
+        "wikidata": "Q7934655",
+        "wikipedia": "en:Virginia Washington Monument"
+      }
+    },
+    {
+      "type": "way",
+      "id": 710713202,
+      "center": {
+        "lat": 37.5534329,
+        "lon": -77.42752
+      },
+      "tags": {
+        "layer": "1",
+        "man_made": "bridge",
+        "name": "Fifth Street Viaduct",
+        "wikidata": "Q5447555",
+        "wikipedia": "en:Fifth Street Viaduct"
+      }
+    },
+    {
+      "type": "way",
+      "id": 745211335,
+      "center": {
+        "lat": 37.4840497,
+        "lon": -77.4790325
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "building": "water_tower",
+        "man_made": "water_tower",
+        "name": "Warwick Road Elevated Tank",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q29093055"
+      }
+    },
+    {
+      "type": "way",
+      "id": 745219952,
+      "center": {
+        "lat": 37.5077986,
+        "lon": -77.4790558
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "4000",
+        "addr:postcode": "23224",
+        "addr:street": "Midlothian Turnpike",
+        "building": "water_tower",
+        "man_made": "water_tower",
+        "name": "Woodside Elevated Tank",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q29093055",
+        "utility": "water"
+      }
+    },
+    {
+      "type": "way",
+      "id": 753726460,
+      "center": {
+        "lat": 37.5338691,
+        "lon": -77.3952511
+      },
+      "tags": {
+        "historic": "memorial",
+        "memorial": "obelisk"
+      }
+    },
+    {
+      "type": "way",
+      "id": 760798848,
+      "center": {
+        "lat": 37.5365848,
+        "lon": -77.5226495
+      },
+      "tags": {
+        "building": "water_tower",
+        "man_made": "water_tower",
+        "name": "Stratford Hills Elevated Tank",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q29093055",
+        "utility": "water"
+      }
+    },
+    {
+      "type": "way",
+      "id": 761043823,
+      "center": {
+        "lat": 37.47461,
+        "lon": -77.4301385
+      },
+      "tags": {
+        "area": "yes",
+        "artwork_type": "statue",
+        "name": "The Giant Cigarette",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 762180177,
+      "center": {
+        "lat": 37.5056526,
+        "lon": -77.5241047
+      },
+      "tags": {
+        "building": "water_tower",
+        "man_made": "water_tower",
+        "name": "Hioaks Elevated Tank",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q29093055",
+        "utility": "water"
+      }
+    },
+    {
+      "type": "way",
+      "id": 916263806,
+      "center": {
+        "lat": 37.5363554,
+        "lon": -77.493687
+      },
+      "tags": {
+        "layer": "1",
+        "man_made": "bridge",
+        "name": "CSX A-Line Bridge",
+        "wikidata": "Q5014431",
+        "wikipedia": "en:CSX A-Line Bridge"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1123145238,
+      "center": {
+        "lat": 37.5329443,
+        "lon": -77.4325184
+      },
+      "tags": {
+        "highway": "steps",
+        "name": "Canal Walk",
+        "surface": "paved"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1197168808,
+      "center": {
+        "lat": 37.5394561,
+        "lon": -77.4344725
+      },
+      "tags": {
+        "area": "yes",
+        "artist_name": "StudioEIS",
+        "artwork_type": "statue",
+        "historic": "memorial",
+        "material": "bronze",
+        "name": "Virginia Women's Monument",
+        "start_date": "2018-10-31",
+        "tourism": "artwork",
+        "wikidata": "Q96414039"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1226808444,
+      "center": {
+        "lat": 37.5338635,
+        "lon": -77.4352615
+      },
+      "tags": {
+        "highway": "steps",
+        "name": "Canal Walk"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1227359257,
+      "center": {
+        "lat": 37.5320431,
+        "lon": -77.4286793
+      },
+      "tags": {
+        "bridge:structure": "beam",
+        "layer": "1",
+        "man_made": "bridge",
+        "name": "CSX Bellwood Subdivision James River Bridge",
+        "wikidata": "Q5014434",
+        "wikipedia": "en:CSX Bellwood Subdivision James River Bridge"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1417444939,
+      "center": {
+        "lat": 37.5818482,
+        "lon": -77.5406829
+      },
+      "tags": {
+        "highway": "steps",
+        "name": "Connecting Lodge Footpath"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1419750362,
+      "center": {
+        "lat": 37.5304889,
+        "lon": -77.4642188
+      },
+      "tags": {
+        "bicycle": "no",
+        "foot": "yes",
+        "handrail": "no",
+        "highway": "steps",
+        "incline": "up",
+        "name": "North Bank Trail",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "ground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1419750365,
+      "center": {
+        "lat": 37.5304975,
+        "lon": -77.4641441
+      },
+      "tags": {
+        "bicycle": "no",
+        "foot": "yes",
+        "highway": "steps",
+        "name": "North Bank Trail",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "ground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1419750366,
+      "center": {
+        "lat": 37.5304964,
+        "lon": -77.4641247
+      },
+      "tags": {
+        "bicycle": "no",
+        "foot": "yes",
+        "highway": "steps",
+        "name": "North Bank Trail",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "step_count": "2"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481952846,
+      "center": {
+        "lat": 37.5443138,
+        "lon": -77.4527511
+      },
+      "tags": {
+        "artist:wikidata": "Q7620234",
+        "artist_name": "Stormie Mills",
+        "artwork_type": "mural",
+        "name": "Black and White Man Boxing",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481952849,
+      "center": {
+        "lat": 37.5484501,
+        "lon": -77.4492858
+      },
+      "tags": {
+        "artist:wikidata": "Q20713848",
+        "artist_name": "Remi Rough",
+        "artwork_type": "mural",
+        "name": "Visual Symphony",
+        "start_date": "2017",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481952850,
+      "center": {
+        "lat": 37.5514699,
+        "lon": -77.4474949
+      },
+      "tags": {
+        "artwork_type": "mural",
+        "name": "Peppermint Butler",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481969851,
+      "center": {
+        "lat": 37.5481098,
+        "lon": -77.4612883
+      },
+      "tags": {
+        "artist:website": "http://nilswestergard.com/",
+        "artist:wikidata": "Q114890636",
+        "artist_name": "Nils",
+        "artwork_type": "mural",
+        "name": "Ships in the Night",
+        "start_date": "2018",
+        "tourism": "artwork",
+        "website": "https://www.nilswestergard.com/street/2019/3/20/sz1ipppc6c9yvt0lfjh5ib173g9weh"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481981173,
+      "center": {
+        "lat": 37.5669865,
+        "lon": -77.4763855
+      },
+      "tags": {
+        "artist_name": "Nils Westergard;Silly Genius",
+        "artwork_type": "mural",
+        "description": "This mural centers a portrait of Richmond’s rapper & emcee, Radio Blitz, with his hands raised, his gaze upward, and surrounded by the names of those whose lives were unjustly taken.",
+        "name": "Say Their Names",
+        "start_date": "2020-07-17",
+        "tourism": "artwork",
+        "website": "https://www.mendingwallsrva.com/walls/say-their-names"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481983457,
+      "center": {
+        "lat": 37.5669912,
+        "lon": -77.4756241
+      },
+      "tags": {
+        "artist:website": "https://www.thenightowlwashere.com/murals",
+        "artist_name": "The Night Owl",
+        "artwork_type": "mural",
+        "description": "Bernie Sanders dancing, in a blue suit",
+        "name": "Bernie",
+        "start_date": "2016-04-05",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:Feel_the_Bern.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481985613,
+      "center": {
+        "lat": 37.5396712,
+        "lon": -77.4238551
+      },
+      "tags": {
+        "artist:website": "https://woesmartin.bigcartel.com/",
+        "artist_name": "Woes Martin",
+        "artwork_type": "mural",
+        "name": "GRIZZLY",
+        "start_date": "2013",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:Bear_mural_by_Woes.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481986496,
+      "center": {
+        "lat": 37.5483959,
+        "lon": -77.4603025
+      },
+      "tags": {
+        "artist:wikidata": "Q114890636",
+        "artist_name": "Nils Westergard",
+        "artwork_type": "mural",
+        "name": "Within",
+        "start_date": "2015-07-23",
+        "tourism": "artwork",
+        "website": "https://www.nilswestergard.com/street/2015/7/23/within"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482075379,
+      "center": {
+        "lat": 37.5479418,
+        "lon": -77.4604858
+      },
+      "tags": {
+        "artist:wikidata": "Q114890636",
+        "artist_name": "Nils Westergard",
+        "artwork_type": "mural",
+        "name": "Happy Puppy (FETCH-A-CURE)",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482254159,
+      "center": {
+        "lat": 37.5325865,
+        "lon": -77.4252257
+      },
+      "tags": {
+        "artist:website": "https://www.amiri.life/about;https://www.herrsuite.com/",
+        "artist_name": "Amiri Richardson-Keys;Emily Herr",
+        "artwork_type": "mural",
+        "description": "Two figures, one representing Solomon Northup and one representing Jacob Blake, constructed out of fish native to the James River",
+        "name": "I Can't Breathe",
+        "start_date": "September 7th, 2020",
+        "tourism": "artwork",
+        "website": "https://www.mendingwallsrva.com/walls/i-can-t-breathe/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482260262,
+      "center": {
+        "lat": 37.5314459,
+        "lon": -77.4188345
+      },
+      "tags": {
+        "advertising": "wall_painting",
+        "artwork_type": "mural",
+        "name": "Uneeda Biscuit ghost sign",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:2501_E_Broad_St.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482292129,
+      "center": {
+        "lat": 37.5606162,
+        "lon": -77.4755388
+      },
+      "tags": {
+        "artist:website": "https://www.nilswestergard.com/",
+        "artist:wikidata": "Q114890636",
+        "artist:wikipedia": "nl:Nils_Westergard",
+        "artist_name": "Nils Westergard",
+        "artwork_type": "mural",
+        "name": "Girl with phone",
+        "start_date": "2016-04-04",
+        "tourism": "artwork",
+        "website": "https://www.nilswestergard.com/2016/4/4/girl-with-phone",
+        "wikimedia_commons": "File:Mural_by_Nils_(25590272584).jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482311468,
+      "center": {
+        "lat": 37.5505869,
+        "lon": -77.4533268
+      },
+      "tags": {
+        "artist:website": "https://www.nilswestergard.com/",
+        "artist:wikidata": "Q114890636",
+        "artist:wikipedia": "nl:Nils_Westergard",
+        "artist_name": "Nils Westergard",
+        "artwork_type": "mural",
+        "description": "Black and white head and shoulders of a man with beard wearding a baseball cap. Area around the eyes is tinted blue.",
+        "name": "Chris",
+        "start_date": "2013",
+        "tourism": "artwork",
+        "website": "https://www.nilswestergard.com/street/gfiookldagncq9gntzshzfr9vk4f5p",
+        "wikimedia_commons": "File:Virginia_(20401200194).jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482324290,
+      "center": {
+        "lat": 37.552786,
+        "lon": -77.4773225
+      },
+      "tags": {
+        "artist:website": "https://www.nilswestergard.com/",
+        "artist:wikidata": "Q114890636",
+        "artist:wikipedia": "nl:Nils_Westergard",
+        "artist_name": "Nils Westergard",
+        "artwork_type": "mural",
+        "description": "Mural of a man in brick-wall-patterned hoodie by Nils Westergard. \"Bricks\", part of the \"Aesop's Fables\" series.",
+        "name": "Bricks",
+        "start_date": "2020",
+        "tourism": "artwork",
+        "website": "https://www.nilswestergard.com/bricks",
+        "wikimedia_commons": "File:Alley_Mural_by_Nils_Westergard.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482362873,
+      "center": {
+        "lat": 37.5418389,
+        "lon": -77.4135065
+      },
+      "tags": {
+        "artist:website": "https://whosham.com",
+        "artist_name": "Hamilton Glass",
+        "artwork_type": "mural",
+        "name": "Think",
+        "start_date": "2018",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:Mural by Hamilton Glass in Richmond, Virginia.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1483080205,
+      "center": {
+        "lat": 37.5505082,
+        "lon": -77.4527265
+      },
+      "tags": {
+        "artist_name": "Marshall Higgins;Brad Bacon Art",
+        "artwork_subject": "Art materials",
+        "artwork_type": "mural",
+        "name": "Plaza Art",
+        "start_date": "2016",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:New_Plaza_Art_Mural.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1483082737,
+      "center": {
+        "lat": 37.5576006,
+        "lon": -77.4625604
+      },
+      "tags": {
+        "artist:website": "https://davidmeggshooke.com/",
+        "artist_name": "David “Meggs” Hooke",
+        "artwork_type": "mural",
+        "name": "A Pearl of Wisdom",
+        "start_date": "2014",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:The_Pig_and_Pearl.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1483876387,
+      "center": {
+        "lat": 37.5636564,
+        "lon": -77.4547816
+      },
+      "tags": {
+        "artist_name": "The Night Owl;Ed Trask",
+        "artwork_type": "mural",
+        "name": "Sports Are Life",
+        "start_date": "2015",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1483876388,
+      "center": {
+        "lat": 37.5505327,
+        "lon": -77.4692514
+      },
+      "tags": {
+        "artist_name": "The Night Owl",
+        "artwork_type": "mural",
+        "description": "Curvy white fantastical mountains with cairns on red background",
+        "name": "Michael Ramey Tribute",
+        "start_date": "2025-05-08",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1483877196,
+      "center": {
+        "lat": 37.5693311,
+        "lon": -77.4547611
+      },
+      "tags": {
+        "artist:website": "https://whosham.com/",
+        "artist_name": "Hamilton Glass",
+        "artwork_type": "mural",
+        "description": "A teddy bear, colorful household objects, and abstract shapes",
+        "name": "Welcoming Your Teddy Bears and Other Contributions",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1484770948,
+      "center": {
+        "lat": 37.5345433,
+        "lon": -77.4272478
+      },
+      "tags": {
+        "artist:website": "https://www.aryz.es/",
+        "artist:wikidata": "Q76446647",
+        "artist_name": "Aryz",
+        "artwork_type": "mural",
+        "description": "Colorful fruits and vegetables on the ground",
+        "name": "Fruits and Veggies",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1484771673,
+      "center": {
+        "lat": 37.548799,
+        "lon": -77.4644189
+      },
+      "tags": {
+        "artist_name": "Nico Cathcart;Monty Montgomery",
+        "artwork_type": "mural",
+        "name": "Brown Ballerinas for Change",
+        "tourism": "artwork",
+        "website": "https://www.nicocathcart.com/muralportfolio?pgid=jt0ajgnx-abe6236f-e720-4f75-aeec-6e3ad87c0185"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1484771674,
+      "center": {
+        "lat": 37.6146378,
+        "lon": -77.4697814
+      },
+      "tags": {
+        "artist": "Nico Cathcart",
+        "artwork_type": "mural",
+        "description": "Flowers and misc items surround large white letters \"LAKESIDE\"",
+        "inscription": "Neighbors Helping Neighbors\nVolunteer Rescue Squad",
+        "name": "Lakeside",
+        "tourism": "artwork",
+        "website": "https://www.nicocathcart.com/muralportfolio?pgid=jt0ajgnx-cdd33f74-38ca-4a18-8bad-f442ee04a8c2"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1487363788,
+      "center": {
+        "lat": 37.5472295,
+        "lon": -77.4638143
+      },
+      "tags": {
+        "artist:website": "https://www.herrsuite.com",
+        "artist_name": "Herr Suite",
+        "artwork_type": "mural",
+        "name": "Nate's Bagels",
+        "start_date": "2024",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:Herr_Suite_mural.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1489288305,
+      "center": {
+        "lat": 37.5267267,
+        "lon": -77.4368702
+      },
+      "tags": {
+        "bicycle": "yes",
+        "foot": "yes",
+        "highway": "steps",
+        "motor_vehicle": "no",
+        "name": "Manchester Floodwall Walk",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "concrete"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1489939983,
+      "center": {
+        "lat": 37.5455007,
+        "lon": -77.4403961
+      },
+      "tags": {
+        "artwork_type": "mural",
+        "name": "Jackson Ward Legacies",
+        "tourism": "artwork"
+      }
+    }
+  ]
+}

@@ -101,7 +101,7 @@ snapshot wrong.
   key.
 - Valhalla for isochrones and walking routes, behind a same-origin proxy
 - Cloudflare Worker in production. The Vite dev server mounts the same handler.
-- 80 KB gzipped of app JavaScript, plus MapLibre's own 277 KB. Both measured by
+- 87 KB gzipped of app JavaScript, plus MapLibre's own 277 KB. Both measured by
   `node scripts/verify-bundle.mjs` rather than remembered; the line used to claim
   64 KB and 276 KB and had been wrong for some number of commits
 
@@ -110,6 +110,36 @@ snapshot wrong.
 Both endpoints live in `server/proxy.ts`, which the dev server and the Worker
 each mount at `/api/isochrone` and `/api/route`. `VALHALLA_URL` names the
 instance. There is no `VITE_` prefix, so Vite will not inline it.
+
+## Where the places come from
+
+Sixty-two of them were typed by hand and win every conflict. The rest came out
+of OpenStreetMap through three commands, in this order:
+
+    npm run harvest:osm      # the only thing here that talks to Overpass
+    npm run propose:places   # reads only data/osm/, writes a review page
+    npm run apply:places     # appends accepted ids to src/data/places.ts
+
+Nothing in that chain runs in CI or at build time. The harvest is committed to
+`data/osm/` and everything downstream reads those files, for the same reason
+`build-reach.mjs` reads a committed snapshot: a build whose output depends on
+the day it ran is not a build, and a mid-air OSM edit should not be able to
+change the destination list without review.
+
+**The human gate is real.** `propose` stops at
+`data/proposals/review.html` — one self-contained page, no network — and a
+person writes ids into `accepted.txt`. A script that can rewrite the
+destination list unattended is a script that can ship a marker standing in a
+highway median.
+
+Generated rows are an append-only suffix below a boundary comment in
+`places.ts`, and `HAND_CURATED_COUNT` is where the hand-written ones stop. The
+proposer refuses to emit a row within 90 m of an existing one, so a hand-picked
+coordinate — chosen by somebody who has stood there — is never overwritten by a
+centroid.
+
+**Map data © OpenStreetMap contributors, ODbL.**
+<https://www.openstreetmap.org/copyright>
 
 ## The weather never faces the browser either
 
@@ -245,7 +275,7 @@ src/
 │   └── smooth.ts          rounds the engine's raster staircase, drawing only
 ├── ui/                    TimeDial, OriginPicker, Filters, ResultCard,
 │                          ReachReadout, TuningPanel
-├── data/places.ts         62 destinations and 11 preset origins
+├── data/places.ts        242 destinations and 11 preset origins
 └── styles/app.css         tokens and every rule; the locked design decisions
                            are documented at the top
 public/reach/              precomputed contour ladders, one per preset origin

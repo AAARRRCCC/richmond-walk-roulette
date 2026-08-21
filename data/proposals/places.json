@@ -1,0 +1,5792 @@
+{
+  "version": 1,
+  "generatedAt": "2026-08-21T21:57:18.904Z",
+  "harvestedAt": "2026-08-21T21:50:57.685Z",
+  "accepted": [
+    {
+      "id": "barton-heights-cemetery",
+      "name": "Barton Heights Cemetery",
+      "lat": 37.557951,
+      "lng": -77.431499,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/44884751",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 82.5,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 75,
+      "seed": {
+        "lat": 37.55799,
+        "lng": -77.432432
+      }
+    },
+    {
+      "id": "fifth-street-viaduct",
+      "name": "Fifth Street Viaduct",
+      "lat": 37.553434,
+      "lng": -77.427521,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "bridge",
+      "osm": "way/710713202",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0.2,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 60,
+      "seed": {
+        "lat": 37.553433,
+        "lng": -77.42752
+      }
+    },
+    {
+      "id": "bryan-park",
+      "name": "Bryan Park",
+      "lat": 37.592938,
+      "lng": -77.474972,
+      "tags": [
+        "park",
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/316099498",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 56.5,
+      "edgeUse": "path",
+      "outboundReach": 50,
+      "score": 75,
+      "seed": {
+        "lat": 37.593433,
+        "lng": -77.474832
+      }
+    },
+    {
+      "id": "arthur-ashe-statue",
+      "name": "Arthur Ashe Statue",
+      "lat": 37.565231,
+      "lng": -77.479084,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/5209437090",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 7.4,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 45,
+      "seed": {
+        "lat": 37.565168,
+        "lng": -77.479061
+      }
+    },
+    {
+      "id": "chimborazo-medical-museum",
+      "name": "Chimborazo Medical Museum",
+      "lat": 37.52689,
+      "lng": -77.412135,
+      "tags": [
+        "museum"
+      ],
+      "detour": null,
+      "osm": "way/298621404",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 9.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 70,
+      "seed": {
+        "lat": 37.526827,
+        "lng": -77.412199
+      }
+    },
+    {
+      "id": "edgar-allan-poe",
+      "name": "Edgar Allan Poe",
+      "lat": 37.540042,
+      "lng": -77.434259,
+      "tags": [
+        "history",
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/5420002328",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.3,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 45,
+      "seed": {
+        "lat": 37.540013,
+        "lng": -77.434307
+      }
+    },
+    {
+      "id": "oakwood-cemetery",
+      "name": "Oakwood Cemetery",
+      "lat": 37.536758,
+      "lng": -77.396155,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "relation/17173266",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 42.8,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 60,
+      "seed": {
+        "lat": 37.53707,
+        "lng": -77.39587
+      }
+    },
+    {
+      "id": "chloe",
+      "name": "Chloe",
+      "lat": 37.557009,
+      "lng": -77.475286,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/7095866280",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 4.9,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 45,
+      "seed": {
+        "lat": 37.556976,
+        "lng": -77.475322
+      }
+    },
+    {
+      "id": "hebrew-cemetery",
+      "name": "Hebrew Cemetery",
+      "lat": 37.552451,
+      "lng": -77.429799,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/44703329",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 14.5,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 60,
+      "seed": {
+        "lat": 37.552375,
+        "lng": -77.429666
+      }
+    },
+    {
+      "id": "rumors-of-war",
+      "name": "Rumors of War",
+      "lat": 37.556489,
+      "lng": -77.473957,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/7095879702",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 12.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 45,
+      "seed": {
+        "lat": 37.556596,
+        "lng": -77.473986
+      }
+    },
+    {
+      "id": "gambles-hill-park",
+      "name": "Gambles Hill Park",
+      "lat": 37.53739,
+      "lng": -77.446945,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/264479485",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 110,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 60,
+      "seed": {
+        "lat": 37.536704,
+        "lng": -77.446048
+      }
+    },
+    {
+      "id": "powhatan-stone",
+      "name": "Powhatan Stone",
+      "lat": 37.524681,
+      "lng": -77.412807,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13294886983",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 2.9,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.5247,
+        "lng": -77.41283
+      }
+    },
+    {
+      "id": "patrick-henry-park",
+      "name": "Patrick Henry Park",
+      "lat": 37.532013,
+      "lng": -77.419602,
+      "tags": [
+        "park",
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/266890327",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 54.1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 55,
+      "seed": {
+        "lat": 37.532156,
+        "lng": -77.419017
+      }
+    },
+    {
+      "id": "robert-e-lee-memorial-bridge",
+      "name": "Robert E. Lee Memorial Bridge",
+      "lat": 37.53068,
+      "lng": -77.450578,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "bridge",
+      "osm": "relation/16271271",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 18,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.530729,
+        "lng": -77.450772
+      }
+    },
+    {
+      "id": "deep-run-park",
+      "name": "Deep Run Park",
+      "lat": 37.625419,
+      "lng": -77.58924,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/11623997",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 19,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 50,
+      "seed": {
+        "lat": 37.625532,
+        "lng": -77.589079
+      }
+    },
+    {
+      "id": "i-can-because-i-said-so",
+      "name": "I Can Because I Said So",
+      "lat": 37.571401,
+      "lng": -77.43391,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "node/13658908095",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 9.4,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 35,
+      "seed": {
+        "lat": 37.571396,
+        "lng": -77.433803
+      }
+    },
+    {
+      "id": "richmond-national-cemetery",
+      "name": "Richmond National Cemetery",
+      "lat": 37.514383,
+      "lng": -77.392809,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/38176596",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0.1,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 50,
+      "seed": {
+        "lat": 37.514384,
+        "lng": -77.392809
+      }
+    },
+    {
+      "id": "girl-with-phone",
+      "name": "Girl with phone",
+      "lat": 37.5607,
+      "lng": -77.475491,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1482292129",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 10.2,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 35,
+      "seed": {
+        "lat": 37.560616,
+        "lng": -77.475539
+      }
+    },
+    {
+      "id": "monroe-park",
+      "name": "Monroe Park",
+      "lat": 37.546955,
+      "lng": -77.45022,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/45087752",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.6,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 50,
+      "seed": {
+        "lat": 37.546961,
+        "lng": -77.450237
+      }
+    },
+    {
+      "id": "icarus-fallen",
+      "name": "Icarus Fallen",
+      "lat": 37.544274,
+      "lng": -77.452777,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "node/13646021692",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 14.8,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 30,
+      "seed": {
+        "lat": 37.544275,
+        "lng": -77.45261
+      }
+    },
+    {
+      "id": "rockwood-park",
+      "name": "Rockwood Park",
+      "lat": 37.449992,
+      "lng": -77.580608,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/315035710",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 53.5,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 50,
+      "seed": {
+        "lat": 37.450321,
+        "lng": -77.58105
+      }
+    },
+    {
+      "id": "say-their-names",
+      "name": "Say Their Names",
+      "lat": 37.567121,
+      "lng": -77.476203,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1481981173",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 22,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 30,
+      "seed": {
+        "lat": 37.566986,
+        "lng": -77.476386
+      }
+    },
+    {
+      "id": "dabbs-house-museum",
+      "name": "Dabbs House Museum",
+      "lat": 37.543576,
+      "lng": -77.382631,
+      "tags": [
+        "museum"
+      ],
+      "detour": null,
+      "osm": "way/708736666",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 27.8,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 50,
+      "seed": {
+        "lat": 37.543521,
+        "lng": -77.382939
+      }
+    },
+    {
+      "id": "chris",
+      "name": "Chris",
+      "lat": 37.550623,
+      "lng": -77.453389,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1482311468",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 6.8,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 30,
+      "seed": {
+        "lat": 37.550587,
+        "lng": -77.453327
+      }
+    },
+    {
+      "id": "ginter-park-historic-district",
+      "name": "Ginter Park Historic District",
+      "lat": 37.589172,
+      "lng": -77.443526,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/356602345",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 16.4,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.589035,
+        "lng": -77.443594
+      }
+    },
+    {
+      "id": "a-pearl-of-wisdom",
+      "name": "A Pearl of Wisdom",
+      "lat": 37.557646,
+      "lng": -77.462648,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "node/13599643336",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 9.2,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 25,
+      "seed": {
+        "lat": 37.557597,
+        "lng": -77.462564
+      }
+    },
+    {
+      "id": "forest-lawn-cemetery",
+      "name": "Forest Lawn Cemetery",
+      "lat": 37.593313,
+      "lng": -77.435525,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/44659688",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 10.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.593223,
+        "lng": -77.435491
+      }
+    },
+    {
+      "id": "silence-isnt-golden",
+      "name": "Silence Isn't Golden",
+      "lat": 37.548543,
+      "lng": -77.463757,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "node/13658855185",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 10.4,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 25,
+      "seed": {
+        "lat": 37.548628,
+        "lng": -77.463709
+      }
+    },
+    {
+      "id": "carter-jones-park",
+      "name": "Carter Jones Park",
+      "lat": 37.515855,
+      "lng": -77.460362,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/44660433",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 20.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.515995,
+        "lng": -77.460505
+      }
+    },
+    {
+      "id": "nates-bagels",
+      "name": "Nate's Bagels",
+      "lat": 37.547219,
+      "lng": -77.463819,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1487363788",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.2,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 25,
+      "seed": {
+        "lat": 37.54723,
+        "lng": -77.463814
+      }
+    },
+    {
+      "id": "woodland-cemetery",
+      "name": "Woodland Cemetery",
+      "lat": 37.562411,
+      "lng": -77.412706,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/44703326",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 44.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.562016,
+        "lng": -77.412651
+      }
+    },
+    {
+      "id": "lockwood-double-house",
+      "name": "Lockwood Double House",
+      "lat": 37.534231,
+      "lng": -77.425467,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/2179727313",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.534207,
+        "lng": -77.42549
+      }
+    },
+    {
+      "id": "highland-plaza",
+      "name": "Highland Plaza",
+      "lat": 37.575373,
+      "lng": -77.417086,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/44908077",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 12,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.57532,
+        "lng": -77.416968
+      }
+    },
+    {
+      "id": "oregon-hill-overlook",
+      "name": "Oregon Hill Overlook",
+      "lat": 37.535276,
+      "lng": -77.450509,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "overlook",
+      "osm": "node/3017455573",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.535276,
+        "lng": -77.45051
+      }
+    },
+    {
+      "id": "westhampton-memorial-park",
+      "name": "Westhampton Memorial Park",
+      "lat": 37.598703,
+      "lng": -77.595562,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/45902101",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 11.9,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.598727,
+        "lng": -77.595693
+      }
+    },
+    {
+      "id": "la-comunidad-ii",
+      "name": "La Comunidad II",
+      "lat": 37.551536,
+      "lng": -77.452697,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "node/13585998968",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 12.1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.551601,
+        "lng": -77.452807
+      }
+    },
+    {
+      "id": "ridge-cemetery",
+      "name": "Ridge Cemetery",
+      "lat": 37.601161,
+      "lng": -77.560377,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/45902915",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 58.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.601681,
+        "lng": -77.560467
+      }
+    },
+    {
+      "id": "royster-house",
+      "name": "Royster House",
+      "lat": 37.529447,
+      "lng": -77.419371,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13615589401",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 7.6,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.529406,
+        "lng": -77.419302
+      }
+    },
+    {
+      "id": "kanawha-plaza",
+      "name": "Kanawha Plaza",
+      "lat": 37.536486,
+      "lng": -77.439459,
+      "tags": [
+        "river",
+        "park",
+        "scenic"
+      ],
+      "detour": null,
+      "osm": "way/225274659",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 22.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.536684,
+        "lng": -77.439498
+      }
+    },
+    {
+      "id": "the-parsons-house",
+      "name": "The Parsons House",
+      "lat": 37.529395,
+      "lng": -77.41721,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13615589407",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 2.6,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.529414,
+        "lng": -77.417193
+      }
+    },
+    {
+      "id": "holly-street-park",
+      "name": "Holly Street Park",
+      "lat": 37.535549,
+      "lng": -77.451764,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/252837456",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 115.1,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.536304,
+        "lng": -77.452655
+      }
+    },
+    {
+      "id": "ann-carrington-house",
+      "name": "Ann Carrington House",
+      "lat": 37.531667,
+      "lng": -77.420954,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13616245533",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 6.6,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.531715,
+        "lng": -77.420909
+      }
+    },
+    {
+      "id": "abner-clay-park",
+      "name": "Abner Clay Park",
+      "lat": 37.549615,
+      "lng": -77.442466,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/266499307",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 15.4,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.549725,
+        "lng": -77.442361
+      }
+    },
+    {
+      "id": "c-w-hardwicke-carriage-house",
+      "name": "C.W. Hardwicke Carriage House",
+      "lat": 37.532758,
+      "lng": -77.421918,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13616245540",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 2.5,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.532745,
+        "lng": -77.421895
+      }
+    },
+    {
+      "id": "cheswick-park",
+      "name": "Cheswick Park",
+      "lat": 37.605648,
+      "lng": -77.545258,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/296201488",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 9.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.605723,
+        "lng": -77.545215
+      }
+    },
+    {
+      "id": "netherwood-house",
+      "name": "Netherwood House",
+      "lat": 37.529931,
+      "lng": -77.418091,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13616245554",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.4,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.52997,
+        "lng": -77.418055
+      }
+    },
+    {
+      "id": "three-lakes-park",
+      "name": "Three Lakes Park",
+      "lat": 37.616997,
+      "lng": -77.428974,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/296208595",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 11.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.616985,
+        "lng": -77.428849
+      }
+    },
+    {
+      "id": "genl-joseph-l-johnston",
+      "name": "Gen'l Joseph L Johnston",
+      "lat": 37.530722,
+      "lng": -77.417456,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13616245561",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0.2,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.530721,
+        "lng": -77.417458
+      }
+    },
+    {
+      "id": "robinson-park",
+      "name": "Robinson Park",
+      "lat": 37.556273,
+      "lng": -77.349415,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/342205613",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 67.4,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.555992,
+        "lng": -77.350091
+      }
+    },
+    {
+      "id": "the-j-m-carter-house",
+      "name": "The J.M. Carter House",
+      "lat": 37.534554,
+      "lng": -77.415902,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13616245564",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.534538,
+        "lng": -77.415875
+      }
+    },
+    {
+      "id": "powhatan-playground",
+      "name": "Powhatan Playground",
+      "lat": 37.515586,
+      "lng": -77.406325,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/576461461",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 44.9,
+      "edgeUse": "path",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.515363,
+        "lng": -77.406749
+      }
+    },
+    {
+      "id": "richardsons-drug-store",
+      "name": "Richardson's Drug Store",
+      "lat": 37.530061,
+      "lng": -77.411536,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13632907505",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.9,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.530062,
+        "lng": -77.411515
+      }
+    },
+    {
+      "id": "montrose-heights-playground",
+      "name": "Montrose Heights Playground",
+      "lat": 37.52354,
+      "lng": -77.393982,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/840378385",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 57.6,
+      "edgeUse": "path",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.52304,
+        "lng": -77.39415
+      }
+    },
+    {
+      "id": "hiram-oliver-house",
+      "name": "Hiram Oliver House",
+      "lat": 37.536272,
+      "lng": -77.417126,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13636183195",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.6,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.536253,
+        "lng": -77.417093
+      }
+    },
+    {
+      "id": "pocosham-park",
+      "name": "Pocosham Park",
+      "lat": 37.471165,
+      "lng": -77.504437,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1084702409",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 75,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.471764,
+        "lng": -77.504826
+      }
+    },
+    {
+      "id": "myrtle-terrace",
+      "name": "Myrtle Terrace",
+      "lat": 37.528064,
+      "lng": -77.416372,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13641321239",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 6.4,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.528029,
+        "lng": -77.416314
+      }
+    },
+    {
+      "id": "colored-paupers-cemetery",
+      "name": "Colored Paupers Cemetery",
+      "lat": 37.536609,
+      "lng": -77.389823,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/1446280636",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 85.4,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 40,
+      "seed": {
+        "lat": 37.536366,
+        "lng": -77.388905
+      }
+    },
+    {
+      "id": "the-pulliam-house",
+      "name": "The Pulliam House",
+      "lat": 37.528673,
+      "lng": -77.418593,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13641321240",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 7.1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.528623,
+        "lng": -77.418643
+      }
+    },
+    {
+      "id": "the-jxn-haus",
+      "name": "The JXN Haus",
+      "lat": 37.550566,
+      "lng": -77.432799,
+      "tags": [
+        "museum"
+      ],
+      "detour": null,
+      "osm": "node/13727734577",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 12.6,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 30,
+      "seed": {
+        "lat": 37.550477,
+        "lng": -77.432887
+      }
+    },
+    {
+      "id": "2014-princess-anne-avenue",
+      "name": "2014 Princess Anne Avenue",
+      "lat": 37.535953,
+      "lng": -77.420503,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13645857198",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 2.2,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.535973,
+        "lng": -77.420503
+      }
+    },
+    {
+      "id": "powhite-park",
+      "name": "Powhite Park",
+      "lat": 37.521803,
+      "lng": -77.524302,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/9294688",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 8.6,
+      "edgeUse": "path",
+      "outboundReach": 50,
+      "score": 30,
+      "seed": {
+        "lat": 37.521734,
+        "lng": -77.524258
+      }
+    },
+    {
+      "id": "elliott-house",
+      "name": "Elliott House",
+      "lat": 37.533387,
+      "lng": -77.415056,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13645857200",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.533366,
+        "lng": -77.415077
+      }
+    },
+    {
+      "id": "pollard-park",
+      "name": "Pollard Park",
+      "lat": 37.573055,
+      "lng": -77.444695,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/307757135",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 44.1,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 30,
+      "seed": {
+        "lat": 37.572913,
+        "lng": -77.444228
+      }
+    },
+    {
+      "id": "boatmans-tower",
+      "name": "Boatman's Tower",
+      "lat": 37.536633,
+      "lng": -77.436069,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/13978497121",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.4,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.536594,
+        "lng": -77.436106
+      }
+    },
+    {
+      "id": "kiehr-field",
+      "name": "Kiehr Field",
+      "lat": 37.626518,
+      "lng": -77.427776,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/546227792",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 47.3,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 30,
+      "seed": {
+        "lat": 37.626109,
+        "lng": -77.42763
+      }
+    },
+    {
+      "id": "fruits-and-veggies",
+      "name": "Fruits and Veggies",
+      "lat": 37.534601,
+      "lng": -77.427344,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1484770948",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 10.6,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.534543,
+        "lng": -77.427248
+      }
+    },
+    {
+      "id": "richmond-makers-market",
+      "name": "Richmond Makers Market",
+      "lat": 37.526249,
+      "lng": -77.442303,
+      "tags": [
+        "food"
+      ],
+      "detour": null,
+      "osm": "node/13361298862",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 15.3,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 25,
+      "seed": {
+        "lat": 37.526139,
+        "lng": -77.442198
+      }
+    },
+    {
+      "id": "lakeside",
+      "name": "Lakeside",
+      "lat": 37.614918,
+      "lng": -77.469846,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1484771674",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 31.7,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.614638,
+        "lng": -77.469781
+      }
+    },
+    {
+      "id": "bandy-field-nature-park",
+      "name": "Bandy Field Nature Park",
+      "lat": 37.587294,
+      "lng": -77.533951,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/171211185",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 116.6,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.586402,
+        "lng": -77.53326
+      }
+    },
+    {
+      "id": "maggie-lena-walker",
+      "name": "Maggie Lena Walker",
+      "lat": 37.55758,
+      "lng": -77.453182,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/5417333240",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.557579,
+        "lng": -77.453184
+      }
+    },
+    {
+      "id": "huguenot-park",
+      "name": "Huguenot Park",
+      "lat": 37.514747,
+      "lng": -77.598577,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/315813183",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 6.6,
+      "edgeUse": "path",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.514688,
+        "lng": -77.598588
+      }
+    },
+    {
+      "id": "dooley-sundial",
+      "name": "Dooley sundial",
+      "lat": 37.534401,
+      "lng": -77.473867,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/5775290150",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 2.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.534423,
+        "lng": -77.473865
+      }
+    },
+    {
+      "id": "triangle-park",
+      "name": "Triangle Park",
+      "lat": 37.534913,
+      "lng": -77.41995,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/365619045",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 86.3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.534699,
+        "lng": -77.41901
+      }
+    },
+    {
+      "id": "maggie-lena-walker-statue",
+      "name": "Maggie Lena Walker Statue",
+      "lat": 37.546195,
+      "lng": -77.442606,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/7678867202",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 8.4,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.546257,
+        "lng": -77.442553
+      }
+    },
+    {
+      "id": "westview-park",
+      "name": "Westview Park",
+      "lat": 37.576795,
+      "lng": -77.519456,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/502860808",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 12.4,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.576869,
+        "lng": -77.519351
+      }
+    },
+    {
+      "id": "manchester-wall-rock-climbing",
+      "name": "Manchester Wall Rock Climbing",
+      "lat": 37.529542,
+      "lng": -77.445958,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "overlook",
+      "osm": "node/10968066382",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.529568,
+        "lng": -77.445936
+      }
+    },
+    {
+      "id": "lucks-field-playground",
+      "name": "Lucks Field Playground",
+      "lat": 37.545243,
+      "lng": -77.414474,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/574960663",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 48.1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.544811,
+        "lng": -77.414496
+      }
+    },
+    {
+      "id": "park-guardian-ii",
+      "name": "Park Guardian II",
+      "lat": 37.536644,
+      "lng": -77.449592,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/11082221505",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 6.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.53669,
+        "lng": -77.449548
+      }
+    },
+    {
+      "id": "rva-big-market",
+      "name": "RVA Big Market",
+      "lat": 37.589318,
+      "lng": -77.472326,
+      "tags": [
+        "food"
+      ],
+      "detour": null,
+      "osm": "way/1415709159",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 7,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.589377,
+        "lng": -77.472355
+      }
+    },
+    {
+      "id": "park-guardian-i",
+      "name": "Park Guardian I",
+      "lat": 37.541745,
+      "lng": -77.449472,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/11089269438",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 4.6,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.541713,
+        "lng": -77.449439
+      }
+    },
+    {
+      "id": "rva-black-farmers-market",
+      "name": "RVA Black Farmers Market",
+      "lat": 37.578114,
+      "lng": -77.452531,
+      "tags": [
+        "food"
+      ],
+      "detour": null,
+      "osm": "way/1415711161",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 57.1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 20,
+      "seed": {
+        "lat": 37.577601,
+        "lng": -77.452537
+      }
+    },
+    {
+      "id": "crash-dummies",
+      "name": "Crash Dummies",
+      "lat": 37.550494,
+      "lng": -77.452146,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "node/13585970444",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 22.6,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.550656,
+        "lng": -77.451992
+      }
+    },
+    {
+      "id": "burying-ground",
+      "name": "Burying Ground",
+      "lat": 37.575876,
+      "lng": -77.537555,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "node/12952541160",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 18.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.575765,
+        "lng": -77.537403
+      }
+    },
+    {
+      "id": "together-we-rise",
+      "name": "Together We Rise",
+      "lat": 37.544382,
+      "lng": -77.438791,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "node/13658881408",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.7,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.544352,
+        "lng": -77.438739
+      }
+    },
+    {
+      "id": "emergency-call-box",
+      "name": "Emergency Call Box",
+      "lat": 37.573052,
+      "lng": -77.542594,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/13568547130",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.3,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.57304,
+        "lng": -77.542593
+      }
+    },
+    {
+      "id": "happy-children",
+      "name": "Happy Children",
+      "lat": 37.5717,
+      "lng": -77.435646,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "node/13658908505",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.8,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.571752,
+        "lng": -77.435642
+      }
+    },
+    {
+      "id": "paradise-park",
+      "name": "Paradise Park",
+      "lat": 37.549607,
+      "lng": -77.461842,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/143098974",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 11,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.549697,
+        "lng": -77.461891
+      }
+    },
+    {
+      "id": "cardinal-points",
+      "name": "Cardinal Points",
+      "lat": 37.548252,
+      "lng": -77.470826,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/13666091333",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 2.6,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.54823,
+        "lng": -77.470818
+      }
+    },
+    {
+      "id": "floodwall-park",
+      "name": "Floodwall Park",
+      "lat": 37.526781,
+      "lng": -77.435145,
+      "tags": [
+        "river",
+        "park",
+        "scenic"
+      ],
+      "detour": null,
+      "osm": "way/491695518",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 34.3,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.526875,
+        "lng": -77.435515
+      }
+    },
+    {
+      "id": "the-giant-cigarette",
+      "name": "The Giant Cigarette",
+      "lat": 37.474656,
+      "lng": -77.429801,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "way/761043823",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 30.3,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.47461,
+        "lng": -77.430138
+      }
+    },
+    {
+      "id": "childrens-garden",
+      "name": "Children's Garden",
+      "lat": 37.622339,
+      "lng": -77.47004,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/2805247716",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 4.6,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.622315,
+        "lng": -77.469997
+      }
+    },
+    {
+      "id": "visual-symphony",
+      "name": "Visual Symphony",
+      "lat": 37.548546,
+      "lng": -77.449195,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1481952849",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 13.3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.54845,
+        "lng": -77.449286
+      }
+    },
+    {
+      "id": "four-seasons-garden",
+      "name": "Four Seasons Garden",
+      "lat": 37.620525,
+      "lng": -77.471263,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/2805247798",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.7,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.62055,
+        "lng": -77.471206
+      }
+    },
+    {
+      "id": "peppermint-butler",
+      "name": "Peppermint Butler",
+      "lat": 37.551461,
+      "lng": -77.447435,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1481952850",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.4,
+      "edgeUse": "steps",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.55147,
+        "lng": -77.447495
+      }
+    },
+    {
+      "id": "west-island-garden",
+      "name": "West Island Garden",
+      "lat": 37.621365,
+      "lng": -77.470009,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/2805247802",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 2.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.621344,
+        "lng": -77.470006
+      }
+    },
+    {
+      "id": "grizzly",
+      "name": "GRIZZLY",
+      "lat": 37.539665,
+      "lng": -77.424062,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1481985613",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 18.3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.539671,
+        "lng": -77.423855
+      }
+    },
+    {
+      "id": "lace-house-garden",
+      "name": "Lace House Garden",
+      "lat": 37.621806,
+      "lng": -77.468487,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/2805247822",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 21.6,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.621855,
+        "lng": -77.468249
+      }
+    },
+    {
+      "id": "think",
+      "name": "Think",
+      "lat": 37.541833,
+      "lng": -77.413497,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1482362873",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.541839,
+        "lng": -77.413506
+      }
+    },
+    {
+      "id": "lucy-payne-minor-garden",
+      "name": "Lucy Payne Minor Garden",
+      "lat": 37.622945,
+      "lng": -77.471327,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/2805247823",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 46.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.622903,
+        "lng": -77.471851
+      }
+    },
+    {
+      "id": "jackson-ward-legacies",
+      "name": "Jackson Ward Legacies",
+      "lat": 37.545568,
+      "lng": -77.44051,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "way/1489939983",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 12.5,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 15,
+      "seed": {
+        "lat": 37.545501,
+        "lng": -77.440396
+      }
+    },
+    {
+      "id": "vienna-cobb-anderson-meadow",
+      "name": "Vienna Cobb Anderson Meadow",
+      "lat": 37.621421,
+      "lng": -77.471378,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/2805247825",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 20.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.621383,
+        "lng": -77.471155
+      }
+    },
+    {
+      "id": "manchester-free-bridges",
+      "name": "Manchester & Free Bridges",
+      "lat": 37.533634,
+      "lng": -77.441196,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/898650767",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 32.6,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.533812,
+        "lng": -77.44149
+      }
+    },
+    {
+      "id": "lake-view-garden",
+      "name": "Lake View Garden",
+      "lat": 37.591234,
+      "lng": -77.497156,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/5411281241",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 9.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.591152,
+        "lng": -77.497148
+      }
+    },
+    {
+      "id": "tdia-1895-james-river-overlook",
+      "name": "TDIA 1895 James River Overlook",
+      "lat": 37.533697,
+      "lng": -77.444471,
+      "tags": [
+        "river",
+        "scenic"
+      ],
+      "detour": "overlook",
+      "osm": "node/2975991287",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.9,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.533692,
+        "lng": -77.44445
+      }
+    },
+    {
+      "id": "homeless-camp-ground",
+      "name": "Homeless Camp Ground",
+      "lat": 37.478893,
+      "lng": -77.516643,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/8295609184",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 21.8,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.47878,
+        "lng": -77.516442
+      }
+    },
+    {
+      "id": "highest-point-in-henrico-county",
+      "name": "Highest Point In Henrico County",
+      "lat": 37.590958,
+      "lng": -77.566042,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "overlook",
+      "osm": "node/3017991713",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 12.4,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.590918,
+        "lng": -77.566173
+      }
+    },
+    {
+      "id": "hatch-local",
+      "name": "Hatch Local",
+      "lat": 37.524844,
+      "lng": -77.437625,
+      "tags": [
+        "food"
+      ],
+      "detour": null,
+      "osm": "node/10553699900",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 9.3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.52479,
+        "lng": -77.437705
+      }
+    },
+    {
+      "id": "david",
+      "name": "David",
+      "lat": 37.639523,
+      "lng": -77.587727,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/6618860841",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 19.8,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.639393,
+        "lng": -77.58788
+      }
+    },
+    {
+      "id": "university-forum",
+      "name": "University Forum",
+      "lat": 37.574954,
+      "lng": -77.539706,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/13544263043",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.574926,
+        "lng": -77.539703
+      }
+    },
+    {
+      "id": "hydroelectric-plant",
+      "name": "Hydroelectric Plant",
+      "lat": 37.533693,
+      "lng": -77.437329,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/10164803159",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0.9,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.533693,
+        "lng": -77.437319
+      }
+    },
+    {
+      "id": "pony-pasture-park",
+      "name": "Pony Pasture Park",
+      "lat": 37.549424,
+      "lng": -77.515701,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/6036457",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 25,
+      "edgeUse": "path",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.549206,
+        "lng": -77.515772
+      }
+    },
+    {
+      "id": "powhatan-hill-overlook",
+      "name": "Powhatan Hill Overlook",
+      "lat": 37.515136,
+      "lng": -77.407331,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "overlook",
+      "osm": "node/10253486981",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.9,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.515135,
+        "lng": -77.407352
+      }
+    },
+    {
+      "id": "lewis-g-larus-park",
+      "name": "Lewis G. Larus Park",
+      "lat": 37.544931,
+      "lng": -77.563981,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/9972905",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.544931,
+        "lng": -77.563981
+      }
+    },
+    {
+      "id": "bloody-run",
+      "name": "Bloody Run",
+      "lat": 37.525982,
+      "lng": -77.416461,
+      "tags": [
+        "history"
+      ],
+      "detour": "marker",
+      "osm": "node/13615520971",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.8,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.526016,
+        "lng": -77.416462
+      }
+    },
+    {
+      "id": "falling-creek-linear-park",
+      "name": "Falling Creek Linear Park",
+      "lat": 37.442967,
+      "lng": -77.444236,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/11520213",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 24.6,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.443128,
+        "lng": -77.444045
+      }
+    },
+    {
+      "id": "22nd-street-pedestrian-stairs",
+      "name": "22nd Street Pedestrian Stairs",
+      "lat": 37.524459,
+      "lng": -77.456036,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "stairs",
+      "osm": "way/76227376",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 66.8,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.525011,
+        "lng": -77.456334
+      }
+    },
+    {
+      "id": "gates-mill-park",
+      "name": "Gates Mill Park",
+      "lat": 37.450954,
+      "lng": -77.453118,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/11520214",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 51,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.45078,
+        "lng": -77.452585
+      }
+    },
+    {
+      "id": "manchester-floodwall-walk",
+      "name": "Manchester Floodwall Walk",
+      "lat": 37.527126,
+      "lng": -77.439348,
+      "tags": [
+        "river",
+        "scenic"
+      ],
+      "detour": "stairs",
+      "osm": "way/167824983",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0.5,
+      "edgeUse": "steps",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.527121,
+        "lng": -77.439348
+      }
+    },
+    {
+      "id": "hidden-creek-park",
+      "name": "Hidden Creek Park",
+      "lat": 37.556272,
+      "lng": -77.394708,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/11623994",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 96.5,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.556718,
+        "lng": -77.39377
+      }
+    },
+    {
+      "id": "pipeline-trail",
+      "name": "Pipeline Trail",
+      "lat": 37.532481,
+      "lng": -77.434508,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "stairs",
+      "osm": "way/294031479",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 4.8,
+      "edgeUse": "steps",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.532509,
+        "lng": -77.434467
+      }
+    },
+    {
+      "id": "dock-street-park",
+      "name": "Dock Street Park",
+      "lat": 37.524365,
+      "lng": -77.419318,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/16078640",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 8.5,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.524344,
+        "lng": -77.419411
+      }
+    },
+    {
+      "id": "north-bank-trail",
+      "name": "North Bank Trail",
+      "lat": 37.530516,
+      "lng": -77.46428,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "stairs",
+      "osm": "way/296545526",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 2.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.530505,
+        "lng": -77.46426
+      }
+    },
+    {
+      "id": "lombardy-park",
+      "name": "Lombardy Park",
+      "lat": 37.550878,
+      "lng": -77.45859,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/16467781",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.5,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.55088,
+        "lng": -77.458574
+      }
+    },
+    {
+      "id": "connecting-lodge-footpath",
+      "name": "Connecting Lodge Footpath",
+      "lat": 37.581853,
+      "lng": -77.540645,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "stairs",
+      "osm": "way/1417444939",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.581848,
+        "lng": -77.540683
+      }
+    },
+    {
+      "id": "westwood-playground",
+      "name": "Westwood Playground",
+      "lat": 37.579555,
+      "lng": -77.509677,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/19397249",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 35.5,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.579289,
+        "lng": -77.509899
+      }
+    },
+    {
+      "id": "future",
+      "name": "Future",
+      "lat": 37.536769,
+      "lng": -77.434075,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/3741870436",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 9.9,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 5,
+      "seed": {
+        "lat": 37.5367,
+        "lng": -77.434145
+      }
+    },
+    {
+      "id": "holy-cross-cemetery",
+      "name": "Holy Cross Cemetery",
+      "lat": 37.55872,
+      "lng": -77.427303,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/44703271",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 45.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.559105,
+        "lng": -77.427463
+      }
+    },
+    {
+      "id": "winds-up",
+      "name": "Wind's Up",
+      "lat": 37.537105,
+      "lng": -77.437107,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "art",
+      "osm": "node/7682158122",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 6.7,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 5,
+      "seed": {
+        "lat": 37.537051,
+        "lng": -77.437072
+      }
+    },
+    {
+      "id": "hotchkiss-field-community-center",
+      "name": "Hotchkiss Field Community Center",
+      "lat": 37.569601,
+      "lng": -77.423474,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/44888595",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0.9,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.569598,
+        "lng": -77.423465
+      }
+    },
+    {
+      "id": "hope",
+      "name": "Hope",
+      "lat": 37.571532,
+      "lng": -77.432392,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "mural",
+      "osm": "node/13658911353",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 5,
+      "seed": {
+        "lat": 37.571541,
+        "lng": -77.432392
+      }
+    },
+    {
+      "id": "patterson-memorial-garden",
+      "name": "Patterson Memorial Garden",
+      "lat": 37.539816,
+      "lng": -77.430819,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/224601757",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 20.8,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.539927,
+        "lng": -77.431008
+      }
+    },
+    {
+      "id": "gambles-hill",
+      "name": "Gambles Hill",
+      "lat": 37.537146,
+      "lng": -77.444485,
+      "tags": [
+        "scenic"
+      ],
+      "detour": "overlook",
+      "osm": "node/356602284",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 59,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.537647,
+        "lng": -77.444705
+      }
+    },
+    {
+      "id": "harrison-park",
+      "name": "Harrison Park",
+      "lat": 37.548691,
+      "lng": -77.454878,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/229722610",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.548696,
+        "lng": -77.454868
+      }
+    },
+    {
+      "id": "fishing-dock",
+      "name": "Fishing Dock",
+      "lat": 37.624168,
+      "lng": -77.587052,
+      "tags": [
+        "river"
+      ],
+      "detour": "bridge",
+      "osm": "way/603735933",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.7,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.62414,
+        "lng": -77.587105
+      }
+    },
+    {
+      "id": "italian-garden",
+      "name": "Italian Garden",
+      "lat": 37.533661,
+      "lng": -77.47678,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/236150754",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 14.4,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.533706,
+        "lng": -77.476627
+      }
+    },
+    {
+      "id": "huguenot-flatwater-park",
+      "name": "Huguenot Flatwater Park",
+      "lat": 37.559447,
+      "lng": -77.541963,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/264474191",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 57.2,
+      "edgeUse": "path",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.559456,
+        "lng": -77.542612
+      }
+    },
+    {
+      "id": "thomas-square",
+      "name": "Thomas Square",
+      "lat": 37.541879,
+      "lng": -77.460757,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/264670674",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.541889,
+        "lng": -77.460723
+      }
+    },
+    {
+      "id": "mount-calvary-cemetery",
+      "name": "Mount Calvary Cemetery",
+      "lat": 37.534453,
+      "lng": -77.465509,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/264670697",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 33.8,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.534287,
+        "lng": -77.465829
+      }
+    },
+    {
+      "id": "canoe-run-park",
+      "name": "Canoe Run Park",
+      "lat": 37.523133,
+      "lng": -77.456498,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/266877983",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 82.3,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.522588,
+        "lng": -77.457128
+      }
+    },
+    {
+      "id": "humphrey-calder-community-center",
+      "name": "Humphrey Calder Community Center",
+      "lat": 37.561275,
+      "lng": -77.485641,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/366222782",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 45.3,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.561538,
+        "lng": -77.486032
+      }
+    },
+    {
+      "id": "pony-pasture-park-wetland-park",
+      "name": "Pony Pasture Park - Wetland Park",
+      "lat": 37.544647,
+      "lng": -77.509438,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/402536157",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 18.3,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.544737,
+        "lng": -77.509611
+      }
+    },
+    {
+      "id": "bill-robinson-playground",
+      "name": "Bill Robinson Playground",
+      "lat": 37.529696,
+      "lng": -77.404193,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/576071486",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 58.7,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.529554,
+        "lng": -77.404833
+      }
+    },
+    {
+      "id": "pump-house-park",
+      "name": "Pump House Park",
+      "lat": 37.537283,
+      "lng": -77.487194,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/600879394",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 46.1,
+      "edgeUse": "path",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.537697,
+        "lng": -77.487174
+      }
+    },
+    {
+      "id": "oregon-hill-linear-park",
+      "name": "Oregon Hill Linear Park",
+      "lat": 37.540491,
+      "lng": -77.449559,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/601799933",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1.5,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.540479,
+        "lng": -77.449566
+      }
+    },
+    {
+      "id": "roy-west-park-washington-park",
+      "name": "Roy West Park (Washington Park)",
+      "lat": 37.59233,
+      "lng": -77.443787,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/679275523",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 20.6,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.592295,
+        "lng": -77.444016
+      }
+    },
+    {
+      "id": "wayside-spring-park",
+      "name": "Wayside Spring Park",
+      "lat": 37.525457,
+      "lng": -77.484606,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/679310817",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 55.2,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.524964,
+        "lng": -77.48467
+      }
+    },
+    {
+      "id": "learning-therapy-garden",
+      "name": "Learning & Therapy Garden",
+      "lat": 37.631655,
+      "lng": -77.461963,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/697524178",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.6,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.631652,
+        "lng": -77.462004
+      }
+    },
+    {
+      "id": "butterfly-garden",
+      "name": "Butterfly Garden",
+      "lat": 37.536815,
+      "lng": -77.479549,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/700377908",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 20.8,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.53665,
+        "lng": -77.479439
+      }
+    },
+    {
+      "id": "fragrance-garden",
+      "name": "Fragrance Garden",
+      "lat": 37.533584,
+      "lng": -77.480469,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/700377915",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 7.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.533527,
+        "lng": -77.480506
+      }
+    },
+    {
+      "id": "lakeside-landing-park",
+      "name": "Lakeside Landing Park",
+      "lat": 37.613117,
+      "lng": -77.458751,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/737415531",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 14.6,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.612987,
+        "lng": -77.458735
+      }
+    },
+    {
+      "id": "alice-fitz-park",
+      "name": "Alice Fitz Park",
+      "lat": 37.523061,
+      "lng": -77.44781,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/761038913",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 19.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.523166,
+        "lng": -77.447982
+      }
+    },
+    {
+      "id": "oak-grove-playground",
+      "name": "Oak Grove Playground",
+      "lat": 37.506924,
+      "lng": -77.444754,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/761047752",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 47.1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.506594,
+        "lng": -77.44442
+      }
+    },
+    {
+      "id": "bethlehem-park",
+      "name": "Bethlehem Park",
+      "lat": 37.617623,
+      "lng": -77.513279,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/847264851",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 25.3,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.617419,
+        "lng": -77.513407
+      }
+    },
+    {
+      "id": "westwood-park",
+      "name": "Westwood Park",
+      "lat": 37.588027,
+      "lng": -77.513794,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/847264852",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 33.3,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.588046,
+        "lng": -77.514171
+      }
+    },
+    {
+      "id": "roslyn-hills-park",
+      "name": "Roslyn Hills Park",
+      "lat": 37.577134,
+      "lng": -77.561756,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/847264853",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 74,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.577023,
+        "lng": -77.562583
+      }
+    },
+    {
+      "id": "spring-park-historic-site",
+      "name": "Spring Park Historic Site",
+      "lat": 37.600513,
+      "lng": -77.463121,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/847264859",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 69.4,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.599902,
+        "lng": -77.46296
+      }
+    },
+    {
+      "id": "yancey-street-playground",
+      "name": "Yancey Street Playground",
+      "lat": 37.55999,
+      "lng": -77.433352,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/949602698",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 25.8,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.559998,
+        "lng": -77.433644
+      }
+    },
+    {
+      "id": "smith-peters-parks",
+      "name": "Smith-Peters Parks",
+      "lat": 37.553005,
+      "lng": -77.448171,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1042936185",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 15.9,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.553119,
+        "lng": -77.448063
+      }
+    },
+    {
+      "id": "north-central-park",
+      "name": "North Central Park",
+      "lat": 37.577547,
+      "lng": -77.435317,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1052171286",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 11.3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.577501,
+        "lng": -77.435431
+      }
+    },
+    {
+      "id": "riverside-meadow-greenspace",
+      "name": "Riverside Meadow Greenspace",
+      "lat": 37.557038,
+      "lng": -77.526874,
+      "tags": [
+        "river",
+        "park",
+        "scenic"
+      ],
+      "detour": null,
+      "osm": "way/1089482397",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.7,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.557052,
+        "lng": -77.526835
+      }
+    },
+    {
+      "id": "providence-cemetery",
+      "name": "Providence Cemetery",
+      "lat": 37.484112,
+      "lng": -77.549674,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/1102588967",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 33.6,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.484007,
+        "lng": -77.549317
+      }
+    },
+    {
+      "id": "monroe-park-learning-garden",
+      "name": "Monroe Park Learning Garden",
+      "lat": 37.54403,
+      "lng": -77.457529,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1210574643",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 18.3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.54418,
+        "lng": -77.457444
+      }
+    },
+    {
+      "id": "ricks-garden",
+      "name": "Rick's Garden",
+      "lat": 37.554685,
+      "lng": -77.4717,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1266567346",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 56.4,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.554888,
+        "lng": -77.472286
+      }
+    },
+    {
+      "id": "albert-hill-native-plant-garden",
+      "name": "Albert Hill Native Plant Garden",
+      "lat": 37.561592,
+      "lng": -77.4815,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1300716641",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 11.2,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.561684,
+        "lng": -77.481449
+      }
+    },
+    {
+      "id": "providence-park",
+      "name": "Providence Park",
+      "lat": 37.581505,
+      "lng": -77.426175,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1414587754",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 44.1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.58111,
+        "lng": -77.426132
+      }
+    },
+    {
+      "id": "conrad-street-mini-park",
+      "name": "Conrad Street Mini Park",
+      "lat": 37.552793,
+      "lng": -77.415752,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1425681874",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 0,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.552793,
+        "lng": -77.415752
+      }
+    },
+    {
+      "id": "briel-street-playground",
+      "name": "Briel Street Playground",
+      "lat": 37.531938,
+      "lng": -77.396719,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1425951819",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 27.7,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.531884,
+        "lng": -77.397025
+      }
+    },
+    {
+      "id": "james-s-christian-jr-park",
+      "name": "James S. Christian Jr. Park",
+      "lat": 37.532996,
+      "lng": -77.404879,
+      "tags": [
+        "river",
+        "park",
+        "scenic"
+      ],
+      "detour": null,
+      "osm": "way/1425951820",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.532949,
+        "lng": -77.404866
+      }
+    },
+    {
+      "id": "m-street-cemetery",
+      "name": "M Street Cemetery",
+      "lat": 37.531801,
+      "lng": -77.41213,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/1425951821",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 21,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.531952,
+        "lng": -77.411988
+      }
+    },
+    {
+      "id": "franklin-street-burial-grounds",
+      "name": "Franklin Street Burial Grounds",
+      "lat": 37.532224,
+      "lng": -77.424411,
+      "tags": [
+        "history"
+      ],
+      "detour": null,
+      "osm": "way/1467380190",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 17.3,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 10,
+      "seed": {
+        "lat": 37.532101,
+        "lng": -77.424531
+      }
+    },
+    {
+      "id": "street-lamp",
+      "name": "Street Lamp",
+      "lat": 37.571866,
+      "lng": -77.54225,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "node/13568547124",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.57187,
+        "lng": -77.54226
+      }
+    },
+    {
+      "id": "oakwood-park",
+      "name": "Oakwood Park",
+      "lat": 37.53565,
+      "lng": -77.39832,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/19483472",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 53,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.535298,
+        "lng": -77.398724
+      }
+    },
+    {
+      "id": "library-park",
+      "name": "Library Park",
+      "lat": 37.542301,
+      "lng": -77.442748,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "relation/21036259",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.542313,
+        "lng": -77.442716
+      }
+    },
+    {
+      "id": "meadow-park",
+      "name": "Meadow Park",
+      "lat": 37.553727,
+      "lng": -77.463266,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/236147597",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 51.2,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.553711,
+        "lng": -77.462686
+      }
+    },
+    {
+      "id": "federal-park",
+      "name": "Federal Park",
+      "lat": 37.550379,
+      "lng": -77.467224,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/236147602",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 12.1,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.550364,
+        "lng": -77.467359
+      }
+    },
+    {
+      "id": "grace-park",
+      "name": "Grace Park",
+      "lat": 37.555387,
+      "lng": -77.458553,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/236147603",
+      "anchorSource": "gate",
+      "anchorDistanceMeters": 42.1,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.555117,
+        "lng": -77.458885
+      }
+    },
+    {
+      "id": "sydney-park",
+      "name": "Sydney Park",
+      "lat": 37.54682,
+      "lng": -77.456769,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/236147606",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 3.5,
+      "edgeUse": "sidewalk",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.546808,
+        "lng": -77.456732
+      }
+    },
+    {
+      "id": "arcpark",
+      "name": "ARCpark",
+      "lat": 37.581095,
+      "lng": -77.472609,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/597002701",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 5.2,
+      "edgeUse": "footway",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.581097,
+        "lng": -77.47255
+      }
+    },
+    {
+      "id": "westham-park",
+      "name": "Westham Park",
+      "lat": 37.586473,
+      "lng": -77.549169,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/846245203",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 52.4,
+      "edgeUse": "path",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.586002,
+        "lng": -77.549182
+      }
+    },
+    {
+      "id": "dog-park",
+      "name": "Dog Park",
+      "lat": 37.611408,
+      "lng": -77.587511,
+      "tags": [
+        "park"
+      ],
+      "detour": null,
+      "osm": "way/1516391064",
+      "anchorSource": "snap",
+      "anchorDistanceMeters": 34,
+      "edgeUse": "road",
+      "outboundReach": 50,
+      "score": 0,
+      "seed": {
+        "lat": 37.611157,
+        "lng": -77.587729
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "osm": "node/356598361",
+      "name": "Bon Air Historic District",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "node/356602799",
+      "name": "Saint Johns Church Historic District",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/356602830",
+      "name": "Fisher Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "node/367996531",
+      "name": "Grand Lodge of Virginia Library and Museum",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3025124422",
+      "name": "Statue of Liberty",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "node/3216566867",
+      "name": "C&O Church Hill Tunnel Western Portal",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3216591411",
+      "name": "C&O Church Hill Tunnel Eastern Entrance",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3328148226",
+      "name": "Ghostprint Gallery",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/3329638727",
+      "name": "Visual Art Studio",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/4556710162",
+      "name": "McCools of Bon Air",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/5696388058",
+      "name": "Virginia Museum of History and Culture",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/5838105089",
+      "name": "Reynolds Gallery",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/6174871332",
+      "name": "Maymont Farm",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/6577171938",
+      "name": "Gallery 23",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/7686815439",
+      "name": "Quirk Gallery",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/7687401587",
+      "name": "SEDIMENT ARTS",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/7690715566",
+      "name": "Page Bond Gallery",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/7690715567",
+      "name": "Try-Me Gallery",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/7690715602",
+      "name": "Uptown Gallery",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/7798871920",
+      "name": "Midtown Design Gallery",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/11474150545",
+      "name": "ArtCraft Designs",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/11658786502",
+      "name": "Libby Prison",
+      "reason": "lifecycle"
+    },
+    {
+      "osm": "node/12650891585",
+      "name": "Artspace",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "node/13040060833",
+      "name": "HJWA Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "node/13040159994",
+      "name": "Randolph Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "node/13351826899",
+      "name": "Black History Museum and Cultural Center of Virginia",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13596932139",
+      "name": "Lora Robins Gallery of Design from Nature",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13716772531",
+      "name": "Sons and Daughters of Ham Cemetery",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/14099720008",
+      "name": "Southside Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "node/14099987752",
+      "name": "Blackwell Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "node/14100032332",
+      "name": "Pocket Park at 30th & 1/2",
+      "reason": "not-public"
+    },
+    {
+      "osm": "relation/6243497",
+      "name": "Dry Rocks",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "relation/9991345",
+      "name": "Meadowview Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "relation/9991347",
+      "name": "Richmond National Battlefield Park",
+      "reason": "out-of-bounds"
+    },
+    {
+      "osm": "relation/10049004",
+      "name": "Chimborazo Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "relation/11520212",
+      "name": "Falling Creek Ironworks",
+      "reason": "out-of-bounds"
+    },
+    {
+      "osm": "relation/18754353",
+      "name": "Fuchsia Freedom Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/44659673",
+      "name": "Shockoe Hill Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/76227067",
+      "name": "JRPS - Archer Island",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/76314458",
+      "name": "James River Park System Main Area",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/76362268",
+      "name": "Hollywood Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/229708024",
+      "name": "Horticulture Garden/Virginia 529 Kids Zone",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/229722581",
+      "name": "The Anderson",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "way/236129239",
+      "name": "E. Clairborne and Lora Robins Sculpture Garden",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/246489937",
+      "name": "Surge Adventure Park",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "way/264469781",
+      "name": "Maymont",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/264670934",
+      "name": "Riverview Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/266877984",
+      "name": "Mt. Olivet Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/266877985",
+      "name": "Maury Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/275860177",
+      "name": "Community Garden",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/275860178",
+      "name": "Community Garden",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/297832945",
+      "name": "Maggie L. Walker National Historic Site",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/298621398",
+      "name": "Gillies Creek Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/298621431",
+      "name": "Libby Hill Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/305490385",
+      "name": "Belmont Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/316225977",
+      "name": "Dorey Park",
+      "reason": "out-of-bounds"
+    },
+    {
+      "osm": "way/321367788",
+      "name": "105 Gallery",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "way/321367819",
+      "name": "The Mix Gallery",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "way/321367904",
+      "name": "Edit: An Art Gallery for Good",
+      "reason": "not-a-place"
+    },
+    {
+      "osm": "way/346339011",
+      "name": "Lewis Ginter Botanical Garden",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/458404247",
+      "name": "Clark Palmore House",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/466010787",
+      "name": "Pleasants Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/494488645",
+      "name": "The Commons at The Estates at Horsepen",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/527243391",
+      "name": "Virginia War Memorial Carillon",
+      "reason": "access"
+    },
+    {
+      "osm": "way/562040599",
+      "name": "Trees of Hope",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/603129634",
+      "name": "Byrd Park Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/629189683",
+      "name": "Monument of Confederate War Dead",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/679306658",
+      "name": "Lt Charles Bland, Sr Park (Triangle Park)",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/679319538",
+      "name": "Walker's Creek Retention Basin Park",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/696551146",
+      "name": "Broadrock Sports Complex",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/707172944",
+      "name": "Three Lakes Nature Center and Aquarium",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/710456188",
+      "name": "Clarke-Palmore House Museum",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/725718156",
+      "name": "Maggie L. Walker National Historic Site",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/746445393",
+      "name": "Wilton House Museum",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/822722113",
+      "name": "Chimborazo Playground Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/822723703",
+      "name": "American Civil War Museum",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/823714647",
+      "name": "Uptown Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/835151345",
+      "name": "Evergreen Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/835151346",
+      "name": "East End Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/838648020",
+      "name": "Greenfield Athletic Complex",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/838651237",
+      "name": "Falling Creek Wayside Park",
+      "reason": "out-of-bounds"
+    },
+    {
+      "osm": "way/838651242",
+      "name": "Falling Creek Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/838651995",
+      "name": "Fernbrook Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/847264861",
+      "name": "Highland Gardens Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/847264868",
+      "name": "Glen Echo Recreation Area",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/847264879",
+      "name": "Vawter Street Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/847264880",
+      "name": "Brook Road Neighborhood Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/847264881",
+      "name": "Lakeside Recreation Area",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/947072836",
+      "name": "Pine Camp Cultural Arts and Community Center",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/1027071396",
+      "name": "Sankofa Community Orchard",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1037193429",
+      "name": "Owl Orchard Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1037196944",
+      "name": "McDonough Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1066468266",
+      "name": "Fonticello Food Forest",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1102589212",
+      "name": "Cary Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1108100433",
+      "name": "Laurel Hill Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1108100573",
+      "name": "Saint James Cemetery",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1123139284",
+      "name": "Humphrey Calder Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1132020640",
+      "name": "Alice Fitz Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1144831266",
+      "name": "Garber Street Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1144831267",
+      "name": "Powhatan Hill Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1204969844",
+      "name": "Barton Mansion Garden",
+      "reason": "access"
+    },
+    {
+      "osm": "way/1210324296",
+      "name": "Charles S. Gilpin Community Farm",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1210472679",
+      "name": "Roots of Woodville Neighborhood Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1210570716",
+      "name": "Broad Rock Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1210570717",
+      "name": "Stockton Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1210574642",
+      "name": "MCV Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1215070801",
+      "name": "Maymont Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1215077241",
+      "name": "Riverview Community Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1228546971",
+      "name": "Chimborazo Native Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1242677353",
+      "name": "Oak Grove Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1318972448",
+      "name": "Jefferson Avenue Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1321491852",
+      "name": "Historic Fulton Memorial Park",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1378116840",
+      "name": "Abby's Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1415709834",
+      "name": "South of the James Farmers Market",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/1425681875",
+      "name": "Powhatan Pool",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1426691926",
+      "name": "Chimborazo Playground",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1431231469",
+      "name": "Brookland Park Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1482016840",
+      "name": "Westhampton College Deanery Garden",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/1510538026",
+      "name": "Swansboro Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1550217525",
+      "name": "Planet Rock Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1550217526",
+      "name": "Hickory Hill Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1550243916",
+      "name": "Youth Garden at Bellemeade",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1550248064",
+      "name": "Hotchkiss Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "way/1550248446",
+      "name": "6 Points Community Garden",
+      "reason": "not-public"
+    },
+    {
+      "osm": "node/898600545",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/898650761",
+      "name": "Powhatan Chiefdom",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "node/2975991294",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/2975991296",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3000313549",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3000313643",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3000313646",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3025126982",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3068824552",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3072222428",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3072224228",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3086272675",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3103680164",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3645025324",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3645025328",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3645025334",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3645025363",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3698797307",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/3731204226",
+      "name": "Untitled Totem",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/4590239374",
+      "name": "Emancipation and Freedom Monument",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/5418265040",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/5418690392",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/6755269391",
+      "name": "Beaufont Springs",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/7678791212",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/7678791213",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/7678791214",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/9658766468",
+      "name": "Armstrong High School Historical Park",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/10656135919",
+      "name": "Wayside Spring",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/10966980667",
+      "name": "Ezekiel & Weilman Company Inc. Established 1924",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/10969244925",
+      "name": "See Richmond By Rail",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "node/11181019545",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/11214923823",
+      "name": "Lanie Kruszewski",
+      "reason": "in-memoriam"
+    },
+    {
+      "osm": "node/11214923824",
+      "name": "Corey Frazier",
+      "reason": "in-memoriam"
+    },
+    {
+      "osm": "node/11214923825",
+      "name": "Robyn Hightman",
+      "reason": "in-memoriam"
+    },
+    {
+      "osm": "node/11276064866",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/11308739736",
+      "name": "Buttermilk Spring",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/11376212075",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/11393260639",
+      "name": "Chimborazo Spring",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/11964861703",
+      "name": "Wilfred Emory Cutshaw (1838-1907)",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/11992817469",
+      "name": "Richmond's First African American Police Officers",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/12077955097",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/12509521453",
+      "name": "",
+      "reason": "in-memoriam"
+    },
+    {
+      "osm": "node/12542224572",
+      "name": "Byrd Park Spring",
+      "reason": "access"
+    },
+    {
+      "osm": "node/12542224573",
+      "name": "Fonticello Lithia Spring",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/12542224575",
+      "name": "Forest Hill Spring",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/12542224576",
+      "name": "Sulphur spring",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/12650730926",
+      "name": "Dogwood Dell Spring",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/13046921398",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13235715546",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13289799964",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13430985501",
+      "name": "2816 E. Grace",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13588416210",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13598206687",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13598209212",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13598209216",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13598209219",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13614768825",
+      "name": "3013 Libby Terrace",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13614768826",
+      "name": "3015 Libby Terrace",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13614768827",
+      "name": "2916 Libby Terrace",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615585198",
+      "name": "2814 E. Franklin Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615585199",
+      "name": "2810 E. Franklin Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615585200",
+      "name": "2610 E. Franklin Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589403",
+      "name": "2510 E. Franklin Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589404",
+      "name": "2407 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589405",
+      "name": "2519 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589406",
+      "name": "2601 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589408",
+      "name": "2712 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589409",
+      "name": "2718 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589410",
+      "name": "2200 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589411",
+      "name": "2204 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589412",
+      "name": "2210 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589413",
+      "name": "2215 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589415",
+      "name": "315 N. 23rd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589416",
+      "name": "317 N. 23rd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589417",
+      "name": "Adams Row 2306 E. Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589418",
+      "name": "Adams Row 2312 E. Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589419",
+      "name": "Adams Row 2314 E. Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589420",
+      "name": "Adams Row 2316 E. Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615589425",
+      "name": "605 N. 25th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615698239",
+      "name": "5 North 29th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13615830662",
+      "name": "609 Chimborazo Boulevard",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245526",
+      "name": "3108 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245527",
+      "name": "2708 E. Franklin Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245528",
+      "name": "2710 E. Franklin Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245529",
+      "name": "2703 E Franklin Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245530",
+      "name": "2514 E. Franklin Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245531",
+      "name": "2601 E. Franklin Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245532",
+      "name": "2310 E Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245534",
+      "name": "2306 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245538",
+      "name": "2204 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245539",
+      "name": "2210 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245541",
+      "name": "260 N. 22nd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245542",
+      "name": "2119 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245543",
+      "name": "2205 East Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245545",
+      "name": "2307 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245546",
+      "name": "308 N. 23rd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245547",
+      "name": "312 N. 23rd",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245548",
+      "name": "318 N. 23rd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245549",
+      "name": "321 N. 23rd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245550",
+      "name": "2505 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245551",
+      "name": "2516 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245552",
+      "name": "2608 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245553",
+      "name": "2610 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245555",
+      "name": "2709 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245556",
+      "name": "2711 East Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245557",
+      "name": "2715 E. Grace",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245558",
+      "name": "208 North 28th",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245559",
+      "name": "210 N. 28th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13616245560",
+      "name": "2715 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13618355751",
+      "name": "3406 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13618355752",
+      "name": "3000 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13618355753",
+      "name": "720 N. 35th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13618518431",
+      "name": "623 Chimborazo Boulevard",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13623872840",
+      "name": "917 N 27th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13630474048",
+      "name": "625 North 31st Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13630474049",
+      "name": "635 North 27th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13630474050",
+      "name": "625 North 26th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13630474051",
+      "name": "403 North 27th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13630474052",
+      "name": "2508 East Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13630474053",
+      "name": "2822 East Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13630474054",
+      "name": "3001 East Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13631363276",
+      "name": "2611 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058558",
+      "name": "2813 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058559",
+      "name": "2809 E. Grace Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058561",
+      "name": "613 N 22nd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058562",
+      "name": "602 N 22nd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058563",
+      "name": "2108 E. Leigh Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058564",
+      "name": "2110 E. Leigh Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058565",
+      "name": "522 N 21st Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058566",
+      "name": "605 N 21st Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058567",
+      "name": "2109 Cedar Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058568",
+      "name": "2115 Cedar Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058569",
+      "name": "802 N. 25th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058570",
+      "name": "700 N. 27th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058571",
+      "name": "606 N. 27th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058572",
+      "name": "522 N. 27th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058573",
+      "name": "506 N. 27th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058574",
+      "name": "501 N. 27th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058575",
+      "name": "3101 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058576",
+      "name": "3107 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13634058577",
+      "name": "411 Chimborazo Boulevard",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13636183194",
+      "name": "425 N. 26th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13636183196",
+      "name": "705 N. 23rd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13641321242",
+      "name": "3420 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13641321243",
+      "name": "3001 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13641321244",
+      "name": "3009 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13641321245",
+      "name": "2917 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13641321246",
+      "name": "2910 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13641321247",
+      "name": "2808 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13641321248",
+      "name": "2106 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645857190",
+      "name": "Adams Row 2302 E. Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645857191",
+      "name": "Adams Row 2310 E. Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645857193",
+      "name": "411 N. 25th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645857194",
+      "name": "2401 E. Clay Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645857195",
+      "name": "411 N. 23rd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645857196",
+      "name": "414 N. 23rd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645857197",
+      "name": "420 N. 23rd Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645862301",
+      "name": "600 N. 29th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645862302",
+      "name": "416 N. 26th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645862303",
+      "name": "514 N. 25th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645862304",
+      "name": "2506 E. Leigh St.",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13645862305",
+      "name": "2508 E. Leigh St.",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13658910260",
+      "name": "Brookland Park Blvd at Ninja Kombucha",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13676646947",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13706073070",
+      "name": "305 N. 28th St.",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13816475479",
+      "name": "2613 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13816475480",
+      "name": "2811 E. Broad Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13816475481",
+      "name": "314 N. 32nd St",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13816475482",
+      "name": "426 N. 32nd St",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13901460039",
+      "name": "606 N. 31st Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13901460040",
+      "name": "611 N. 31st Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13901460041",
+      "name": "600 N. 31st Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13908007193",
+      "name": "801 N 24th St",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13908007194",
+      "name": "517 N 24th St",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13908007195",
+      "name": "810 N 26th St",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13909825733",
+      "name": "611 North 26th Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13915751435",
+      "name": "3403 E. Marshall Street",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13919159240",
+      "name": "2214 E. Marshall St.",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/13969039809",
+      "name": "Young's Spring",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "node/13978497119",
+      "name": "The Case of the Missing Executive",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "node/14087716103",
+      "name": "Mitchell Spring",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "relation/12435112",
+      "name": "Powhite Parkway Bridge",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/76167516",
+      "name": "Canal Walk",
+      "reason": "access"
+    },
+    {
+      "osm": "way/76211910",
+      "name": "Reedy Creek Trail",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/369177609",
+      "name": "Ginter Park Elevated Tank",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "way/658621480",
+      "name": "Virginia Washington Monument",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/745211335",
+      "name": "Warwick Road Elevated Tank",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "way/745219952",
+      "name": "Woodside Elevated Tank",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "way/753726460",
+      "name": "",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/760798848",
+      "name": "Stratford Hills Elevated Tank",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "way/762180177",
+      "name": "Hioaks Elevated Tank",
+      "reason": "no-vibe"
+    },
+    {
+      "osm": "way/916263806",
+      "name": "CSX A-Line Bridge",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1227359257",
+      "name": "CSX Bellwood Subdivision James River Bridge",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/1481969851",
+      "name": "Ships in the Night",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1481986496",
+      "name": "Within",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1482075379",
+      "name": "Happy Puppy (FETCH-A-CURE)",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1483876387",
+      "name": "Sports Are Life",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1483876388",
+      "name": "Michael Ramey Tribute",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "way/1483877196",
+      "name": "Welcoming Your Teddy Bears and Other Contributions",
+      "reason": "unnamed"
+    },
+    {
+      "osm": "way/1484771673",
+      "name": "Brown Ballerinas for Change",
+      "reason": "no-anchor"
+    },
+    {
+      "osm": "node/13353752420",
+      "name": "Science Museum of Virginia",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/76314480",
+      "name": "Brown's Island",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/146689449",
+      "name": "Virginia Museum of Fine Arts",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/225586238",
+      "name": "Virginia Holocaust Museum",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "relation/6243498",
+      "name": "Belle Isle",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/264469782",
+      "name": "Byrd Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/44888557",
+      "name": "Children's Museum of Richmond",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/224601768",
+      "name": "The Valentine",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/345031039",
+      "name": "John Marshall House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/3500856476",
+      "name": "First Freedom Center",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13352676244",
+      "name": "Edgar Allan Poe Museum",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/224601753",
+      "name": "White House of the Confederacy",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2722730584",
+      "name": "Christopher Newport Cross",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/463588973",
+      "name": "The Richmond Railroad Museum",
+      "reason": "duplicate-name"
+    },
+    {
+      "osm": "node/4261144429",
+      "name": "Thomas J. \"Stonewall\" Jackson",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/7095866282",
+      "name": "Neptune Virginia Beach Maquette",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1197168808",
+      "name": "Virginia Women's Monument",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2720391372",
+      "name": "Bill Bojangles Robinson Statue",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "relation/13728919",
+      "name": "Great Shiplock Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/45031115",
+      "name": "Forest Hill Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/113023443",
+      "name": "Capitol Square",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/266890328",
+      "name": "Jefferson Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/746447566",
+      "name": "Taylor's Hill Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1226872659",
+      "name": "Saint Johns Cemetery",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/9785880012",
+      "name": "Church Hill Overlook",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/677107281",
+      "name": "Battery Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1482254159",
+      "name": "I Can't Breathe",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1482324290",
+      "name": "Bricks",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1482260262",
+      "name": "Uneeda Biscuit ghost sign",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1483082737",
+      "name": "A Pearl of Wisdom",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/3017471233",
+      "name": "Virginia Center for Architecture",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13203477801",
+      "name": "Birdhouse Farmers Market",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/315813184",
+      "name": "Huguenot Park",
+      "reason": "duplicate-name"
+    },
+    {
+      "osm": "node/13615589414",
+      "name": "Burton-Farrar House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13616245535",
+      "name": "Thomas Hardgrove Building",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13616245536",
+      "name": "2214-2220 E. Grace Street",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13616245544",
+      "name": "Miles Turpin House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13616245562",
+      "name": "Adams-Crump House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13616245563",
+      "name": "Jackson Turpin House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13616245565",
+      "name": "The J.M. Carter House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13634058560",
+      "name": "Adams Double House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13641321241",
+      "name": "Hilary Baker House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13645857199",
+      "name": "2018 Princess Anne Avenue",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13705985480",
+      "name": "T. Wiley Davis House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1481983457",
+      "name": "Bernie",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/3731204224",
+      "name": "La Riviere",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/3731204225",
+      "name": "Reclining Figure",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/4261144427",
+      "name": "Civil Rights Memorial",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/4261144428",
+      "name": "Dr. Hunter Holmes McGuire",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/4261144430",
+      "name": "Governor William Smith",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/6375121336",
+      "name": "Mr. Smedley Statue",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/7095866277",
+      "name": "Little Lady of the Sea",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/7095866281",
+      "name": "Man and Vegetation",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/11229751280",
+      "name": "Cosmic Perception",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13585988894",
+      "name": "Plaza Art",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13658880381",
+      "name": "The Roots of Richmond",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13993023412",
+      "name": "The War Horse",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/14077416778",
+      "name": "Spinosaurus Aegyptiacus",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1481952846",
+      "name": "Black and White Man Boxing",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1483080205",
+      "name": "Plaza Art",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2805247799",
+      "name": "Healing Garden",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2805247800",
+      "name": "Sunken Garden",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2805247803",
+      "name": "Flagler Perennial Garden",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2805247821",
+      "name": "Grace Arents Garden",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2805247824",
+      "name": "Margaret Streb Conifer Garden",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/3696244196",
+      "name": "Reconciliation Statue",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/143231940",
+      "name": "Scuffletown Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/236138603",
+      "name": "Arthur Ashe Monument",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/264479487",
+      "name": "Oregon Hill Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/298032396",
+      "name": "Japanese Garden",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/303803586",
+      "name": "JRPS Texas Beach Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/305756045",
+      "name": "Civil War Cemetery",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/679324138",
+      "name": "Ancarrow's Landing",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1207244251",
+      "name": "Petronius S. Jones Park",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/898650652",
+      "name": "Tredegar Iron Works",
+      "reason": "duplicate-name"
+    },
+    {
+      "osm": "node/2975967750",
+      "name": "Floodwall Overlook",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2975967763",
+      "name": "Old Manchester Bridge Overlook",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/3070522846",
+      "name": "Pipeline Overlook",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/3500856477",
+      "name": "General Assembly of Virginia",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/6568119689",
+      "name": "Change the Narrative",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/10164803057",
+      "name": "Confederate Laboratory",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/10164803156",
+      "name": "Haxall Headgates",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/10164803158",
+      "name": "Haxall Millrace",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/11992817472",
+      "name": "Ebenezer Baptist Church",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13609366937",
+      "name": "Libby House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13645857192",
+      "name": "The Lewis Doughty House",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/167824987",
+      "name": "Manchester Floodwall Walk",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/303800625",
+      "name": "Buttermilk Connector",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/305179078",
+      "name": "Buttermilk Connector",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/561126205",
+      "name": "Libbie Landing",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1419750362",
+      "name": "North Bank Trail",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1419750365",
+      "name": "North Bank Trail",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1419750366",
+      "name": "North Bank Trail",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/1489288305",
+      "name": "Manchester Floodwall Walk",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/3732461331",
+      "name": "Grand Kugel",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/4590239369",
+      "name": "The Headman",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/7095866278",
+      "name": "Red Reeds",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/7095866279",
+      "name": "Oracle",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/10162688920",
+      "name": "The Mill",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/10966377707",
+      "name": "Soft",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13585979417",
+      "name": "Moonshine",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13586024167",
+      "name": "Dan (Janus)",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/13682257168",
+      "name": "Kugel",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2805247594",
+      "name": "Rose Garden",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/2805247801",
+      "name": "Asian Valley",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "way/601385964",
+      "name": "Herb Garden",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/898650689",
+      "name": "John Jasper",
+      "reason": "duplicate"
+    },
+    {
+      "osm": "node/10966042589",
+      "name": "Monroe Park",
+      "reason": "duplicate-name"
+    },
+    {
+      "osm": "way/1123145238",
+      "name": "Canal Walk",
+      "reason": "duplicate-name"
+    },
+    {
+      "osm": "way/1226808444",
+      "name": "Canal Walk",
+      "reason": "duplicate-name"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "harvestedAt": "2026-08-21T21:50:57.685Z",
+  "endpoint": "https://overpass-api.de/api/interpreter",
+  "bbox": {
+    "south": 37.44,
+    "west": -77.6,
+    "north": 37.64,
+    "east": -77.34
+  },
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "queries": [
+    {
+      "file": "destinations.json",
+      "osmBase": "2026-08-21T21:47:41Z",
+      "elements": 278,
+      "ql": "[out:json][timeout:180];\n(\n  nwr[leisure=park][name](37.44,-77.60,37.64,-77.34);\n  nwr[leisure=garden][name](37.44,-77.60,37.64,-77.34);\n  nwr[leisure=nature_reserve][name](37.44,-77.60,37.64,-77.34);\n  nwr[landuse=cemetery][name](37.44,-77.60,37.64,-77.34);\n  nwr[tourism~\"^(museum|gallery|zoo|aquarium|theme_park)$\"][name](37.44,-77.60,37.64,-77.34);\n  nwr[amenity=marketplace][name](37.44,-77.60,37.64,-77.34);\n  nwr[historic~\"^(monument|fort|archaeological_site|city_gate|aqueduct)$\"][name](37.44,-77.60,37.64,-77.34);\n);\nout center tags;"
+    },
+    {
+      "file": "detours.json",
+      "osmBase": "2026-08-21T21:47:41Z",
+      "elements": 336,
+      "ql": "[out:json][timeout:180];\n(\n  nwr[tourism=artwork][name](37.44,-77.60,37.64,-77.34);\n  nwr[tourism=viewpoint](37.44,-77.60,37.64,-77.34);\n  nwr[man_made~\"^(bridge|pier|water_tower|lighthouse|obelisk)$\"][name](37.44,-77.60,37.64,-77.34);\n  way[highway=steps][name](37.44,-77.60,37.64,-77.34);\n  nwr[natural~\"^(peak|cliff|spring|waterfall)$\"][name](37.44,-77.60,37.64,-77.34);\n  nwr[historic=memorial][memorial](37.44,-77.60,37.64,-77.34);\n);\nout center tags;"
+    },
+    {
+      "file": "gates-park.json",
+      "osmBase": "2026-08-21T21:48:39Z",
+      "elements": 195,
+      "ql": "[out:json][timeout:180];\nway[leisure=park][name](37.44,-77.60,37.64,-77.34)->.p;\nway[highway~\"^(footway|path|steps|pedestrian|cycleway|residential|service)$\"](37.44,-77.60,37.64,-77.34)->.f;\nnode(w.p)->.pn;\nnode(w.f)->.fn;\nnode.pn.fn;\nout;"
+    },
+    {
+      "file": "gates-garden.json",
+      "osmBase": "2026-08-21T21:48:39Z",
+      "elements": 24,
+      "ql": "[out:json][timeout:180];\nway[leisure=garden][name](37.44,-77.60,37.64,-77.34)->.p;\nway[highway~\"^(footway|path|steps|pedestrian|cycleway|residential|service)$\"](37.44,-77.60,37.64,-77.34)->.f;\nnode(w.p)->.pn;\nnode(w.f)->.fn;\nnode.pn.fn;\nout;"
+    },
+    {
+      "file": "gates-reserve.json",
+      "osmBase": "2026-08-21T21:49:48Z",
+      "elements": 0,
+      "ql": "[out:json][timeout:180];\nway[leisure=nature_reserve][name](37.44,-77.60,37.64,-77.34)->.p;\nway[highway~\"^(footway|path|steps|pedestrian|cycleway|residential|service)$\"](37.44,-77.60,37.64,-77.34)->.f;\nnode(w.p)->.pn;\nnode(w.f)->.fn;\nnode.pn.fn;\nout;"
+    },
+    {
+      "file": "gates-cemetery.json",
+      "osmBase": "2026-08-21T21:49:48Z",
+      "elements": 12,
+      "ql": "[out:json][timeout:180];\nway[landuse=cemetery][name](37.44,-77.60,37.64,-77.34)->.p;\nway[highway~\"^(footway|path|steps|pedestrian|cycleway|residential|service)$\"](37.44,-77.60,37.64,-77.34)->.f;\nnode(w.p)->.pn;\nnode(w.f)->.fn;\nnode.pn.fn;\nout;"
+    }
+  ]
+}

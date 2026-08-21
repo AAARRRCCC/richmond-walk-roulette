@@ -1,0 +1,4275 @@
+{
+  "elements": [
+    {
+      "type": "node",
+      "id": 356598361,
+      "lat": 37.5259806,
+      "lon": -77.5538764,
+      "tags": {
+        "ele": "85",
+        "gnis:feature_id": "1759847",
+        "historic": "district",
+        "leisure": "park",
+        "name": "Bon Air Historic District"
+      }
+    },
+    {
+      "type": "node",
+      "id": 356602345,
+      "lat": 37.5890346,
+      "lon": -77.4435942,
+      "tags": {
+        "ele": "61",
+        "gnis:feature_id": "1780520",
+        "historic": "district",
+        "leisure": "park",
+        "name": "Ginter Park Historic District",
+        "wikidata": "Q49493870"
+      }
+    },
+    {
+      "type": "node",
+      "id": 356602799,
+      "lat": 37.5332845,
+      "lon": -77.4207703,
+      "tags": {
+        "ele": "41",
+        "gnis:feature_id": "1780679",
+        "historic": "district",
+        "leisure": "park",
+        "name": "Saint Johns Church Historic District",
+        "name:etymology:wikidata": "Q2319561",
+        "wikidata": "Q49555866"
+      }
+    },
+    {
+      "type": "node",
+      "id": 356602830,
+      "lat": 37.5475642,
+      "lon": -77.5831268,
+      "tags": {
+        "ele": "66",
+        "gnis:feature_id": "1780701",
+        "leisure": "park",
+        "name": "Fisher Park",
+        "wikidata": "Q49489581"
+      }
+    },
+    {
+      "type": "node",
+      "id": 367996531,
+      "lat": 37.5391559,
+      "lon": -77.3797519,
+      "tags": {
+        "addr:state": "VA",
+        "ele": "46",
+        "gnis:feature_id": "1760335",
+        "name": "Grand Lodge of Virginia Library and Museum",
+        "source": "USGS Geonames",
+        "tourism": "museum",
+        "website": "https://grandlodgeofvirginia.org/library/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2720391372,
+      "lat": 37.5493473,
+      "lon": -77.4403617,
+      "tags": {
+        "historic": "monument",
+        "name": "Bill Bojangles Robinson Statue",
+        "wikidata": "Q49475208"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247594,
+      "lat": 37.6216502,
+      "lon": -77.4707525,
+      "tags": {
+        "leisure": "garden",
+        "name": "Rose Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247716,
+      "lat": 37.6223145,
+      "lon": -77.4699974,
+      "tags": {
+        "leisure": "garden",
+        "name": "Children's Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247798,
+      "lat": 37.6205497,
+      "lon": -77.4712064,
+      "tags": {
+        "leisure": "garden",
+        "name": "Four Seasons Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247799,
+      "lat": 37.6207571,
+      "lon": -77.4712249,
+      "tags": {
+        "leisure": "garden",
+        "name": "Healing Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247800,
+      "lat": 37.6209328,
+      "lon": -77.4715052,
+      "tags": {
+        "leisure": "garden",
+        "name": "Sunken Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247801,
+      "lat": 37.6210771,
+      "lon": -77.4708725,
+      "tags": {
+        "leisure": "garden",
+        "name": "Asian Valley"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247802,
+      "lat": 37.6213438,
+      "lon": -77.4700056,
+      "tags": {
+        "leisure": "garden",
+        "name": "West Island Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247803,
+      "lat": 37.6211985,
+      "lon": -77.4694687,
+      "tags": {
+        "leisure": "garden",
+        "name": "Flagler Perennial Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247821,
+      "lat": 37.6222264,
+      "lon": -77.469365,
+      "tags": {
+        "leisure": "garden",
+        "name": "Grace Arents Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247822,
+      "lat": 37.6218546,
+      "lon": -77.4682493,
+      "tags": {
+        "leisure": "garden",
+        "name": "Lace House Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247823,
+      "lat": 37.6229027,
+      "lon": -77.4718511,
+      "tags": {
+        "leisure": "garden",
+        "name": "Lucy Payne Minor Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247824,
+      "lat": 37.6224958,
+      "lon": -77.4716643,
+      "tags": {
+        "leisure": "garden",
+        "name": "Margaret Streb Conifer Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247825,
+      "lat": 37.6213825,
+      "lon": -77.4711553,
+      "tags": {
+        "leisure": "garden",
+        "name": "Vienna Cobb Anderson Meadow"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3017471233,
+      "lat": 37.5582298,
+      "lon": -77.4683201,
+      "tags": {
+        "fee": "no",
+        "name": "Virginia Center for Architecture",
+        "opening_hours": "Mo-Sa 10:00-17:00",
+        "phone": "+1 804-644-3041",
+        "tourism": "museum",
+        "website": "https://architectureva.org/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3025124422,
+      "lat": 37.5255759,
+      "lon": -77.4132195,
+      "tags": {
+        "historic": "monument",
+        "mapillary": "1274637277733945",
+        "name": "Statue of Liberty"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3216566867,
+      "lat": 37.5361438,
+      "lon": -77.4232528,
+      "tags": {
+        "historic": "archaeological_site",
+        "historic:civilization": "modern",
+        "name": "C&O Church Hill Tunnel Western Portal",
+        "tomb": "yes",
+        "wikidata": "Q5116620",
+        "wikipedia": "en:Church Hill Tunnel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3216591411,
+      "lat": 37.5271926,
+      "lon": -77.4148935,
+      "tags": {
+        "historic": "archaeological_site",
+        "historic:civilization": "modern",
+        "name": "C&O Church Hill Tunnel Eastern Entrance",
+        "wikidata": "Q5116620",
+        "wikipedia": "en:Church Hill Tunnel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3328148226,
+      "lat": 37.547223,
+      "lon": -77.4441729,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "220",
+        "addr:state": "VA",
+        "addr:street": "West Broad Street",
+        "name": "Ghostprint Gallery",
+        "opening_hours": "We-Sa 12:00-17:00",
+        "phone": "+1 804-344-1557",
+        "tourism": "gallery",
+        "website": "https://www.ghostprintgallery.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3329638727,
+      "lat": 37.5470213,
+      "lon": -77.4438357,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "208",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Broad Street",
+        "name": "Visual Art Studio",
+        "opening_hours": "We-Fr 12:00-15:00,16:00-18:00; Sa 12:00-15:00",
+        "phone": "+1 804-644-1368",
+        "tourism": "gallery",
+        "website": "http://www.thelincolnstudio.com/Anne_Visual_Art_Studio.html"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3500856476,
+      "lat": 37.534824,
+      "lon": -77.4325159,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "14",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "South 14th Street",
+        "name": "First Freedom Center",
+        "opening_hours": "Mo off; Tu-Sa 10:00-17:00; Su 12:00-17:00",
+        "phone": "+1 804-649-0711",
+        "source": "esri_USDOT_Virgina;survey",
+        "tourism": "museum",
+        "website": "https://www.firstfreedom.org/",
+        "wikidata": "Q5453036"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3696244196,
+      "lat": 37.5348598,
+      "lon": -77.4304292,
+      "tags": {
+        "historic": "monument",
+        "name": "Reconciliation Statue"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4556710162,
+      "lat": 37.5342063,
+      "lon": -77.5608343,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2614",
+        "addr:postcode": "23235",
+        "addr:state": "VA",
+        "addr:street": "Buford Road",
+        "contact:facebook": "https://www.facebook.com/mccoolsofbonair/",
+        "name": "McCools of Bon Air",
+        "phone": "+1 804-272-3161",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5411281241,
+      "lat": 37.5911517,
+      "lon": -77.4971482,
+      "tags": {
+        "leisure": "garden",
+        "name": "Lake View Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5696388058,
+      "lat": 37.5580274,
+      "lon": -77.4736281,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "428",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "North Boulevard",
+        "fee": "no",
+        "museum": "history",
+        "name": "Virginia Museum of History and Culture",
+        "opening_hours": "10:00-17:00; PH 10:00-17:00; Nov Th[4] off; Jan 01 off; Dec 25 off",
+        "phone": "+1 804-340-1800",
+        "tourism": "museum",
+        "website": "https://www.virginiahistory.org/",
+        "wikidata": "Q7934315"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5838105089,
+      "lat": 37.5473324,
+      "lon": -77.4601317,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1514",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Main Street",
+        "name": "Reynolds Gallery",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6174871332,
+      "lat": 37.5375718,
+      "lon": -77.4800277,
+      "tags": {
+        "fee": "no",
+        "name": "Maymont Farm",
+        "tourism": "zoo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6577171938,
+      "lat": 37.5458935,
+      "lon": -77.4427564,
+      "tags": {
+        "name": "Gallery 23",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7686815439,
+      "lat": 37.5466943,
+      "lon": -77.4440801,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "207",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Broad Street",
+        "check_date": "2025-10-19",
+        "name": "Quirk Gallery",
+        "phone": "+1 804-340-6036",
+        "tourism": "gallery",
+        "website": "https://www.quirkgallery.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7687401587,
+      "lat": 37.5436404,
+      "lon": -77.4405662,
+      "tags": {
+        "name": "SEDIMENT ARTS",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7690715566,
+      "lat": 37.5476932,
+      "lon": -77.4619977,
+      "tags": {
+        "name": "Page Bond Gallery",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7690715567,
+      "lat": 37.5476191,
+      "lon": -77.4618076,
+      "tags": {
+        "name": "Try-Me Gallery",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7690715602,
+      "lat": 37.5460861,
+      "lon": -77.4574503,
+      "tags": {
+        "name": "Uptown Gallery",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7798871920,
+      "lat": 37.5905122,
+      "lon": -77.4938832,
+      "tags": {
+        "name": "Midtown Design Gallery",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8295609184,
+      "lat": 37.4787795,
+      "lon": -77.5164422,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "6640",
+        "addr:postcode": "23224",
+        "addr:state": "VA",
+        "addr:street": "Hull Street Road",
+        "leisure": "park",
+        "name": "Homeless Camp Ground",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10553699900,
+      "lat": 37.5247904,
+      "lon": -77.4377054,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "400",
+        "addr:postcode": "23224",
+        "addr:state": "VA",
+        "addr:street": "Hull Street",
+        "amenity": "marketplace",
+        "name": "Hatch Local",
+        "source": "esri_USDOT_Virgina",
+        "website": "https://www.hatchlocalfoodhall.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11474150545,
+      "lat": 37.5485363,
+      "lon": -77.4463808,
+      "tags": {
+        "check_date": "2023-12-31",
+        "name": "ArtCraft Designs",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11658786502,
+      "lat": 37.5306378,
+      "lon": -77.4266021,
+      "tags": {
+        "archaeological_site": "building",
+        "disused:amenity": "prison",
+        "disused:building": "warehouse",
+        "disused:end_date": "1865",
+        "disused:name_1": "Libby & Son Co.",
+        "disused:start_date": "1861",
+        "historic": "archaeological_site",
+        "historic:civilization": "modern",
+        "name": "Libby Prison",
+        "name:etymology:wikidata": "Q124650219",
+        "wikipedia": "en:Libby Prison"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12650891585,
+      "lat": 37.5389769,
+      "lon": -77.5183123,
+      "tags": {
+        "check_date": "2025-03-30",
+        "contact:phone": "+1 804-232-6464",
+        "contact:website": "https://www.artspacegallery.org/",
+        "fee": "no",
+        "name": "Artspace",
+        "opening_hours": "We-Su 12:00-16:00; Mo-Tu off",
+        "opening_hours:signed": "yes",
+        "source:opening_hours": "entrance; website",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12952541160,
+      "lat": 37.5757653,
+      "lon": -77.537403,
+      "tags": {
+        "description": "African American burying ground on the site of the former Westham plantation.",
+        "landuse": "cemetery",
+        "name": "Burying Ground"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13040060833,
+      "lat": 37.5508885,
+      "lon": -77.4399752,
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "HJWA Community Garden",
+        "operator": "Historic Jackson Ward Association",
+        "website": "https://www.hjwa.org/news/hjwa-community-garden/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13040159994,
+      "lat": 37.5441291,
+      "lon": -77.4625331,
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Randolph Community Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13203477801,
+      "lat": 37.544389,
+      "lon": -77.462018,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1507",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "Grayland Avenue",
+        "amenity": "marketplace",
+        "name": "Birdhouse Farmers Market",
+        "opening_hours": "Tu 15:00-18:30",
+        "website": "https://birdhousefarmersmarket.org/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13351826899,
+      "lat": 37.550047,
+      "lon": -77.4413499,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "122",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Leigh Street",
+        "museum": "history",
+        "name": "Black History Museum and Cultural Center of Virginia",
+        "phone": "+1 804-780-9093",
+        "tourism": "museum",
+        "website": "https://blackhistorymuseum.org/",
+        "wikidata": "Q117072297"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13352676244,
+      "lat": 37.5321579,
+      "lon": -77.4260748,
+      "tags": {
+        "fee": "yes",
+        "name": "Edgar Allan Poe Museum",
+        "opening_hours": "Tu-Sa 10:00-17:00; Su 11:00-17:00",
+        "phone": "+1 804-767-5809",
+        "tourism": "museum",
+        "website": "https://poemuseum.org/",
+        "wikidata": "Q1130116"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13353752420,
+      "lat": 37.5611207,
+      "lon": -77.46582,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2500",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Broad Street",
+        "description": "Kid-focused, hands-on exhibits about animals, the human body, the cosmos and the environment.",
+        "museum": "children",
+        "name": "Science Museum of Virginia",
+        "opening_hours": "Mo-Sa 09:30-17:00; Su 11:30-17:00",
+        "phone": "+1-804-864-1400",
+        "tourism": "museum",
+        "website": "https://smv.org/",
+        "wikidata": "Q7433575",
+        "wikipedia": "en:Science Museum of Virginia"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13361298862,
+      "lat": 37.5261395,
+      "lon": -77.4421982,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "212",
+        "addr:postcode": "23224",
+        "addr:state": "VA",
+        "addr:street": "West 6th Street",
+        "amenity": "marketplace",
+        "check_date": "2025-12-08",
+        "check_date:currency:XBT": "2025-12-08",
+        "contact:facebook": "rvamakersmarket",
+        "contact:instagram": "rvamakersmarket",
+        "craft": "handicraft",
+        "currency:XBT": "yes",
+        "description": "Market held on the first Saturday of each month.",
+        "name": "Richmond Makers Market",
+        "opening_hours": "Sa 12:00-18:00",
+        "payment:lightning": "yes",
+        "payment:lightning:operator": "square",
+        "payment:lightning_contactless": "no",
+        "payment:onchain": "no",
+        "phone": "+1 804 813 9965",
+        "temporary": "yes",
+        "website": "https://www.rvamakersmarket.us/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13544263043,
+      "lat": 37.5749265,
+      "lon": -77.5397033,
+      "tags": {
+        "leisure": "park",
+        "name": "University Forum"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13568547124,
+      "lat": 37.5718702,
+      "lon": -77.5422595,
+      "tags": {
+        "leisure": "park",
+        "name": "Street Lamp"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13568547130,
+      "lat": 37.5730404,
+      "lon": -77.5425927,
+      "tags": {
+        "description": "Out of Service",
+        "leisure": "park",
+        "name": "Emergency Call Box"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13596932139,
+      "lat": 37.5774634,
+      "lon": -77.5390095,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "261",
+        "addr:postcode": "23173",
+        "addr:state": "VA",
+        "addr:street": "Richmond Way",
+        "name": "Lora Robins Gallery of Design from Nature",
+        "opening_hours": "Mo-Fr 11:00-17:00",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13716772531,
+      "lat": 37.5843393,
+      "lon": -77.5346715,
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Sons and Daughters of Ham Cemetery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13727734577,
+      "lat": 37.5504772,
+      "lon": -77.4328868,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "303",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Bates Street",
+        "fixme": "A building exists here starting some time in late 2025/early 2026. Should be added once aerial imagery is updated to see it.",
+        "mapillary": "1501317741634440",
+        "museum": "history",
+        "name": "The JXN Haus",
+        "operator": "The JXN Project",
+        "operator:wikidata": "Q139270866",
+        "owner": "The JXN Project",
+        "owner:wikidata": "Q139270866",
+        "tourism": "museum",
+        "wikidata": "Q139270711"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14099720008,
+      "lat": 37.4992561,
+      "lon": -77.5106859,
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Southside Community Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14099987752,
+      "lat": 37.5156212,
+      "lon": -77.4422659,
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Blackwell Community Garden",
+        "operator": "City of Richmond"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14100032332,
+      "lat": 37.5132783,
+      "lon": -77.4644788,
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Pocket Park at 30th & 1/2",
+        "operator": "City of Richmond"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6036457,
+      "center": {
+        "lat": 37.5492062,
+        "lon": -77.515772
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Pony Pasture Park",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "source": "http://www.richmondgov.com/Parks/index.aspx",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6243497,
+      "center": {
+        "lat": 37.5260295,
+        "lon": -77.4563168
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Dry Rocks",
+        "natural": "bare_rock",
+        "type": "multipolygon",
+        "wikidata": "Q140084465"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6243498,
+      "center": {
+        "lat": 37.5292039,
+        "lon": -77.4527471
+      },
+      "tags": {
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/95000246",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-0455/",
+        "historic": "district",
+        "leisure": "nature_reserve",
+        "name": "Belle Isle",
+        "nrhp:criteria": "(A)",
+        "nrhp:inscription_date": "1995-03-17",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "ref:US-VA:vlr": "127-0455",
+        "ref:nrhp": "95000246",
+        "type": "multipolygon",
+        "vlr:inscription_date": "1995-01-15",
+        "wikidata": "Q4883643",
+        "wikipedia": "en:Belle Isle (Richmond, Virginia)"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 9294688,
+      "center": {
+        "lat": 37.5217344,
+        "lon": -77.5242577
+      },
+      "tags": {
+        "ele": "55",
+        "gnis:feature_id": "1780802",
+        "leisure": "nature_reserve",
+        "name": "Powhite Park",
+        "natural": "wood",
+        "type": "multipolygon",
+        "wikidata": "Q14713095"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 9972905,
+      "center": {
+        "lat": 37.5449308,
+        "lon": -77.5639807
+      },
+      "tags": {
+        "leisure": "nature_reserve",
+        "name": "Lewis G. Larus Park",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 9991345,
+      "center": {
+        "lat": 37.5800048,
+        "lon": -77.3611908
+      },
+      "tags": {
+        "boundary": "protected_area",
+        "leisure": "nature_reserve",
+        "name": "Meadowview Park",
+        "type": "multipolygon",
+        "website": "http://www.co.henrico.va.us/rec/"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 9991347,
+      "center": {
+        "lat": 37.5047399,
+        "lon": -77.3397431
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "470",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "Tredegar Street",
+        "boundary": "protected_area",
+        "leisure": "nature_reserve",
+        "name": "Richmond National Battlefield Park",
+        "owner": "US National Park Service",
+        "protect_class": "2",
+        "protected_area": "historic_site",
+        "source": "Virginia Department of Conservation and Recreation;esri_USDOT_Virgina",
+        "type": "multipolygon",
+        "website": "https://www.nps.gov/rich/index.htm",
+        "wikidata": "Q7330919",
+        "wikipedia": "en:Richmond National Battlefield Park"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 10049004,
+      "center": {
+        "lat": 37.5254351,
+        "lon": -77.4114895
+      },
+      "tags": {
+        "ele": "47",
+        "leisure": "park",
+        "name": "Chimborazo Park",
+        "name:etymology:wikidata": "Q14081",
+        "name:etymology:wikipedia": "en:Chimborazo",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "type": "multipolygon",
+        "wikidata": "Q5099313",
+        "wikipedia": "en:Chimborazo Park"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 11520212,
+      "center": {
+        "lat": 37.4391769,
+        "lon": -77.4346071
+      },
+      "tags": {
+        "addr:city": "North Chesterfield",
+        "addr:housenumber": "2046",
+        "addr:postcode": "23234",
+        "addr:state": "VA",
+        "addr:street": "Marina Drive",
+        "leisure": "park",
+        "name": "Falling Creek Ironworks",
+        "operator": "Chesterfield County Parks and Recreation",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 11520213,
+      "center": {
+        "lat": 37.4431278,
+        "lon": -77.4440454
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Falling Creek Linear Park",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 11520214,
+      "center": {
+        "lat": 37.4507795,
+        "lon": -77.452585
+      },
+      "tags": {
+        "addr:city": "North Chesterfield",
+        "addr:housenumber": "3000",
+        "addr:postcode": "23234",
+        "addr:state": "VA",
+        "addr:street": "Cogbill Road",
+        "leisure": "park",
+        "name": "Gates Mill Park",
+        "operator": "Chesterfield County Parks and Recreation",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 11623994,
+      "center": {
+        "lat": 37.5567184,
+        "lon": -77.3937704
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Hidden Creek Park",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 11623997,
+      "center": {
+        "lat": 37.6255324,
+        "lon": -77.5890792
+      },
+      "tags": {
+        "addr:city": "Henrico",
+        "addr:housenumber": "9900",
+        "addr:postcode": "23233",
+        "addr:state": "VA",
+        "addr:street": "Ridgefield Parkway",
+        "leisure": "park",
+        "name": "Deep Run Park",
+        "owner": "Henrico County",
+        "type": "multipolygon",
+        "website": "http://www.co.henrico.va.us/rec/",
+        "wikidata": "Q5250289"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 13728919,
+      "center": {
+        "lat": 37.5261175,
+        "lon": -77.4218331
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2803",
+        "addr:postcode": "23234",
+        "addr:state": "VA",
+        "addr:street": "Dock Street",
+        "leisure": "park",
+        "name": "Great Shiplock Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "type": "multipolygon",
+        "wikidata": "Q49495628"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 16078640,
+      "center": {
+        "lat": 37.5243437,
+        "lon": -77.4194106
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Dock Street Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 16467781,
+      "center": {
+        "lat": 37.5508801,
+        "lon": -77.4585736
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Lombardy Park",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 17173266,
+      "center": {
+        "lat": 37.5370695,
+        "lon": -77.39587
+      },
+      "tags": {
+        "gnis:feature_id": "1479247",
+        "landuse": "cemetery",
+        "name": "Oakwood Cemetery",
+        "type": "multipolygon",
+        "wikidata": "Q7074292",
+        "wikipedia": "en:Oakwood Cemetery (Richmond, Virginia)"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 18754353,
+      "center": {
+        "lat": 37.5488663,
+        "lon": -77.4405684
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Fuchsia Freedom Garden",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 19397249,
+      "center": {
+        "lat": 37.5792893,
+        "lon": -77.5098992
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Westwood Playground",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 19483472,
+      "center": {
+        "lat": 37.5352981,
+        "lon": -77.3987243
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Oakwood Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 21036259,
+      "center": {
+        "lat": 37.5423125,
+        "lon": -77.442716
+      },
+      "tags": {
+        "barrier": "fence",
+        "leisure": "park",
+        "name": "Library Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q29093055",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "way",
+      "id": 38176596,
+      "center": {
+        "lat": 37.5143837,
+        "lon": -77.3928091
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1701",
+        "addr:postcode": "23231",
+        "addr:state": "VA",
+        "addr:street": "Williamsburg Road",
+        "fax": "+1-804-795-1064",
+        "landuse": "cemetery",
+        "name": "Richmond National Cemetery",
+        "phone": "+1 804-795-2031",
+        "website": "https://www.cem.va.gov/cems/nchp/Richmond.asp",
+        "wikidata": "Q7330920"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44659673,
+      "center": {
+        "lat": 37.5516262,
+        "lon": -77.431997
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Shockoe Hill Cemetery",
+        "wikidata": "Q3959678"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44659688,
+      "center": {
+        "lat": 37.5932233,
+        "lon": -77.4354914
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Forest Lawn Cemetery",
+        "wikidata": "Q5469017"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44660433,
+      "center": {
+        "lat": 37.515995,
+        "lon": -77.460505
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2715",
+        "addr:postcode": "23225",
+        "addr:state": "VA",
+        "addr:street": "Bainbridge Street",
+        "ele": "47",
+        "leisure": "park",
+        "name": "Carter Jones Park",
+        "opening_hours": "dawn-dusk",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q49477101"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44703271,
+      "center": {
+        "lat": 37.5591052,
+        "lon": -77.4274628
+      },
+      "tags": {
+        "gnis:feature_id": "1478781",
+        "landuse": "cemetery",
+        "name": "Holy Cross Cemetery",
+        "religion": "christian"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44703326,
+      "center": {
+        "lat": 37.5620164,
+        "lon": -77.4126512
+      },
+      "tags": {
+        "gnis:feature_id": "1476943",
+        "landuse": "cemetery",
+        "name": "Woodland Cemetery",
+        "wikidata": "Q8032818"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44703329,
+      "center": {
+        "lat": 37.5523749,
+        "lon": -77.4296662
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Hebrew Cemetery",
+        "religion": "jewish",
+        "wikidata": "Q5695834",
+        "wikipedia": "en:Hebrew Cemetery (Richmond, Virginia)"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44884751,
+      "center": {
+        "lat": 37.5579904,
+        "lon": -77.4324324
+      },
+      "tags": {
+        "gnis:feature_id": "1780569",
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/02000364",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-5679/",
+        "historic": "heritage",
+        "landuse": "cemetery",
+        "name": "Barton Heights Cemetery",
+        "nrhp:criteria": "(A)",
+        "nrhp:inscription_date": "2002-04-10",
+        "ref:US-VA:vlr": "127-5679",
+        "ref:nrhp": "02000364",
+        "start_date": "1815",
+        "vlr:inscription_date": "2001-06-13",
+        "wikidata": "Q16164769",
+        "wikipedia": "en:Barton Heights Cemeteries"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44888557,
+      "center": {
+        "lat": 37.5623898,
+        "lon": -77.4672564
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2626",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Broad Street",
+        "building": "yes",
+        "check_date": "2023-12-27",
+        "description": "Interactive exhibits enable kids to move, climb, farm, draw, play & learn about their world.",
+        "internet_access": "no",
+        "museum": "children",
+        "name": "Children's Museum of Richmond",
+        "opening_hours": "Mo off; Tu-Su 09:30-17:00",
+        "payment:cash": "yes",
+        "payment:credit_cards": "yes",
+        "payment:debit_cards": "yes",
+        "phone": "+1 804-474-7000",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "website": "https://c-mor.org",
+        "wheelchair": "yes",
+        "wikidata": "Q5098181"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44888595,
+      "center": {
+        "lat": 37.5695984,
+        "lon": -77.4234647
+      },
+      "tags": {
+        "alt_name": "Hotchkiss Park",
+        "ele": "50",
+        "leisure": "park",
+        "name": "Hotchkiss Field Community Center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44908077,
+      "center": {
+        "lat": 37.5753198,
+        "lon": -77.4169678
+      },
+      "tags": {
+        "ele": "57",
+        "gnis:feature_id": "1779888",
+        "leisure": "park",
+        "name": "Highland Plaza",
+        "wikidata": "Q49501195"
+      }
+    },
+    {
+      "type": "way",
+      "id": 45031115,
+      "center": {
+        "lat": 37.5194396,
+        "lon": -77.4725296
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Forest Hill Park",
+        "natural": "wood",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "wikidata": "Q5468937"
+      }
+    },
+    {
+      "type": "way",
+      "id": 45087752,
+      "center": {
+        "lat": 37.546961,
+        "lon": -77.450237
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "620",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Main Street",
+        "designation": "Monroe Park",
+        "leisure": "park",
+        "name": "Monroe Park",
+        "wikidata": "Q6902235",
+        "wikipedia": "en:Monroe Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 45902101,
+      "center": {
+        "lat": 37.5987269,
+        "lon": -77.5956934
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Westhampton Memorial Park",
+        "wikidata": "Q117446495"
+      }
+    },
+    {
+      "type": "way",
+      "id": 45902915,
+      "center": {
+        "lat": 37.6016809,
+        "lon": -77.5604673
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Ridge Cemetery",
+        "wikidata": "Q117585783"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76227067,
+      "center": {
+        "lat": 37.5268693,
+        "lon": -77.4784621
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "JRPS - Archer Island",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76314458,
+      "center": {
+        "lat": 37.5301139,
+        "lon": -77.4782285
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "James River Park System Main Area",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76314480,
+      "center": {
+        "lat": 37.5340821,
+        "lon": -77.4423791
+      },
+      "tags": {
+        "description": "This open, grassy park on a river island offers city & waterway views, walking paths & concerts.",
+        "leisure": "park",
+        "name": "Brown's Island",
+        "name:etymology:wikidata": "Q123458780",
+        "not:operator:wikidata": "Q43421",
+        "operator": "City of Richmond",
+        "phone": "+1 804-788-6466",
+        "website": "http://www.brownsisland.com/",
+        "wikidata": "Q4975950",
+        "wikipedia": "en:Brown's Island"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76362268,
+      "center": {
+        "lat": 37.5365824,
+        "lon": -77.4568735
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Hollywood Cemetery",
+        "phone": "+1 804-648-8501",
+        "website": "https://www.hollywoodcemetery.org/",
+        "wikidata": "Q5882648"
+      }
+    },
+    {
+      "type": "way",
+      "id": 113023443,
+      "center": {
+        "lat": 37.5386266,
+        "lon": -77.4337639
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Capitol Square",
+        "wikidata": "Q49476889"
+      }
+    },
+    {
+      "type": "way",
+      "id": 143098974,
+      "center": {
+        "lat": 37.5496972,
+        "lon": -77.4618909
+      },
+      "tags": {
+        "description": "Paradise Park is one of the Richmond Fan District's pocket parks. It was designed by Carlton Abbott in 1968 and is a unique example of classic modern architecture.",
+        "leisure": "park",
+        "name": "Paradise Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 143231940,
+      "center": {
+        "lat": 37.5558455,
+        "lon": -77.4673167
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Scuffletown Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 146689449,
+      "center": {
+        "lat": 37.5560452,
+        "lon": -77.4749157
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "200",
+        "addr:postcode": "23220",
+        "addr:street": "North Boulevard",
+        "alt_name": "VMFA",
+        "building": "yes",
+        "building:levels": "3",
+        "building:levels:underground": "2",
+        "email": "info@vmfa.museum",
+        "fee": "no",
+        "internet_access": "wlan",
+        "internet_access:fee": "no",
+        "internet_access:ssid": "VMFA Guest",
+        "name": "Virginia Museum of Fine Arts",
+        "opening_hours": "Sa-We 10:00-17:00; Th-Fr 10:00-21:00",
+        "operator": "Commonwealth of Virginia",
+        "phone": "+1-804-340-1400",
+        "smoking": "no",
+        "tourism": "museum",
+        "website": "https://vmfa.museum/",
+        "wheelchair": "yes",
+        "wikidata": "Q4013975",
+        "wikipedia": "en:Virginia Museum of Fine Arts"
+      }
+    },
+    {
+      "type": "way",
+      "id": 171211185,
+      "center": {
+        "lat": 37.5864016,
+        "lon": -77.5332597
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Bandy Field Nature Park",
+        "website": "https://www.bandyfield.org/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 224601753,
+      "center": {
+        "lat": 37.540712,
+        "lon": -77.4296017
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1201",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Clay Street",
+        "building": "yes",
+        "building:levels": "4",
+        "check_date": "2023-04-22",
+        "museum": "history",
+        "name": "White House of the Confederacy",
+        "official_name": "Executive Mansion of the Confederacy",
+        "old_name": "Museum of the Confederacy",
+        "operator:type": "private",
+        "operator:wikidata": "Q3736543",
+        "phone": "+1 804-649-1861",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "website": "https://acwm.org/",
+        "wikidata": "Q7994925"
+      }
+    },
+    {
+      "type": "way",
+      "id": 224601757,
+      "center": {
+        "lat": 37.5399271,
+        "lon": -77.431008
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Patterson Memorial Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 224601768,
+      "center": {
+        "lat": 37.5414946,
+        "lon": -77.4311182
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1015",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Clay Street",
+        "building": "yes",
+        "building:levels": "3",
+        "description": "Circa-1812 landmark house turned museum with exhibits & artifacts exploring Richmond's history.",
+        "name": "The Valentine",
+        "phone": "+1 804-649-0711",
+        "tourism": "museum",
+        "website": "https://thevalentine.org/",
+        "wikidata": "Q7911006"
+      }
+    },
+    {
+      "type": "way",
+      "id": 225274659,
+      "center": {
+        "lat": 37.5366845,
+        "lon": -77.4394985
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Kanawha Plaza",
+        "wikidata": "Q49509299"
+      }
+    },
+    {
+      "type": "way",
+      "id": 225586238,
+      "center": {
+        "lat": 37.5309061,
+        "lon": -77.4259638
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2000",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "East Cary Street",
+        "building": "yes",
+        "building:levels": "3",
+        "check_date:opening_hours": "2023-07-12",
+        "fee": "no",
+        "name": "Virginia Holocaust Museum",
+        "opening_hours": "Mo-Fr 09:00-17:00, Sa-Su 11:00-17:00, Nov We[4] 09:00-13:00; Nov Th[4] off, Jan 01 off, easter off, Dec 25 off, Dec 31 off",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "website": "https://www.vaholocaust.org/",
+        "wikidata": "Q882998",
+        "wikipedia": "en:Virginia Holocaust Museum"
+      }
+    },
+    {
+      "type": "way",
+      "id": 229708024,
+      "center": {
+        "lat": 37.5891188,
+        "lon": -77.416955
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Horticulture Garden/Virginia 529 Kids Zone"
+      }
+    },
+    {
+      "type": "way",
+      "id": 229722581,
+      "center": {
+        "lat": 37.5488911,
+        "lon": -77.4533088
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1 -1/2",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Franklin Street",
+        "building": "university",
+        "name": "The Anderson",
+        "operator": "Virginia Commonwealth University",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 229722610,
+      "center": {
+        "lat": 37.5486958,
+        "lon": -77.4548676
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "201",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "North Harrison Street",
+        "leisure": "park",
+        "name": "Harrison Park",
+        "source": "esri_USDOT_Virgina"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236129239,
+      "center": {
+        "lat": 37.5567301,
+        "lon": -77.4754087
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "E. Clairborne and Lora Robins Sculpture Garden",
+        "wikidata": "Q127827399"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236138603,
+      "center": {
+        "lat": 37.5651678,
+        "lon": -77.4790643
+      },
+      "tags": {
+        "historic": "monument",
+        "name": "Arthur Ashe Monument",
+        "name:etymology": "Arthur Ashe",
+        "name:etymology:wikidata": "Q53325",
+        "subject": "Arthur Ashe",
+        "subject:wikidata": "Q53325"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236147597,
+      "center": {
+        "lat": 37.5537107,
+        "lon": -77.4626857
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Meadow Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236147602,
+      "center": {
+        "lat": 37.5503642,
+        "lon": -77.4673589
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Federal Park",
+        "opening_hours": "Mo-Fr 08:00-17:00"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236147603,
+      "center": {
+        "lat": 37.5551167,
+        "lon": -77.4588855
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Grace Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236147606,
+      "center": {
+        "lat": 37.5468082,
+        "lon": -77.4567319
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Sydney Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236150754,
+      "center": {
+        "lat": 37.5337064,
+        "lon": -77.4766266
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Italian Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 246489937,
+      "center": {
+        "lat": 37.6019864,
+        "lon": -77.5675496
+      },
+      "tags": {
+        "addr:housenumber": "1406",
+        "addr:street": "North Parham Road",
+        "addr:unit": "A200",
+        "check_date": "2025-05-17",
+        "contact:phone": "+1 804-215-4730",
+        "contact:website": "https://surgefun.com/locations/richmond/",
+        "name": "Surge Adventure Park",
+        "opening_hours": "Mo-Th 11:00-20:00; Fr 11:00-22:00; Sa 09:00-22:00; Su 12:00-20:00",
+        "opening_hours:signed": "yes",
+        "source:opening_hours": "entrance; website",
+        "tourism": "theme_park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 252837456,
+      "center": {
+        "lat": 37.5363036,
+        "lon": -77.4526554
+      },
+      "tags": {
+        "ele": "45",
+        "leisure": "park",
+        "name": "Holly Street Park",
+        "wikidata": "Q49502428"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264469781,
+      "center": {
+        "lat": 37.5357838,
+        "lon": -77.4775758
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Maymont",
+        "opening_hours": "10:00-17:00; Mar-Oct 10:00-17:00 || Mar-Oct 17:00-19:00 \"weather permitting\"",
+        "phone": "+1 804-358-7166",
+        "website": "https://www.maymont.org/",
+        "wikidata": "Q6797360"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264469782,
+      "center": {
+        "lat": 37.5419681,
+        "lon": -77.4789579
+      },
+      "tags": {
+        "dog": "no",
+        "leisure": "park",
+        "name": "Byrd Park",
+        "name:etymology": "William Byrd II",
+        "name:etymology:wikidata": "Q55022486",
+        "name:etymology:wikipedia": "en:William Byrd II",
+        "opening_hours": "24/7",
+        "website": "http://www.richmondgov.com/parks/parkbyrd.aspx",
+        "wikidata": "Q5004228",
+        "wikipedia": "en:Byrd Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264474191,
+      "center": {
+        "lat": 37.5594564,
+        "lon": -77.5426116
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Huguenot Flatwater Park",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264479485,
+      "center": {
+        "lat": 37.536704,
+        "lon": -77.4460481
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Gambles Hill Park",
+        "wikidata": "Q5519680",
+        "wikipedia": "en:Gambles Hill"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264479487,
+      "center": {
+        "lat": 37.5364321,
+        "lon": -77.4512478
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Oregon Hill Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264670674,
+      "center": {
+        "lat": 37.541889,
+        "lon": -77.4607229
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Thomas Square"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264670697,
+      "center": {
+        "lat": 37.5342869,
+        "lon": -77.465829
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Mount Calvary Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264670934,
+      "center": {
+        "lat": 37.5346935,
+        "lon": -77.4609913
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Riverview Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266499307,
+      "center": {
+        "lat": 37.5497254,
+        "lon": -77.4423605
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Abner Clay Park",
+        "wikidata": "Q49471795"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266877983,
+      "center": {
+        "lat": 37.5225883,
+        "lon": -77.4571282
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Canoe Run Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266877984,
+      "center": {
+        "lat": 37.5032784,
+        "lon": -77.4557839
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Mt. Olivet Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266877985,
+      "center": {
+        "lat": 37.5067883,
+        "lon": -77.4534647
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Maury Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266890327,
+      "center": {
+        "lat": 37.532156,
+        "lon": -77.4190168
+      },
+      "tags": {
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/90002097",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-0192/",
+        "historic": "heritage",
+        "leisure": "park",
+        "name": "Patrick Henry Park",
+        "name:etymology:wikidata": "Q311885",
+        "nrhp:inscription_date": "1991-01-17",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "ref:US-VA:vlr": "127-0192",
+        "ref:nrhp": "90002097",
+        "vlr:inscription_date": "1990-04-17",
+        "wikidata": "Q49540180"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266890328,
+      "center": {
+        "lat": 37.5354899,
+        "lon": -77.4216124
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "East Marshall Street",
+        "leisure": "park",
+        "name": "Jefferson Park",
+        "name:etymology:wikidata": "Q11812",
+        "opening_hours": "Mo-Su 06:00-24:00",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "wikidata": "Q49507300"
+      }
+    },
+    {
+      "type": "way",
+      "id": 275860177,
+      "center": {
+        "lat": 37.6215823,
+        "lon": -77.4727805
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 275860178,
+      "center": {
+        "lat": 37.6212592,
+        "lon": -77.4741175
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 296201488,
+      "center": {
+        "lat": 37.6057234,
+        "lon": -77.5452151
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Cheswick Park",
+        "wikidata": "Q49477970"
+      }
+    },
+    {
+      "type": "way",
+      "id": 296208595,
+      "center": {
+        "lat": 37.6169852,
+        "lon": -77.4288495
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Three Lakes Park",
+        "source": "Henrico Conty Parks & Rec",
+        "wikidata": "Q49570514"
+      }
+    },
+    {
+      "type": "way",
+      "id": 297832945,
+      "center": {
+        "lat": 37.547882,
+        "lon": -77.4375508
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Leigh Street",
+        "addr:unit": "A",
+        "building": "yes",
+        "name": "Maggie L. Walker National Historic Site",
+        "name:etymology:wikidata": "Q542579",
+        "phone": "+1 804-771-2017",
+        "source": "esri_USDOT_Virgina",
+        "subject:wikidata": "Q542579",
+        "tourism": "museum",
+        "website": "https://www.nps.gov/mawa/index.htm"
+      }
+    },
+    {
+      "type": "way",
+      "id": 298032396,
+      "center": {
+        "lat": 37.5325745,
+        "lon": -77.4762765
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Japanese Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 298621398,
+      "center": {
+        "lat": 37.5217681,
+        "lon": -77.4060439
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Gillies Creek Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 298621404,
+      "center": {
+        "lat": 37.5268268,
+        "lon": -77.4121995
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "3215",
+        "addr:postcode": "23223",
+        "addr:street": "East Broad Street",
+        "building": "government",
+        "construction_date": "1909",
+        "fee": "no",
+        "name": "Chimborazo Medical Museum",
+        "name:etymology:wikidata": "Q5099313",
+        "opening_hours": "We-Su 09:00-16:30",
+        "operator": "National Park Service",
+        "tourism": "museum",
+        "website": "https://www.virginia.org/listing/chimborazo-medical-museum/6127/",
+        "wikidata": "Q100324858",
+        "wikipedia": "en:Chimborazo Hospital"
+      }
+    },
+    {
+      "type": "way",
+      "id": 298621431,
+      "center": {
+        "lat": 37.5267582,
+        "lon": -77.4173802
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2801",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "East Franklin Street",
+        "leisure": "park",
+        "name": "Libby Hill Park",
+        "name:etymology:wikidata": "Q124650219",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q49516400"
+      }
+    },
+    {
+      "type": "way",
+      "id": 303803586,
+      "center": {
+        "lat": 37.5326573,
+        "lon": -77.4758074
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "JRPS Texas Beach Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 305490385,
+      "center": {
+        "lat": 37.6134243,
+        "lon": -77.4635914
+      },
+      "tags": {
+        "ele": "45",
+        "gnis:feature_id": "1760323",
+        "leisure": "park",
+        "name": "Belmont Park",
+        "wikidata": "Q49474304"
+      }
+    },
+    {
+      "type": "way",
+      "id": 305756045,
+      "center": {
+        "lat": 37.5308761,
+        "lon": -77.4513946
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Civil War Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 307757135,
+      "center": {
+        "lat": 37.5729125,
+        "lon": -77.4442285
+      },
+      "tags": {
+        "ele": "53",
+        "gnis:feature_id": "1479358",
+        "leisure": "park",
+        "name": "Pollard Park",
+        "wikidata": "Q49544730"
+      }
+    },
+    {
+      "type": "way",
+      "id": 315035710,
+      "center": {
+        "lat": 37.4503212,
+        "lon": -77.5810495
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Rockwood Park",
+        "owner": "Chesterfield County",
+        "source": "Commonwealth of Virginia, Department of Conservation and Recreation",
+        "website": "https://www.dcr.virginia.gov/natural_heritage/cldownload.shtml",
+        "wikidata": "Q49552790"
+      }
+    },
+    {
+      "type": "way",
+      "id": 315813183,
+      "center": {
+        "lat": 37.5146884,
+        "lon": -77.5985883
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Huguenot Park",
+        "owner": "Chesterfield County",
+        "source": "Commonwealth of Virginia, Department of Conservation and Recreation",
+        "website": "https://www.dcr.virginia.gov/natural_heritage/cldownload.shtml"
+      }
+    },
+    {
+      "type": "way",
+      "id": 315813184,
+      "center": {
+        "lat": 37.5129355,
+        "lon": -77.5951359
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Huguenot Park",
+        "owner": "Chesterfield County",
+        "source": "Commonwealth of Virginia, Department of Conservation and Recreation",
+        "website": "https://www.dcr.virginia.gov/natural_heritage/cldownload.shtml"
+      }
+    },
+    {
+      "type": "way",
+      "id": 316099498,
+      "center": {
+        "lat": 37.5934329,
+        "lon": -77.4748319
+      },
+      "tags": {
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/02001369",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-5677/",
+        "historic": "heritage",
+        "leisure": "park",
+        "name": "Bryan Park",
+        "nrhp:criteria": "(A),(C)",
+        "nrhp:inscription_date": "2002-11-21",
+        "owner": "City of Richmond",
+        "ref:US-VA:vlr": "127-5677",
+        "ref:nrhp": "02001369",
+        "start_date": "1909",
+        "vlr:inscription_date": "2002-09-11",
+        "website": "http://www.richmondgov.com/Parks/index.aspx",
+        "wikidata": "Q4980293",
+        "wikipedia": "en:Bryan Park (Richmond, Virginia)"
+      }
+    },
+    {
+      "type": "way",
+      "id": 316225977,
+      "center": {
+        "lat": 37.4638342,
+        "lon": -77.3395678
+      },
+      "tags": {
+        "ele": "42",
+        "gnis:feature_id": "1760380",
+        "leisure": "park",
+        "name": "Dorey Park",
+        "owner": "Henrico County",
+        "website": "https://henrico.us/rec/places/dorey/",
+        "wikidata": "Q49483822"
+      }
+    },
+    {
+      "type": "way",
+      "id": 321367788,
+      "center": {
+        "lat": 37.5446942,
+        "lon": -77.441075
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "105",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Broad Street",
+        "building": "yes",
+        "name": "105 Gallery",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 321367819,
+      "center": {
+        "lat": 37.5461265,
+        "lon": -77.4420751
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "10",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "West Broad Street",
+        "building": "yes",
+        "name": "The Mix Gallery",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 321367904,
+      "center": {
+        "lat": 37.5457487,
+        "lon": -77.4414407
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "8",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Broad Street",
+        "building": "yes",
+        "name": "Edit: An Art Gallery for Good",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "gallery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 342205613,
+      "center": {
+        "lat": 37.5559921,
+        "lon": -77.3500913
+      },
+      "tags": {
+        "alt_name": "Matthew James Robinson Park",
+        "ele": "51",
+        "gnis:feature_id": "1760418",
+        "leisure": "park",
+        "name": "Robinson Park",
+        "wikidata": "Q49522726"
+      }
+    },
+    {
+      "type": "way",
+      "id": 345031039,
+      "center": {
+        "lat": 37.5419234,
+        "lon": -77.433085
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "818",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Marshall Street",
+        "building": "yes",
+        "description": "Historic home of a 19th-century Supreme Court justice preserves period furnishings & architecture.",
+        "name": "John Marshall House",
+        "phone": "+1 804-648-7998",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "website": "https://preservationvirginia.org/historic-sites/john-marshall-house/",
+        "wikidata": "Q6246895"
+      }
+    },
+    {
+      "type": "way",
+      "id": 346339011,
+      "center": {
+        "lat": 37.6206291,
+        "lon": -77.4718127
+      },
+      "tags": {
+        "addr:city": "Henrico",
+        "addr:housenumber": "1800",
+        "addr:postcode": "23228",
+        "addr:state": "VA",
+        "addr:street": "Lakeside Avenue",
+        "garden:type": "botanical",
+        "leisure": "garden",
+        "name": "Lewis Ginter Botanical Garden",
+        "name:etymology:wikidata": "Q15514985",
+        "phone": "+1 804-262-9887",
+        "website": "https://www.lewisginter.org/",
+        "wheelchair": "yes",
+        "wikidata": "Q9010902"
+      }
+    },
+    {
+      "type": "way",
+      "id": 365619045,
+      "center": {
+        "lat": 37.534699,
+        "lon": -77.4190105
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Triangle Park",
+        "opening_hours": "sunrise-sunset",
+        "website": "https://friendsoftrianglepark.com/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 366222782,
+      "center": {
+        "lat": 37.5615384,
+        "lon": -77.4860325
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Humphrey Calder Community Center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 402536157,
+      "center": {
+        "lat": 37.544737,
+        "lon": -77.5096109
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Pony Pasture Park - Wetland Park",
+        "natural": "wood",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "source": "http://www.richmondgov.com/Parks/index.aspx"
+      }
+    },
+    {
+      "type": "way",
+      "id": 458404247,
+      "center": {
+        "lat": 37.5061166,
+        "lon": -77.4063964
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Clark Palmore House"
+      }
+    },
+    {
+      "type": "way",
+      "id": 463588973,
+      "center": {
+        "lat": 37.5259265,
+        "lon": -77.4356328
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "102",
+        "addr:postcode": "23224",
+        "addr:state": "VA",
+        "addr:street": "Hull Street",
+        "building": "yes",
+        "description": "http://www.richmondrailroadmuseum.org/",
+        "name": "The Richmond Railroad Museum",
+        "opening_hours": "Sa 11:00-16:00; Su 01:00-16:00",
+        "railway:historic": "station",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "wikidata": "Q14712591"
+      }
+    },
+    {
+      "type": "way",
+      "id": 466010787,
+      "center": {
+        "lat": 37.5402883,
+        "lon": -77.4513415
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "401",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "South Laurel Street",
+        "leisure": "park",
+        "name": "Pleasants Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 491695518,
+      "center": {
+        "lat": 37.5268748,
+        "lon": -77.435515
+      },
+      "tags": {
+        "description": "Part of the James River Park System",
+        "leisure": "park",
+        "name": "Floodwall Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 494488645,
+      "center": {
+        "lat": 37.5970576,
+        "lon": -77.5201503
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "The Commons at The Estates at Horsepen"
+      }
+    },
+    {
+      "type": "way",
+      "id": 502860808,
+      "center": {
+        "lat": 37.5768689,
+        "lon": -77.5193505
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "5900",
+        "addr:postcode": "23226",
+        "addr:state": "VA",
+        "addr:street": "Fergusson Road",
+        "capacity": "200",
+        "leisure": "park",
+        "name": "Westview Park",
+        "phone": "+1 804-646-0761",
+        "website": "https://parksandrecreation.richmondgov.com/wbwsc/webtrac.wsc/wbsa1221.html?xxcim=0&xxmod=FR&xxrowid=0x000000000006ca81&wbsi=870ac8ba-5245-dab2-1d14-44b730a4db46"
+      }
+    },
+    {
+      "type": "way",
+      "id": 527243391,
+      "center": {
+        "lat": 37.5408567,
+        "lon": -77.483467
+      },
+      "tags": {
+        "access": "private",
+        "addr:city": "Richmond",
+        "addr:housenumber": "1300",
+        "addr:postcode": "23221",
+        "addr:state": "VA",
+        "addr:street": "Blanton Avenue",
+        "building": "bell_tower",
+        "height": "240'",
+        "historic": "monument",
+        "man_made": "tower",
+        "name": "Virginia War Memorial Carillon",
+        "tower:type": "bell_tower",
+        "website": "https://www.dhr.virginia.gov/historic-registers/127-0387/",
+        "wikidata": "Q127740146",
+        "wikimedia_commons": "Category:Virginia War Memorial Carillon"
+      }
+    },
+    {
+      "type": "way",
+      "id": 546227792,
+      "center": {
+        "lat": 37.6261092,
+        "lon": -77.4276296
+      },
+      "tags": {
+        "ele": "51",
+        "gnis:feature_id": "1760345",
+        "leisure": "park",
+        "name": "Kiehr Field",
+        "wikidata": "Q49510626"
+      }
+    },
+    {
+      "type": "way",
+      "id": 562040599,
+      "center": {
+        "lat": 37.5450021,
+        "lon": -77.4747006
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Trees of Hope"
+      }
+    },
+    {
+      "type": "way",
+      "id": 574960663,
+      "center": {
+        "lat": 37.5448112,
+        "lon": -77.4144962
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Lucks Field Playground",
+        "website": "http://www.richmondgov.com/parks/communitycentergill.aspx"
+      }
+    },
+    {
+      "type": "way",
+      "id": 576071486,
+      "center": {
+        "lat": 37.5295542,
+        "lon": -77.4048334
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Bill Robinson Playground",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 576461461,
+      "center": {
+        "lat": 37.5153631,
+        "lon": -77.4067487
+      },
+      "tags": {
+        "ele": "41",
+        "gnis:feature_id": "1479377",
+        "leisure": "park",
+        "name": "Powhatan Playground",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q49545687"
+      }
+    },
+    {
+      "type": "way",
+      "id": 597002701,
+      "center": {
+        "lat": 37.5810967,
+        "lon": -77.4725504
+      },
+      "tags": {
+        "leisure": "park",
+        "leisure_1": "playground",
+        "name": "ARCpark"
+      }
+    },
+    {
+      "type": "way",
+      "id": 600879394,
+      "center": {
+        "lat": 37.5376965,
+        "lon": -77.4871737
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Pump House Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 601385964,
+      "center": {
+        "lat": 37.5341274,
+        "lon": -77.4753481
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Herb Garden",
+        "operator": "The Old Dominion Herb Society"
+      }
+    },
+    {
+      "type": "way",
+      "id": 601799933,
+      "center": {
+        "lat": 37.5404787,
+        "lon": -77.449566
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Oregon Hill Linear Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 603129634,
+      "center": {
+        "lat": 37.5467694,
+        "lon": -77.4699787
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Byrd Park Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 629189683,
+      "center": {
+        "lat": 37.540796,
+        "lon": -77.4555887
+      },
+      "tags": {
+        "historic": "monument",
+        "name": "Monument of Confederate War Dead",
+        "tourism": "attraction",
+        "wikidata": "Q136677300"
+      }
+    },
+    {
+      "type": "way",
+      "id": 677107281,
+      "center": {
+        "lat": 37.5665263,
+        "lon": -77.4392809
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2803",
+        "addr:postcode": "23222",
+        "addr:state": "VA",
+        "addr:street": "Dupont Circle",
+        "ele": "40",
+        "gnis:feature_id": "1478158",
+        "leisure": "park",
+        "name": "Battery Park",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "wikidata": "Q49473807"
+      }
+    },
+    {
+      "type": "way",
+      "id": 679275523,
+      "center": {
+        "lat": 37.5922946,
+        "lon": -77.4440156
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Roy West Park (Washington Park)",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia"
+      }
+    },
+    {
+      "type": "way",
+      "id": 679306658,
+      "center": {
+        "lat": 37.5666099,
+        "lon": -77.4370227
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Lt Charles Bland, Sr Park (Triangle Park)",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia"
+      }
+    },
+    {
+      "type": "way",
+      "id": 679310817,
+      "center": {
+        "lat": 37.5249637,
+        "lon": -77.4846702
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Wayside Spring Park",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "source": "http://www.richmondgov.com/Parks/index.aspx"
+      }
+    },
+    {
+      "type": "way",
+      "id": 679319538,
+      "center": {
+        "lat": 37.5257287,
+        "lon": -77.4301925
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Walker's Creek Retention Basin Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia"
+      }
+    },
+    {
+      "type": "way",
+      "id": 679324138,
+      "center": {
+        "lat": 37.5206704,
+        "lon": -77.4231584
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1200",
+        "addr:postcode": "23234",
+        "addr:state": "VA",
+        "addr:street": "Brander Street",
+        "leisure": "park",
+        "name": "Ancarrow's Landing",
+        "name:etymology:wikidata": "Q123473213",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "source": "http://www.richmondgov.com/Parks/index.aspx"
+      }
+    },
+    {
+      "type": "way",
+      "id": 696551146,
+      "center": {
+        "lat": 37.484711,
+        "lon": -77.4834863
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "4825",
+        "addr:postcode": "23224",
+        "addr:state": "VA",
+        "addr:street": "Old Warwick Road",
+        "leisure": "park",
+        "name": "Broadrock Sports Complex",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 697524178,
+      "center": {
+        "lat": 37.6316523,
+        "lon": -77.4620039
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Learning & Therapy Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 700377908,
+      "center": {
+        "lat": 37.53665,
+        "lon": -77.4794395
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Butterfly Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 700377915,
+      "center": {
+        "lat": 37.5335273,
+        "lon": -77.4805063
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Fragrance Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 707172944,
+      "center": {
+        "lat": 37.6179242,
+        "lon": -77.4308462
+      },
+      "tags": {
+        "addr:housenumber": "501",
+        "addr:postcode": "23227",
+        "addr:street": "Sausiluta Drive",
+        "building": "yes",
+        "check_date": "2025-11-08",
+        "name": "Three Lakes Nature Center and Aquarium",
+        "opening_hours": "Mo-We off; Th-Su 10:00-15:00",
+        "tourism": "museum"
+      }
+    },
+    {
+      "type": "way",
+      "id": 708736666,
+      "center": {
+        "lat": 37.5435215,
+        "lon": -77.3829389
+      },
+      "tags": {
+        "addr:city": "Henrico",
+        "addr:housenumber": "3812",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "Nine Mile Road",
+        "building": "yes",
+        "name": "Dabbs House Museum",
+        "tourism": "museum",
+        "website": "https://henrico.gov/rec/places/dabbs-house/",
+        "wikidata": "Q125928234"
+      }
+    },
+    {
+      "type": "way",
+      "id": 710456188,
+      "center": {
+        "lat": 37.5052943,
+        "lon": -77.4068898
+      },
+      "tags": {
+        "addr:city": "Henrico",
+        "addr:housenumber": "904",
+        "addr:postcode": "23231",
+        "addr:state": "VA",
+        "addr:street": "Mccoul Street",
+        "building": "yes",
+        "name": "Clarke-Palmore House Museum",
+        "tourism": "museum",
+        "website": "https://henrico.gov/rec/places/clarke-palmore/",
+        "wikidata": "Q5127455",
+        "wikipedia": "en:Clarke–Palmore House"
+      }
+    },
+    {
+      "type": "way",
+      "id": 725718156,
+      "center": {
+        "lat": 37.5478119,
+        "lon": -77.4374697
+      },
+      "tags": {
+        "boundary": "national_park",
+        "leisure": "park",
+        "name": "Maggie L. Walker National Historic Site",
+        "ownership": "federal",
+        "phone": "+1 804-771-2017",
+        "subject:wikidata": "Q542579",
+        "website": "https://www.nps.gov/mawa/index.htm",
+        "wikidata": "Q6730266"
+      }
+    },
+    {
+      "type": "way",
+      "id": 737415531,
+      "center": {
+        "lat": 37.6129868,
+        "lon": -77.4587346
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Lakeside Landing Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 746445393,
+      "center": {
+        "lat": 37.5625396,
+        "lon": -77.5197605
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "215",
+        "addr:postcode": "23226",
+        "addr:street": "South Wilton Road",
+        "building": "yes",
+        "historic": "yes",
+        "name": "Wilton House Museum",
+        "opening_hours": "We-Sa 10:00-17:00; Su 12:00-17:00",
+        "ref:nrhp": "76002231",
+        "tourism": "museum",
+        "website": "https://www.wiltonhousemuseum.org/",
+        "wikidata": "Q8023381",
+        "wikipedia": "en:Wilton House Museum"
+      }
+    },
+    {
+      "type": "way",
+      "id": 746447566,
+      "center": {
+        "lat": 37.532312,
+        "lon": -77.4229239
+      },
+      "tags": {
+        "ele": "31",
+        "gnis:feature_id": "1780467",
+        "leisure": "park",
+        "name": "Taylor's Hill Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q49569347"
+      }
+    },
+    {
+      "type": "way",
+      "id": 761038913,
+      "center": {
+        "lat": 37.5231656,
+        "lon": -77.4479823
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1303",
+        "addr:postcode": "23224",
+        "addr:street": "Perry Street",
+        "leisure": "park",
+        "name": "Alice Fitz Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 761047752,
+      "center": {
+        "lat": 37.5065939,
+        "lon": -77.44442
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2207",
+        "addr:postcode": "23224",
+        "addr:street": "Halifax Avenue",
+        "leisure": "park",
+        "name": "Oak Grove Playground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 822722113,
+      "center": {
+        "lat": 37.5277671,
+        "lon": -77.4142335
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Chimborazo Playground Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 822723703,
+      "center": {
+        "lat": 37.5356232,
+        "lon": -77.4454836
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "480",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "Tredegar Street",
+        "building": "yes",
+        "check_date": "2026-07-31",
+        "check_date:opening_hours": "2026-07-31",
+        "fee": "yes",
+        "museum": "history",
+        "name": "American Civil War Museum",
+        "opening_hours": "Mo-Su 10:00-17:00",
+        "tourism": "museum",
+        "website": "https://acwm.org/",
+        "wikidata": "Q3736543",
+        "wikipedia": "en:American Civil War Museum"
+      }
+    },
+    {
+      "type": "way",
+      "id": 823714647,
+      "center": {
+        "lat": 37.5482198,
+        "lon": -77.4699423
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Uptown Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 835151345,
+      "center": {
+        "lat": 37.5327371,
+        "lon": -77.3883565
+      },
+      "tags": {
+        "ele": "43",
+        "gnis:feature_id": "1478569",
+        "landuse": "cemetery",
+        "name": "Evergreen Cemetery",
+        "wikidata": "Q5417189"
+      }
+    },
+    {
+      "type": "way",
+      "id": 835151346,
+      "center": {
+        "lat": 37.5367468,
+        "lon": -77.38748
+      },
+      "tags": {
+        "ele": "43",
+        "gnis:feature_id": "1466094",
+        "landuse": "cemetery",
+        "name": "East End Cemetery",
+        "wikidata": "Q109237418"
+      }
+    },
+    {
+      "type": "way",
+      "id": 838648020,
+      "center": {
+        "lat": 37.5165612,
+        "lon": -77.5928845
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Greenfield Athletic Complex"
+      }
+    },
+    {
+      "type": "way",
+      "id": 838651237,
+      "center": {
+        "lat": 37.4390328,
+        "lon": -77.4389935
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Falling Creek Wayside Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 838651242,
+      "center": {
+        "lat": 37.4461553,
+        "lon": -77.4492919
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Falling Creek Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 838651995,
+      "center": {
+        "lat": 37.4414986,
+        "lon": -77.5646599
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Fernbrook Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 840378385,
+      "center": {
+        "lat": 37.5230399,
+        "lon": -77.3941501
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Montrose Heights Playground",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q139567649"
+      }
+    },
+    {
+      "type": "way",
+      "id": 846245203,
+      "center": {
+        "lat": 37.5860024,
+        "lon": -77.5491818
+      },
+      "tags": {
+        "addr:housenumber": "7913",
+        "addr:postcode": "23229",
+        "addr:street": "Dogwood Road",
+        "leisure": "park",
+        "name": "Westham Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264851,
+      "center": {
+        "lat": 37.6174195,
+        "lon": -77.5134073
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Bethlehem Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264852,
+      "center": {
+        "lat": 37.5880456,
+        "lon": -77.5141712
+      },
+      "tags": {
+        "addr:housenumber": "5906",
+        "addr:postcode": "23226",
+        "addr:street": "Keystone Drive",
+        "leisure": "park",
+        "name": "Westwood Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264853,
+      "center": {
+        "lat": 37.5770234,
+        "lon": -77.562583
+      },
+      "tags": {
+        "addr:housenumber": "195",
+        "addr:postcode": "23229",
+        "addr:street": "Roslyn Hills Drive",
+        "leisure": "park",
+        "name": "Roslyn Hills Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264859,
+      "center": {
+        "lat": 37.5999024,
+        "lon": -77.4629599
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Spring Park Historic Site"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264861,
+      "center": {
+        "lat": 37.5831553,
+        "lon": -77.4201195
+      },
+      "tags": {
+        "addr:housenumber": "3800",
+        "addr:postcode": "23222",
+        "addr:street": "Patrick Avenue",
+        "leisure": "park",
+        "name": "Highland Gardens Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264868,
+      "center": {
+        "lat": 37.5435262,
+        "lon": -77.3837269
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Glen Echo Recreation Area"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264879,
+      "center": {
+        "lat": 37.5947883,
+        "lon": -77.4001741
+      },
+      "tags": {
+        "addr:housenumber": "4721",
+        "addr:postcode": "23222",
+        "addr:street": "Vawter Avenue",
+        "leisure": "park",
+        "name": "Vawter Street Park",
+        "wikidata": "Q49574275"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264880,
+      "center": {
+        "lat": 37.6192542,
+        "lon": -77.4586387
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Brook Road Neighborhood Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264881,
+      "center": {
+        "lat": 37.6084817,
+        "lon": -77.4643229
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Lakeside Recreation Area"
+      }
+    },
+    {
+      "type": "way",
+      "id": 947072836,
+      "center": {
+        "lat": 37.6001115,
+        "lon": -77.4459401
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Pine Camp Cultural Arts and Community Center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 949602698,
+      "center": {
+        "lat": 37.5599983,
+        "lon": -77.4336444
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1900",
+        "addr:state": "VA",
+        "addr:street": "North Avenue",
+        "leisure": "park",
+        "name": "Yancey Street Playground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1027071396,
+      "center": {
+        "lat": 37.51011,
+        "lon": -77.4928943
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "309",
+        "addr:postcode": "23225",
+        "addr:state": "VA",
+        "addr:street": "Covington Road",
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Sankofa Community Orchard",
+        "website": "https://thenaturalfestival.com/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1037193429,
+      "center": {
+        "lat": 37.5149497,
+        "lon": -77.4837588
+      },
+      "tags": {
+        "access": "yes",
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Owl Orchard Community Garden",
+        "operator": "City Of Richmond Recreation & Parks",
+        "operator:type": "government"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1037196944,
+      "center": {
+        "lat": 37.515264,
+        "lon": -77.4678158
+      },
+      "tags": {
+        "access": "yes",
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "McDonough Community Garden",
+        "operator": "City Of Richmond Recreation & Parks",
+        "operator:type": "government"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1042936185,
+      "center": {
+        "lat": 37.5531189,
+        "lon": -77.4480628
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "904",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "Catherine Street",
+        "leisure": "park",
+        "name": "Smith-Peters Parks",
+        "operator": "City of Richmond Parks, Recreation and Community Facilities"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1052171286,
+      "center": {
+        "lat": 37.5775008,
+        "lon": -77.4354308
+      },
+      "tags": {
+        "alt_name": "Fendall Avenue Park",
+        "leisure": "park",
+        "name": "North Central Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1066468266,
+      "center": {
+        "lat": 37.5165773,
+        "lon": -77.4589345
+      },
+      "tags": {
+        "access": "yes",
+        "fee": "no",
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Fonticello Food Forest",
+        "website": "https://www.fonticellofoodforest.com/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1084702409,
+      "center": {
+        "lat": 37.4717644,
+        "lon": -77.5048257
+      },
+      "tags": {
+        "ele": "44",
+        "gnis:feature_id": "1780800",
+        "leisure": "park",
+        "name": "Pocosham Park",
+        "wikidata": "Q49544475"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1089482397,
+      "center": {
+        "lat": 37.5570515,
+        "lon": -77.5268353
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "7650",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "Riverside Drive",
+        "leisure": "park",
+        "name": "Riverside Meadow Greenspace",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421",
+        "parking": "no"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1102588967,
+      "center": {
+        "lat": 37.4840071,
+        "lon": -77.5493172
+      },
+      "tags": {
+        "ele": "91",
+        "gnis:feature_id": "1759995",
+        "landuse": "cemetery",
+        "name": "Providence Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1102589212,
+      "center": {
+        "lat": 37.4500961,
+        "lon": -77.4317459
+      },
+      "tags": {
+        "ele": "12",
+        "gnis:feature_id": "1759922",
+        "landuse": "cemetery",
+        "name": "Cary Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1108100433,
+      "center": {
+        "lat": 37.4588723,
+        "lon": -77.3775955
+      },
+      "tags": {
+        "amenity": "grave_yard",
+        "ele": "41",
+        "gnis:feature_id": "1760416",
+        "landuse": "cemetery",
+        "name": "Laurel Hill Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1108100573,
+      "center": {
+        "lat": 37.450506,
+        "lon": -77.374985
+      },
+      "tags": {
+        "ele": "46",
+        "gnis:feature_id": "1473726",
+        "landuse": "cemetery",
+        "name": "Saint James Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1123139284,
+      "center": {
+        "lat": 37.5630062,
+        "lon": -77.4844526
+      },
+      "tags": {
+        "access": "permissive",
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Humphrey Calder Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1132020640,
+      "center": {
+        "lat": 37.5233012,
+        "lon": -77.4482342
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Alice Fitz Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1144831266,
+      "center": {
+        "lat": 37.5139494,
+        "lon": -77.3979506
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Garber Street Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1144831267,
+      "center": {
+        "lat": 37.5157251,
+        "lon": -77.4063486
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Powhatan Hill Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1204969844,
+      "center": {
+        "lat": 37.5624694,
+        "lon": -77.4305686
+      },
+      "tags": {
+        "access": "private",
+        "garden:type": "residential",
+        "leisure": "garden",
+        "name": "Barton Mansion Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1207244251,
+      "center": {
+        "lat": 37.5445436,
+        "lon": -77.4629357
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Petronius S. Jones Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1210324296,
+      "center": {
+        "lat": 37.5543755,
+        "lon": -77.4377386
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Charles S. Gilpin Community Farm"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1210472679,
+      "center": {
+        "lat": 37.5445962,
+        "lon": -77.4017623
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Roots of Woodville Neighborhood Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1210570716,
+      "center": {
+        "lat": 37.5062594,
+        "lon": -77.4631983
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "404",
+        "addr:postcode": "23224",
+        "addr:street": "East Broad Rock Road",
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Broad Rock Community Garden",
+        "website": "https://thenaturalfestival.com/broadrock/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1210570717,
+      "center": {
+        "lat": 37.5012499,
+        "lon": -77.4703551
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Stockton Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1210574642,
+      "center": {
+        "lat": 37.5444025,
+        "lon": -77.4292282
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "MCV Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1210574643,
+      "center": {
+        "lat": 37.5441799,
+        "lon": -77.457444
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Monroe Park Learning Garden",
+        "operator": "Virginia Commonwealth University"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1215070801,
+      "center": {
+        "lat": 37.532009,
+        "lon": -77.4688145
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Maymont Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1215077241,
+      "center": {
+        "lat": 37.5321556,
+        "lon": -77.4686665
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Riverview Community Park",
+        "wikimedia_commons": "File:Riverview_Community_Park.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1226872659,
+      "center": {
+        "lat": 37.5314763,
+        "lon": -77.4196675
+      },
+      "tags": {
+        "denomination": "Episcopal",
+        "ele": "45",
+        "gnis:feature_id": "1780463",
+        "landuse": "cemetery",
+        "name": "Saint Johns Cemetery",
+        "religion": "christian",
+        "wikidata": "Q105072429"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1228546971,
+      "center": {
+        "lat": 37.5236203,
+        "lon": -77.411571
+      },
+      "tags": {
+        "barrier": "fence",
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Chimborazo Native Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1242677353,
+      "center": {
+        "lat": 37.5065016,
+        "lon": -77.4439244
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Oak Grove Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1266567346,
+      "center": {
+        "lat": 37.554888,
+        "lon": -77.4722858
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Rick's Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1300716641,
+      "center": {
+        "lat": 37.5616842,
+        "lon": -77.4814489
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Albert Hill Native Plant Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1318972448,
+      "center": {
+        "lat": 37.5352459,
+        "lon": -77.4172527
+      },
+      "tags": {
+        "access": "yes",
+        "email": "jeffersonavecommgarden@gmail.com",
+        "garden:type": "community",
+        "landuse": "flowerbed",
+        "leisure": "garden",
+        "name": "Jefferson Avenue Community Garden",
+        "website": "https://verdantrichmond.org/jefferson-avenue-community-garden/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1321491852,
+      "center": {
+        "lat": 37.5155624,
+        "lon": -77.4088117
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "5001",
+        "addr:postcode": "23231",
+        "addr:state": "VA",
+        "addr:street": "Williamsburg Avenue",
+        "leisure": "park",
+        "name": "Historic Fulton Memorial Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1378116840,
+      "center": {
+        "lat": 37.5734193,
+        "lon": -77.5368658
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Abby's Garden",
+        "operator": "University of Richmond"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1414587754,
+      "center": {
+        "lat": 37.5811099,
+        "lon": -77.4261322
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Providence Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1415709159,
+      "center": {
+        "lat": 37.5893768,
+        "lon": -77.4723551
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "4308",
+        "addr:postcode": "23227",
+        "addr:state": "VA",
+        "addr:street": "Hermitage Road",
+        "amenity": "marketplace",
+        "name": "RVA Big Market",
+        "opening_hours": "Nov-Apr: Sa 09:00-12:00; May-Oct: Sa 08:00-12:00",
+        "operator": "GrowRVA",
+        "website": "https://www.growrva.com/rvabigmkt"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1415709834,
+      "center": {
+        "lat": 37.5208132,
+        "lon": -77.4733867
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "4021",
+        "addr:postcode": "23225",
+        "addr:state": "VA",
+        "addr:street": "Forest Hill Avenue",
+        "amenity": "marketplace",
+        "name": "South of the James Farmers Market",
+        "opening_hours": "Su 10:00-13:00",
+        "operator": "GrowRVA",
+        "website": "https://www.growrva.com/sojmarket"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1415711161,
+      "center": {
+        "lat": 37.5776013,
+        "lon": -77.452537
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1311",
+        "addr:postcode": "23227",
+        "addr:state": "VA",
+        "addr:street": "Westwood Avenue",
+        "amenity": "marketplace",
+        "name": "RVA Black Farmers Market",
+        "opening_hours": "Jun-Nov: Su[2,4] 11:00-15:00",
+        "organic": "yes",
+        "website": "https://www.rvablackfarmersmarket.com/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1425681874,
+      "center": {
+        "lat": 37.5527929,
+        "lon": -77.4157521
+      },
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1901",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "Conrad Street",
+        "leisure": "park",
+        "name": "Conrad Street Mini Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1425681875,
+      "center": {
+        "lat": 37.515634,
+        "lon": -77.404596
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Powhatan Pool",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1425951819,
+      "center": {
+        "lat": 37.5318836,
+        "lon": -77.3970248
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Briel Street Playground",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1425951820,
+      "center": {
+        "lat": 37.5329494,
+        "lon": -77.4048662
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "James S. Christian Jr. Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1425951821,
+      "center": {
+        "lat": 37.5319519,
+        "lon": -77.4119878
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "M Street Cemetery",
+        "note": "William Catlin family graveyard",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1426691926,
+      "center": {
+        "lat": 37.5281982,
+        "lon": -77.4148889
+      },
+      "tags": {
+        "leisure": "park",
+        "name": "Chimborazo Playground",
+        "opening_hours": "sunrise-sunset"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1431231469,
+      "center": {
+        "lat": 37.5694666,
+        "lon": -77.4291695
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Brookland Park Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1446280636,
+      "center": {
+        "lat": 37.5363658,
+        "lon": -77.3889049
+      },
+      "tags": {
+        "alt_name": "Garden of Lilies",
+        "landuse": "cemetery",
+        "name": "Colored Paupers Cemetery",
+        "wikidata": "Q139279400"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1467380190,
+      "center": {
+        "lat": 37.5321008,
+        "lon": -77.4245312
+      },
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Franklin Street Burial Grounds",
+        "religion": "jewish"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482016840,
+      "center": {
+        "lat": 37.5739971,
+        "lon": -77.5407635
+      },
+      "tags": {
+        "leisure": "garden",
+        "name": "Westhampton College Deanery Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1510538026,
+      "center": {
+        "lat": 37.5117364,
+        "lon": -77.4758972
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Swansboro Community Garden",
+        "operator": "Swansboro Baptist Church"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1516391064,
+      "center": {
+        "lat": 37.6111567,
+        "lon": -77.5877294
+      },
+      "tags": {
+        "dog": "unleashed",
+        "leisure": "park",
+        "name": "Dog Park",
+        "operator": "MAA Chase Gayton"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1550217525,
+      "center": {
+        "lat": 37.4844338,
+        "lon": -77.4804635
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Planet Rock Community Garden",
+        "official_name": "P.L.A.N.E.T.R.O.C.K. Community Garden",
+        "website": "https://www.richmondgrowsgardens.org/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1550217526,
+      "center": {
+        "lat": 37.4789121,
+        "lon": -77.4614423
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Hickory Hill Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1550243916,
+      "center": {
+        "lat": 37.4974191,
+        "lon": -77.4385625
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Youth Garden at Bellemeade",
+        "operator": "City of Richmond"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1550248064,
+      "center": {
+        "lat": 37.5695267,
+        "lon": -77.4225872
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "Hotchkiss Community Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1550248446,
+      "center": {
+        "lat": 37.5697902,
+        "lon": -77.4165437
+      },
+      "tags": {
+        "garden:type": "community",
+        "leisure": "garden",
+        "name": "6 Points Community Garden"
+      }
+    }
+  ]
+}

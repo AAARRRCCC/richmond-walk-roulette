@@ -1,7 +1,7 @@
 {
   "$comment": "Gzipped bytes of the app's own JS, excluding the MapLibre chunk. `actual` is rewritten by each chunk's commit from a real build; `ceiling` is the v0.5 plan's wall and is never raised to make a build pass. See docs/plans/README.md section 5.",
   "ceiling": 102400,
-  "actual": 82262,
+  "actual": 89244,
   "history": [
     {
       "label": "baseline (v0.4, before the harness)",
@@ -50,6 +50,10 @@
     {
       "label": "chunk 7 - weather-filters",
       "bytes": 82262
+    },
+    {
+      "label": "chunk 8 - places-expansion",
+      "bytes": 89244
     }
   ]
 }

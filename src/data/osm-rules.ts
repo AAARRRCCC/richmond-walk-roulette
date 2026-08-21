@@ -53,7 +53,9 @@ export type Rejection =
   | "lifecycle" // disused:/was:/abandoned:/demolished:/removed:/proposed:/construction:
   | "access" // access=private|no, entrance=no
   | "commercial" // shop=*, amenity in the food set; marketplace excepted
-  | "unnamed" // no name, /^untitled/i, under four characters, or over NAME_MAX
+  | "unnamed" // no name, /^untitled/i, an address, too short, or over NAME_MAX
+  | "in-memoriam" // a memorial to one named person's death
+  | "not-public" // a community or residential garden: plots, not a destination
   | "no-vibe" // collected zero Vibes, so no chip could ever reach it
   | "out-of-bounds" // outside PLACE_BOUNDS
   | "not-a-place"; // matched no rule in the classification table
@@ -94,6 +96,22 @@ export const PLACE_BOUNDS = { south: 37.44, west: -77.6, north: 37.64, east: -77
 /** Shortest name that can stand on its own on the result card. */
 const NAME_MIN = 4;
 
+/**
+ * A name that is really a street address.
+ *
+ * Measured, not imagined: of 52 markers the first propose run accepted, **38**
+ * were Historic Richmond house plaques named "2816 E. Grace", "605 N. 25th
+ * Street", "802 N. 25th Street". Each is a real plaque on a real house, and
+ * "Marker: 635 North 27th Street" is not an offer - it is an address, and
+ * sending somebody on a twenty-minute walk to a house number is this app
+ * failing its own promise that the name is the whole offer.
+ *
+ * The leading house number is the whole tell. A genuine place beginning with a
+ * digit - "17th Street Market", "1708 Gallery" - does not match, because the
+ * number is part of the name rather than a street address preceding one.
+ */
+const ADDRESS_LIKE = /^\d+[a-z]?\s+(n|s|e|w|north|south|east|west|[a-z]+\s+(st|street|ave|avenue|rd|road|blvd|boulevard|ln|lane|ter|terrace|pl|place|dr|drive))\b/i;
+
 /** Tag key prefixes that mean "this used to be, or is not yet, a thing". */
 const LIFECYCLE_PREFIXES = [
   "disused:",
@@ -123,6 +141,18 @@ const COMMERCIAL_AMENITIES = new Set([
   "fast_food",
   "ice_cream",
 ]);
+
+/**
+ * Garden subtypes that are somebody's plot rather than somewhere to walk to.
+ *
+ * Measured: of 63 named gardens in the Richmond box, **34** are
+ * `garden:type=community` and one is `residential`. A community garden is a
+ * membership of raised beds, usually behind a gate, and turning up at one
+ * because a roulette sent you is not a thing to do. The 27 untagged ones are
+ * Lewis Ginter's named gardens - Rose Garden, Sunken Garden, Asian Valley -
+ * which are exactly the destinations this harvest is for.
+ */
+const PRIVATE_GARDEN_TYPES = new Set(["community", "residential", "allotment"]);
 
 const HISTORIC_DESTINATIONS = new Set([
   "monument",
@@ -155,6 +185,7 @@ export function placeName(candidate: OsmCandidate): string | null {
   const raw = get(candidate, "name")?.trim();
   if (raw === undefined || raw.length === 0) return null;
   if (/^untitled/i.test(raw)) return null;
+  if (ADDRESS_LIKE.test(raw)) return null;
   if (raw.length < NAME_MIN) return null;
   if (raw.length > NAME_MAX) return null;
   return raw;
@@ -253,7 +284,9 @@ function vibesOf(candidate: OsmCandidate, name: string): Vibe[] {
     get(candidate, "landuse") === "recreation_ground";
   if (isPark) vibes.add("park");
 
-  if (tourism === "museum" || tourism === "gallery") vibes.add("museum");
+  // Museums only. `tourism=gallery` is not here for the same reason it is not
+  // in `isPlaceLike`: in this box it is overwhelmingly commercial art dealers.
+  if (tourism === "museum") vibes.add("museum");
   if (amenity === "arts_centre" || amenity === "theatre" || amenity === "library") {
     vibes.add("museum");
   }
@@ -320,9 +353,14 @@ function isPlaceLike(candidate: OsmCandidate): boolean {
   if (get(candidate, "landuse") === "cemetery") return true;
 
   const tourism = get(candidate, "tourism");
+  // `tourism=gallery` is deliberately absent. Of the 18 in the Richmond box,
+  // most are commercial art dealers - Reynolds, Quirk, Page Bond, Try-Me,
+  // Uptown - and nothing in the tags tells those apart from The Anderson or
+  // Artspace, which are not. Unsure is a rejection: a destination list that
+  // sends somebody to a storefront that has closed or moved is the exact
+  // failure the data layer's own comment already records happening once.
   if (
     tourism === "museum" ||
-    tourism === "gallery" ||
     tourism === "zoo" ||
     tourism === "aquarium" ||
     tourism === "theme_park" ||
@@ -374,6 +412,26 @@ export function classify(candidate: OsmCandidate): ClassifyResult {
   const amenity = get(candidate, "amenity");
   if (has(candidate, "shop") || (amenity !== undefined && COMMERCIAL_AMENITIES.has(amenity))) {
     return { ok: false, reason: "commercial" };
+  }
+
+  if (get(candidate, "leisure") === "garden") {
+    const type = get(candidate, "garden:type");
+    if (type !== undefined && PRIVATE_GARDEN_TYPES.has(type)) {
+      return { ok: false, reason: "not-public" };
+    }
+  }
+
+  // A ghost bike marks where a named cyclist was killed in traffic. Four of
+  // them are in the Richmond box, and the first propose run accepted three -
+  // as "Marker: Robyn Hightman", a person's name with no context, drawn at
+  // random and presented as a small delight.
+  //
+  // This app has no room on the card to say what that place is, and no business
+  // making a roulette prize of it. The refusal is a product decision rather than
+  // a data rule, which is exactly why it is written down here rather than left
+  // to whoever reviews the list to notice.
+  if (get(candidate, "memorial") === "ghost_bike") {
+    return { ok: false, reason: "in-memoriam" };
   }
 
   const { lat, lng } = candidate.seed;

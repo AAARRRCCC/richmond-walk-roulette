@@ -12,6 +12,9 @@
     "lint:dead": "knip",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify.mjs",
+    "harvest:osm": "node scripts/harvest-osm.mjs",
+    "propose:places": "node scripts/propose-places.mjs",
+    "apply:places": "node scripts/apply-places.mjs",
     "test": "node --test \"server/*.test.ts\" \"src/**/*.test.ts\""
   },
   "dependencies": {

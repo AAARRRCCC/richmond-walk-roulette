@@ -1,0 +1,2611 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Place proposals</title>
+<style>
+  :root { color-scheme: dark; }
+  body { background:#0b1014; color:#dfe6ec; font:14px/1.45 system-ui, sans-serif; margin:0; padding:24px; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  p.lede { color:#8fa0ae; margin:0 0 20px; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { text-align:left; padding:5px 8px; border-bottom:1px solid #1b242c; vertical-align:top; }
+  th { color:#8fa0ae; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+  tr.snap { background:rgba(255,176,67,.07); }
+  tr.here { outline:2px solid #ffb043; }
+  td.n, td.num { color:#8fa0ae; font-variant-numeric:tabular-nums; text-align:right; }
+  td.name { font-weight:600; }
+  .tier { font-size:11px; padding:1px 6px; border-radius:9px; }
+  .tier.dest { background:#1b242c; color:#8fa0ae; }
+  .tier.det { background:rgba(255,176,67,.18); color:#ffd7a0; }
+  .vibes span { font-size:11px; color:#8fa0ae; margin-right:5px; }
+  a { color:#ffb043; }
+  .bar { position:sticky; top:0; background:#0b1014; padding:10px 0; border-bottom:1px solid #1b242c; margin-bottom:12px; }
+  kbd { background:#1b242c; border-radius:3px; padding:1px 5px; font:12px ui-monospace, monospace; }
+  #count { color:#ffb043; font-weight:600; }
+  .side { display:flex; gap:32px; align-items:flex-start; }
+  .rejected { min-width:220px; }
+</style>
+<div class="bar">
+  <strong>Place proposals</strong> &mdash; <span id="count">0</span> accepted of 180
+  &nbsp; <kbd>j</kbd>/<kbd>k</kbd> move &nbsp; <kbd>a</kbd> toggle &nbsp; <kbd>c</kbd> copy ids
+</div>
+<p class="lede">
+  Amber rows were anchored by <strong>snap</strong> rather than by a gate node. A snapped anchor can be
+  technically walkable and socially wrong &mdash; a park anchored to a service road behind a maintenance
+  yard passes every automated gate. Look at those on the map before accepting them.
+</p>
+<div class="side">
+<table>
+  <thead><tr>
+    <th></th><th></th><th>Name</th><th>Tier</th><th>Vibes</th><th>Score</th>
+    <th>Anchor</th><th>Moved</th><th>Edge</th><th>Reach</th><th>Links</th>
+  </tr></thead>
+  <tbody id="rows">
+<tr data-id="barton-heights-cemetery" class="snap">
+  <td class="n">1</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Barton Heights Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">75</td>
+  <td class="anchor">snap</td>
+  <td class="num">82.5 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/44884751" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.557951&amp;mlon=-77.431499#map=18/37.557951/-77.431499" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="fifth-street-viaduct" class="snap">
+  <td class="n">2</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Fifth Street Viaduct</td>
+  <td><span class="tier det">bridge</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">60</td>
+  <td class="anchor">snap</td>
+  <td class="num">0.2 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/710713202" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.553434&amp;mlon=-77.427521#map=18/37.553434/-77.427521" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="bryan-park" class="snap">
+  <td class="n">3</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Bryan Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span><span>history</span></td>
+  <td class="num">75</td>
+  <td class="anchor">snap</td>
+  <td class="num">56.5 m</td>
+  <td>path</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/316099498" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.592938&amp;mlon=-77.474972#map=18/37.592938/-77.474972" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="arthur-ashe-statue" class="snap">
+  <td class="n">4</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Arthur Ashe Statue</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">45</td>
+  <td class="anchor">snap</td>
+  <td class="num">7.4 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/5209437090" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.565231&amp;mlon=-77.479084#map=18/37.565231/-77.479084" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="chimborazo-medical-museum" class="snap">
+  <td class="n">5</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Chimborazo Medical Museum</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>museum</span></td>
+  <td class="num">70</td>
+  <td class="anchor">snap</td>
+  <td class="num">9.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/298621404" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.52689&amp;mlon=-77.412135#map=18/37.52689/-77.412135" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="edgar-allan-poe" class="snap">
+  <td class="n">6</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Edgar Allan Poe</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>history</span><span>scenic</span></td>
+  <td class="num">45</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.3 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/5420002328" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.540042&amp;mlon=-77.434259#map=18/37.540042/-77.434259" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="oakwood-cemetery" class="snap">
+  <td class="n">7</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Oakwood Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">60</td>
+  <td class="anchor">snap</td>
+  <td class="num">42.8 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/17173266" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.536758&amp;mlon=-77.396155#map=18/37.536758/-77.396155" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="chloe" class="snap">
+  <td class="n">8</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Chloe</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">45</td>
+  <td class="anchor">snap</td>
+  <td class="num">4.9 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/7095866280" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.557009&amp;mlon=-77.475286#map=18/37.557009/-77.475286" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="hebrew-cemetery" class="snap">
+  <td class="n">9</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Hebrew Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">60</td>
+  <td class="anchor">snap</td>
+  <td class="num">14.5 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/44703329" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.552451&amp;mlon=-77.429799#map=18/37.552451/-77.429799" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="rumors-of-war" class="snap">
+  <td class="n">10</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Rumors of War</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">45</td>
+  <td class="anchor">snap</td>
+  <td class="num">12.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/7095879702" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.556489&amp;mlon=-77.473957#map=18/37.556489/-77.473957" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="gambles-hill-park" class="">
+  <td class="n">11</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Gambles Hill Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">60</td>
+  <td class="anchor">gate</td>
+  <td class="num">110 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/264479485" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.53739&amp;mlon=-77.446945#map=18/37.53739/-77.446945" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="powhatan-stone" class="snap">
+  <td class="n">12</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Powhatan Stone</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">2.9 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13294886983" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.524681&amp;mlon=-77.412807#map=18/37.524681/-77.412807" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="patrick-henry-park" class="">
+  <td class="n">13</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Patrick Henry Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span><span>history</span></td>
+  <td class="num">55</td>
+  <td class="anchor">gate</td>
+  <td class="num">54.1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/266890327" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.532013&amp;mlon=-77.419602#map=18/37.532013/-77.419602" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="robert-e-lee-memorial-bridge" class="snap">
+  <td class="n">14</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Robert E. Lee Memorial Bridge</td>
+  <td><span class="tier det">bridge</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">18 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/16271271" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.53068&amp;mlon=-77.450578#map=18/37.53068/-77.450578" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="deep-run-park" class="snap">
+  <td class="n">15</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Deep Run Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">50</td>
+  <td class="anchor">snap</td>
+  <td class="num">19 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/11623997" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.625419&amp;mlon=-77.58924#map=18/37.625419/-77.58924" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="i-can-because-i-said-so" class="snap">
+  <td class="n">16</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">I Can Because I Said So</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">35</td>
+  <td class="anchor">snap</td>
+  <td class="num">9.4 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13658908095" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.571401&amp;mlon=-77.43391#map=18/37.571401/-77.43391" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="richmond-national-cemetery" class="snap">
+  <td class="n">17</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Richmond National Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">50</td>
+  <td class="anchor">snap</td>
+  <td class="num">0.1 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/38176596" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.514383&amp;mlon=-77.392809#map=18/37.514383/-77.392809" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="girl-with-phone" class="snap">
+  <td class="n">18</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Girl with phone</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">35</td>
+  <td class="anchor">snap</td>
+  <td class="num">10.2 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1482292129" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.5607&amp;mlon=-77.475491#map=18/37.5607/-77.475491" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="monroe-park" class="snap">
+  <td class="n">19</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Monroe Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">50</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.6 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/45087752" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.546955&amp;mlon=-77.45022#map=18/37.546955/-77.45022" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="icarus-fallen" class="snap">
+  <td class="n">20</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Icarus Fallen</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">30</td>
+  <td class="anchor">snap</td>
+  <td class="num">14.8 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13646021692" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.544274&amp;mlon=-77.452777#map=18/37.544274/-77.452777" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="rockwood-park" class="snap">
+  <td class="n">21</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Rockwood Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">50</td>
+  <td class="anchor">snap</td>
+  <td class="num">53.5 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/315035710" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.449992&amp;mlon=-77.580608#map=18/37.449992/-77.580608" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="say-their-names" class="snap">
+  <td class="n">22</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Say Their Names</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">30</td>
+  <td class="anchor">snap</td>
+  <td class="num">22 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1481981173" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.567121&amp;mlon=-77.476203#map=18/37.567121/-77.476203" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="dabbs-house-museum" class="snap">
+  <td class="n">23</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Dabbs House Museum</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>museum</span></td>
+  <td class="num">50</td>
+  <td class="anchor">snap</td>
+  <td class="num">27.8 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/708736666" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.543576&amp;mlon=-77.382631#map=18/37.543576/-77.382631" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="chris" class="snap">
+  <td class="n">24</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Chris</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">30</td>
+  <td class="anchor">snap</td>
+  <td class="num">6.8 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1482311468" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.550623&amp;mlon=-77.453389#map=18/37.550623/-77.453389" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="ginter-park-historic-district" class="snap">
+  <td class="n">25</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Ginter Park Historic District</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">16.4 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/356602345" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.589172&amp;mlon=-77.443526#map=18/37.589172/-77.443526" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="a-pearl-of-wisdom" class="snap">
+  <td class="n">26</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">A Pearl of Wisdom</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">25</td>
+  <td class="anchor">snap</td>
+  <td class="num">9.2 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13599643336" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.557646&amp;mlon=-77.462648#map=18/37.557646/-77.462648" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="forest-lawn-cemetery" class="snap">
+  <td class="n">27</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Forest Lawn Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">10.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/44659688" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.593313&amp;mlon=-77.435525#map=18/37.593313/-77.435525" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="silence-isnt-golden" class="snap">
+  <td class="n">28</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Silence Isn't Golden</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">25</td>
+  <td class="anchor">snap</td>
+  <td class="num">10.4 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13658855185" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.548543&amp;mlon=-77.463757#map=18/37.548543/-77.463757" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="carter-jones-park" class="snap">
+  <td class="n">29</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Carter Jones Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">20.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/44660433" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.515855&amp;mlon=-77.460362#map=18/37.515855/-77.460362" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="nates-bagels" class="snap">
+  <td class="n">30</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Nate's Bagels</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">25</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.2 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1487363788" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.547219&amp;mlon=-77.463819#map=18/37.547219/-77.463819" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="woodland-cemetery" class="snap">
+  <td class="n">31</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Woodland Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">44.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/44703326" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.562411&amp;mlon=-77.412706#map=18/37.562411/-77.412706" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="lockwood-double-house" class="snap">
+  <td class="n">32</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Lockwood Double House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/2179727313" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.534231&amp;mlon=-77.425467#map=18/37.534231/-77.425467" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="highland-plaza" class="snap">
+  <td class="n">33</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Highland Plaza</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">12 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/44908077" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.575373&amp;mlon=-77.417086#map=18/37.575373/-77.417086" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="oregon-hill-overlook" class="snap">
+  <td class="n">34</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Oregon Hill Overlook</td>
+  <td><span class="tier det">overlook</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">0.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/3017455573" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.535276&amp;mlon=-77.450509#map=18/37.535276/-77.450509" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="westhampton-memorial-park" class="snap">
+  <td class="n">35</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Westhampton Memorial Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">11.9 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/45902101" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.598703&amp;mlon=-77.595562#map=18/37.598703/-77.595562" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="la-comunidad-ii" class="snap">
+  <td class="n">36</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">La Comunidad II</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">12.1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13585998968" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.551536&amp;mlon=-77.452697#map=18/37.551536/-77.452697" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="ridge-cemetery" class="snap">
+  <td class="n">37</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Ridge Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">58.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/45902915" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.601161&amp;mlon=-77.560377#map=18/37.601161/-77.560377" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="royster-house" class="snap">
+  <td class="n">38</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Royster House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">7.6 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13615589401" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.529447&amp;mlon=-77.419371#map=18/37.529447/-77.419371" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="kanawha-plaza" class="snap">
+  <td class="n">39</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Kanawha Plaza</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>river</span><span>park</span><span>scenic</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">22.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/225274659" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.536486&amp;mlon=-77.439459#map=18/37.536486/-77.439459" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="the-parsons-house" class="snap">
+  <td class="n">40</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">The Parsons House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">2.6 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13615589407" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.529395&amp;mlon=-77.41721#map=18/37.529395/-77.41721" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="holly-street-park" class="">
+  <td class="n">41</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Holly Street Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">gate</td>
+  <td class="num">115.1 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/252837456" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.535549&amp;mlon=-77.451764#map=18/37.535549/-77.451764" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="ann-carrington-house" class="snap">
+  <td class="n">42</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Ann Carrington House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">6.6 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13616245533" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.531667&amp;mlon=-77.420954#map=18/37.531667/-77.420954" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="abner-clay-park" class="snap">
+  <td class="n">43</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Abner Clay Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">15.4 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/266499307" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.549615&amp;mlon=-77.442466#map=18/37.549615/-77.442466" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="c-w-hardwicke-carriage-house" class="snap">
+  <td class="n">44</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">C.W. Hardwicke Carriage House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">2.5 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13616245540" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.532758&amp;mlon=-77.421918#map=18/37.532758/-77.421918" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="cheswick-park" class="snap">
+  <td class="n">45</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Cheswick Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">9.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/296201488" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.605648&amp;mlon=-77.545258#map=18/37.605648/-77.545258" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="netherwood-house" class="snap">
+  <td class="n">46</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Netherwood House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.4 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13616245554" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.529931&amp;mlon=-77.418091#map=18/37.529931/-77.418091" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="three-lakes-park" class="snap">
+  <td class="n">47</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Three Lakes Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">11.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/296208595" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.616997&amp;mlon=-77.428974#map=18/37.616997/-77.428974" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="genl-joseph-l-johnston" class="snap">
+  <td class="n">48</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Gen'l Joseph L Johnston</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">0.2 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13616245561" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.530722&amp;mlon=-77.417456#map=18/37.530722/-77.417456" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="robinson-park" class="">
+  <td class="n">49</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Robinson Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">gate</td>
+  <td class="num">67.4 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/342205613" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.556273&amp;mlon=-77.349415#map=18/37.556273/-77.349415" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="the-j-m-carter-house" class="snap">
+  <td class="n">50</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">The J.M. Carter House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13616245564" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.534554&amp;mlon=-77.415902#map=18/37.534554/-77.415902" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="powhatan-playground" class="">
+  <td class="n">51</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Powhatan Playground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">gate</td>
+  <td class="num">44.9 m</td>
+  <td>path</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/576461461" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.515586&amp;mlon=-77.406325#map=18/37.515586/-77.406325" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="richardsons-drug-store" class="snap">
+  <td class="n">52</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Richardson's Drug Store</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.9 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13632907505" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.530061&amp;mlon=-77.411536#map=18/37.530061/-77.411536" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="montrose-heights-playground" class="snap">
+  <td class="n">53</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Montrose Heights Playground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">57.6 m</td>
+  <td>path</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/840378385" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.52354&amp;mlon=-77.393982#map=18/37.52354/-77.393982" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="hiram-oliver-house" class="snap">
+  <td class="n">54</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Hiram Oliver House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.6 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13636183195" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.536272&amp;mlon=-77.417126#map=18/37.536272/-77.417126" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="pocosham-park" class="snap">
+  <td class="n">55</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Pocosham Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">75 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1084702409" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.471165&amp;mlon=-77.504437#map=18/37.471165/-77.504437" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="myrtle-terrace" class="snap">
+  <td class="n">56</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Myrtle Terrace</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">6.4 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13641321239" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.528064&amp;mlon=-77.416372#map=18/37.528064/-77.416372" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="colored-paupers-cemetery" class="snap">
+  <td class="n">57</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Colored Paupers Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">40</td>
+  <td class="anchor">snap</td>
+  <td class="num">85.4 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1446280636" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.536609&amp;mlon=-77.389823#map=18/37.536609/-77.389823" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="the-pulliam-house" class="snap">
+  <td class="n">58</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">The Pulliam House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">7.1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13641321240" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.528673&amp;mlon=-77.418593#map=18/37.528673/-77.418593" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="the-jxn-haus" class="snap">
+  <td class="n">59</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">The JXN Haus</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>museum</span></td>
+  <td class="num">30</td>
+  <td class="anchor">snap</td>
+  <td class="num">12.6 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13727734577" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.550566&amp;mlon=-77.432799#map=18/37.550566/-77.432799" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="2014-princess-anne-avenue" class="snap">
+  <td class="n">60</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">2014 Princess Anne Avenue</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">2.2 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13645857198" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.535953&amp;mlon=-77.420503#map=18/37.535953/-77.420503" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="powhite-park" class="snap">
+  <td class="n">61</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Powhite Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">30</td>
+  <td class="anchor">snap</td>
+  <td class="num">8.6 m</td>
+  <td>path</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/9294688" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.521803&amp;mlon=-77.524302#map=18/37.521803/-77.524302" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="elliott-house" class="snap">
+  <td class="n">62</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Elliott House</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13645857200" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.533387&amp;mlon=-77.415056#map=18/37.533387/-77.415056" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="pollard-park" class="snap">
+  <td class="n">63</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Pollard Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">30</td>
+  <td class="anchor">snap</td>
+  <td class="num">44.1 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/307757135" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.573055&amp;mlon=-77.444695#map=18/37.573055/-77.444695" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="boatmans-tower" class="snap">
+  <td class="n">64</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Boatman's Tower</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.4 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13978497121" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.536633&amp;mlon=-77.436069#map=18/37.536633/-77.436069" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="kiehr-field" class="snap">
+  <td class="n">65</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Kiehr Field</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">30</td>
+  <td class="anchor">snap</td>
+  <td class="num">47.3 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/546227792" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.626518&amp;mlon=-77.427776#map=18/37.626518/-77.427776" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="fruits-and-veggies" class="snap">
+  <td class="n">66</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Fruits and Veggies</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">10.6 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1484770948" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.534601&amp;mlon=-77.427344#map=18/37.534601/-77.427344" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="richmond-makers-market" class="snap">
+  <td class="n">67</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Richmond Makers Market</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>food</span></td>
+  <td class="num">25</td>
+  <td class="anchor">snap</td>
+  <td class="num">15.3 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13361298862" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.526249&amp;mlon=-77.442303#map=18/37.526249/-77.442303" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="lakeside" class="snap">
+  <td class="n">68</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Lakeside</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">31.7 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1484771674" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.614918&amp;mlon=-77.469846#map=18/37.614918/-77.469846" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="bandy-field-nature-park" class="">
+  <td class="n">69</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Bandy Field Nature Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">20</td>
+  <td class="anchor">gate</td>
+  <td class="num">116.6 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/171211185" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.587294&amp;mlon=-77.533951#map=18/37.587294/-77.533951" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="maggie-lena-walker" class="snap">
+  <td class="n">70</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Maggie Lena Walker</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">0.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/5417333240" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.55758&amp;mlon=-77.453182#map=18/37.55758/-77.453182" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="huguenot-park" class="snap">
+  <td class="n">71</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Huguenot Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">6.6 m</td>
+  <td>path</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/315813183" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.514747&amp;mlon=-77.598577#map=18/37.514747/-77.598577" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="dooley-sundial" class="snap">
+  <td class="n">72</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Dooley sundial</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">2.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/5775290150" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.534401&amp;mlon=-77.473867#map=18/37.534401/-77.473867" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="triangle-park" class="">
+  <td class="n">73</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Triangle Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">20</td>
+  <td class="anchor">gate</td>
+  <td class="num">86.3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/365619045" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.534913&amp;mlon=-77.41995#map=18/37.534913/-77.41995" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="maggie-lena-walker-statue" class="snap">
+  <td class="n">74</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Maggie Lena Walker Statue</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">8.4 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/7678867202" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.546195&amp;mlon=-77.442606#map=18/37.546195/-77.442606" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="westview-park" class="snap">
+  <td class="n">75</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Westview Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">12.4 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/502860808" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.576795&amp;mlon=-77.519456#map=18/37.576795/-77.519456" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="manchester-wall-rock-climbing" class="snap">
+  <td class="n">76</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Manchester Wall Rock Climbing</td>
+  <td><span class="tier det">overlook</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/10968066382" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.529542&amp;mlon=-77.445958#map=18/37.529542/-77.445958" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="lucks-field-playground" class="snap">
+  <td class="n">77</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Lucks Field Playground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">48.1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/574960663" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.545243&amp;mlon=-77.414474#map=18/37.545243/-77.414474" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="park-guardian-ii" class="snap">
+  <td class="n">78</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Park Guardian II</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">6.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/11082221505" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.536644&amp;mlon=-77.449592#map=18/37.536644/-77.449592" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="rva-big-market" class="snap">
+  <td class="n">79</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">RVA Big Market</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>food</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">7 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1415709159" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.589318&amp;mlon=-77.472326#map=18/37.589318/-77.472326" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="park-guardian-i" class="snap">
+  <td class="n">80</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Park Guardian I</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">4.6 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/11089269438" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.541745&amp;mlon=-77.449472#map=18/37.541745/-77.449472" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="rva-black-farmers-market" class="snap">
+  <td class="n">81</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">RVA Black Farmers Market</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>food</span></td>
+  <td class="num">20</td>
+  <td class="anchor">snap</td>
+  <td class="num">57.1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1415711161" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.578114&amp;mlon=-77.452531#map=18/37.578114/-77.452531" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="crash-dummies" class="snap">
+  <td class="n">82</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Crash Dummies</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">22.6 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13585970444" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.550494&amp;mlon=-77.452146#map=18/37.550494/-77.452146" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="burying-ground" class="snap">
+  <td class="n">83</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Burying Ground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">18.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/12952541160" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.575876&amp;mlon=-77.537555#map=18/37.575876/-77.537555" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="together-we-rise" class="snap">
+  <td class="n">84</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Together We Rise</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.7 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13658881408" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.544382&amp;mlon=-77.438791#map=18/37.544382/-77.438791" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="emergency-call-box" class="snap">
+  <td class="n">85</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Emergency Call Box</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.3 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13568547130" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.573052&amp;mlon=-77.542594#map=18/37.573052/-77.542594" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="happy-children" class="snap">
+  <td class="n">86</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Happy Children</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.8 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13658908505" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.5717&amp;mlon=-77.435646#map=18/37.5717/-77.435646" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="paradise-park" class="">
+  <td class="n">87</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Paradise Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">15</td>
+  <td class="anchor">gate</td>
+  <td class="num">11 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/143098974" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.549607&amp;mlon=-77.461842#map=18/37.549607/-77.461842" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="cardinal-points" class="snap">
+  <td class="n">88</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Cardinal Points</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">2.6 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13666091333" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.548252&amp;mlon=-77.470826#map=18/37.548252/-77.470826" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="floodwall-park" class="">
+  <td class="n">89</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Floodwall Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>river</span><span>park</span><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">gate</td>
+  <td class="num">34.3 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/491695518" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.526781&amp;mlon=-77.435145#map=18/37.526781/-77.435145" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="the-giant-cigarette" class="snap">
+  <td class="n">90</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">The Giant Cigarette</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">30.3 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/761043823" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.474656&amp;mlon=-77.429801#map=18/37.474656/-77.429801" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="childrens-garden" class="snap">
+  <td class="n">91</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Children's Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">4.6 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/2805247716" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.622339&amp;mlon=-77.47004#map=18/37.622339/-77.47004" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="visual-symphony" class="snap">
+  <td class="n">92</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Visual Symphony</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">13.3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1481952849" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.548546&amp;mlon=-77.449195#map=18/37.548546/-77.449195" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="four-seasons-garden" class="snap">
+  <td class="n">93</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Four Seasons Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.7 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/2805247798" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.620525&amp;mlon=-77.471263#map=18/37.620525/-77.471263" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="peppermint-butler" class="snap">
+  <td class="n">94</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Peppermint Butler</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.4 m</td>
+  <td>steps</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1481952850" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.551461&amp;mlon=-77.447435#map=18/37.551461/-77.447435" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="west-island-garden" class="snap">
+  <td class="n">95</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">West Island Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">2.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/2805247802" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.621365&amp;mlon=-77.470009#map=18/37.621365/-77.470009" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="grizzly" class="snap">
+  <td class="n">96</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">GRIZZLY</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">18.3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1481985613" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.539665&amp;mlon=-77.424062#map=18/37.539665/-77.424062" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="lace-house-garden" class="snap">
+  <td class="n">97</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Lace House Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">21.6 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/2805247822" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.621806&amp;mlon=-77.468487#map=18/37.621806/-77.468487" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="think" class="snap">
+  <td class="n">98</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Think</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1482362873" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.541833&amp;mlon=-77.413497#map=18/37.541833/-77.413497" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="lucy-payne-minor-garden" class="snap">
+  <td class="n">99</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Lucy Payne Minor Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">46.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/2805247823" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.622945&amp;mlon=-77.471327#map=18/37.622945/-77.471327" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="jackson-ward-legacies" class="snap">
+  <td class="n">100</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Jackson Ward Legacies</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">15</td>
+  <td class="anchor">snap</td>
+  <td class="num">12.5 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1489939983" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.545568&amp;mlon=-77.44051#map=18/37.545568/-77.44051" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="vienna-cobb-anderson-meadow" class="snap">
+  <td class="n">101</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Vienna Cobb Anderson Meadow</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">20.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/2805247825" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.621421&amp;mlon=-77.471378#map=18/37.621421/-77.471378" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="manchester-free-bridges" class="snap">
+  <td class="n">102</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Manchester &amp; Free Bridges</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">32.6 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/898650767" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.533634&amp;mlon=-77.441196#map=18/37.533634/-77.441196" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="lake-view-garden" class="snap">
+  <td class="n">103</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Lake View Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">9.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/5411281241" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.591234&amp;mlon=-77.497156#map=18/37.591234/-77.497156" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="tdia-1895-james-river-overlook" class="snap">
+  <td class="n">104</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">TDIA 1895 James River Overlook</td>
+  <td><span class="tier det">overlook</span></td>
+  <td class="vibes"><span>river</span><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.9 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/2975991287" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.533697&amp;mlon=-77.444471#map=18/37.533697/-77.444471" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="homeless-camp-ground" class="snap">
+  <td class="n">105</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Homeless Camp Ground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">21.8 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/8295609184" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.478893&amp;mlon=-77.516643#map=18/37.478893/-77.516643" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="highest-point-in-henrico-county" class="snap">
+  <td class="n">106</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Highest Point In Henrico County</td>
+  <td><span class="tier det">overlook</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">12.4 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/3017991713" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.590958&amp;mlon=-77.566042#map=18/37.590958/-77.566042" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="hatch-local" class="snap">
+  <td class="n">107</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Hatch Local</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>food</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">9.3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/10553699900" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.524844&amp;mlon=-77.437625#map=18/37.524844/-77.437625" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="david" class="snap">
+  <td class="n">108</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">David</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">19.8 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/6618860841" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.639523&amp;mlon=-77.587727#map=18/37.639523/-77.587727" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="university-forum" class="snap">
+  <td class="n">109</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">University Forum</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13544263043" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.574954&amp;mlon=-77.539706#map=18/37.574954/-77.539706" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="hydroelectric-plant" class="snap">
+  <td class="n">110</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Hydroelectric Plant</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">0.9 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/10164803159" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.533693&amp;mlon=-77.437329#map=18/37.533693/-77.437329" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="pony-pasture-park" class="snap">
+  <td class="n">111</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Pony Pasture Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">25 m</td>
+  <td>path</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/6036457" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.549424&amp;mlon=-77.515701#map=18/37.549424/-77.515701" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="powhatan-hill-overlook" class="snap">
+  <td class="n">112</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Powhatan Hill Overlook</td>
+  <td><span class="tier det">overlook</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.9 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/10253486981" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.515136&amp;mlon=-77.407331#map=18/37.515136/-77.407331" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="lewis-g-larus-park" class="snap">
+  <td class="n">113</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Lewis G. Larus Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">0 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/9972905" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.544931&amp;mlon=-77.563981#map=18/37.544931/-77.563981" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="bloody-run" class="snap">
+  <td class="n">114</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Bloody Run</td>
+  <td><span class="tier det">marker</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.8 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13615520971" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.525982&amp;mlon=-77.416461#map=18/37.525982/-77.416461" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="falling-creek-linear-park" class="snap">
+  <td class="n">115</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Falling Creek Linear Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">24.6 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/11520213" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.442967&amp;mlon=-77.444236#map=18/37.442967/-77.444236" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="22nd-street-pedestrian-stairs" class="">
+  <td class="n">116</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">22nd Street Pedestrian Stairs</td>
+  <td><span class="tier det">stairs</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">gate</td>
+  <td class="num">66.8 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/76227376" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.524459&amp;mlon=-77.456036#map=18/37.524459/-77.456036" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="gates-mill-park" class="snap">
+  <td class="n">117</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Gates Mill Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">51 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/11520214" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.450954&amp;mlon=-77.453118#map=18/37.450954/-77.453118" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="manchester-floodwall-walk" class="snap">
+  <td class="n">118</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Manchester Floodwall Walk</td>
+  <td><span class="tier det">stairs</span></td>
+  <td class="vibes"><span>river</span><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">0.5 m</td>
+  <td>steps</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/167824983" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.527126&amp;mlon=-77.439348#map=18/37.527126/-77.439348" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="hidden-creek-park" class="snap">
+  <td class="n">119</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Hidden Creek Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">96.5 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/11623994" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.556272&amp;mlon=-77.394708#map=18/37.556272/-77.394708" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="pipeline-trail" class="snap">
+  <td class="n">120</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Pipeline Trail</td>
+  <td><span class="tier det">stairs</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">4.8 m</td>
+  <td>steps</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/294031479" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.532481&amp;mlon=-77.434508#map=18/37.532481/-77.434508" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="dock-street-park" class="snap">
+  <td class="n">121</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Dock Street Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">8.5 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/16078640" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.524365&amp;mlon=-77.419318#map=18/37.524365/-77.419318" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="north-bank-trail" class="snap">
+  <td class="n">122</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">North Bank Trail</td>
+  <td><span class="tier det">stairs</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">2.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/296545526" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.530516&amp;mlon=-77.46428#map=18/37.530516/-77.46428" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="lombardy-park" class="snap">
+  <td class="n">123</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Lombardy Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.5 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/16467781" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.550878&amp;mlon=-77.45859#map=18/37.550878/-77.45859" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="connecting-lodge-footpath" class="snap">
+  <td class="n">124</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Connecting Lodge Footpath</td>
+  <td><span class="tier det">stairs</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1417444939" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.581853&amp;mlon=-77.540645#map=18/37.581853/-77.540645" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="westwood-playground" class="snap">
+  <td class="n">125</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Westwood Playground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">35.5 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/19397249" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.579555&amp;mlon=-77.509677#map=18/37.579555/-77.509677" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="future" class="snap">
+  <td class="n">126</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Future</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">5</td>
+  <td class="anchor">snap</td>
+  <td class="num">9.9 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/3741870436" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.536769&amp;mlon=-77.434075#map=18/37.536769/-77.434075" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="holy-cross-cemetery" class="snap">
+  <td class="n">127</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Holy Cross Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">45.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/44703271" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.55872&amp;mlon=-77.427303#map=18/37.55872/-77.427303" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="winds-up" class="snap">
+  <td class="n">128</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Wind's Up</td>
+  <td><span class="tier det">art</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">5</td>
+  <td class="anchor">snap</td>
+  <td class="num">6.7 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/7682158122" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.537105&amp;mlon=-77.437107#map=18/37.537105/-77.437107" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="hotchkiss-field-community-center" class="snap">
+  <td class="n">129</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Hotchkiss Field Community Center</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">0.9 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/44888595" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.569601&amp;mlon=-77.423474#map=18/37.569601/-77.423474" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="hope" class="snap">
+  <td class="n">130</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Hope</td>
+  <td><span class="tier det">mural</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">5</td>
+  <td class="anchor">snap</td>
+  <td class="num">1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13658911353" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.571532&amp;mlon=-77.432392#map=18/37.571532/-77.432392" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="patterson-memorial-garden" class="snap">
+  <td class="n">131</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Patterson Memorial Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">20.8 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/224601757" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.539816&amp;mlon=-77.430819#map=18/37.539816/-77.430819" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="gambles-hill" class="snap">
+  <td class="n">132</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Gambles Hill</td>
+  <td><span class="tier det">overlook</span></td>
+  <td class="vibes"><span>scenic</span></td>
+  <td class="num">0</td>
+  <td class="anchor">snap</td>
+  <td class="num">59 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/356602284" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.537146&amp;mlon=-77.444485#map=18/37.537146/-77.444485" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="harrison-park" class="snap">
+  <td class="n">133</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Harrison Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/229722610" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.548691&amp;mlon=-77.454878#map=18/37.548691/-77.454878" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="fishing-dock" class="snap">
+  <td class="n">134</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Fishing Dock</td>
+  <td><span class="tier det">bridge</span></td>
+  <td class="vibes"><span>river</span></td>
+  <td class="num">0</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.7 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/603735933" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.624168&amp;mlon=-77.587052#map=18/37.624168/-77.587052" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="italian-garden" class="">
+  <td class="n">135</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Italian Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">gate</td>
+  <td class="num">14.4 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/236150754" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.533661&amp;mlon=-77.47678#map=18/37.533661/-77.47678" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="huguenot-flatwater-park" class="snap">
+  <td class="n">136</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Huguenot Flatwater Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">57.2 m</td>
+  <td>path</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/264474191" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.559447&amp;mlon=-77.541963#map=18/37.559447/-77.541963" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="thomas-square" class="snap">
+  <td class="n">137</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Thomas Square</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/264670674" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.541879&amp;mlon=-77.460757#map=18/37.541879/-77.460757" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="mount-calvary-cemetery" class="snap">
+  <td class="n">138</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Mount Calvary Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">33.8 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/264670697" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.534453&amp;mlon=-77.465509#map=18/37.534453/-77.465509" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="canoe-run-park" class="">
+  <td class="n">139</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Canoe Run Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">gate</td>
+  <td class="num">82.3 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/266877983" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.523133&amp;mlon=-77.456498#map=18/37.523133/-77.456498" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="humphrey-calder-community-center" class="snap">
+  <td class="n">140</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Humphrey Calder Community Center</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">45.3 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/366222782" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.561275&amp;mlon=-77.485641#map=18/37.561275/-77.485641" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="pony-pasture-park-wetland-park" class="snap">
+  <td class="n">141</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Pony Pasture Park - Wetland Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">18.3 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/402536157" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.544647&amp;mlon=-77.509438#map=18/37.544647/-77.509438" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="bill-robinson-playground" class="snap">
+  <td class="n">142</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Bill Robinson Playground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">58.7 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/576071486" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.529696&amp;mlon=-77.404193#map=18/37.529696/-77.404193" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="pump-house-park" class="snap">
+  <td class="n">143</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Pump House Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">46.1 m</td>
+  <td>path</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/600879394" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.537283&amp;mlon=-77.487194#map=18/37.537283/-77.487194" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="oregon-hill-linear-park" class="snap">
+  <td class="n">144</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Oregon Hill Linear Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">1.5 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/601799933" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.540491&amp;mlon=-77.449559#map=18/37.540491/-77.449559" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="roy-west-park-washington-park" class="">
+  <td class="n">145</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Roy West Park (Washington Park)</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">gate</td>
+  <td class="num">20.6 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/679275523" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.59233&amp;mlon=-77.443787#map=18/37.59233/-77.443787" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="wayside-spring-park" class="">
+  <td class="n">146</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Wayside Spring Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">gate</td>
+  <td class="num">55.2 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/679310817" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.525457&amp;mlon=-77.484606#map=18/37.525457/-77.484606" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="learning-therapy-garden" class="snap">
+  <td class="n">147</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Learning &amp; Therapy Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.6 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/697524178" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.631655&amp;mlon=-77.461963#map=18/37.631655/-77.461963" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="butterfly-garden" class="snap">
+  <td class="n">148</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Butterfly Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">20.8 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/700377908" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.536815&amp;mlon=-77.479549#map=18/37.536815/-77.479549" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="fragrance-garden" class="snap">
+  <td class="n">149</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Fragrance Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">7.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/700377915" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.533584&amp;mlon=-77.480469#map=18/37.533584/-77.480469" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="lakeside-landing-park" class="snap">
+  <td class="n">150</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Lakeside Landing Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">14.6 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/737415531" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.613117&amp;mlon=-77.458751#map=18/37.613117/-77.458751" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="alice-fitz-park" class="snap">
+  <td class="n">151</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Alice Fitz Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">19.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/761038913" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.523061&amp;mlon=-77.44781#map=18/37.523061/-77.44781" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="oak-grove-playground" class="snap">
+  <td class="n">152</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Oak Grove Playground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">47.1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/761047752" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.506924&amp;mlon=-77.444754#map=18/37.506924/-77.444754" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="bethlehem-park" class="snap">
+  <td class="n">153</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Bethlehem Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">25.3 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/847264851" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.617623&amp;mlon=-77.513279#map=18/37.617623/-77.513279" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="westwood-park" class="snap">
+  <td class="n">154</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Westwood Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">33.3 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/847264852" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.588027&amp;mlon=-77.513794#map=18/37.588027/-77.513794" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="roslyn-hills-park" class="snap">
+  <td class="n">155</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Roslyn Hills Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">74 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/847264853" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.577134&amp;mlon=-77.561756#map=18/37.577134/-77.561756" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="spring-park-historic-site" class="snap">
+  <td class="n">156</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Spring Park Historic Site</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">69.4 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/847264859" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.600513&amp;mlon=-77.463121#map=18/37.600513/-77.463121" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="yancey-street-playground" class="snap">
+  <td class="n">157</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Yancey Street Playground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">25.8 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/949602698" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.55999&amp;mlon=-77.433352#map=18/37.55999/-77.433352" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="smith-peters-parks" class="snap">
+  <td class="n">158</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Smith-Peters Parks</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">15.9 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1042936185" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.553005&amp;mlon=-77.448171#map=18/37.553005/-77.448171" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="north-central-park" class="snap">
+  <td class="n">159</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">North Central Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">11.3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1052171286" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.577547&amp;mlon=-77.435317#map=18/37.577547/-77.435317" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="riverside-meadow-greenspace" class="snap">
+  <td class="n">160</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Riverside Meadow Greenspace</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>river</span><span>park</span><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.7 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1089482397" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.557038&amp;mlon=-77.526874#map=18/37.557038/-77.526874" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="providence-cemetery" class="snap">
+  <td class="n">161</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Providence Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">33.6 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1102588967" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.484112&amp;mlon=-77.549674#map=18/37.484112/-77.549674" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="monroe-park-learning-garden" class="snap">
+  <td class="n">162</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Monroe Park Learning Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">18.3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1210574643" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.54403&amp;mlon=-77.457529#map=18/37.54403/-77.457529" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="ricks-garden" class="snap">
+  <td class="n">163</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Rick's Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">56.4 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1266567346" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.554685&amp;mlon=-77.4717#map=18/37.554685/-77.4717" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="albert-hill-native-plant-garden" class="snap">
+  <td class="n">164</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Albert Hill Native Plant Garden</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">11.2 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1300716641" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.561592&amp;mlon=-77.4815#map=18/37.561592/-77.4815" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="providence-park" class="snap">
+  <td class="n">165</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Providence Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">44.1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1414587754" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.581505&amp;mlon=-77.426175#map=18/37.581505/-77.426175" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="conrad-street-mini-park" class="snap">
+  <td class="n">166</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Conrad Street Mini Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">0 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1425681874" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.552793&amp;mlon=-77.415752#map=18/37.552793/-77.415752" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="briel-street-playground" class="snap">
+  <td class="n">167</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Briel Street Playground</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">27.7 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1425951819" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.531938&amp;mlon=-77.396719#map=18/37.531938/-77.396719" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="james-s-christian-jr-park" class="snap">
+  <td class="n">168</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">James S. Christian Jr. Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>river</span><span>park</span><span>scenic</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1425951820" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.532996&amp;mlon=-77.404879#map=18/37.532996/-77.404879" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="m-street-cemetery" class="snap">
+  <td class="n">169</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">M Street Cemetery</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">21 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1425951821" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.531801&amp;mlon=-77.41213#map=18/37.531801/-77.41213" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="franklin-street-burial-grounds" class="snap">
+  <td class="n">170</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Franklin Street Burial Grounds</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>history</span></td>
+  <td class="num">10</td>
+  <td class="anchor">snap</td>
+  <td class="num">17.3 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1467380190" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.532224&amp;mlon=-77.424411#map=18/37.532224/-77.424411" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="street-lamp" class="snap">
+  <td class="n">171</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Street Lamp</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">snap</td>
+  <td class="num">1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/node/13568547124" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.571866&amp;mlon=-77.54225#map=18/37.571866/-77.54225" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="oakwood-park" class="snap">
+  <td class="n">172</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Oakwood Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">snap</td>
+  <td class="num">53 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/19483472" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.53565&amp;mlon=-77.39832#map=18/37.53565/-77.39832" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="library-park" class="snap">
+  <td class="n">173</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Library Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/relation/21036259" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.542301&amp;mlon=-77.442748#map=18/37.542301/-77.442748" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="meadow-park" class="">
+  <td class="n">174</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Meadow Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">gate</td>
+  <td class="num">51.2 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/236147597" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.553727&amp;mlon=-77.463266#map=18/37.553727/-77.463266" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="federal-park" class="">
+  <td class="n">175</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Federal Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">gate</td>
+  <td class="num">12.1 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/236147602" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.550379&amp;mlon=-77.467224#map=18/37.550379/-77.467224" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="grace-park" class="">
+  <td class="n">176</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Grace Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">gate</td>
+  <td class="num">42.1 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/236147603" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.555387&amp;mlon=-77.458553#map=18/37.555387/-77.458553" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="sydney-park" class="snap">
+  <td class="n">177</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Sydney Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">snap</td>
+  <td class="num">3.5 m</td>
+  <td>sidewalk</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/236147606" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.54682&amp;mlon=-77.456769#map=18/37.54682/-77.456769" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="arcpark" class="snap">
+  <td class="n">178</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">ARCpark</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">snap</td>
+  <td class="num">5.2 m</td>
+  <td>footway</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/597002701" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.581095&amp;mlon=-77.472609#map=18/37.581095/-77.472609" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="westham-park" class="snap">
+  <td class="n">179</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Westham Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">snap</td>
+  <td class="num">52.4 m</td>
+  <td>path</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/846245203" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.586473&amp;mlon=-77.549169#map=18/37.586473/-77.549169" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+<tr data-id="dog-park" class="snap">
+  <td class="n">180</td>
+  <td><input type="checkbox" data-check></td>
+  <td class="name">Dog Park</td>
+  <td><span class="tier dest">place</span></td>
+  <td class="vibes"><span>park</span></td>
+  <td class="num">0</td>
+  <td class="anchor">snap</td>
+  <td class="num">34 m</td>
+  <td>road</td>
+  <td class="num">50</td>
+  <td><a href="https://www.openstreetmap.org/way/1516391064" target="_blank" rel="noreferrer">osm</a>
+      <a href="https://www.openstreetmap.org/?mlat=37.611408&amp;mlon=-77.587511#map=18/37.611408/-77.587511" target="_blank" rel="noreferrer">map</a></td>
+</tr>
+  </tbody>
+</table>
+<div class="rejected">
+  <table>
+    <thead><tr><th>Rejected</th><th class="num">434</th></tr></thead>
+    <tbody><tr><td>unnamed</td><td class="num">187</td></tr>
+<tr><td>duplicate</td><td class="num">104</td></tr>
+<tr><td>no-anchor</td><td class="num">56</td></tr>
+<tr><td>not-public</td><td class="num">34</td></tr>
+<tr><td>not-a-place</td><td class="num">17</td></tr>
+<tr><td>no-vibe</td><td class="num">17</td></tr>
+<tr><td>duplicate-name</td><td class="num">6</td></tr>
+<tr><td>out-of-bounds</td><td class="num">4</td></tr>
+<tr><td>access</td><td class="num">4</td></tr>
+<tr><td>in-memoriam</td><td class="num">4</td></tr>
+<tr><td>lifecycle</td><td class="num">1</td></tr></tbody>
+  </table>
+</div>
+</div>
+<script>
+  const rows = [...document.querySelectorAll("#rows tr")];
+  let at = 0;
+  const paint = () => {
+    rows.forEach((row, index) => row.classList.toggle("here", index === at));
+    rows[at]?.scrollIntoView({ block: "nearest" });
+    document.getElementById("count").textContent =
+      String(rows.filter((row) => row.querySelector("[data-check]").checked).length);
+  };
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "j") at = Math.min(rows.length - 1, at + 1);
+    else if (event.key === "k") at = Math.max(0, at - 1);
+    else if (event.key === "a") {
+      const box = rows[at]?.querySelector("[data-check]");
+      if (box) box.checked = !box.checked;
+    } else if (event.key === "c") {
+      const ids = rows
+        .filter((row) => row.querySelector("[data-check]").checked)
+        .map((row) => row.dataset.id)
+        .join("\n");
+      navigator.clipboard.writeText(ids);
+      document.getElementById("count").textContent += " (copied)";
+      return;
+    } else return;
+    event.preventDefault();
+    paint();
+  });
+  document.addEventListener("change", paint);
+  paint();
+</script>

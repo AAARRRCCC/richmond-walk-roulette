@@ -104,6 +104,10 @@ Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re
       came back 2.597 km against 2.310 km straight-line, a 1.12× detour.
 - [x] A preset origin cold-starts from its snapshot: measured 3-7 ms, zero
       `/api/isochrone` calls.
+- [ ] `curl -X POST <deployed>/api/locate -d '{"point":{"latitude":37.5388,"longitude":-77.4336}}'`
+      answers 200 with a `point`, a `distanceMeters` and a `use`. It is a
+      build-time endpoint that happens to be public: bounded to Richmond,
+      pedestrian-pinned, one rate-limit unit, edge-cached thirty days
 - [ ] `curl <deployed>/api/weather` answers 200 with `observedAt`, `now` and
       `hours`, and `curl '<deployed>/api/weather?latitude=48.85'` answers 400
       **with a warm cache entry already present** — that second one is the
