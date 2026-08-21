@@ -6,37 +6,85 @@ run one. The engine is open source and the data is OpenStreetMap, so unlike
 the Google setup this replaces, there is no API key, no per-request bill, and
 no terms clause about non-Google basemaps.
 
-`./data/` is gitignored: it holds the OSM extract and the built graph
-(roughly 1 GB for Virginia). Everything else here is tracked.
+`./data/` is gitignored: it holds the OSM extract, the clipped extract and
+the built graph. Everything else here is tracked.
 
-## Run it (any machine with Docker)
+## Run it
+
+Four scripts, in order. They are plain Linux shell and read their settings
+from `richmond.env`, so the machine you develop on and the machine you deploy
+to are set up by the same commands.
 
 ```bash
 cd valhalla
-curl -L -o data/virginia-latest.osm.pbf https://download.geofabrik.de/north-america/us/virginia-latest.osm.pbf
-docker compose up -d
-docker logs -f walk-roulette-valhalla   # first run builds tiles, ~10-20 min
+./scripts/install-engine.sh   # once per machine: the engine, plus osmium
+./scripts/clip-extract.sh     # fetches Virginia once, cuts Richmond out of it
+./scripts/build-graph.sh      # writes the config, builds the graph
+./scripts/run-engine.sh       # foreground, Ctrl-C to stop
 ```
 
-When the log says it is serving, raise two limits so the whole dial ladder
-comes back in one query. The ladder is every minute from 5 to 100, so that is
-96 contours, and the longest one is 100 minutes. Edit `data/valhalla.json`,
-which the container writes on first run:
+`clip-extract.sh` is why this is quick. The Virginia extract is about 900 MB
+and nearly none of it is within walking distance of Richmond; clipped to a box
+reaching roughly 15 km from downtown it is a fraction of that, and the graph
+builds in about a minute instead of fifteen. The dial tops out at a 100 minute
+walk, about 6.2 km at the pace the proxy pins, so there is graph well past
+anywhere a walk could reach. Widen the box in `richmond.env` if the preset
+origins ever move.
 
-```json
-"service_limits": {
-  "isochrone": { "max_contours": 100, "max_time_contour": 100 }
-}
-```
+`build-graph.sh` also writes the two settings that are easy to get wrong: the
+isochrone limits the ladder needs (100 contours, 100 minutes), and a listen
+address on loopback. The engine takes a raw location and a costing model with
+no bounds check and no rate limit, so the only thing that should reach it is
+the app's proxy.
 
-Then `docker compose restart`. A config edit does not rebuild the tiles.
+Then point the app at it:
 
-Point the app at it:
-
-- dev: in `.env.local` set `VALHALLA_URL=http://localhost:8002` and
+- dev: in `.env.local`, `VALHALLA_URL=http://localhost:8002` and
   `VALHALLA_MAX_CONTOURS=100`
-- prod: same two values in `wrangler.toml` `[vars]`, with the URL of wherever
-  this Compose stack actually runs
+- prod: the same two values in `wrangler.toml` `[vars]`, with the URL of
+  wherever this runs
+
+## On Windows
+
+Valhalla's HTTP service does not build natively on Windows. Run these scripts
+in WSL2 instead - they are the same scripts the server runs, so nothing here
+is a Windows-only detour.
+
+```powershell
+wsl --install -d Ubuntu     # once, may want a reboot
+```
+
+Then open Ubuntu and work from the checkout, which WSL sees under `/mnt/c/`.
+A service bound to loopback inside WSL2 is reachable from Windows on
+`localhost`, so `.env.local` still says `http://localhost:8002`.
+
+The pip-installed `pyvalhalla` wheel ships `valhalla_service.exe`, but only
+its one-shot mode works; the HTTP loop (prime_server) is compiled out.
+Verified 2026-07-28: it prints usage and exits when given a concurrency
+argument. That is why WSL rather than a native build.
+
+## As a service
+
+`walk-roulette-valhalla.service` runs the engine under systemd, restarts it on
+failure, and confines it to reading its own tile directory.
+
+```bash
+sudo cp walk-roulette-valhalla.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now walk-roulette-valhalla
+journalctl -u walk-roulette-valhalla -f
+```
+
+Edit `User` and the two paths in the unit if the checkout is not in `/srv`.
+Nothing else in it is machine-specific.
+
+## Or the container
+
+`docker-compose.yml` is still here and reads the same `./data`. On a Linux
+server that is Docker Engine plus the compose plugin - Docker Desktop is a
+Windows and macOS product and is not involved. It is the shorter path if the
+box already runs containers; the scripts above are the shorter path if it does
+not.
 
 Sanity check the engine, then the app's own view of it:
 
@@ -53,13 +101,6 @@ with a 502 means the engine is configured and not answering; a 503 means
 
 ## Where to run it
 
-- **This Windows machine:** Docker Desktop (or a WSL2 distro with Docker)
-  is required. Valhalla's HTTP service does not build natively on Windows:
-  the pip-installed `pyvalhalla` wheel ships `valhalla_service.exe`, but only
-  its one-shot mode works; the HTTP loop (prime_server) is compiled out.
-  Verified 2026-07-28: it prints usage and exits when given a concurrency
-  argument. Until Docker is installed, `.env.local` points at FOSSGIS's
-  public instance (below).
 - **A small VPS:** the whole stack fits comfortably in 1-2 GB of RAM once
   built. The Cloudflare Worker needs to reach it, so give it a hostname and
   front it with TLS (Caddy is the least ceremony), and firewall it so only
