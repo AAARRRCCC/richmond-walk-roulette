@@ -47,8 +47,10 @@ only symptom in the app is a dial that never warms.
 
 Then point the app at it:
 
-- dev: in `.env.local`, `VALHALLA_URL=http://localhost:8002` and
-  `VALHALLA_MAX_CONTOURS=100`
+- dev: in `.env.local`, `VALHALLA_URL=http://127.0.0.1:8002` and
+  `VALHALLA_MAX_CONTOURS=100`. The literal address rather than `localhost`:
+  some clients try `::1` first and wait out a connection that nothing
+  answers, which reads as the engine being slow when it is not.
 - prod: the same two values in `wrangler.toml` `[vars]`, with the URL of
   wherever this runs
 
