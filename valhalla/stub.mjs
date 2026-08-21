@@ -5,6 +5,19 @@
 // deterministically irregular blobs with a notch cut to the south so nesting,
 // holes-adjacent rendering and point-in-polygon paths all get exercised.
 // The shapes are synthetic - never judge reachability with this.
+//
+// It answers /route with no elevation at all, and that is deliberate. A route
+// without a profile is a legitimate and required client state - a pre-3.5
+// engine, a graph nobody has rebuilt - so the app has to handle it, and this is
+// the cheapest way to keep exercising that path. Inventing a fourth synthetic
+// shape would be a fake hill nobody could learn anything from.
+//
+// So: to see the elevation chart you need a graph built with elevation. The
+// local one after `build_elevation=True` and `REBUILD=1 ./scripts/build-graph.sh`
+// is the reliable answer. Any public instance whose data was generated with
+// elevation would also do, but no hostname is named here on purpose - this file
+// has not probed one, and a comment promising an instance that turns out not to
+// serve elevation is worse than no comment.
 import { createServer } from "node:http";
 
 const PORT = Number(process.argv[2] ?? 8003);

@@ -78,6 +78,28 @@ async function envFile(key) {
   return undefined;
 }
 
+/**
+ * Rounds a live contour to the precision the snapshot was written at.
+ *
+ * Without this the tool measures the snapshot's own quantisation and calls it
+ * drift. `build-reach.mjs` writes vertices at 4 decimals - about 11 m at this
+ * latitude, deliberately coarser than the app's COORD_PRECISION because
+ * Valhalla cuts contours on a 25 m grid and the map rounds their corners before
+ * drawing them. At the 5-minute rung the contour is a few hundred metres across,
+ * so 11 m of vertex rounding is worth about 1% of its area - which is the whole
+ * threshold, arriving from a source that is not drift at all. Measured: three
+ * origins read 1.0-1.3% against snapshots cut from the very engine they were
+ * being compared to.
+ *
+ * So both sides are rounded the same way, and what is left is the real thing.
+ */
+function quantise(polygons, precision) {
+  const round = (n) => Number(n.toFixed(precision));
+  return polygons.map((polygon) =>
+    polygon.map((ring) => ring.map(([lng, lat]) => [round(lng), round(lat)])),
+  );
+}
+
 /** Live contours for one origin, keyed by minute, or null if the engine refused. */
 async function liveContours(origin, minutes) {
   const request = new Request("http://verify.local/api/isochrone", {
@@ -112,14 +134,19 @@ for (const file of files) {
     continue;
   }
 
+  // The snapshot says what precision it was written at; older files that
+  // predate the stamp were written at the same 4 and say so by defaulting.
+  const precision = Number.isFinite(snapshot.coordPrecision) ? snapshot.coordPrecision : 4;
+
   const rungs = [];
   for (const minute of sample) {
     const committed = snapshot.contours?.[String(minute)] ?? null;
-    const fresh = live.get(minute) ?? null;
-    if (committed === null || fresh === null) {
+    const raw = live.get(minute) ?? null;
+    if (committed === null || raw === null) {
       rungs.push({ minute, missing: committed === null ? "committed" : "live" });
       continue;
     }
+    const fresh = quantise(raw, precision);
     const before = collectPolygons(committed);
     const beforeArea = areaSqMeters(before);
     const afterArea = areaSqMeters(fresh);
@@ -135,8 +162,11 @@ for (const file of files) {
 await vite.close();
 
 const measured = results.flatMap((result) => result.rungs.filter((rung) => "areaDelta" in rung));
+// `>=` rather than `>`, and seeded with the first rung: a run where every
+// delta is exactly 0 is the expected answer right after a regeneration, and
+// "worst 0.00% at - min" reads like the tool failed to measure anything.
 const worstArea = measured.reduce(
-  (worst, rung) => (Math.abs(rung.areaDelta) > Math.abs(worst?.areaDelta ?? 0) ? rung : worst),
+  (worst, rung) => (worst === null || Math.abs(rung.areaDelta) > Math.abs(worst.areaDelta) ? rung : worst),
   null,
 );
 const totalFlips = measured.reduce((sum, rung) => sum + rung.flips, 0);
@@ -167,14 +197,19 @@ if (asJson) {
     ),
   );
 } else {
-  console.log(`sample: ${sample.join(", ")} min   threshold: ${threshold}%`);
+  console.log(`sample: ${sample.join(", ")} min   threshold: ${threshold}%   (live contours rounded to the snapshot's own precision)`);
   for (const result of results) {
     if (result.error !== undefined) {
       console.log(`  [!] ${result.file} - ${result.error}`);
       continue;
     }
     const worst = result.rungs.reduce(
-      (acc, rung) => (Math.abs(rung.areaDelta ?? 0) > Math.abs(acc?.areaDelta ?? 0) ? rung : acc),
+      (acc, rung) =>
+        rung.areaDelta === undefined
+          ? acc
+          : acc === null || Math.abs(rung.areaDelta) > Math.abs(acc.areaDelta)
+            ? rung
+            : acc,
       null,
     );
     const flips = result.rungs.reduce((sum, rung) => sum + (rung.flips ?? 0), 0);

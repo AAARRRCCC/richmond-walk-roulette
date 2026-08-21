@@ -7,6 +7,7 @@ const route = (durationSeconds: number, distanceMeters: number): WalkingRoute =>
   durationSeconds,
   distanceMeters,
   coords: [],
+  profile: null,
 });
 
 test("announce: the clauses are joined and the sentence is terminated", () => {

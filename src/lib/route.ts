@@ -1,15 +1,105 @@
 import { pointKey, type LngLat } from "./geometry";
 import { pooled } from "./pool";
 import { postJson } from "./http";
-import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson } from "./json";
+import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson, type Json } from "./json";
 import { LruMap } from "./lru";
 import { flush, rememberRoute, storedRoute } from "./route-store.ts";
+import { ELEVATION_HYSTERESIS_M, climbFrom, plausibleProfile } from "./elevation.ts";
+
+/**
+ * Metres above sea level along the walk, evenly spaced. Sample `i` sits at
+ * `i * intervalMeters` from the start, so the profile spans
+ * `(samples.length - 1) * intervalMeters` - which is the walk's length as this
+ * profile measures it, and is **not** the same number as the trip summary's.
+ * Anything that scrubs, draws or labels this profile uses the span above, or it
+ * will put the cursor in the wrong place by the difference.
+ */
+export type ElevationProfile = {
+  samples: number[];
+  intervalMeters: number;
+  /** Metres gained, with small oscillations suppressed. See `climbFrom`. */
+  ascentMeters: number;
+  descentMeters: number;
+  minMeters: number;
+  maxMeters: number;
+};
 
 export type WalkingRoute = {
   coords: LngLat[];
   distanceMeters: number;
   durationSeconds: number;
+  /** null when the engine answered without usable elevation. */
+  profile: ElevationProfile | null;
 };
+
+/**
+ * The interval to assume when the engine returns an elevation array without
+ * echoing what it sampled at. Matches what the proxy asks for.
+ */
+const DEFAULT_INTERVAL_M = 30;
+
+/**
+ * Whether this engine can measure hills at all.
+ *
+ * `undefined` until the first route settles, then fixed. It is a fact about the
+ * instance, not about one walk, so chunk 3 can disable the Climb filter outright
+ * rather than showing a control that silently never matches - which is what an
+ * engine built without `build_elevation` would otherwise produce.
+ *
+ * Module state rather than React state because it is read by the same pure path
+ * that fills the cache, including on rehydration from a previous session.
+ */
+let sawElevation: boolean | undefined;
+
+function noteElevation(hadProfile: boolean): void {
+  // Only ever turns on, never back off: one route through a tunnel with no
+  // samples does not make an elevation-bearing graph elevation-less.
+  if (sawElevation === true) return;
+  sawElevation = hadProfile;
+}
+
+/** @public - consumed by `elevation-profile` (chunk 3). */
+export function elevationAvailable(): boolean | undefined {
+  return sawElevation;
+}
+
+/**
+ * The profile out of one leg, or null.
+ *
+ * The first leg only, and deliberately: `route()` in `server/proxy.ts` sends
+ * exactly two locations, so Valhalla returns exactly one leg, always. A
+ * concatenation loop would be dead code that was also wrong if it ever ran - a
+ * leg's final interval is a partial one, so joining legs breaks the
+ * `i * intervalMeters` rule everything downstream is built on.
+ */
+function profileFrom(leg: Json): ElevationProfile | null {
+  if (!isJsonObject(leg)) return null;
+  const raw = leg["elevation"];
+  if (!isJsonArray(raw)) return null;
+
+  const samples = raw.filter((value) => isFiniteNumber(value));
+  // A non-number anywhere voids the whole profile rather than leaving a hole in
+  // it: the samples are positional, and dropping one shifts every later one.
+  if (samples.length !== raw.length) return null;
+  if (!plausibleProfile(samples)) return null;
+
+  // Echoed in the response's own units. The proxy pins `units: "kilometers"`,
+  // so the echo is metres and so is the array. If anything ever changes those
+  // pinned units, this reader changes with it.
+  const echoed = leg["elevation_interval"];
+  const intervalMeters =
+    isFiniteNumber(echoed) && echoed > 0 ? echoed : DEFAULT_INTERVAL_M;
+
+  const { ascentMeters, descentMeters } = climbFrom(samples, ELEVATION_HYSTERESIS_M);
+  return {
+    samples,
+    intervalMeters,
+    ascentMeters,
+    descentMeters,
+    minMeters: Math.min(...samples),
+    maxMeters: Math.max(...samples),
+  };
+}
 
 /**
  * Cached in place of a route when an attempt settled without one for a reason
@@ -73,11 +163,15 @@ async function requestRoute(origin: LngLat, destination: LngLat): Promise<Fetche
   const lengthKm = summary && isFiniteNumber(summary.length) ? summary.length : 0;
   const timeSeconds = summary && isFiniteNumber(summary.time) ? summary.time : 0;
 
+  const profile = profileFrom(legs[0] ?? null);
+  noteElevation(profile !== null);
+
   return {
     route: {
       coords,
       distanceMeters: Math.round(lengthKm * 1000),
       durationSeconds: timeSeconds,
+      profile,
     },
     encodedLegs,
   };
@@ -103,7 +197,22 @@ function entryFor(key: string): CacheEntry | undefined {
           coords: stored.encodedLegs.flatMap((leg) => decodePolyline(leg)),
           distanceMeters: stored.distanceMeters,
           durationSeconds: stored.durationSeconds,
+          profile:
+            stored.profile === undefined
+              ? null
+              : {
+                  samples: stored.profile.e,
+                  intervalMeters: stored.profile.i,
+                  ascentMeters: stored.profile.up,
+                  descentMeters: stored.profile.down,
+                  minMeters: Math.min(...stored.profile.e),
+                  maxMeters: Math.max(...stored.profile.e),
+                },
         };
+  // A rehydrated route answers the elevation question as well as a fresh one:
+  // a returning visitor whose store is warm would otherwise see the Climb
+  // filter disabled until the first cache miss of the session.
+  if (entry !== null) noteElevation(entry.profile !== null);
   cache.set(key, entry);
   return entry;
 }
@@ -135,11 +244,29 @@ export function fetchWalkingRoute(
       const route = fetched?.route ?? null;
       cache.set(key, route);
       // Only settled answers are kept. A transient failure never reaches here.
-      rememberRoute(key, {
+      const base = {
         encodedLegs: fetched?.encodedLegs ?? null,
         distanceMeters: route?.distanceMeters ?? 0,
         durationSeconds: route?.durationSeconds ?? 0,
-      });
+      };
+      const profile = route?.profile ?? null;
+      // Ascent and descent are carried rather than recomputed on read: they are
+      // measured here from the unrounded samples, and re-deriving them over
+      // whole-metre ones manufactures oscillation the walk never had.
+      rememberRoute(
+        key,
+        profile === null
+          ? base
+          : {
+              ...base,
+              profile: {
+                i: profile.intervalMeters,
+                e: profile.samples.map((sample) => Math.round(sample)),
+                up: profile.ascentMeters,
+                down: profile.descentMeters,
+              },
+            },
+      );
       return route;
     })
     .catch(() => {

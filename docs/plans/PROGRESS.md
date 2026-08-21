@@ -161,3 +161,106 @@ pre-authorised. Preconditions: `npm run verify` green (met); `verify-engine` run
 is red today, on exactly the two checks the rebuild fixes, which is the justification); and the
 tileset plus all eleven `public/reach/*.json` backed up to a timestamped directory **before** the
 rebuild starts.
+
+---
+
+## Chunk 1 — Elevation on the wire, and the graph — done
+
+The one irreversible act in the plan, pre-authorised, and it went in one pass. Backed up first:
+`valhalla/backups/20260821-142818/` holds the old tileset, its config, its hashes, the pre-rebuild
+`/status`, and all eleven `public/reach/*.json` — 57 MB, gitignored.
+
+### What landed
+
+`build_elevation=True`, a rebuilt graph, and the data path from the engine to localStorage and back.
+Nothing renders a profile: that is chunk 3.
+
+| Piece | Note |
+| --- | --- |
+| `valhalla/docker-compose.yml` | `build_elevation=True`, with why it is silent when it is wrong |
+| `valhalla/scripts/build-graph.sh` | The smoke check now asks for elevation and fails on a sentinel |
+| `valhalla/README.md` | A measured Elevation section: one tile, 25 MB, one pass |
+| `server/proxy.ts` | `ELEVATION_INTERVAL_M = 30` on the route body |
+| `src/lib/elevation.ts` | The pure module: `climbFrom`, `plausibleProfile`, `classifyClimb`, `mirrorProfile`, `elevationAt`, `resample`, `profilePoints`, `areaPath`, `linePath` |
+| `src/lib/route.ts` | `ElevationProfile`, `WalkingRoute.profile`, `noteElevation`/`elevationAvailable` |
+| `src/lib/route-store.ts` | `SCHEMA_VERSION` 2, `MAX_ENTRIES` 600, the compact stored profile |
+| `src/lib/geometry.ts` | `cumulativeMeters`, `pointAtMeters`, one memo, one Earth radius |
+| `public/reach/*.json` | All eleven recut; `SNAPSHOT_VERSION` 2 → 3 |
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm run lint` | eslint, oxlint, knip all clean |
+| `npm test` | **131 passing**, 0 failing (100 before) |
+| `npm run build` | succeeds |
+| `verify-bundle` | **71,860 B** gz, **+545 B**. The spec estimated +0.7 KB |
+| `verify-places` | 4 checks pass |
+| `verify-engine` | **all 7 pass** — the first time it has been green |
+| `verify-drift` | 0.00%, 0 flips, after regeneration |
+| `npm run verify` | all 6 steps clean |
+
+### The numbers this chunk exists to produce
+
+| | Before the rebuild | After |
+| --- | --- | --- |
+| `/height`, 3 probe points | `[null, null, null]` | `[51, 44, 31]` m |
+| `/route`, 36 elevation samples | 36 at the `-500` sentinel | 0 |
+| Tileset timestamp | 1787278077 | 1787337146 |
+| Worst snapshot area drift | — | **4.44%** at 25 min, from Maymont |
+| Place-membership flips | — | **0** |
+| Drift after regenerating all eleven | — | **0.00%**, 0 flips |
+| Regeneration cost | — | **2.9 s** |
+| Elevation tiles | — | one, `N37W078`, 25 MB |
+| Rebuild passes needed | — | **one** |
+
+And the profile is real, not merely present: after one spin the store holds 60 profiles at a 30 m
+interval. Forest Hill from Home reads 89 m of ascent over a 7–50 m range; the canal walks read 0.
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-01.md`: **59 of 60 ticked**. The open one is `prefers-reduced-motion`,
+which this machine cannot emulate — and this chunk renders nothing.
+
+### Spec corrections
+
+Three, all in `elevation-profile.md`, and the first is the substantive one.
+
+1. **`climbFrom`'s pseudocode has two real bugs**, both caught by the spec's own fixtures.
+   - It resolves `direction` only at a reversal. So a walk that climbs and then turns down is still
+     "either" at the turn, the turn reads as *extending a fall*, the pivot slides back down, and the
+     ascent is silently discarded. `climbFrom(HILL, 2)` returned `{0, 0}` where the spec's own test
+     demands `{30, 30}`. Fixed by resolving direction the moment a run clears the threshold.
+   - It banks the final open run unconditionally, so noise at the end of a flat walk counts as
+     ascent while identical noise in the middle does not — a hill that depends on where the walk
+     happened to stop. `climbFrom(FLAT, 2)` returned 0.3 m where the spec demands 0. Fixed by
+     holding the last run to the same threshold as every other.
+2. **The 1 km geometry fixture assumed a different Earth.** `37.548993` is 1000 m north only at
+   ~111,195 m/degree; `geometry.ts` already carries `EARTH_RADIUS_M = 6378137`, which puts it at
+   1001.1 m. Rather than add a second radius the fixture is now `37.5489832`, derived from the
+   module's own constant. One Earth per module.
+3. **The build-ordering open question is answered.** The spec could not tell whether the image
+   fetches SRTM tiles before or after the build that needs them, and said to run it twice if the
+   first pass came back flat. It does not need a second pass: one `REBUILD=1` produced real
+   elevation. Recorded in `valhalla/README.md` as the spec instructed.
+
+Also corrected: `README.md` line 91's stale "64 KB … 276 KB" is now the measured 70 KB and 277 KB,
+which README §5 consequence 2 makes chunk 1's job.
+
+### Deferred
+
+- HUMAN-REVIEW 3.4 — the snapshots were regenerated rather than accepted (4.44% drift, 0 flips).
+- HUMAN-REVIEW 3.5 — `verify-drift` was measuring the snapshot's own 11 m rounding as drift. The
+  measurement was fixed; the 1% threshold was not touched.
+- HUMAN-REVIEW 6.1 — **every walking time in the app changed and nothing on screen says so.** The
+  fixed fixture route went 1025.7 s → 963.5 s on an unchanged 1.047 km, because `use_hills` now has
+  grades to read. The pinned 3.69 km/h is now a flat-ground pace the terrain modulates. Nothing was
+  changed in response; somebody should decide whether the constant still holds.
+
+### Next
+
+**Chunk 2 — `pool-reasoning`.** Preconditions: `npm run verify` green (met); chunk 1's acceptance
+file at 59/60 with the one open box recorded. It touches no engine. Its first deliverable is
+`verify-signature`, deferred here since chunk 0 and owed now: the memo contract it guards is the
+plan's single biggest risk, and four later chunks plug rules into the registry it protects.

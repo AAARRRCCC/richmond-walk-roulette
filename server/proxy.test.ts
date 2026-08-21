@@ -304,6 +304,34 @@ test("route forwards the trip and pins the pedestrian costing", async (t) => {
   assert.equal((sent.locations ?? []).length, 2);
 });
 
+test("route requests elevation", async (t) => {
+  // Metres, because the units above are kilometres: the engine echoes the
+  // interval in the response's own units, and asking in miles would come back
+  // as 98.4 and feet with nothing to say it had.
+  const trip = { trip: { legs: [{ "shape": "abc" }], summary: { length: 1.2, time: 900 } } };
+  const calls = stubFetch(t, () => Response.json(trip));
+
+  await handleApiRequest(
+    post("/api/route", { origin: MONROE, destination: { latitude: 37.5407, longitude: -77.4361 } }),
+    ENV,
+  );
+
+  assert.equal(calls[0]!.body.elevation_interval, 30);
+});
+
+test("the two endpoints version their caches independently", () => {
+  // They shared one constant until v0.5. That meant a one-line change to the
+  // route body evicted every 1.7 MB contour ladder on the edge - an eviction
+  // nobody asked for and nobody would connect to the change that caused it.
+  // The prefixes are pinned as literals precisely so the two cannot be quietly
+  // conflated again by a refactor that tidies up the versions.
+  const isochrone = isochroneCacheKey({ location: MONROE, minutes: [25] });
+  const route = routeCacheKey({ origin: MONROE, destination: VMFA });
+
+  assert.ok(route?.startsWith("/api/route/v2-"), `route key was ${route}`);
+  assert.ok(isochrone?.startsWith("/api/isochrone/v1-"), `isochrone key was ${isochrone}`);
+});
+
 test("engine 4xx stays final (400); 429 and 5xx read transient", async (t) => {
   stubConsoleError(t);
   let status = 400;
@@ -408,19 +436,6 @@ test("the query cost is what the engine will actually be asked for", () => {
   // A request that is about to be a 400 costs one, not nothing and not many.
   assert.equal(isochroneQueryCost({ location: MONROE, minutes: [] }, ENV), 1);
   assert.equal(isochroneQueryCost(null, ENV), 1);
-});
-
-test("routes and isochrones are versioned apart, so bumping one cannot evict the other", () => {
-  // They shared one constant until v0.5. That meant a one-line change to the
-  // route body evicted every 1.7 MB contour ladder on the edge - an eviction
-  // nobody asked for and nobody would connect to the change that caused it.
-  // The prefixes are pinned as literals here precisely so the two cannot be
-  // quietly conflated again by a refactor that "tidies up" the versions.
-  const isochrone = isochroneCacheKey({ location: MONROE, minutes: [5, 25] });
-  const route = routeCacheKey({ origin: MONROE, destination: VMFA });
-
-  assert.ok(isochrone?.startsWith("/api/isochrone/v1-"), `isochrone key was ${isochrone}`);
-  assert.ok(route?.startsWith("/api/route/v2-"), `route key was ${route}`);
 });
 
 test("the cache key is canonical, coarse to 5 decimals, and refuses bad requests", () => {

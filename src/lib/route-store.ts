@@ -1,4 +1,11 @@
-import { isFiniteNumber, isJsonArray, isJsonObject, isString, parseJson } from "./json.ts";
+import {
+  isFiniteNumber,
+  isJsonArray,
+  isJsonObject,
+  isString,
+  parseJson,
+  type Json,
+} from "./json.ts";
 
 /**
  * Walking routes that survive a reload.
@@ -24,7 +31,7 @@ const STORAGE_KEY = "walk-roulette:routes";
  * answers wrong - a new tile build, a change to the walking speed the proxy
  * pins. An unrecognised version is dropped rather than migrated.
  */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 /**
  * How long an answer stays good. A week is well inside the life of a tile
@@ -34,11 +41,23 @@ const SCHEMA_VERSION = 1;
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
- * Roughly a dozen origins' worth. Far under the 5 MB localStorage typically
- * allows at about 700 bytes an entry, and bounded so a long-lived browser
- * cannot grow this without limit.
+ * Roughly nine origins' worth, down from a dozen, because an entry got bigger.
+ *
+ * Shown rather than asserted, since the previous figure was a guess. An entry
+ * was about 700 bytes; it now also carries a whole-metre elevation sample every
+ * 30 m, and Richmond elevations are two or three digits, so each sample costs
+ * 3-4 bytes of JSON including its comma and the wrapper keys about 30. A
+ * 25-minute leg at 3.69 km/h is ~1,540 m, so ~52 samples: about +240 bytes. The
+ * 100-minute ceiling is ~6,150 m, so ~206 samples: about +850 bytes. Entries run
+ * ~940 bytes typical and ~1,550 worst case.
+ *
+ * 600 of those is ~560 KB, which is exactly the budget this store already kept,
+ * and an implausible store of nothing but 100-minute walks still lands under
+ * 1 MB - far inside the 5 MB localStorage usually allows. Halving to 400 would
+ * have thrown away six origins of warm cache to buy headroom the arithmetic
+ * does not need.
  */
-const MAX_ENTRIES = 800;
+const MAX_ENTRIES = 600;
 
 /**
  * Writes are batched. A warm-up settles sixty routes in a couple of seconds,
@@ -53,11 +72,25 @@ const FLUSH_DELAY_MS = 1500;
  * stored: it is a fact about one request, and reading it back tomorrow as an
  * answer is exactly the confusion `FAILED` exists to prevent.
  */
+/**
+ * The compact stored form of an `ElevationProfile`. Named rather than inlined
+ * so the reader below can return it without dragging `undefined` along from the
+ * optional property it eventually lands in.
+ */
+type StoredProfile = { i: number; e: number[]; up: number; down: number };
+
 export type StoredRoute = {
   at: number;
   encodedLegs: string[] | null;
   distanceMeters: number;
   durationSeconds: number;
+  /**
+   * Absent when the engine gave no usable profile. Short keys and whole-metre
+   * samples: a metre is finer than a chart floored at a 20 m range can show, and
+   * rounding halves the bytes. `up`/`down` are computed before the rounding,
+   * because deriving them from rounded samples manufactures oscillation.
+   */
+  profile?: StoredProfile;
 };
 
 let entries: Map<string, StoredRoute> | null = null;
@@ -70,6 +103,29 @@ function readStorage(): string | null {
     // Private mode, or storage disabled. The app runs, it just re-asks.
     return null;
   }
+}
+
+/**
+ * A stored profile, narrowed field by field, or null.
+ *
+ * Narrowed rather than trusted: this comes back out of localStorage, which any
+ * extension or earlier build of this app can have written, and a sample array
+ * with a string in it would reach the chart as a NaN in the middle of a line.
+ */
+function readProfile(value: Json | undefined): StoredProfile | null {
+  if (!isJsonObject(value)) return null;
+  const interval = value["i"];
+  const up = value["up"];
+  const down = value["down"];
+  const samples = value["e"];
+  if (!isFiniteNumber(interval) || interval <= 0) return null;
+  if (!isFiniteNumber(up) || !isFiniteNumber(down)) return null;
+  if (!isJsonArray(samples) || samples.length < 2) return null;
+  const numbers = samples.filter((sample) => isFiniteNumber(sample));
+  // Positional data: one bad sample shifts every later one, so it is all or
+  // nothing rather than a filtered subset.
+  if (numbers.length !== samples.length) return null;
+  return { i: interval, e: numbers, up, down };
 }
 
 function hydrate(): Map<string, StoredRoute> {
@@ -109,7 +165,13 @@ function hydrate(): Map<string, StoredRoute> {
     // that jumps, which is worse than asking the engine again.
     if (walked.length !== encodedLegs.length) continue;
 
-    loaded.set(key, { at, encodedLegs: walked, distanceMeters, durationSeconds });
+    const profile = readProfile(value["profile"]);
+    loaded.set(
+      key,
+      profile === null
+        ? { at, encodedLegs: walked, distanceMeters, durationSeconds }
+        : { at, encodedLegs: walked, distanceMeters, durationSeconds, profile },
+    );
   }
   return loaded;
 }

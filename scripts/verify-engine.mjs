@@ -58,19 +58,28 @@ const NO_ELEVATION = -500;
 const WIDE_CONTOURS = 8;
 
 /**
- * A fixed short walk, and what the engine said about it when this fixture was
- * taken (2026-08-21, tileset 1787278077, Valhalla 3.8.3).
+ * A fixed short walk, and what the engine said about it. Grace Street to Main
+ * Street Station: flat, central, and inside any Richmond extract.
  *
  * The point is not the number, it is that the number stops moving quietly. A
  * costing change, a speed change, or a graph built from a different extract all
- * show up here as a loud failure on a route nobody edits. Grace Street to Main
- * Street Station: flat, central, and inside any Richmond extract.
+ * show up here as a loud failure on a route nobody edits.
+ *
+ * **Re-taken 2026-08-21 after the elevation rebuild** (tileset 1787337146,
+ * Valhalla 3.8.3). The previous fixture, against the same route on an
+ * elevation-less graph, was 1.048 km in 1025.7 s - 3.68 km/h. The rebuild moved
+ * it to 963.5 s, 3.91 km/h, on a route whose length did not change by a metre.
+ * That is not an error: pedestrian costing's `use_hills` defaults to 0.5, and
+ * over a graph that now carries grades this particular walk is downhill (51 m to
+ * 44 m), so the engine rightly makes it quicker. Every ETA in the app moved with
+ * it. The fixture catching this on the first run after the rebuild is the whole
+ * reason it exists.
  */
 const SPEED_FIXTURE = {
   from: { lat: 37.5407, lon: -77.436 },
   to: { lat: 37.5345, lon: -77.431 },
-  expectedKm: 1.048,
-  expectedSeconds: 1025.7,
+  expectedKm: 1.047,
+  expectedSeconds: 963.5,
   /** Wide enough to absorb a rebuild that re-snaps an endpoint by a house-width. */
   tolerance: 0.02,
 };

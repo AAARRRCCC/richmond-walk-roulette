@@ -7,6 +7,10 @@ dist-ssr
 # are tracked.
 valhalla/data
 valhalla/extracts
+# Pre-rebuild backups: a copy of the tileset and the eleven reach snapshots,
+# taken before the one irreversible act in the v0.5 plan. Tens of MB, and the
+# snapshots in it are already in git history anyway.
+valhalla/backups
 *.local
 
 # Environment files — never commit. .env.example IS allowed (no secrets).

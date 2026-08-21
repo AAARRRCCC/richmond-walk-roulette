@@ -181,7 +181,7 @@ export function bandMinutes(budgetMinutes: number, floorMinutes = 0): readonly n
  *
  * @public - the generator stamps this into every file it writes.
  */
-export const SNAPSHOT_VERSION = 2;
+export const SNAPSHOT_VERSION = 3;
 
 /**
  * The oldest build this reader still understands. Every version so far is the

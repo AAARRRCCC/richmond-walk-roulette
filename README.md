@@ -88,7 +88,9 @@ snapshot wrong.
   key.
 - Valhalla for isochrones and walking routes, behind a same-origin proxy
 - Cloudflare Worker in production. The Vite dev server mounts the same handler.
-- 64 KB gzipped of app JavaScript, plus MapLibre's own 276 KB
+- 70 KB gzipped of app JavaScript, plus MapLibre's own 277 KB. Both measured by
+  `node scripts/verify-bundle.mjs` rather than remembered; the line used to claim
+  64 KB and 276 KB and had been wrong for some number of commits
 
 ## The engine never faces the browser
 

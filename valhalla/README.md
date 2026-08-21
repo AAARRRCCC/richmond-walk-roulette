@@ -54,6 +54,65 @@ Then point the app at it:
 - prod: the same two values in `wrangler.toml` `[vars]`, with the URL of
   wherever this runs
 
+## Elevation
+
+The graph carries elevation, and that is a **build** setting, not a serving one.
+`build_elevation=True` in `docker-compose.yml` tells the image to fetch the SRTM
+tiles covering the extract and bake heights into the tiles it builds. Turning it
+on for a graph that already exists does nothing whatsoever until the graph is
+rebuilt:
+
+```bash
+REBUILD=1 ./scripts/build-graph.sh
+```
+
+**Why this matters more than it sounds like it does.** An engine built without
+elevation does not refuse the question. It answers `/height` with `null` for
+every point and `/route` with `-500.0` for every sample - Valhalla's
+`kNoElevationData` sentinel - and it goes on serving routes and contours
+perfectly happily while it does. Nothing in the stack notices. The app would
+draw a confident flat line five hundred metres below sea level and label it
+terrain. That is why `build-graph.sh` now ends by asking for a route *with*
+`elevation_interval` and failing loudly on a sentinel, and why
+`node scripts/verify-engine.mjs` probes capability rather than availability.
+
+**Measured, on this machine, 2026-08-21:**
+
+| | |
+| --- | --- |
+| Tiles fetched | one, `N37W078` - the clipped bbox in `richmond.env` sits wholly inside it |
+| Disk, `data/elevation_data` | 25 MB |
+| Rebuild | a single pass. The image fetched the tiles *before* the build that needed them, so no second run was required |
+| Tileset timestamp | moved, as it must; the old graph is not reused |
+
+That last row settles an open question in `docs/plans/elevation-profile.md`,
+which could not tell from the image's documentation whether "covering the
+routing graph" meant the tiles were fetched after a graph already existed. They
+are not: one `REBUILD=1` is enough. The smoke check is what makes it safe to
+have been unsure.
+
+**Two things move with the rebuild, and both are expected.**
+
+*Walking times change.* Pedestrian costing's `use_hills` defaults to 0.5, and
+over a graph that now carries grades the engine rightly makes downhill quicker
+and uphill slower. The fixture in `scripts/verify-engine.mjs` moved from 1025.7 s
+to 963.5 s on a route whose length did not change by a metre. Every ETA in the
+app moved with it.
+
+*Contours move, so the snapshots must be recut.* `public/reach/*.json` are
+precomputed ladders and nothing in the app detects a stale one. After a rebuild:
+
+```bash
+node scripts/verify-drift.mjs          # how far off are the committed ones
+npm run dev                            # in another terminal
+node scripts/build-reach.mjs           # recut all eleven
+# then bump SNAPSHOT_VERSION in src/lib/isochrone.ts and commit public/reach/
+```
+
+**You are offline while it builds.** `REBUILD=1` discards the existing graph
+before starting, so the engine answers nothing for the couple of minutes the
+build takes. Do not do it on a box serving traffic without something in front.
+
 ## On Windows
 
 Valhalla's HTTP service does not build natively on Windows. Run these scripts

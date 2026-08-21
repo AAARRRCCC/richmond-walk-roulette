@@ -16,6 +16,8 @@ export type UpstreamBody = {
   costing_options?: Json;
   locations?: Json[];
   units?: string;
+  /** Metres, because the proxy pins `units: "kilometers"`. */
+  elevation_interval?: number;
 };
 
 export type Upstream = { url: string; method: string; body: UpstreamBody };

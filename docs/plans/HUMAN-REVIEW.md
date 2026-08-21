@@ -105,12 +105,48 @@ person doing the feel pass - which is where a "needs a real device" check belong
 **What reverses it.** Nothing structural. Run the pass on a machine where the media feature can be
 set and tick the boxes; they are one line each in `docs/plans/acceptance/chunk-*.md`.
 
+### 3.4 The eleven snapshots were regenerated rather than accepted
+
+**What happened.** The graph rebuild moved the contours. `verify-drift` measured 4.44% worst-case
+area drift at the 25-minute rung from Maymont, against a 1% threshold — and, more interestingly, **0**
+place-membership flips: every contour moved and no place changed sides.
+
+**The branch taken.** Regenerated all eleven and bumped `SNAPSHOT_VERSION` 2 → 3.
+
+**Why it is the conservative one.** It is the checklist's own wording: a stale snapshot lies, a
+regenerated one only costs engine time. Here it cost **2.9 seconds** — the whole ladder for one origin
+is a single upstream query at `VALHALLA_MAX_CONTOURS=100`, so eleven origins is eleven queries against
+a local engine. There was no trade to think about.
+
+**What reverses it.** `git checkout` of `public/reach/` and `SNAPSHOT_VERSION` back to 2, though
+there is no reason to: `verify-drift` reads 0.00% and 0 flips afterwards.
+
+### 3.5 `verify-drift` was measuring the snapshot's own rounding and calling it drift
+
+Not a decision so much as a defect found by using the tool. A freshly cut snapshot still read
+1.0–1.3% on three origins, which cannot be drift — it was cut from the engine it was being compared
+to. The cause: `build-reach.mjs` writes vertices at 4 decimals, about 11 m, and at the 5-minute rung
+the contour is a few hundred metres across, so 11 m of vertex rounding is worth about 1% of its area.
+
+The tool now rounds the live contour to the snapshot's own recorded `coordPrecision` before
+comparing. Both sides quantised the same way; what is left is the real thing. Afterwards the same
+eleven read 0.00%.
+
+Worth stating plainly, because it is the one place in this run where a threshold looked wrong and the
+answer was to fix the measurement rather than move the line: **the threshold is still 1%.** It was
+never touched.
+
 ---
 
 ## 4. Unticked boxes
 
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
+
+**Chunk 1 — one box, and it is section 5.1's.** 59 of 60 ticked.
+
+- [ ] *It was seen with `prefers-reduced-motion` on.* Not observable here; see 5.1. Chunk 1 renders
+  nothing at all, so nothing in it is at risk from it.
 
 **Chunk 0 — one box, and it is section 5.1's.**
 
@@ -166,8 +202,35 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | App JS after chunk 0 | 71,315 B (69.6 KiB) | +110 B on the baseline |
 | Tests after chunk 0 | 100 passing | 68 at the baseline |
 | Worst solar error vs USNO | 73 s (2026-03-20 sunset) | Chunk 0, across 15 phenomena |
+| App JS after chunk 1 | 71,860 B (70.2 KiB) | +545 B on chunk 0; the spec estimated +0.7 KB |
+| Tests after chunk 1 | 131 passing | |
+| Snapshot drift after the rebuild | 4.44% worst area, **0** membership flips | Chunk 1, 55 rungs |
+| Snapshot drift after regenerating | 0.00%, 0 flips | Chunk 1 |
+| Snapshot regeneration cost | **2.9 s** for all eleven | Chunk 1, local engine, one query per origin |
+| Elevation tiles | one (`N37W078`), 25 MB on disk | Chunk 1 |
+| Graph rebuild | a single pass; no second run needed | Chunk 1 |
+| Walking-speed fixture | 1025.7 s → **963.5 s** on the same 1.047 km | Chunk 1 — see 6.1 |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
+
+### 6.1 Every walking time in the app changed, and nothing on screen says so
+
+The rebuild's loudest measured effect, caught by `verify-engine`'s fixture on the first run after it.
+The same fixed route — Grace Street to Main Street Station, 1.047 km, not a metre different — went
+from 1025.7 s to 963.5 s. That is 3.68 km/h to 3.91 km/h against a walking speed the proxy pins at
+3.69 and calls a product decision.
+
+It is not a bug. Pedestrian costing's `use_hills` defaults to 0.5, and over a graph that now carries
+grades the engine rightly makes a downhill walk quicker. But it means the pinned 3.69 km/h is now a
+*flat-ground* pace that the terrain modulates, where before it was the pace, full stop — and
+`server/proxy.ts`'s comment on `WALKING_SPEED_KMH` still describes the older, simpler thing.
+
+**Nothing was changed in response.** Two reasons: the plan does not ask for it, and the new behaviour
+is more honest than the old one — a walk downhill *is* quicker. But somebody should decide whether
+the 3.69 that was measured against Google's isochrones on an elevation-less graph is still the right
+number now that the graph has hills in it, because that measurement is the whole basis for the
+constant. It is one number in one file, `WALKING_SPEED_KMH` in `server/proxy.ts`, and changing it
+means recutting the snapshots again.
 
 **Chunk 0's measured bundle delta is +0.1 KB against an estimate of +0.9 KB, and the estimate is not
 wrong — it is early.** Nothing imports `solar.ts`, `daylight.ts` or `conditions.ts` yet, so the

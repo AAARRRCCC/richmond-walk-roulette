@@ -83,6 +83,12 @@ pace. Summary here; the history has the full text.
 
 Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re-run against your production instance once it exists.
 
+- [ ] The deployed engine's graph was built **with elevation**
+      (`build_elevation=True`, then `REBUILD=1 ./scripts/build-graph.sh`). Without
+      it the app still runs: the card loses its profile block and the Climb
+      filter disables itself. What must not happen is the middle case, where the
+      engine answers with `-500.0` and something draws it - which is what the two
+      checks below exist to catch.
 - [ ] `node scripts/verify-engine.mjs` passes against the deployed engine.
       It probes capability rather than availability: `/status` answering is
       not the same claim as elevation being real, and an instance can

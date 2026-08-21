@@ -35,6 +35,24 @@ export type LngLat = { lng: number; lat: number };
  */
 export const COORD_PRECISION = 5;
 
+/**
+ * One degree, in metres, on the same sphere `areaSqMeters` measures against.
+ *
+ * Derived rather than typed as its own constant so there is exactly one Earth
+ * in this module: two radii a hundred lines apart is how a length and an area
+ * end up describing different planets.
+ */
+const metersPerDegree = (): number => (EARTH_RADIUS_M * Math.PI) / 180;
+
+/**
+ * Distances along a line, keyed by the line itself.
+ *
+ * A WeakMap rather than a cache with a size: the key is the `coords` array a
+ * `WalkingRoute` owns, so an entry lives exactly as long as the route it
+ * describes and disappears with it when the LRU drops it.
+ */
+const CUMULATIVE = new WeakMap<readonly LngLat[], number[]>();
+
 /** Stable identity for a point, for cache keys and file names. */
 export function pointKey(point: LngLat): string {
   return `${point.lat.toFixed(COORD_PRECISION)},${point.lng.toFixed(COORD_PRECISION)}`;
@@ -213,4 +231,81 @@ function shoelace(ring: Ring): number {
     sum += (b[0] - a[0]) * DEG * ((a[1] + b[1]) * DEG);
   }
   return sum;
+}
+
+/**
+ * Metres from the start of the line to each vertex. `out[0]` is 0 and
+ * `out.length === coords.length`.
+ *
+ * Equirectangular rather than haversine: at city scale the two disagree by well
+ * under a metre, and the app already refuses a geo library over the byte budget.
+ * The cosine is taken once at the line's own latitude, which over a 6 km walk in
+ * Richmond is accurate to centimetres.
+ *
+ * Memoised on the array's identity because `WalkingRoute` objects are stable per
+ * pair in the LRU: the chart, the map cursor and the hover readout all ask for
+ * this on the same `coords` array, and a scrub asks on every frame.
+ *
+ * @public - consumed by `elevation-profile` (chunk 3).
+ */
+export function cumulativeMeters(coords: readonly LngLat[]): number[] {
+  const memoised = CUMULATIVE.get(coords);
+  if (memoised !== undefined) return memoised;
+
+  const out: number[] = [0];
+  if (coords.length > 1) {
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    const midLat = (((first?.lat ?? 0) + (last?.lat ?? 0)) / 2) * (Math.PI / 180);
+    const lngScale = metersPerDegree() * Math.cos(midLat);
+    let total = 0;
+    for (let index = 1; index < coords.length; index += 1) {
+      const from = coords[index - 1];
+      const to = coords[index];
+      if (from === undefined || to === undefined) continue;
+      const dx = (to.lng - from.lng) * lngScale;
+      const dy = (to.lat - from.lat) * metersPerDegree();
+      total += Math.hypot(dx, dy);
+      out.push(total);
+    }
+  }
+
+  CUMULATIVE.set(coords, out);
+  return out;
+}
+
+/**
+ * The coordinate `meters` along the line, linearly interpolated. Clamped to
+ * both ends, so a cursor dragged past either end of the chart lands on the end
+ * of the walk rather than vanishing.
+ *
+ * @public - consumed by `elevation-profile` (chunk 3).
+ */
+export function pointAtMeters(
+  coords: readonly LngLat[],
+  cumulative: readonly number[],
+  meters: number,
+): LngLat | null {
+  if (coords.length === 0) return null;
+  const first = coords[0];
+  const last = coords[coords.length - 1];
+  if (first === undefined || last === undefined) return null;
+  if (meters <= 0) return first;
+  const total = cumulative[cumulative.length - 1] ?? 0;
+  if (meters >= total) return last;
+
+  // Linear rather than binary: a walk is a few hundred vertices, this runs on
+  // hover, and the loop is faster than the branch predictor misses would be.
+  for (let index = 1; index < cumulative.length; index += 1) {
+    const to = cumulative[index] ?? 0;
+    if (to < meters) continue;
+    const from = cumulative[index - 1] ?? 0;
+    const span = to - from;
+    const t = span === 0 ? 0 : (meters - from) / span;
+    const a = coords[index - 1];
+    const b = coords[index];
+    if (a === undefined || b === undefined) return last;
+    return { lng: a.lng + (b.lng - a.lng) * t, lat: a.lat + (b.lat - a.lat) * t };
+  }
+  return last;
 }

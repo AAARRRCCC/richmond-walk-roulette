@@ -31,3 +31,15 @@ services:
       - use_default_speeds_config=False
       # Walking never needs more than a few threads; leave headroom on the box.
       - server_threads=4
+      # Elevation is baked into the graph, not fetched from skadi per request,
+      # so this is a BUILD setting and not a serving one: turning it on for an
+      # existing graph does nothing at all until the tiles are rebuilt with
+      # REBUILD=1. Without it the engine still answers /route and /height - it
+      # answers them with -500.0 and null respectively, which is Valhalla's
+      # no-data sentinel and reads as a place five hundred metres below sea
+      # level. That is the failure build-graph.sh's smoke check now catches.
+      #
+      # One SRTM tile. The clipped bbox in ../richmond.env (-77.61,37.40 to
+      # -77.26,37.68) sits wholly inside N37W078, which spans -78..-77 and
+      # 37..38, so all four corners are inside it with room to spare.
+      - build_elevation=True

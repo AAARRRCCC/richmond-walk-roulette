@@ -121,6 +121,17 @@ const CACHE_VERSION = "v1";
  */
 const ROUTE_CACHE_VERSION = "v2";
 
+/**
+ * How far apart, in metres, the engine samples elevation along a route.
+ *
+ * 30 because that is the DEM's own resolution: SRTM is a 1 arc-second grid,
+ * about 30 m at this latitude, so asking for a finer interval buys interpolated
+ * points rather than detail. A coarser one would miss the short sharp climbs
+ * that are the whole reason Richmond needs this - Libby Hill rises 35 m in
+ * under a kilometre.
+ */
+const ELEVATION_INTERVAL_M = 30;
+
 type LatLng = { latitude: number; longitude: number };
 
 function json(body: Json, status: number): Response {
@@ -452,6 +463,10 @@ async function route(base: string, payload: JsonObject): Promise<Response> {
       costing: "pedestrian",
       costing_options: { pedestrian: { walking_speed: WALKING_SPEED_KMH } },
       units: "kilometers",
+      // Metres, because the units above are kilometres: the engine echoes the
+      // interval in the response's own units, and with `miles` the same request
+      // comes back as 98.4 and feet.
+      elevation_interval: ELEVATION_INTERVAL_M,
       // The app draws the line and prints distance and time; turn-by-turn prose
       // would be dead weight in every warm-up response.
       directions_type: "none",
