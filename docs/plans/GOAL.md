@@ -529,14 +529,20 @@ and it is designed so that person can arrive cold, with no memory of the run, an
 
 ### Run this checklist to the end before declaring the work finished
 
-- [ ] Harness built and committed
-- [ ] Chunk 0 — foundations
-- [ ] Chunk 1 — elevation on the wire, and the graph
-- [ ] Chunk 2 — pool-reasoning
-- [ ] Chunk 3 — elevation-profile, the visible half
-- [ ] Chunk 4 — apple-maps
-- [ ] Chunk 5 — daylight-budget
-- [ ] Chunk 6 — geolocate
+**Where the run stopped: after chunk 6, on 2026-08-21, at the reader's request.**
+Seven commits on `v0.4`, `npm run verify` green, working tree clean. Bundle 81,058 B gzipped against
+the 102,400 B ceiling; 191 tests. Each ticked chunk names its commit and its acceptance tally —
+every open box in those tallies is recorded in `HUMAN-REVIEW.md` §4 and §5, and none of them is a
+`[!]`. `PROGRESS.md` carries a report per chunk; the next one to start is chunk 7.
+
+- [x] Harness built and committed — `25ac08b`
+- [x] Chunk 0 — foundations — `3d85202`, 53/54
+- [x] Chunk 1 — elevation on the wire, and the graph — `a9c05ce`, 59/60
+- [x] Chunk 2 — pool-reasoning — `b057052`, 68/70
+- [x] Chunk 3 — elevation-profile, the visible half — `074f3e7`, 73/76
+- [x] Chunk 4 — apple-maps — `e3938f8`, 61/63
+- [x] Chunk 5 — daylight-budget — `506d096`, 67/69
+- [x] Chunk 6 — geolocate — `e575427`, 65/71
 - [ ] Chunk 7 — weather-filters
 - [ ] Chunk 8 — places-expansion
 - [ ] Chunk 9 — opening-hours
