@@ -104,6 +104,21 @@ Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re
       came back 2.597 km against 2.310 km straight-line, a 1.12× detour.
 - [x] A preset origin cold-starts from its snapshot: measured 3-7 ms, zero
       `/api/isochrone` calls.
+- [ ] **The three share checks, and they only work deployed.**
+      `run_worker_first` lives in `wrangler.toml`; nothing local can prove it.
+      - `curl -H 'Accept: text/html' '<deployed>/s?o=carytown&b=34&rt=1&p=shiplock' | grep -E 'og:|canonical'`
+        answers **200** with a place-specific `og:title` containing
+        `inside 34 min`, and absolute `og:url`, `og:image` and canonical. A
+        **404** means the Worker never saw the path
+      - `curl -I <deployed>/site.webmanifest` still returns the manifest with
+        `content-type: application/manifest+json`. This is why the pattern is
+        `/s` exactly and never `/s*` - the glob swallows the manifest with no
+        error anywhere
+      - `POST <deployed>/api/isochrone` still works, which is the check that
+        `/api/*` was not dropped from `run_worker_first` when `/s` joined it
+- [ ] Read the emitted `og:url` from the first curl. If it carries a
+      `workers.dev` or internal host rather than the public one, add a
+      `SITE_ORIGIN` var and use it - deliberately not added speculatively
 - [ ] `curl -X POST <deployed>/api/locate -d '{"point":{"latitude":37.5388,"longitude":-77.4336}}'`
       answers 200 with a `point`, a `distanceMeters` and a `use`. It is a
       build-time endpoint that happens to be public: bounded to Richmond,

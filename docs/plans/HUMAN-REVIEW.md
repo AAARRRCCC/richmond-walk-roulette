@@ -350,6 +350,46 @@ seconds and names exactly what is still owed.
 **The size of the afternoon still owed: 20 rows.** That is the number the
 checklist asks to be recorded.
 
+### 2.9 A shared dropped pin is published at 110 metres, not at one
+
+**The question.** `shareable-spins`' own open question 2, and one GOAL.md names
+as a decision that was meant to be a person's: sharing a preset publishes an id,
+but sharing a dropped pin publishes a *coordinate*. At the five decimals the
+contour cache uses that is about a metre — and for a `geolocate` fix or a home
+pin, that is somebody's front door, in a link designed to be forwarded.
+
+The spec lists three options: share it at full precision and say so, round it,
+or refuse to share pin-origin spins at all.
+
+**The branch taken.** Round it. `PIN_PRECISION = 3` in `src/app/share.ts`, about
+110 m at this latitude.
+
+**Why it is the conservative one.** It is the option that publishes less while
+still letting the link work. Refusing outright would break a real case — the
+whole point of a dropped pin is that it is where you actually are — and full
+precision hands a house number to every chat the link is forwarded into. 110 m
+is a block: enough to say "start around here", not enough to say which door.
+
+It is also the same number `meet-in-the-middle` (chunk 11) pins its meet point
+at, deliberately. One number for "how precisely this app is willing to publish a
+person's location" is easier to reason about, and easier to change, than two.
+
+**The cost, stated rather than hidden.** The recipient's reach is computed from
+the rounded pin, so it is a slightly different shape than the sender's, and the
+shared destination can fall outside it. That is already a state this feature
+handles — the card shows the destination anyway with the reason beside it — so
+the failure mode is a sentence, not a substitution. It is the same degradation a
+recipient with a shorter dial already gets.
+
+**What reverses it.** One number in one file. Raising it to 5 restores metre
+precision; the tests assert the current value, so changing it is a deliberate
+act with a test to update.
+
+**What else would have to change.** Nothing in the app. If chunk 11 wants a
+different precision for meet pins, the two constants separate — but they should
+separate with a reason written down, because the argument for one number is that
+this decision is about people rather than about geometry.
+
 ---
 
 ## 3. Plan-level decisions
@@ -527,6 +567,23 @@ but nobody needs to treat it as a last chance.
 
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
+
+**Chunk 10 — nine boxes, and three of them need a deployment.** 65 of 74.
+
+- [ ] *`shareable-spins` criteria 13, 14, and "static asset caching still works".*
+  Section 5.12. `run_worker_first` is in `wrangler.toml` and only a deployed
+  request can prove `/s` reaches the Worker and `/site.webmanifest` does not.
+  Three curls, all in `LAUNCH.md`.
+- [ ] *It was seen at a phone viewport width* and *criterion 11's 380 px
+  reflow.* Section 5.11. The actions grid gained a fourth control and was seen
+  only at rail width.
+- [ ] *Criterion 8 — a cancelled share sheet* and *criterion 9 — "Link
+  copied."* Section 5.11. This browser's sheet threw and its clipboard refused,
+  which exercised the fallback for real and left those two unseen.
+- [ ] *It was seen with `prefers-reduced-motion` on.* Section 5.1.
+- [ ] *The Worker injects OG meta — verified with a crawler-like fetch.*
+  Section 5.12. Asserted through `handleWorkerRequest` with a rewriter stub; no
+  real crawler has fetched it.
 
 **Chunk 9 — three boxes, and one criterion ticked as superseded.** 78 of 81.
 
@@ -781,6 +838,48 @@ a tab under automation is hidden.
 Both want somebody with a real browser and either patience or
 `walkRouletteDev.clockOffset`.
 
+### 5.11 The share control at a phone width, and the two states this browser refused
+
+Three of chunk 10's boxes need a browser this one is not.
+
+- **The actions grid at 320–380 px.** It is the one layout in that chunk that
+  genuinely changed: a fourth control joined `.result-actions`, which is two
+  rows of two at rail width. The narrow rule collapses it to a single column,
+  which is inherited rather than new — but nobody looked at four stacked buttons
+  on a phone-width sheet, and that is exactly where three would already have
+  been tight.
+- **A cancelled share sheet.** The code leaves the note empty and claims
+  nothing, which is the whole design of that state; proving it needs a real
+  system sheet to cancel.
+- **"Link copied."** This browser refused the clipboard, so the copy path fell
+  through to the manual fallback — which was useful, because it exercised the
+  full chain for real, but it means the four-second self-clearing note was never
+  seen doing it.
+
+### 5.12 Three checks that only a deployment can make
+
+`shareable-spins` says this itself, and it is worth repeating where the pass
+will look: `run_worker_first` lives in `wrangler.toml`, and nothing running
+locally can prove what it does.
+
+1. `curl -H 'Accept: text/html' https://<host>/s?o=carytown&b=34&rt=1&p=shiplock`
+   must return **200** with a place-specific `og:title`. A **404** means the
+   Worker never saw the path.
+2. `curl https://<host>/site.webmanifest` must still return the manifest with
+   `content-type: application/manifest+json`. This is why the pattern is `/s`
+   exactly and never `/s*` — the glob would swallow the manifest, with no error
+   anywhere.
+3. `POST /api/isochrone` must still work, which checks that `/api/*` was not
+   dropped from `run_worker_first` when `/s` was added to it.
+
+And one thing the spec flags that these curls also answer: whether
+`new URL(request.url).origin` inside the Worker carries the **public** hostname
+behind a custom domain. If the emitted `og:url` comes back with a `workers.dev`
+or internal host, the fix is a `SITE_ORIGIN` var — deliberately not added
+speculatively.
+
+All three are in `LAUNCH.md`.
+
 ## 6. Numbers
 
 Final measurements, replacing `docs/plans/README.md` §5's estimates.
@@ -836,6 +935,10 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Generated hours table | 14,095 B raw, 3,239 B standalone gz | Chunk 9, after the solar fix cut it from 76 KB |
 | Hand-curated rows with an `osm` id | **42 of 62** | Chunk 9; 20 left unknown - see 2.8 |
 | Hours window | 2026-01-01 to 2027-12-31 | 496 days left at bake time |
+| App JS after chunk 10 | 95,675 B (93.4 KiB) | +2,499 B against a 3 KB line; 6.6 KB of headroom |
+| Tests after chunk 10 | 346 passing | |
+| Shared pin precision | 3 decimals, ~110 m | Chunk 10 - see 2.9 |
+| A typical share link | ~30 characters of query | `o=carytown&b=34&rt=1&p=shiplock` |
 | `formatToParts` per 26-position scrub | 150 → **0** | Chunk 5 — see 6.3 |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |

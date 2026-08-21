@@ -308,6 +308,42 @@ a route rather than of a dot. A second tier, `detour`, marks the things that
 are a reason to walk a particular way rather than somewhere to spend an
 afternoon.
 
+## Sharing a spin
+
+A good spin used to be unshareable: the address bar offered the front door of
+the app, so the other person landed on a different question with a different
+answer.
+
+    /s?o=carytown&b=34&rt=1&p=shiplock
+
+A readable query string, not a token. It costs no codec in the byte budget,
+ignores keys it does not understand, falls back to defaults for keys that are
+absent, and therefore never needs a version or a migration. Opening one restores
+the session and shows the card — it never re-runs the reel, because a replayed
+reel is either predetermined theatre or a genuine second draw, and both break
+the promise the link makes.
+
+**A preset origin shares as an id. A dropped pin shares as a coordinate rounded
+to three decimals**, about 110 m — enough to say "start around here", not enough
+to say which door. That is a privacy decision and it is one constant,
+`PIN_PRECISION`.
+
+**The link does not carry the condition switches.** Get back before dark, Mind
+the weather and Skip closed places are about the recipient's here-and-now, not
+about the walk that was sent: a link that switched off somebody's daylight guard
+would be a trap, and one that switched it on would be a lie about what the
+sender did.
+
+The shared destination is always shown, even when the recipient's conditions
+exclude it, with the reason beside it. A link never silently substitutes a
+different place.
+
+The Worker rewrites the page's own `<title>` and Open Graph tags for the spin,
+so a link unfurls as the place and the walk rather than as the site's generic
+card. The picture is the same for every share — runtime image rendering does not
+fit the Workers Free plan's 10 ms of CPU per request, and that is a decision
+rather than an oversight.
+
 ## Hours, and what the app will not claim
 
 The app says whether a place is likely to be open **when you would get there** —

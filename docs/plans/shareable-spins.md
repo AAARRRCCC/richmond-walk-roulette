@@ -1,6 +1,6 @@
 # Shareable spins
 
-**Status:** spec — not implemented
+**Status:** implemented in chunk 10. See *Corrections after implementation* at the end.
 **Slug:** `shareable-spins`
 
 ## Depends on
@@ -1050,3 +1050,60 @@ assert *which document was asked for*, not only what came back.
    button (this spec's assumption — the share note names it), round it to 3 decimals (~110 m,
    which produces a different reach and can drop the winner out of the pool), or refuse and
    share pin-origin spins as place-only. This is a privacy call, not a technical one.
+
+## Corrections after implementation
+
+Written against the code that shipped. Six things.
+
+1. **`unavailableReason` should not exist, and this spec half-knew it.** Its own
+   `## Depends on` says the contract "is satisfied by machinery that is already
+   built, not by a new function" — and then the file-by-file section adds a prop
+   anyway. `ResultCard` already renders one `.result-warning` per exclusion
+   reason from `verdict`, so the prop printed the sentence twice: "Further than
+   your budget walks." above "Outside your current time budget." Found by
+   reading the screen, removed, and the card carries a comment saying where the
+   guarantee actually lives.
+
+2. **The canonical tag ships with no `href`, because Vite will not build one
+   that has one.** Vite's HTML plugin treats `link[href]` as an asset reference
+   and tried to open `/` as a file — `EISDIR`, build failed outright. That is a
+   better failure than the alternative, but it does mean the spec's
+   `<link rel="canonical" href="/" />` is not shippable. A canonical with no
+   `href` is ignored by crawlers, which is exactly right for a repo that does
+   not know its own domain, and `/s` gets a real absolute one from the Worker.
+   `og:url` is unaffected — `meta[content]` is not an asset attribute.
+
+3. **The link carries `c` and `k`, not `t`.** `docs/plans/README.md` §4's
+   amendment, applied: the climb band replaced terrain in chunk 3 and the tier
+   filter arrived in chunk 8. It carries none of `beforeDark`, `weatherAware` or
+   `hideClosed`, which is the same amendment's other half.
+
+4. **A dropped pin is published at three decimals, not five.** Open question 2
+   is answered rather than left open: ~110 m instead of ~1 m, one constant
+   `PIN_PRECISION`, and the same number `meet-in-the-middle` pins its own meet
+   point at. The cost the spec warns about — the recipient's reach is a slightly
+   different shape and the destination can fall outside it — is a state this
+   feature already handles, so it degrades to a sentence rather than a
+   substitution. HUMAN-REVIEW 2.9.
+
+5. **`applyShare` takes its data as arguments.** The spec has it reach for
+   `PLACES` and `PRESET_ORIGINS` directly; passing them keeps `session.ts` free
+   of a data import it does not otherwise need and lets `share.test.ts` restore
+   against a fixture list. It also sets `requestedBudgetMinutes`, which did not
+   exist when this spec was written — chunk 7 added it, and a restored session
+   that did not set it would hand the reader back a different budget the first
+   time a cap lifted.
+
+6. **`decodeShare` narrows by type predicate, not by `Set.has` plus a cast.**
+   A `Set<string>.has(x)` proves nothing to the type system, so the first draft
+   needed three assertions and the anti-slop plugin refused all three — rightly.
+   The guards prove it once, at the boundary where the string arrives.
+
+Two things the spec flagged as unverified, now checked:
+
+- **Vite's dev server does serve `index.html` for `/s`.** `curl -H 'Accept:
+  text/html' 'http://localhost:5173/s?…'` returns 200 with the document, so the
+  two-line `req.url` rewrite the spec holds in reserve is not needed.
+- **`new URL(request.url).origin` inside the Worker** is still unverified, and
+  cannot be checked without a deployment. It is one of three checks in
+  `LAUNCH.md` that only a deployed request can make. HUMAN-REVIEW 5.12.

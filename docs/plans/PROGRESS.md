@@ -1096,3 +1096,140 @@ holds the clock through a throw, exactly as README section 2.1 predicted.
 (all are), `npm run verify` green (it is). It is the first chunk that serialises
 the session, which is why `requestedBudgetMinutes` was added in chunk 7 rather
 than after a link format existed.
+
+---
+
+## Chunk 10 — `shareable-spins` — done
+
+A good spin is shareable now. It was not: you got sent to Great Shiplock Park
+from a 34-minute round trip out of Carytown, and the address bar offered the
+front door of the app — a different question with a different answer.
+
+    /s?o=carytown&b=34&rt=1&p=shiplock
+
+### Why this had to be last
+
+Every earlier chunk changed what a session *is*: `climb` replaced `terrain`,
+`kind` appeared, `osm` appeared, three condition switches appeared. A format
+frozen before those landed is a format that needs a migration the day after it
+ships — which is the whole thing a readable query string exists to avoid. Being
+tenth is the feature, not the schedule.
+
+The amendment in README §4 is applied in full: the link carries the walk
+(`o`, `b`, `f`, `rt`, `p`) and the *place* filters (`c`, `v`, `e`, `k`), and
+**none** of the condition switches. Those are about the recipient's here-and-now.
+A link that switched off somebody's daylight guard would be a trap; one that
+switched it on would be a lie about what the sender did.
+
+### The deferred decision: a pin is published at 110 metres
+
+Open question 2, which GOAL.md names as a decision meant to be a person's.
+Sharing a preset publishes an id; sharing a dropped pin publishes a coordinate,
+and at the five decimals the contour cache uses that is about a metre — for a
+geolocated or home pin, somebody's front door, in a link built to be forwarded.
+
+**`PIN_PRECISION = 3`**, about 110 m. Enough to say "start around here", not
+enough to say which door. Same number `meet-in-the-middle` pins its meet point
+at, deliberately: one number for how precisely this app is willing to publish a
+person's location. The cost is real and already designed for — the recipient's
+reach is a slightly different shape, so the shared destination can fall outside
+it, and that degrades to a sentence rather than a substitution because the card
+shows the destination anyway. HUMAN-REVIEW 2.9.
+
+### Two things removed after being written
+
+Both for the same reason, and both found by reading the screen rather than by
+any test.
+
+1. **`unavailableReason` duplicated chunk 2.** The card already renders one
+   warning row per exclusion reason, so the prop printed "Further than your
+   budget walks." above "Outside your current time budget." This spec's own
+   `## Depends on` says the contract "is satisfied by machinery that is already
+   built" — and then the file-by-file section adds a prop anyway. Same shape of
+   mistake as chunk 9's hours line, caught the same way.
+2. **The canonical tag cannot ship an `href`.** Vite's HTML plugin treats
+   `link[href]` as an asset reference and tried to open `/` as a file — `EISDIR`,
+   build failed outright. It ships with no `href` and the Worker supplies an
+   absolute one, which is the honest default for a repo that does not know its
+   own domain.
+
+### What the Worker does, and the three things it must not do
+
+`/s` fetches **`/`** explicitly and never `env.ASSETS.fetch(request)`:
+`not_found_handling` defaults to `"none"`, so a `/s` request matches no asset
+and comes back 404, which would turn every careful degradation here into a
+broken link. It fetches `/` rather than `/index.html` because `html_handling`
+defaults to `auto-trailing-slash` and answers the latter with a 307.
+
+Its own named edge cache, so a test can prove nothing landed in the isochrone
+one. **No entry at all for a dropped-pin origin** — coordinates are the one
+field with an unbounded value space, and a pin link is sent by one person
+anyway. **A HEAD never fills the cache**, because crawlers issue HEAD and a
+stored empty body would be served to the next GET of the same spin.
+
+The cache key carries the *whole* canonical query rather than a digest of the
+fields the sentence uses: two spins differing only in a filter are different
+documents, and keying them together would hand the second sender's crawler the
+first sender's `og:url`.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint`, `npm run build` | clean |
+| `npm test` | **346 passing**, 0 failing |
+| `verify-bundle` | **95,675 B** gz, **+2,499 B** against a 3 KB line; 6.6 KB of headroom |
+| `share-meta.ts` in the client bundle | zero — grep finds neither `shareMeta` nor `__share` |
+| `git diff public/_headers public/reach/ wrangler.toml`'s `not_found_handling` | unchanged |
+
+### Seen on screen
+
+A link opened cold restored Carytown at 34 minutes with the card and route on
+the **first frame**, no reel. The destination was outside the recipient's pool
+at that budget and was shown anyway, with "Further than your budget walks."
+
+**The address-bar rule, which is the subtle one, behaved exactly as designed:**
+moving the dial cleared the URL to `/` on the next paint while "Spin your own"
+stayed. That distinction is the entire reason `SharedArrival.linkQuery` exists —
+the arrival is about how this session started, and the URL is about whether it
+still describes the screen, and they expire at different moments.
+
+A link naming a deleted place showed its notice, kept Carytown and 34 minutes,
+enabled Spin and rendered no card. The Share button's full fallback chain ran
+for real: this browser has `navigator.share`, it threw, the clipboard then
+refused, and the manual fallback caught it with the URL focused and selected.
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-10.md`: **65 of 74 ticked**. Nine open, and three
+of those are checks the spec itself says only a deployment can make —
+`run_worker_first` lives in `wrangler.toml` and nothing local can prove `/s`
+reaches the Worker or that `/site.webmanifest` still does not. All three are
+curls in `LAUNCH.md`. HUMAN-REVIEW 5.12.
+
+The rest are the usual local limits plus one that matters more than usual: the
+actions grid gained a fourth control and was seen only at rail width
+(HUMAN-REVIEW 5.11).
+
+### Spec corrections
+
+Six, in `shareable-spins.md`. Also two of its "unverified, check first" items
+resolved: Vite's dev server **does** serve the document for `/s`, so the
+reserve plugin change is unnecessary; and the Worker's public-hostname question
+remains open because it needs a deployment.
+
+### Deferred
+
+- HUMAN-REVIEW **2.9** — the shared pin precision.
+- HUMAN-REVIEW **5.11** — the share control at a phone width, and the two share
+  states this browser refused.
+- HUMAN-REVIEW **5.12** — the three checks that need a deployment.
+
+### Next
+
+**Chunk 11 — `multiplayer-links` + `meet-in-the-middle`, as one landing.** The
+last chunk, and the plan is explicit that 11a and 11b land together: knip is
+never green on 11a alone, so it must never be committed alone. Preconditions:
+every other chunk landed, `npm run verify` green, and `share.ts` in place for
+it to grow `m`/`ma`/`mb`/`d` onto — with `PIN_PRECISION` already settled at the
+3 decimals that spec's `MEET_PIN_PRECISION` asks for.
