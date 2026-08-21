@@ -1,5 +1,14 @@
 import type { Plugin } from "vite";
 import { handleApiRequest, type ProxyEnv } from "./proxy";
+import { bakeTuning, type BakeResult } from "./bake-tuning.ts";
+import { parseJson } from "../src/lib/json.ts";
+
+/**
+ * The one route here that is not a proxy. It writes to a source file, so it
+ * lives in `configureServer` and nowhere else: there is no build in which
+ * this exists.
+ */
+const BAKE_TUNING_PATH = "/api/dev/bake-tuning";
 
 /**
  * Largest request body the dev proxy will buffer.
@@ -69,10 +78,30 @@ export function apiProxy(env: ProxyEnv): Plugin {
           if (settled) return;
           settled = true;
 
+          const body = chunks.length > 0 ? Buffer.concat(chunks).toString("utf8") : "";
+
+          if (req.url === BAKE_TUNING_PATH) {
+            const answer = (status: number, result: BakeResult): void => {
+              res.statusCode = status;
+              res.setHeader("content-type", "application/json");
+              res.end(JSON.stringify(result));
+            };
+            bakeTuning(parseJson(body))
+              .then((result) => {
+                if (result.ok) console.log("[tuning] baked new defaults into src/app/tuning.ts");
+                answer(result.ok ? 200 : 400, result);
+              })
+              .catch((cause: unknown) => {
+                console.error("[tuning] could not write defaults", cause);
+                answer(500, { ok: false, error: "could not write src/app/tuning.ts" });
+              });
+            return;
+          }
+
           const request = new Request(`http://localhost${req.url}`, {
             method: req.method ?? "GET",
             headers: { "content-type": req.headers["content-type"] ?? "application/json" },
-            body: chunks.length > 0 ? Buffer.concat(chunks) : null,
+            body: body.length > 0 ? body : null,
           });
 
           handleApiRequest(request, env)

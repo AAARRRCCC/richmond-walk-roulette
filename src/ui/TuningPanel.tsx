@@ -1,6 +1,5 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import {
-  TUNING_DEFAULTS,
   TUNING_RANGE,
   onTuningChange,
   resetTuning,
@@ -9,6 +8,7 @@ import {
   type Tuning,
 } from "../app/tuning";
 import { playLanding, playPress, playTap } from "../lib/sound";
+import { isJsonObject, isString, parseJson } from "../lib/json";
 
 /**
  * Dev-only feel controls: the reel's timing and the cue level, adjustable
@@ -39,8 +39,42 @@ const SLIDERS: { key: NumericTuningKey; label: string; hint: string; unit: strin
   { key: "soundVolume", label: "Cue level", hint: "master volume for every sound", unit: "" },
 ];
 
+/**
+ * Promotes what is on screen from "what this browser does" to "what the app
+ * does", by writing these numbers into `TUNING_DEFAULTS` in the source.
+ *
+ * The panel saves to localStorage, and a stored value beats a default for
+ * good - right while dialling something in, wrong once it is dialled in. The
+ * alternative was reading the numbers off the panel and retyping them, which
+ * is how a setting ends up one digit away from the one that was chosen.
+ *
+ * The dev server does the writing; a page cannot touch the filesystem. Vite
+ * reloads the module on the change, so `Reset` immediately afterwards returns
+ * to the values just baked rather than the old ones.
+ */
+async function bake(report: (message: string) => void): Promise<void> {
+  report("Baking...");
+  try {
+    const response = await fetch("/api/dev/bake-tuning", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(tuning),
+    });
+    if (response.ok) {
+      report("Baked into src/app/tuning.ts. Reset now returns to these.");
+      return;
+    }
+    const result = parseJson(await response.text());
+    const detail = isJsonObject(result) && isString(result["error"]) ? result["error"] : "refused";
+    report(`Not baked: ${detail}`);
+  } catch {
+    report("Not baked: the dev server did not answer.");
+  }
+}
+
 export function TuningPanel() {
   const [, redraw] = useReducer((n: number) => n + 1, 0);
+  const [baked, setBaked] = useState<string | null>(null);
   const [open, toggle] = useReducer((v: boolean) => !v, false);
 
   useEffect(() => onTuningChange(redraw), []);
@@ -141,8 +175,14 @@ export function TuningPanel() {
           Reset
         </button>
       </div>
+      <div className="tuner-actions">
+        <button type="button" className="button is-bake" onClick={() => void bake(setBaked)}>
+          Bake as defaults
+        </button>
+      </div>
       <p className="tuner-note">
-        Dev only. Saved in this browser. Defaults: {TUNING_DEFAULTS.spinDurationMs}ms spin.
+        {baked ??
+          "Dev only. Saved in this browser until baked, which writes these numbers into src/app/tuning.ts."}
       </p>
     </aside>
   );

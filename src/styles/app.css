@@ -1191,6 +1191,13 @@ code {
   padding: 7px 10px;
   font-size: 13px;
 }
+/* The one control here that leaves the browser and changes the repo, so it
+   spans the row rather than sitting in a pair with something reversible. */
+.tuner-actions .button.is-bake {
+  grid-column: 1 / -1;
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 .tuner-note {
   margin: 0;
