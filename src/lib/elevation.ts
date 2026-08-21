@@ -154,28 +154,6 @@ export function classifyClimb(ascentMeters: number, distanceMeters: number): Cli
   return ascentMeters / km <= CLIMB_EASY_MAX_M_PER_KM ? "easy" : "hilly";
 }
 
-/**
- * The out-and-back profile: there, then back the way you came.
- *
- * The card must not doubt itself. When round trip is on, every other number on
- * it doubles, and a profile that showed only the outbound leg beside a doubled
- * distance is two different walks described at once.
- */
-export function mirrorProfile(profile: ElevationProfile): ElevationProfile {
-  const back = profile.samples.slice(0, -1).toReversed();
-  const samples = [...profile.samples, ...back];
-  return {
-    samples,
-    intervalMeters: profile.intervalMeters,
-    // Not recomputed: what goes up on the way out comes down on the way back,
-    // exactly, and re-deriving it through the hysteresis would round it away.
-    ascentMeters: profile.ascentMeters + profile.descentMeters,
-    descentMeters: profile.ascentMeters + profile.descentMeters,
-    minMeters: profile.minMeters,
-    maxMeters: profile.maxMeters,
-  };
-}
-
 /** Elevation at `meters` along the profile, clamped to both ends of `samples`. */
 export function elevationAt(profile: ElevationProfile, meters: number): number {
   const { samples, intervalMeters } = profile;

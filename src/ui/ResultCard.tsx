@@ -1,6 +1,5 @@
 import { ArrowSquareOutIcon, ShuffleIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
 import { REASON_COPY, REASON_ORDER, type PlaceVerdict } from "../app/eligibility";
-import { mirrorProfile } from "../lib/elevation";
 import { appleDirectionsUrl, googleDirectionsUrl } from "../lib/handoff";
 import { playPress } from "../lib/sound";
 import { elevationAvailable } from "../lib/route";
@@ -74,14 +73,17 @@ export function ResultCard(props: ResultCardProps) {
   // and the honest answer is a dash next to something to press.
   const pending = props.routeLoading && !props.routeFailed;
   /**
-   * The profile the chart draws and the stat counts, which must be one object.
+   * The profile the chart draws and the Climb stat counts, which must be one
+   * object so the picture and the number cannot disagree.
    *
-   * With round trip on, every other number on the card doubles; a profile
-   * showing only the outbound leg beside a doubled distance would be two
-   * different walks described at once.
+   * **The outbound leg, always** - even with round trip on, where the two stats
+   * beside it are doubled. A mirrored profile is the same hill drawn twice, and
+   * the shape of the walk is the thing worth looking at; the return is that
+   * shape backwards and nobody needs to see it to know it. The figure says so
+   * in a line rather than leaving the reader to infer it from a doubled
+   * distance.
    */
-  const shown =
-    route?.profile == null ? null : props.roundTrip ? mirrorProfile(route.profile) : route.profile;
+  const shown = route?.profile ?? null;
 
   const verdict = props.verdict ?? null;
   const reasons =
@@ -130,6 +132,7 @@ export function ResultCard(props: ResultCardProps) {
       {shown !== null && (
         <ElevationProfile
           profile={shown}
+          roundTrip={props.roundTrip}
           hoverMeters={props.hoverMeters}
           onHover={props.onHoverRoute}
         />

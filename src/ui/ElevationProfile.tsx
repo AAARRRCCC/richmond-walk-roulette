@@ -13,8 +13,10 @@ import { playTap } from "../lib/sound";
 import type { ElevationProfile as Profile } from "../lib/route";
 
 export type ElevationProfileProps = {
-  /** Already mirrored for a round trip by the caller — see `mirrorProfile`. */
+  /** The outbound leg, always — including on a round trip. */
   profile: Profile;
+  /** Only to say so on the figure; the profile itself does not change. */
+  roundTrip: boolean;
   hoverMeters: number | null;
   onHover: (meters: number | null) => void;
 };
@@ -157,6 +159,12 @@ export function ElevationProfile(props: ElevationProfileProps) {
           }}
         />
       </div>
+      {props.roundTrip && (
+        /* The two stats above this are doubled and this figure is not, so it
+           says which it is rather than letting the reader work it out from a
+           distance that does not match. */
+        <p className="profile-note">The way out. You come back the same way.</p>
+      )}
       <figcaption className="profile-readout">
         <span>
           <b>&#8593;{formatFeet(profile.ascentMeters)}</b> up

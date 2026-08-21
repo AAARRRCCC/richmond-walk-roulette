@@ -6,7 +6,6 @@ import {
   climbFrom,
   elevationAt,
   linePath,
-  mirrorProfile,
   plausibleProfile,
   profilePoints,
   resample,
@@ -148,24 +147,6 @@ test("areaPath: the path closes along the baseline", () => {
 test("linePath: no closing skirt", () => {
   const points = profilePoints(HILL, 300, 76, 20);
   assert.ok(!linePath(points).includes("Z"));
-});
-
-test("mirrorProfile: the out-and-back profile returns to its start", () => {
-  const mirrored = mirrorProfile(profileOf(RAMP));
-  assert.equal(mirrored.samples.length, 2 * RAMP.length - 1);
-  assert.equal(mirrored.samples[0], 20);
-  assert.equal(mirrored.samples[mirrored.samples.length - 1], 20);
-  assert.equal(mirrored.ascentMeters, 30);
-  assert.equal(mirrored.descentMeters, 30);
-});
-
-test("mirrorProfile: mirroring twice is not the same as mirroring once", () => {
-  // A component that mirrored from its own state rather than from the one-way
-  // profile would double the walk again on every toggle of the round-trip
-  // switch. This is what makes that a test failure rather than a bug report.
-  const once = mirrorProfile(profileOf(RAMP));
-  const twice = mirrorProfile(once);
-  assert.equal(twice.samples.length, 4 * RAMP.length - 3);
 });
 
 test("elevationAt: clamps past both ends", () => {

@@ -839,7 +839,9 @@ export function App() {
             ? ""
             : route.profile === null
               ? "climb not measured"
-              : `${formatFeet(state.roundTrip ? route.profile.ascentMeters + route.profile.descentMeters : route.profile.ascentMeters)} of climb`,
+              // The outbound leg, matching the stat and the chart. The card
+              // shows one profile and this says its number.
+              : `${formatFeet(route.profile.ascentMeters)} of climb`,
           // The only way an exclusion reaches a screen reader on a result. The
           // card shows it as a row; this is the same sentence, lowercased into
           // the middle of one.
@@ -913,7 +915,6 @@ export function App() {
         places={PLACES}
         inReachIds={pool.includedIds}
         hoverMeters={hoverMeters}
-        roundTrip={state.roundTrip}
         pickedId={active?.id ?? null}
         framingKey={state.framingKey}
         route={route}

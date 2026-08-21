@@ -158,6 +158,31 @@ Worth stating plainly, because it is the one place in this run where a threshold
 answer was to fix the measurement rather than move the line: **the threshold is still 1%.** It was
 never touched.
 
+### 3.6 The elevation chart shows the outbound leg, not the out-and-back
+
+**Overturned by the reader on 2026-08-21, after chunk 3 had landed.** This is the one entry in this
+document that is not a decision made in your absence — it is a decision made in your presence, and it
+is recorded here because it reverses something a spec argued for at length.
+
+`elevation-profile`'s decision 9 mirrored the profile on a round trip, so that the Climb stat, the
+figcaption, the `aria-label` and the scrubber all described the same out-and-back walk as the two
+stats above them. The reasoning was sound and the outcome was a symmetric hump whose second half
+carries no information: the return is the outbound backwards, every reader knows it, and half the
+pixels were spent restating it.
+
+The chart now draws the outbound leg whatever the switch says, and the figure carries one line —
+*"The way out. You come back the same way."* The four statements still agree; they agree about the
+outbound. The Distance and duration stats still describe the whole outing, and the note is what keeps
+that from reading as a contradiction.
+
+**What was deleted with it:** `mirrorProfile`, its two tests, and the `m > L -> 2L - m` fold in
+`syncHover` that only existed to keep the map dot on the route once the chart ran past the halfway
+point. Test count 191 -> 189, and the two that went were tests of a function that no longer exists.
+
+**What reverses it.** Restore `mirrorProfile` from git history, set `shown = roundTrip ?
+mirrorProfile(route.profile) : route.profile` in `ResultCard`, and drop the `roundTrip` prop from
+`ElevationProfile`. The spec keeps the original argument under a strikethrough.
+
 ---
 
 ## 4. Unticked boxes

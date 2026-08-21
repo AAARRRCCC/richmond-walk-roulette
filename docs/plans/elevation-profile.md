@@ -261,7 +261,27 @@ statements of the same walk, disagreeing on screen. That is exactly the failure 
 in decision 3 when it rejects the cheap elevation proxy — a number that disagrees with the chart
 drawn directly beneath it.
 
-The fix is not to pick one of the four. It is to make the profile describe the walk the rest of the
+**Overturned after implementation, by the reader, on 2026-08-21.** The chart now shows the **outbound
+leg only**, on a round trip as much as a one-way, and a line under the figure says so: *"The way out.
+You come back the same way."*
+
+The disagreement this decision was written to fix is real, and the fix stands - four statements of one
+walk must not contradict each other. What changed is which walk they describe. Mirroring made every
+number agree by describing the out-and-back, but it also drew the same hill twice: a symmetric hump
+whose second half carries no information, because the return is the outbound backwards and every
+reader already knows that. The shape of the climb is the thing worth looking at, and half the pixels
+were spent restating it.
+
+So the four statements are reconciled on the outbound instead. The Climb stat, the figcaption, the
+`aria-label` and the scrubber all describe the leg the chart draws; the Distance and duration stats
+above still describe the whole outing, and the note is what stops that being a contradiction rather
+than leaving the reader to infer it from a distance that does not match. `mirrorProfile` and the
+`m > L -> 2L - m` fold in `syncHover` are both deleted, along with the two tests that covered them.
+
+The original reasoning is kept below because it is still the argument for *why the numbers must
+agree*, which is the part that did not change.
+
+~~The fix is not to pick one of the four. It is to make the profile describe the walk the rest of the
 card describes. On a round trip the profile is **mirrored**: `mirrorProfile(p)` returns samples
 `[...p.samples, ...p.samples.slice(0, -1).reverse()]`, with `ascentMeters = p.ascentMeters +
 p.descentMeters` and `descentMeters` the same, `min`/`max` unchanged, `intervalMeters` unchanged.
@@ -329,8 +349,8 @@ export function plausibleProfile(samples: readonly number[]): boolean;
 
 export function classifyClimb(ascentMeters: number, distanceMeters: number): ClimbBand;
 
-/** The out-and-back profile. See decision 9: the card must not doubt itself. */
-export function mirrorProfile(profile: ElevationProfile): ElevationProfile;
+// mirrorProfile was here. Deleted when decision 9 was overturned: the chart
+// draws the outbound leg on a round trip too, and says so on the figure.
 
 /** Elevation at `meters` along the profile, clamped to both ends of `samples`. */
 export function elevationAt(profile: ElevationProfile, meters: number): number;
@@ -572,7 +592,8 @@ nothing, so the paragraph takes an id from `useId()` and every chip takes
 
 **`src/ui/ResultCard.tsx`** — modified.
 - The third `<Stat>` changes from `Terrain` (line 69) to `Climb`. Its value is
-  `formatFeet(shown.ascentMeters)` where `shown = roundTrip ? mirrorProfile(route.profile) : route.profile`
+  `formatFeet(shown.ascentMeters)` where `shown = route.profile` — the outbound leg, on a round trip
+  too (decision 9, overturned)
   — the *same* object the chart below it draws, so the stat cannot disagree with the picture
   (decision 9). `null` while pending → the existing skeleton; `"-"` when the profile is absent.
 - After `.result-stats` and before the warnings: `{route?.profile ? <ElevationProfile … /> : null}`,
@@ -628,7 +649,7 @@ nothing, so the paragraph takes an id from `useId()` and every chip takes
   `circle-color: "#ffffff"`, `circle-stroke-width: weighted(2)`, `circle-stroke-color: ACCENT`.
 - One more sync effect on `[route, hoverMeters, roundTrip]` calling
   `syncHover(map, route, hoverMeters, roundTrip)`, which uses `cumulativeMeters`/`pointAtMeters`,
-  folds `m > L` to `2L - m` on a round trip (decision 9), and sets `EMPTY` when `hoverMeters` is
+  sets `EMPTY` when `hoverMeters` is
   null. Its own effect, for the same reason the file's other effects are each their own.
 
 **`src/styles/app.css`** — modified. New block after the result section:
@@ -1009,10 +1030,10 @@ creep back.
    the PR; if over 1%, `SNAPSHOT_VERSION` is 3 with all 11 snapshots regenerated. `valhalla/README.md`
    records whether one build pass or two were needed, and the real SRTM download and disk figures.
 5. `WalkingRoute.profile` is `ElevationProfile | null`, and a `-500` sentinel array yields `null`.
-6. On a round trip the Climb stat, the figcaption totals, the `aria-label`'s distance and the
-   scrubber's maximum all describe the same out-and-back walk, and the chart's trace returns to its
-   starting height. Checkable by eye on one card: the Distance stat and the `aria-label` distance
-   read the same number.
+6. **Overturned — see decision 9.** The Climb stat, the figcaption totals, the `aria-label`'s
+   distance and the scrubber's maximum all describe the same **outbound** leg, on a round trip as
+   much as a one-way, and the figure carries the line that says which leg it is. Checkable by eye on
+   one card: the `aria-label` distance is half the Distance stat, and the note explains why.
 7. The filled area chart renders under the stats using only `--accent`, `--accent-wash`, `--line`,
    `--ink-2` and `--ink-3` — no new colour token, no charting dependency in `package.json`.
 8. A walk with under 20 m of real relief renders as a near-flat trace; a walk with 60 m fills the box.

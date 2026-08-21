@@ -986,6 +986,12 @@ code {
 .profile-cursor {
   stroke: var(--accent-soft);
 }
+/* Which leg the figure is showing, when that is not the leg the stats count. */
+.profile-note {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
 .profile-readout {
   display: flex;
   gap: 12px;

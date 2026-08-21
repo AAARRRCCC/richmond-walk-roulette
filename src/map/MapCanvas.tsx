@@ -89,7 +89,6 @@ export type MapCanvasProps = {
   route: WalkingRoute | null;
   /** Metres along the elevation profile the reader is scrubbing, or null. */
   hoverMeters: number | null;
-  roundTrip: boolean;
   pickingOrigin: boolean;
   /**
    * True while the reel is turning. `pickedId` then changes on every tick, and
@@ -419,8 +418,8 @@ export function MapCanvas(props: MapCanvasProps) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !readyRef.current) return;
-    syncHover(map, route, props.hoverMeters, props.roundTrip);
-  }, [route, props.hoverMeters, props.roundTrip]);
+    syncHover(map, route, props.hoverMeters);
+  }, [route, props.hoverMeters]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -669,16 +668,15 @@ function syncPlaces(
 /**
  * The dot that answers "where on the walk is this?".
  *
- * On a round trip the chart shows the walk there and back, so a distance past
- * the halfway point is a distance back along the same line: `m > L` folds to
- * `2L - m`. Without the fold the dot would run off the end of the route at
- * exactly the halfway mark and stay there for the whole return leg.
+ * No round-trip fold: the chart draws the outbound leg whatever the switch says,
+ * so a scrub position is always a distance along the line the map is drawing. An
+ * earlier version mirrored the profile and had to fold `m > L` back to `2L - m`
+ * here; the fold went when the mirror did.
  */
 function syncHover(
   map: MapLibreMap,
   route: WalkingRoute | null,
   hoverMeters: number | null,
-  roundTrip: boolean,
 ): void {
   if (route === null || hoverMeters === null) {
     setData(map, "route-hover", EMPTY);
@@ -686,9 +684,7 @@ function syncHover(
   }
 
   const cumulative = cumulativeMeters(route.coords);
-  const total = cumulative[cumulative.length - 1] ?? 0;
-  const along = roundTrip && hoverMeters > total ? 2 * total - hoverMeters : hoverMeters;
-  const at = pointAtMeters(route.coords, cumulative, along);
+  const at = pointAtMeters(route.coords, cumulative, hoverMeters);
   if (at === null) {
     setData(map, "route-hover", EMPTY);
     return;
