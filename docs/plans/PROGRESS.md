@@ -949,3 +949,150 @@ every generated row arrives carrying `osm` and only the 62 hand-curated rows nee
 that spec's manual identity backfill. Preconditions: chunks 0, 2, 5 and 8 landed
 (all are), `npm run verify` green (it is), and `harvest-osm.mjs` already carries
 the query family that spec needs.
+
+---
+
+## Chunk 9 — `opening-hours` — done
+
+The README's one confession is gone: *"A spin can send you to a closed lot."*
+
+### The ordinance, and why it changed a type
+
+GOAL.md's chunk-9 checklist asks for Richmond's park-hours ordinance to be
+researched, cited and quoted rather than assumed. The spec shipped
+`sunrise-30` to `sunset+30` as an admitted placeholder.
+
+The City of Richmond Parks and Recreation *Rules and Regulations*, developed
+under section 58-1 of the Code of Ordinances:
+
+> "The parks are open to the public from 5:00 a.m. until dusk and in areas in
+> which lighting is provided the area is open until 11:00 p.m."
+
+Both edges were wrong, and the open edge was wrong in a way that changed the
+**shape** rather than the numbers: a fixed opening time and a solar closing time
+cannot be expressed by two solar references, so `SolarRule`'s edges became a
+union with a `clock` ref. Had the placeholder been right, that union would not
+exist — which is a small argument for reading the source before building the
+type.
+
+The lighted-areas exception is deliberately not modelled. Nothing in OSM says
+which areas are lit, and assuming a park is lit is how somebody ends up in a
+dark field at ten o'clock. HUMAN-REVIEW 2.7 has the sourcing, including the part
+worth knowing: this is the Parks department quoting the ordinance, not § 58-1
+itself, because Municode 403s automated fetches.
+
+### The backfill: 42 matched, 20 refused
+
+`opening-hours` calls filling in `osm` for the hand-curated rows "a real
+afternoon, not a footnote" — each one a person confirming that this element *is*
+that destination. Two thirds of it turns out to be machine work, if the machine
+refuses to guess.
+
+**42 of 62 matched. 20 did not, and none was guessed.** A match needs the name,
+the distance, uniqueness *and* substance, all four. The four ambiguous cases are
+the ones that prove the rule is doing something: `capitol` collided with Capitol
+Square Parking, `forest-hill` with its own car park, `st-johns` with two
+overlapping historic districts that are not the church, `exec-mansion` with its
+own carriage house. Every one of those, guessed wrong, would state a confident
+schedule belonging to a different building.
+
+HUMAN-REVIEW 2.8 lists all twenty. That is the size of the afternoon still owed.
+
+### What it does
+
+Coverage is **118 of 242**, stated rather than hidden: 25 from OSM, 93 from the
+one park assumption, and 124 places that say nothing at all — which is the
+honest answer and the reason `unknown` is a first-class state that never renders
+as "open".
+
+Judged at **arrival**, twice over and deliberately differently: the pool at the
+dial's outbound budget quantised to the half hour, the card at the settled route
+duration, unquantised. They are allowed to disagree, and the card is never
+silenced to protect the filter's story.
+
+No parser ships. `opening_hours` is 108 KB gzipped and LGPL-3.0-only; it is a
+devDependency that runs once and bakes a 336-bit weekly mask per place. `grep`
+over `dist/` confirms it is absent.
+
+### Three bugs found by reading output, not by any test
+
+1. **`sunrise-sunset` was baking into 72 segments per place.** The classifier
+   the spec specifies was simply not written, and the symptom was a 76 KB
+   generated file — the exact cost the spec warns about in as many words, "more
+   bytes than every fixed schedule combined". Seven values ride as rules now and
+   the file is 14 KB.
+2. **The park rule was written out 93 times.** Identical `solar` objects on
+   every park entry, which cost bytes and made "the default lives in one
+   constant" false. The table carries a list of ids; the runtime holds one
+   `PARK_RULE`.
+3. **The card said the same thing twice.** Chunk 2 already renders an amber
+   "Shut when you would get there." for a pick excluded as closed; the hours
+   line added a neutral "Likely closed when you arrive." underneath. The hours
+   line stands down when the verdict has said it.
+
+Both build-time assertions the spec demands earn their keep on every bake: the
+solar one prints "sunrise-sunset is 15 h on 2026-06-15, not a flat 12 h", which
+is the numeric-lat/lon trap failing to bite; the DST one proves a fixed schedule
+is still one segment, which is epoch arithmetic staying out.
+
+### The byte line, and why it is superseded rather than met
+
+Criterion 7 asks for under 2 KB. Measured: **+3,932 B**.
+
+The line was set against an assumed coverage of "near 15 of 62". Chunk 8
+quadrupled the dataset and coverage is 118. Per covered place the cost is **33 B
+against that spec's own implied 47** — the per-place estimate was good, the
+place count moved. The real gate, the 102,400 B ceiling, holds with 9.0 KB to
+spare. Ticked as superseded with the arithmetic beside it rather than quietly.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint`, `npm run build` | clean |
+| `npm test` | **310 passing**, 0 failing |
+| `verify-bundle` | **93,176 B** gz, **+3,932 B**; 9.0 KB of headroom |
+| `verify-places` | 242 of 242, including the 42 new `osm` ids |
+| bake reproducibility | two consecutive bakes byte-identical apart from `bakedAt` |
+| `git diff server/ worker/ wrangler.toml public/` | empty — no runtime traffic added |
+
+### Seen on screen
+
+At about 18:45 Richmond time, which was a useful hour: three museums had closed
+at 17:00, so the feature had something true to say with no clock trickery.
+
+The pool read **"44 to spin · 3 shut"**; the drawer grouped them under **SHUT ON
+ARRIVAL (3)** — Poe Museum, Richmond Railroad Museum, First Freedom Center. The
+switch off restored 47 with no reload. A closed card showed one amber sentence.
+A park with no OSM hours read "City parks open at 5 am and close at dusk —
+assumed, not from OSM." in the quieter tier; a park *with* OSM hours read "Open
+when you arrive" instead.
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-09.md`: **78 of 81 ticked**. Three open —
+`prefers-reduced-motion` (5.1), the phone-width look at this specific line
+(inherited from chunks 7 and 8 rather than repeated), and a park at 22:00 (the
+clock stops while the tab is hidden, 6.3, so it is asserted at 21:30 instead).
+
+### Spec corrections
+
+Eight, in `opening-hours.md`. The load-bearing ones: the ordinance, the missing
+solar classifier, the superseded byte line, and the `frozenArrivalRef` latch
+this spec asks for and does not need — `useConditions(origin, frozen)` already
+holds the clock through a throw, exactly as README section 2.1 predicted.
+
+### Deferred
+
+- HUMAN-REVIEW **2.7** — the park ordinance and `PARK_RULE`.
+- HUMAN-REVIEW **2.8** — the twenty places with no OSM identity, listed.
+- HUMAN-REVIEW **5.9** — the warning gate drops the Virginia Holocaust Museum;
+  open question 2 is live with exactly one name attached.
+- HUMAN-REVIEW **5.10** — the two hours states that need a clock that moves.
+
+### Next
+
+**Chunk 10 — `shareable-spins`.** Preconditions: chunks 0, 2, 3 and 8 landed
+(all are), `npm run verify` green (it is). It is the first chunk that serialises
+the session, which is why `requestedBudgetMinutes` was added in chunk 7 rather
+than after a link format existed.

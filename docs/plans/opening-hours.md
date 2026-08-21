@@ -1,6 +1,6 @@
 # Hours and seasonality, without hand-maintenance
 
-**Status:** spec — not implemented
+**Status:** implemented in chunk 9. See *Corrections after implementation* at the end.
 **Slug:** opening-hours
 
 ## Depends on
@@ -889,3 +889,79 @@ a schedule.
    allowlist. A human should look at the first build's log and decide.
 3. **Annual rebuild owner.** `check:hours` will start failing 60 days before coverage runs out. Whose
    job is it, and does it happen on a calendar reminder or only when CI complains?
+
+## Corrections after implementation
+
+Written against the code that shipped. Eight things, worst first.
+
+1. **The park ordinance is 5:00 a.m. to dusk, and the placeholder was wrong in
+   both edges.** Open Question 1 asked somebody to read the city code. The City
+   of Richmond Parks and Recreation Rules and Regulations, developed under
+   section 58-1 of the Code of Ordinances, say: *"The parks are open to the
+   public from 5:00 a.m. until dusk and in areas in which lighting is provided
+   the area is open until 11:00 p.m."* So the open edge is a **fixed clock
+   time**, not `sunrise-30`, and the close is dusk rather than `sunset+30`.
+
+   That is not a numbers change, it is a **shape** change: `SolarRule` had to
+   grow a `clock` ref, because a rule with a fixed open and a solar close cannot
+   be expressed by two solar references. The lighted-areas exception is
+   deliberately not modelled — nothing in OSM says which areas are lit, and
+   assuming a park is lit is how somebody ends up in a dark field at 10 pm.
+
+2. **Solar values must be classified before baking, and the first
+   implementation forgot.** Step 7 of the algorithm is exactly right and was
+   simply not written; `sunrise-sunset` went through the mask baker and produced
+   **72 segments** for Battery Park alone. The generated file was 76 KB. This is
+   the failure the spec predicts in as many words — "more bytes than every fixed
+   schedule combined" — and it is invisible unless somebody reads the output.
+   Seven values ride as rules now and the file is 14 KB.
+
+3. **The 2 KB budget is superseded, and the arithmetic matters.** Criterion 7
+   was written against an assumed coverage of "near 15 of 62". Actual coverage
+   is **118 of 242** — chunk 8 quadrupled the dataset and the OSM hit rate is
+   what it is. Measured growth is **+3,932 B gzipped**, which is 33 B per
+   covered place against this spec's own implied 47 (700 B for ~15). The
+   per-place estimate was good; the place count moved. The real gate — the
+   102,400 B ceiling — holds with 9.0 KB to spare.
+
+4. **The park rule is one constant, and it took a second pass to become one.**
+   The table first carried an identical `solar` object on all 93 park entries.
+   That is 93 copies of the thing the checklist calls "one constant", and it
+   cost bytes for nothing. The table carries `parks: string[]` and the runtime
+   holds one `PARK_RULE`.
+
+5. **The card said the same thing twice.** `pool-reasoning` already renders an
+   amber "Shut when you would get there." for a pick excluded as closed. Adding
+   a neutral "Likely closed when you arrive." underneath it is the card telling
+   the reader twice. The hours line stands down when the verdict has said it,
+   which leaves it the half the verdict cannot say: a closing time coming up,
+   the park assumption, a quoted comment, data past its window.
+
+6. **`build-hours.mjs` does not fetch, and `harvest-hours.mjs` is new.** README
+   section 2.6 moved the Overpass call into the shared harvester, which deletes
+   this spec's keep-the-previous-table-on-failure machinery outright. The hours
+   family is also its own script, because it is the one family that changes when
+   `place.osm` does — every backfilled identity is an element nobody has asked
+   about yet, and re-running all six families to get it would be rude.
+
+7. **`osmId` is `osm`** (README 2.6), and the backfill is 42 of 62 rather than
+   all 62: 4 ambiguous and 16 with no candidate are left without one. See
+   HUMAN-REVIEW 2.8 for the list. The spec is right that this is an afternoon's
+   human work; what it could not know is that two thirds of it can be done by a
+   machine that refuses to guess.
+
+8. **The `frozenArrivalRef` latch is not needed.** `useConditions(origin,
+   frozen)` already holds the clock through a throw, so quantising to the slot
+   is the only stabiliser this spec needs. README section 2.1 predicted that and
+   it held.
+
+Two more worth knowing:
+
+- **`dawn` and `dusk` are separate refs from `sunrise` and `sunset`.** Roughly
+  half an hour apart at this latitude, which is the difference between a park
+  being open and shut, and "dusk" is the word the ordinance itself uses. Real
+  Richmond values use `dawn-dusk` as well as `sunrise-sunset`.
+- **Open question 2 is live.** The warning gate drops exactly one place — the
+  Virginia Holocaust Museum — and its value looks well-formed to a human. That
+  is the "drops too much" case the question anticipates, now with a name.
+  HUMAN-REVIEW 5.9.

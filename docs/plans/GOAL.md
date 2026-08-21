@@ -562,11 +562,11 @@ and it is designed so that person can arrive cold, with no memory of the run, an
 
 ### Run this checklist to the end before declaring the work finished
 
-**Where the run is: chunk 8 landed, on 2026-08-21.**
-`npm run verify` green, working tree clean. Bundle 89,244 B gzipped against the 102,400 B ceiling;
-294 tests; 242 places. Each ticked chunk names its commit and its acceptance tally — every open box
+**Where the run is: chunk 9 landed, on 2026-08-21.**
+`npm run verify` green, working tree clean. Bundle 93,176 B gzipped against the 102,400 B ceiling;
+310 tests; 242 places; hours for 118 of them. Each ticked chunk names its commit and its acceptance tally — every open box
 in those tallies is recorded in `HUMAN-REVIEW.md` §4 and §5, and none of them is a `[!]`.
-`PROGRESS.md` carries a report per chunk; the next one to start is chunk 9.
+`PROGRESS.md` carries a report per chunk; the next one to start is chunk 10.
 
 The walking speed is **settled at 3.69** with a 673-route measurement (`HUMAN-REVIEW.md` §2.5), and
 the premise that chunk 8 would recut the snapshots was wrong — it recut none, because a snapshot
@@ -582,7 +582,7 @@ holds contours and knows nothing about places (§3.9).
 - [x] Chunk 6 — geolocate — `e575427`, 65/71
 - [x] Chunk 7 — weather-filters — `e62f166`, 81/83
 - [x] Chunk 8 — places-expansion — `0817b7b`, 84/85
-- [ ] Chunk 9 — opening-hours
+- [x] Chunk 9 — opening-hours — `26f90e3`, 78/81
 - [ ] Chunk 10 — shareable-spins
 - [ ] Chunk 11 — multiplayer-links + meet-in-the-middle, one landing
 - [ ] `docs/plans/HUMAN-REVIEW.md` complete

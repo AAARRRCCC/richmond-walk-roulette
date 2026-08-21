@@ -248,6 +248,108 @@ comment in `places.ts` to the closing bracket.
 **What else would have to change.** Nothing structural. `HAND_CURATED_COUNT`
 stays 62 whatever happens to the suffix, which is what it is for.
 
+### 2.7 Richmond parks open at 5 a.m. and close at dusk, and the plan's guess was wrong
+
+**The question.** `opening-hours` applies one category assumption — a public
+park with no OSM hours is assumed to close at dusk — and ships it with the word
+"assumed" doing a lot of work. Its own Open Question 1 says somebody must read
+the city code before that copy ships, because the numbers in the spec
+(`sunrise-30` to `sunset+30`) are placeholders.
+
+**What the rules actually say**, researched rather than assumed:
+
+> "The parks are open to the public from 5:00 a.m. until dusk and in areas in
+> which lighting is provided the area is open until 11:00 p.m."
+
+— City of Richmond Parks and Recreation *Rules and Regulations*, which state
+they are "developed in accordance with Section 58-1 of the City of Richmond Code
+of Ordinances" (<https://www.cityofrichmond.net/DocumentCenter/View/341>). The
+city's own facilities listing corroborates the shape with "Sunrise to Sunset"
+(<https://www.rva.gov/parks-recreation/about-department>).
+
+**Sourcing, stated plainly.** This is the Parks department's regulations quoting
+the ordinance, not the ordinance text itself. Municode returns 403 to automated
+fetches and the elaws mirror timed out, so § 58-1 was not read directly. Two
+independent city sources agree on the substance; nobody has read the primary
+text. If that matters, it is fifteen minutes in a library terminal.
+
+**The branch taken.** `PARK_RULE` in `src/lib/hours.ts`:
+
+```ts
+open:  { ref: "clock",  offsetMinutes: 5 * 60 }   // 5:00 a.m., fixed
+close: { ref: "dusk",   offsetMinutes: 0 }        // civil dusk
+```
+
+**Why it is the conservative one.** It is what the city says, and where it had
+to choose it chose the tighter reading: "dusk" resolves to **civil dusk**, the
+same threshold `daylight-budget` clamps the dial to, so the two features cannot
+disagree about when the light goes. The lighted-areas exception — which would
+keep some parks open until 11 p.m. — is deliberately **not** modelled, because
+nothing in OSM says which areas are lit and assuming a park is lit is how
+somebody ends up in a dark field at ten o'clock.
+
+**What reverses it.** One object, `PARK_RULE` in `src/lib/hours.ts`, and one
+sentence beside it, `PARK_NOTE`. Nothing else reads either.
+
+**What else would have to change — and the part worth noticing.** The
+placeholder was wrong in a way that changed the *shape*, not just the numbers.
+A fixed opening time and a solar closing time cannot be expressed by two solar
+references, so `SolarRule`'s edges became a union with a `clock` ref. Had the
+placeholder been right, that union would not exist — which is a small argument
+for reading the source before building the type.
+
+It also took a second pass for "one constant" to be true. The table first
+carried an identical copy of this rule on all 93 park entries.
+
+### 2.8 Twenty places still have no OpenStreetMap identity, and they are listed
+
+**The question.** `opening-hours` needs `place.osm` to join a row to a schedule,
+and calls filling it in for the hand-curated rows "a real afternoon, not a
+footnote" of human confirmation — each one a person deciding that this element
+*is* that destination, because names differ and there are hours-carrying POIs
+within 120 m of several entries that a proximity match would happily steal.
+
+**The branch taken.** `scripts/backfill-osm.mjs` did the unambiguous two thirds
+and refused the rest. **42 of 62 matched. 20 did not, and none was guessed.**
+
+A match requires all four of: the name normalises equal (or one contains the
+other and the shorter is at least six characters); within 250 m; **the only**
+candidate meeting those; and carrying a tag that makes it the kind of thing a
+destination is. Candidates are deduped by element id first — the same museum
+appears in two harvest files, and counting it twice turned clean matches into
+false ambiguities on the first run.
+
+**The four ambiguous, each with what it collided with:**
+
+| Place | Candidates |
+| --- | --- |
+| `capitol` | Capitol Square, Capitol Square Parking, One Capitol Square |
+| `forest-hill` | Forest Hill Park, Forest Hill Park Parking |
+| `st-johns` | two overlapping "St John's Church … Historic District" ways, neither of them the church |
+| `exec-mansion` | Executive Mansion, its Cottage, its Carriage House |
+
+Every one of those is a case where the wrong choice gains somebody else's hours
+— a car park's, or a historic district's.
+
+**The sixteen with no candidate at all:** `vmfa`, `canal-walk`, `manch-flood`,
+`tpott`, `shockoe`, `monument`, `vcu-compass`, `17th-mkt`, `fan`,
+`birdhouse-market`, `sotj-market`, `maggie-walker`, `branch`, `pyramid`,
+`bojangles`, `vcu-commons`. Some are neighbourhoods rather than features
+(`fan`, `shockoe`, `scotts-add`); some are almost certainly in OSM under a name
+the matcher could not reach (`vmfa` is the Virginia Museum of Fine Arts).
+
+**Why it is the conservative one.** A wrong identity is worse than a missing
+one in a way that compounds: it does not fail visibly, it makes the app state a
+*confident schedule belonging to a different building*. A missing one just
+means that place says nothing, which is what 124 other places already do.
+
+**What reverses it.** Add the id by hand to the row in `src/data/places.ts`,
+then `npm run harvest:hours && npm run build:hours`. The report re-runs in
+seconds and names exactly what is still owed.
+
+**The size of the afternoon still owed: 20 rows.** That is the number the
+checklist asks to be recorded.
+
 ---
 
 ## 3. Plan-level decisions
@@ -425,6 +527,24 @@ but nobody needs to treat it as a last chance.
 
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
+
+**Chunk 9 — three boxes, and one criterion ticked as superseded.** 78 of 81.
+
+- [ ] *It was seen with `prefers-reduced-motion` on.* Section 5.1. Nothing here
+  animates.
+- [ ] *It was seen at a phone viewport width.* Inherited rather than repeated:
+  this chunk adds a fourth entry to a `.switch-row` verified at 386 px and
+  387 px in chunks 7 and 8, and a `ResultLine` whose wrapping was verified
+  there too. Nobody looked at this specific line at that width.
+- [ ] *`opening-hours` criterion 9 — a park at 22:00 in June.* Section 5.10.
+  The clock stops while the tab is hidden; the rule is asserted at 21:30
+  instead and the assumed sentence was seen at a real hour.
+
+Criterion 7's "less than 2 KB" is ticked as **superseded**, with the arithmetic:
+the line was set against an assumed 15 covered places and there are 118, so the
+measured 3,932 B is 33 B per place against that spec's own implied 47.
+Criterion 15's minute-by-minute observation is ticked on its mechanism
+(`quantiseToSlot`) for the same hidden-clock reason.
 
 **Chunk 8 — one box.** 84 of 85 ticked.
 
@@ -624,6 +744,43 @@ document is hidden (6.3), and a tab driven by automation is hidden. Somebody sho
 open through a rain onset and confirm the contour steps in once rather than five times, and that no
 route warm-up restarts more than once in that window.
 
+### 5.9 The warning gate drops the Virginia Holocaust Museum, and open question 2 is live
+
+`build-hours.mjs` refuses any value the parser warns about, which is the gate
+that stops a typo like `Su 01:00-16:00` — a museum open at one in the morning —
+from shipping as fact. It currently drops exactly one place:
+
+```
+Mo-Fr 09:00-17:00, Sa-Su 11:00-17:00, Nov We[4] 09:00-13:00; Nov Th[4] off,
+Jan 01 off, easter off, Dec 25 off, Dec 31 off
+```
+
+That reads perfectly sensible to a human — weekday hours, weekend hours, a half
+day before Thanksgiving, and the holidays off. The parser's complaint is about
+how the rule will be *evaluated*, not that it is nonsense.
+
+This is the "does the gate drop too much?" case open question 2 anticipates,
+now with exactly one name attached. Somebody should read that warning in full
+and decide between three options: accept it with `--accept-warnings`, gate only
+on a severity allowlist, or fix the value upstream in OSM, which helps everyone.
+The cost of doing nothing is that one museum says nothing about its hours.
+
+### 5.10 The hours states that need a clock that moves
+
+Two acceptance criteria could not be watched, both for the same reason as
+chunk 7's: the clock deliberately stops while the document is hidden (6.3), and
+a tab under automation is hidden.
+
+- **A park at 22:00 in June**, shut by the assumption and excluded from the pool.
+  The rule is asserted at 21:30 against a fixed clock instead, and the assumed
+  sentence was seen on screen at a real hour.
+- **A spin surviving a half-hour boundary crossed mid-throw.** `quantiseToSlot`
+  is asserted stable across 29 one-minute advances and moving at the boundary,
+  which is the mechanism the criterion is really about.
+
+Both want somebody with a real browser and either patience or
+`walkRouletteDev.clockOffset`.
+
 ## 6. Numbers
 
 Final measurements, replacing `docs/plans/README.md` §5's estimates.
@@ -671,6 +828,14 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Far-edge pool at 100 min | **38** candidates | Chunk 8; the band this feature exists for |
 | Harvested OSM elements | 845 in 277 KB, six queries | Chunk 8, committed to `data/osm/` |
 | Snapshot regeneration for chunk 8 | **zero** | Snapshots hold contours, not places - see 3.9 |
+| App JS after chunk 9 | 93,176 B (91.0 KiB) | +3,932 B; 9.0 KB of headroom left |
+| Tests after chunk 9 | 310 passing | |
+| Hours coverage | **118 of 242** places | Chunk 9: 25 from OSM, 93 from the park fallback |
+| Elements carrying `opening_hours` | 26 of 222 identified | Chunk 9, one batched Overpass lookup |
+| Hours cost per covered place | 33 B gzipped | Chunk 9, against that spec's implied 47 |
+| Generated hours table | 14,095 B raw, 3,239 B standalone gz | Chunk 9, after the solar fix cut it from 76 KB |
+| Hand-curated rows with an `osm` id | **42 of 62** | Chunk 9; 20 left unknown - see 2.8 |
+| Hours window | 2026-01-01 to 2027-12-31 | 496 days left at bake time |
 | `formatToParts` per 26-position scrub | 150 → **0** | Chunk 5 — see 6.3 |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
