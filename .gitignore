@@ -31,3 +31,5 @@ valhalla/data
 
 # Dev server log
 dev.log
+dev-lan.log
+dev-lan.err.log
