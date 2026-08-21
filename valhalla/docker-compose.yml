@@ -1,11 +1,17 @@
 # Self-hosted Valhalla for Walk Roulette. See README.md in this directory.
 #
-# First run builds the routing graph from every .osm.pbf in ./data (put the
-# Virginia extract there first), then serves HTTP on :8002. Subsequent runs
-# reuse the built tiles; a changed PBF triggers a rebuild automatically.
+# Driven by ./scripts, which put a clipped Richmond extract in ./data and then
+# correct the isochrone limits this image ships with. Running it by hand works
+# too; it just leaves those limits too low for the dial's ladder.
+#
+# First run builds the routing graph from every .osm.pbf in ./data, then
+# serves HTTP on :8002. Later runs reuse the tiles; a changed PBF rebuilds.
 services:
   valhalla:
-    image: ghcr.io/valhalla/valhalla-scripted:latest
+    # Pinned. `latest` means the engine can change under a graph that did not,
+    # and the app records a version in its health check that would then be a
+    # different thing from one deploy to the next.
+    image: ghcr.io/valhalla/valhalla-scripted:3.8.3
     container_name: walk-roulette-valhalla
     restart: unless-stopped
     ports:
@@ -14,6 +20,8 @@ services:
       # Remove the 127.0.0.1 prefix only if something else fronts it.
       - "127.0.0.1:8002:8002"
     volumes:
+      # Only the clipped extract lives here. The state extract is kept in
+      # ../extracts precisely so this build never sees it.
       - ./data:/custom_files
     environment:
       # The app never uses time-dependent or cross-border routing, and

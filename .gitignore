@@ -6,6 +6,7 @@ dist-ssr
 # of MB, rebuilt from valhalla/README.md. Only docs/compose/config recipes
 # are tracked.
 valhalla/data
+valhalla/extracts
 *.local
 
 # Environment files — never commit. .env.example IS allowed (no secrets).

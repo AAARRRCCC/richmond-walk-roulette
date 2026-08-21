@@ -11,17 +11,23 @@ the built graph. Everything else here is tracked.
 
 ## Run it
 
-Four scripts, in order. They are plain Linux shell and read their settings
-from `richmond.env`, so the machine you develop on and the machine you deploy
-to are set up by the same commands.
+Three scripts, in order. Plain Linux shell reading one settings file, so the
+machine you develop on and the machine you deploy to are set up by the same
+commands.
 
 ```bash
 cd valhalla
-./scripts/install-engine.sh   # once per machine: the engine, plus osmium
+./scripts/install-engine.sh   # once per machine
 ./scripts/clip-extract.sh     # fetches Virginia once, cuts Richmond out of it
-./scripts/build-graph.sh      # writes the config, builds the graph
-./scripts/run-engine.sh       # foreground, Ctrl-C to stop
+./scripts/build-graph.sh      # builds the graph, fixes the limits, starts it
 ```
+
+Then `./scripts/run-engine.sh [start|logs|stop]` day to day.
+
+Valhalla is not packaged for Debian or Ubuntu, so it runs as the project's own
+container image. That means Docker Engine, which is what a Linux server runs -
+Docker Desktop is a Windows and macOS product and is not involved. Everything
+else the scripts need (`osmium-tool`, `curl`, `python3`) is in the archives.
 
 `clip-extract.sh` is why this is quick. The Virginia extract is about 900 MB
 and nearly none of it is within walking distance of Richmond; clipped to a box
@@ -29,13 +35,15 @@ reaching roughly 15 km from downtown it is a fraction of that, and the graph
 builds in about a minute instead of fifteen. The dial tops out at a 100 minute
 walk, about 6.2 km at the pace the proxy pins, so there is graph well past
 anywhere a walk could reach. Widen the box in `richmond.env` if the preset
-origins ever move.
+origins ever move. The state extract is deliberately kept in `./extracts`
+rather than `./data`: the engine builds from every `.osm.pbf` in the directory
+it is given, so leaving it beside the clipped one would build the whole state.
 
-`build-graph.sh` also writes the two settings that are easy to get wrong: the
-isochrone limits the ladder needs (100 contours, 100 minutes), and a listen
-address on loopback. The engine takes a raw location and a costing model with
-no bounds check and no rate limit, so the only thing that should reach it is
-the app's proxy.
+`build-graph.sh` also corrects the setting that is easiest to get wrong and
+silent when it is: the image ships isochrone limits far below what this app's
+ladder asks for - 96 contours in one query, the longest 100 minutes - and
+below them the warm-up is rejected outright rather than answered slowly. The
+only symptom in the app is a dial that never warms.
 
 Then point the app at it:
 
@@ -51,53 +59,32 @@ in WSL2 instead - they are the same scripts the server runs, so nothing here
 is a Windows-only detour.
 
 ```powershell
-wsl --install -d Ubuntu     # once, may want a reboot
+wsl --install -d Ubuntu
 ```
 
 Then open Ubuntu and work from the checkout, which WSL sees under `/mnt/c/`.
 A service bound to loopback inside WSL2 is reachable from Windows on
 `localhost`, so `.env.local` still says `http://localhost:8002`.
 
+Adding yourself to the `docker` group only takes effect at the next login. On
+WSL that means `wsl --shutdown` from PowerShell, then reopening Ubuntu.
+
 The pip-installed `pyvalhalla` wheel ships `valhalla_service.exe`, but only
 its one-shot mode works; the HTTP loop (prime_server) is compiled out.
 Verified 2026-07-28: it prints usage and exits when given a concurrency
 argument. That is why WSL rather than a native build.
 
-## As a service
+## Keeping it running
 
-`walk-roulette-valhalla.service` runs the engine under systemd, restarts it on
-failure, and confines it to reading its own tile directory.
+No systemd unit here on purpose. The compose file says
+`restart: unless-stopped` and `install-engine.sh` enables `docker` at boot, so
+the engine comes back after a crash or a reboot on its own. A unit wrapping
+`docker compose up` would only be a second thing to keep in sync with the
+first.
 
-```bash
-sudo cp walk-roulette-valhalla.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now walk-roulette-valhalla
-journalctl -u walk-roulette-valhalla -f
-```
-
-Edit `User` and the two paths in the unit if the checkout is not in `/srv`.
-Nothing else in it is machine-specific.
-
-## Or the container
-
-`docker-compose.yml` is still here and reads the same `./data`. On a Linux
-server that is Docker Engine plus the compose plugin - Docker Desktop is a
-Windows and macOS product and is not involved. It is the shorter path if the
-box already runs containers; the scripts above are the shorter path if it does
-not.
-
-Sanity check the engine, then the app's own view of it:
-
-```bash
-curl 'http://localhost:8002/status'
-curl 'http://localhost:5173/api/health'
-```
-
-The second goes through the proxy and answers
-`{ok, upstreamMs, version, tileset_last_modified}` - no URL, no secrets - so
-it is also what to point an uptime check at once this is deployed. `ok: false`
-with a 502 means the engine is configured and not answering; a 503 means
-`VALHALLA_URL` was never set.
+If the engine ever does run as a bare binary rather than a container, that is
+when it needs a unit - and the config the scripts write already carries the
+listen address and tile paths it would need.
 
 ## Where to run it
 

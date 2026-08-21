@@ -10,7 +10,16 @@ set -euo pipefail
 # shellcheck source=../richmond.env
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/richmond.env"
 
-mkdir -p "${VALHALLA_DATA_DIR}"
+mkdir -p "${VALHALLA_DATA_DIR}" "${VALHALLA_EXTRACTS_DIR}"
+
+# An earlier layout kept the state extract in the data directory, where the
+# engine would find it and build the whole state. Move it rather than
+# re-downloading 900 MB.
+STRAY="${VALHALLA_DATA_DIR}/$(basename "${STATE_EXTRACT}")"
+if [ -f "${STRAY}" ] && [ ! -f "${STATE_EXTRACT}" ]; then
+  echo "Moving the state extract out of the data directory..."
+  mv "${STRAY}" "${STATE_EXTRACT}"
+fi
 
 if [ ! -f "${STATE_EXTRACT}" ]; then
   echo "Fetching the Virginia extract (about 900 MB, once)..."
@@ -19,6 +28,9 @@ if [ ! -f "${STATE_EXTRACT}" ]; then
 fi
 
 echo "Clipping to ${RICHMOND_BBOX_LEFT},${RICHMOND_BBOX_BOTTOM},${RICHMOND_BBOX_RIGHT},${RICHMOND_BBOX_TOP}..."
+# complete_ways keeps every way that touches the box whole, including the
+# nodes outside it. A way chopped at the boundary is a road the router thinks
+# ends in the middle of nowhere.
 osmium extract \
   --bbox "${RICHMOND_BBOX_LEFT},${RICHMOND_BBOX_BOTTOM},${RICHMOND_BBOX_RIGHT},${RICHMOND_BBOX_TOP}" \
   --strategy complete_ways \
@@ -27,3 +39,4 @@ osmium extract \
   "${STATE_EXTRACT}"
 
 echo "Wrote ${RICHMOND_EXTRACT} ($(du -h "${RICHMOND_EXTRACT}" | cut -f1))."
+echo "Next: ./scripts/build-graph.sh"

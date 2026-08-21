@@ -1,55 +1,61 @@
 #!/usr/bin/env bash
-# Writes the config and builds the routing graph from the clipped extract.
+# Builds the routing graph, then corrects the two limits the app depends on
+# and that nothing else will tell you are wrong.
 #
-# Safe to re-run: it rebuilds from whatever extract is on disk. Re-run it
-# after clip-extract.sh has fetched a newer one.
+# The image builds tiles on first start from the .osm.pbf in the mounted data
+# directory, and writes its config there. The config it writes caps isochrones
+# far below what this app asks for, so the sequence is: start, wait for the
+# config, correct it, restart.
+#
+# Safe to re-run. A changed extract triggers a rebuild; an unchanged one does
+# not, and the limits are left alone once they are already right.
 set -euo pipefail
 
+VALHALLA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../richmond.env
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/richmond.env"
+source "${VALHALLA_DIR}/richmond.env"
 
 if [ ! -f "${RICHMOND_EXTRACT}" ]; then
   echo "No extract at ${RICHMOND_EXTRACT}. Run ./scripts/clip-extract.sh first." >&2
   exit 1
 fi
 
-mkdir -p "${VALHALLA_TILE_DIR}"
+cd "${VALHALLA_DIR}"
 
-valhalla_build_config \
-  --mjolnir-tile-dir "${VALHALLA_TILE_DIR}" \
-  --mjolnir-tile-extract "${VALHALLA_DATA_DIR}/tiles.tar" \
-  --mjolnir-timezone "" \
-  --mjolnir-admin "" \
-  > "${VALHALLA_CONFIG}"
+echo "Starting the engine. The first run builds the graph - about a minute for"
+echo "a clipped extract - and later runs reuse it."
+docker compose up -d
 
-# The generated config caps isochrones well below what the dial needs. The
-# ladder is 96 contours in one query and the longest is 100 minutes; leave
-# these lower and the app's warm-up is rejected outright.
-python3 - "${VALHALLA_CONFIG}" "${VALHALLA_MAX_CONTOURS}" "${VALHALLA_MAX_TIME_CONTOUR}"   "${VALHALLA_HOST}" "${VALHALLA_PORT}" <<'PY'
-import json, sys
+printf 'Waiting for the config to be written'
+for _ in $(seq 1 300); do
+  [ -f "${VALHALLA_CONFIG}" ] && break
+  printf '.'
+  sleep 2
+done
+printf '\n'
 
-path, max_contours, max_time = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
-host, port = sys.argv[4], int(sys.argv[5])
-with open(path) as handle:
-    config = json.load(handle)
+if [ ! -f "${VALHALLA_CONFIG}" ]; then
+  echo "No config after ten minutes. Check: docker compose logs -f" >&2
+  exit 1
+fi
 
-limits = config.setdefault("service_limits", {}).setdefault("isochrone", {})
-limits["max_contours"] = max_contours
-limits["max_time_contour"] = max_time
+python3 "${VALHALLA_DIR}/scripts/set-limits.py" \
+  "${VALHALLA_CONFIG}" "${VALHALLA_MAX_CONTOURS}" "${VALHALLA_MAX_TIME_CONTOUR}"
 
-# The generated config listens on every interface. The engine takes a raw
-# location and a costing model with no rate limit and no bounds check, so the
-# only thing that should be able to reach it is the app's proxy.
-listen = config.setdefault("httpd", {}).setdefault("service", {})
-listen["listen"] = f"tcp://{host}:{port}"
+docker compose restart
 
-with open(path, "w") as handle:
-    json.dump(config, handle, indent=2)
-print(f"isochrone limits set to {max_contours} contours, {max_time} minutes")
-print(f"listening on {host}:{port}")
-PY
+echo "Waiting for the engine to answer..."
+for _ in $(seq 1 60); do
+  if curl -fsS "http://${VALHALLA_HOST}:${VALHALLA_PORT}/status" >/dev/null 2>&1; then
+    curl -fsS "http://${VALHALLA_HOST}:${VALHALLA_PORT}/status"
+    printf '\n\n'
+    echo "Serving on ${VALHALLA_HOST}:${VALHALLA_PORT}. Point the app at it:"
+    echo "  in .env.local, VALHALLA_URL=http://localhost:${VALHALLA_PORT}"
+    echo "                 VALHALLA_MAX_CONTOURS=${VALHALLA_MAX_CONTOURS}"
+    exit 0
+  fi
+  sleep 2
+done
 
-echo "Building tiles (about a minute for a clipped extract)..."
-valhalla_build_tiles -c "${VALHALLA_CONFIG}" "${RICHMOND_EXTRACT}"
-
-echo "Graph built. Next: ./scripts/run-engine.sh, or install the systemd unit."
+echo "The engine did not answer. Check: docker compose logs -f" >&2
+exit 1
