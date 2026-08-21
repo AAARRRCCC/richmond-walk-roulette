@@ -1,9 +1,12 @@
 import { ArrowSquareOutIcon, ShuffleIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
 import { REASON_COPY, REASON_ORDER, type PlaceVerdict } from "../app/eligibility";
+import { mirrorProfile } from "../lib/elevation";
+import { elevationAvailable } from "../lib/route";
+import { ElevationProfile } from "./ElevationProfile";
 import type { Place } from "../data/places";
 import type { LngLat } from "../lib/geometry";
 import type { WalkingRoute } from "../lib/route";
-import { formatMiles, formatMinutes } from "../lib/format";
+import { formatFeet, formatMiles, formatMinutes } from "../lib/format";
 
 /**
  * One small grey line under the stats.
@@ -48,6 +51,9 @@ export type ResultCardProps = {
    * is clickable precisely so the reader can ask, and this is the answer.
    */
   verdict?: PlaceVerdict | null;
+  /** Metres along the profile the reader is scrubbing, or null. */
+  hoverMeters: number | null;
+  onHoverRoute: (meters: number | null) => void;
   onSpinAgain: () => void;
   onRetryRoute: () => void;
   onDismiss: () => void;
@@ -63,6 +69,16 @@ export function ResultCard(props: ResultCardProps) {
   // A skeleton means "still coming". Once the attempts are spent it is a lie,
   // and the honest answer is a dash next to something to press.
   const pending = props.routeLoading && !props.routeFailed;
+  /**
+   * The profile the chart draws and the stat counts, which must be one object.
+   *
+   * With round trip on, every other number on the card doubles; a profile
+   * showing only the outbound leg beside a doubled distance would be two
+   * different walks described at once.
+   */
+  const shown =
+    route?.profile == null ? null : props.roundTrip ? mirrorProfile(route.profile) : route.profile;
+
   const verdict = props.verdict ?? null;
   const reasons =
     verdict === null || verdict.included
@@ -105,8 +121,25 @@ export function ResultCard(props: ResultCardProps) {
                 : "-"
           }
         />
-        <Stat label="Terrain" value={place.terrain === "hilly" ? "Hilly" : "Flat"} />
+        <Stat
+          label="Climb"
+          value={pending ? null : shown === null ? "-" : formatFeet(shown.ascentMeters)}
+        />
       </dl>
+
+      {shown !== null && (
+        <ElevationProfile
+          profile={shown}
+          hoverMeters={props.hoverMeters}
+          onHover={props.onHoverRoute}
+        />
+      )}
+      {!pending && route !== null && shown === null && elevationAvailable() === false && (
+        /* Never an empty gap. A route with no profile from an engine that has
+           never produced one is a fact about the engine, and saying so beats a
+           flat line drawn from nothing. */
+        <p className="profile-empty field-label">No elevation data from this engine.</p>
+      )}
 
       {props.lines.length > 0 && (
         <div className="result-lines">

@@ -21,7 +21,7 @@
  * concurrency helper, and two modules called `pool` one directory apart is a
  * trap somebody falls into exactly once.
  */
-import type { Place, Terrain, Vibe } from "../data/places.ts";
+import type { Place, Vibe } from "../data/places.ts";
 import { contains, type MultiPolygon } from "../lib/geometry.ts";
 import { MAX_MINUTES, type Reach } from "../lib/isochrone.ts";
 import { budgetStep, clampBudget } from "./session.ts";
@@ -45,7 +45,7 @@ import { budgetStep, clampBudget } from "./session.ts";
 export type ExclusionReason =
   | "out-of-reach" // outside the outermost contour at this budget
   | "inside-floor" // closer than the range's lower end
-  | "wrong-terrain" // the terrain chip; becomes the climb band under elevation-profile
+  | "wrong-terrain" // the climb band, measured per route rather than tagged per place
   | "no-matching-vibe" // the vibe chips
   | "kind" // owned by places-expansion: the tier/kind chip
   | "not-far-edge" // edgeOnly, and it sits inside the next contour in
@@ -99,10 +99,13 @@ export const REASON_COPY = {
     sentence: "Closer than the range's lower end.",
     heading: "Too close",
   },
+  // Renamed in copy only when the climb filter replaced the terrain chip. One
+  // control, one reason code, one clause - a second member would have made the
+  // same filter answer to two names.
   "wrong-terrain": {
-    clause: (n: number) => `${n} wrong terrain`,
-    sentence: "Not the terrain you asked for.",
-    heading: "Wrong terrain",
+    clause: (n: number) => `${n} wrong climb`,
+    sentence: "Not the climb you asked for.",
+    heading: "Wrong climb",
   },
   "no-matching-vibe": {
     clause: (n: number) => `${n} no match`,
@@ -158,7 +161,7 @@ export type PlaceVerdict =
  * the v0.5 plan, and `signature.test.ts` exists to catch it.
  *
  * `clear` is a plain callback, not an `Action`. Every component in this repo
- * takes `onTerrain`/`onToggleVibe`/`onPick` and never sees the reducer's
+ * takes `onClimb`/`onToggleVibe`/`onPick` and never sees the reducer's
  * vocabulary; App closes over `dispatch` when it builds the rule, and this
  * module stays free of `session.ts`'s action type.
  */
@@ -198,12 +201,6 @@ export type PoolConditions = {
    * cannot distinguish them. Null when there is no lower bound.
    */
   readonly floorPolygons: MultiPolygon | null;
-  /**
-   * The terrain chip, exactly as `Session.terrain` holds it today. Chunk 3
-   * replaces it with a measured climb band and renames only the copy — one
-   * control, one reason code, one clause.
-   */
-  readonly terrain: Terrain | "any";
   readonly vibes: readonly Vibe[];
   readonly edgeOnly: boolean;
   readonly rules: readonly PoolRule[];
@@ -264,7 +261,7 @@ export type PoolFix =
       /**
        * `clear` is authoritative for a cause a sibling contributed as a
        * `PoolRule` - that rule brought its own callback. For the three chips
-       * this app already owns (terrain, vibes, far edge) it is a no-op, because
+       * this app already owns (vibes, far edge) it is a no-op, because
        * clearing those means dispatching to the reducer and this module is
        * deliberately free of the reducer's vocabulary. App switches on `reason`
        * for exactly those three and falls through to `clear` for everything
@@ -321,7 +318,7 @@ const emptyCounts = () => ({
  *
  * Accumulates the whole set rather than short-circuiting on the first reason:
  * the per-place explanation wants all of them — "shut, and also the wrong
- * terrain for your setting" is a different conversation from "shut" — and the
+ * climb for your setting" is a different conversation from "shut" — and the
  * extra work is a handful of comparisons on places that are already out.
  */
 export function explainPlace(place: Place, conditions: PoolConditions): PlaceVerdict {
@@ -347,10 +344,9 @@ export function explainPlace(place: Place, conditions: PoolConditions): PlaceVer
     }
   }
 
-  // The reader's own chips.
-  if (conditions.terrain !== "any" && place.terrain !== conditions.terrain) {
-    reasons.push("wrong-terrain");
-  }
+  // The reader's own chips. Climb is not among them any more: it is measured
+  // per route rather than tagged per place, so it arrives as a `deferred`
+  // PoolRule from App and is evaluated below with everything else.
   if (conditions.vibes.length > 0 && !place.tags.some((tag) => conditions.vibes.includes(tag))) {
     reasons.push("no-matching-vibe");
   }
@@ -493,7 +489,6 @@ const US = "";
  */
 export function conditionsSignature(conditions: PoolConditions): string {
   return [
-    conditions.terrain,
     conditions.vibes.join("+"),
     String(conditions.edgeOnly),
     conditions.floorPolygons === null ? "-" : "f",
@@ -578,9 +573,6 @@ export function suggestFix(
     }
   };
 
-  if (conditions.terrain !== "any") {
-    consider("wrong-terrain", "Any terrain", byReducer, { ...conditions, terrain: "any" });
-  }
   if (conditions.vibes.length > 0) {
     consider("no-matching-vibe", "Clear what you are looking for", byReducer, {
       ...conditions,
@@ -662,7 +654,7 @@ export function suggestFix(
 const MAX_CLAUSES = 2;
 
 /**
- * The clause half of the pool line: `["12 shut", "6 wrong terrain"]`.
+ * The clause half of the pool line: `["12 shut", "6 wrong climb"]`.
  *
  * Geometry reasons are excluded — they are the difference between `inReach` and
  * `total`, and `.readout` already names `inReach`. Saying it twice was the bug
@@ -682,7 +674,7 @@ export function summaryClauses(report: PoolReport): string[] {
 }
 
 /**
- * The pool line: "6 to spin · 12 shut · 6 wrong terrain". Pool size first, then
+ * The pool line: "6 to spin · 12 shut · 6 wrong climb". Pool size first, then
  * at most two reason clauses. The "N of M in reach" headline is deliberately not
  * here — that is `ReachReadout`'s existing sentence.
  */

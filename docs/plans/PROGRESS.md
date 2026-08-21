@@ -352,3 +352,89 @@ test 1. Both put back.
 chunk 2 landed with the rule registry it needs. It contributes the first real `PoolRule` — the climb
 rule, `deferred: true` — so it also owes the first new entry in `signature.test.ts`'s REGISTERED
 table, which is already seeded with the case it must satisfy.
+
+---
+
+## Chunk 3 — `elevation-profile`, the visible half — done
+
+The card used to say `Terrain: Flat` because somebody typed `terrain: "flat"` next to a coordinate.
+It now says **`Climb 141 ft`** and draws the shape of the walk underneath, measured from the origin
+you actually chose along the route the map is already showing.
+
+The tag is not supplemented, it is deleted. `Terrain`, `Place.terrain` on all 62 rows,
+`Session.terrain` and the `terrain` action are gone from `src/` — `grep -rn 'Terrain\b' src/` returns
+nothing.
+
+### What landed
+
+| Piece | Note |
+| --- | --- |
+| `src/ui/ElevationProfile.tsx` | The chart. One `<input type="range">` laid transparently over the SVG buys pointer, touch and keyboard for nothing |
+| `ResultCard` | The `Climb` stat and the chart read the **same object**, so they cannot disagree |
+| `Filters` | Any / Easy / Hilly, disabled with a described notice when the engine has no elevation |
+| `App` | The climb `PoolRule`, `deferred: true`, and the gate over `pool.baseIncluded` |
+| `MapCanvas` | The hover dot, above the place layers so it cannot slide under the winner's marker |
+| `format.ts` | `formatFeet` |
+| `places.ts` | 62 rows lighter by one field each |
+
+**`applyClimb` was deliberately not written.** README §2.3(b) supersedes that half of the spec: the
+climb filter is one `deferred` `PoolRule`, and `baseIncluded`/`baseKey` replace the spec's
+`baseCandidates`/`baseCandidateKey`. This is the first sibling to plug into chunk 2's registry, and it
+did so without editing it.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm run lint` | eslint, oxlint, knip all clean |
+| `npm test` | **164 passing**, 0 failing |
+| `npm run build` | succeeds |
+| `verify-bundle` | **76,798 B** gz, **+2,154 B** — under that spec's own 2.5 KB line |
+| `verify-signature` | 6 pass, with the climb rule's REGISTERED entry naming the signature that shipped |
+| `verify-engine`, `verify-drift`, `verify-places` | clean |
+
+### Seen working
+
+- **Flat versus steep, side by side.** 17th Street Market: `Climb 0 ft`, a trace that wanders a few
+  pixels inside its 20 m window, `0 ft up / 0 ft down / 20 ft–26 ft`. Libby Hill Park: `Climb 141 ft`,
+  a trace that climbs and comes back down to where it started. There is no "flat" branch in the
+  drawing code — the floor on the range is the whole mechanism.
+- **Four statements of one fact, agreeing.** Stat `141 ft`, figcaption `↑141 ft`, `aria-label` "141 ft
+  of climb … over 2.3 mi", announcement "141 ft of climb". The `aria-label`'s distance and the
+  Distance stat read the same 2.3 mi, which is criterion 6's one-card check.
+- **The hover dot.** Scrubbed to 900 m; the white dot with the amber ring sat on the route line at
+  that distance. `aria-valuetext` read "1.1 mi in, 151 ft" mid-walk and "2.3 mi in, 23 ft" at the
+  maximum — a real elevation at the end rather than `undefined ft`.
+- **No elevation at all**, run against `valhalla/stub.mjs`, which refuses elevation on purpose: chips
+  disabled with `aria-describedby`, `Climb -`, "No elevation data from this engine.", no shimmering
+  skeleton — **and the same on a cold reload**, which is the rehydration path criterion 17 exists to
+  catch.
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-03.md`: **73 of 76 ticked**. Three open, all environmental and all
+logged: `prefers-reduced-motion` (5.1), the card at a phone width (5.3), and criterion 14's
+`Measuring climb n/total` label (5.4) — the local engine settles 26 routes faster than the DOM can be
+sampled, even polling every 80 ms against a cleared store.
+
+### Spec corrections
+
+- **`applyClimb` and the `selectCandidates` split are not implemented**, per README §2.3(b). Recorded
+  here rather than silently skipped, because the spec still describes them at length.
+- **One test expectation was wrong and the code was right.** `baseIncluded` keeps a place a deferred
+  rule has measured and rejected — the base pool is everything whose climb might need measuring, and
+  its entire job is not to shrink while the reader watches the denominator.
+- Four comments in `eligibility.ts` still said "terrain" about the renamed filter; they say "climb".
+- README's app-JS figure is the measured 75 KB.
+
+### Deferred
+
+- HUMAN-REVIEW 5.3 — the result card at a phone width.
+- HUMAN-REVIEW 5.4 — the measuring gate on screen.
+
+### Next
+
+**Chunk 4 — `apple-maps`.** The afternoon: one pure module, eight assertions, two anchors and a CSS
+grid. Preconditions: `npm run verify` green (met), and chunk 0's `.result-lines` block, which has been
+rendering an empty array since it landed and now gets its first line.

@@ -46,15 +46,14 @@ const reachAt = (minutes: number): Reach => {
 };
 
 const PLACES: Place[] = [
-  { id: "a", name: "A", lat: 0.05, lng: 0.05, terrain: "flat", tags: ["park"] },
-  { id: "b", name: "B", lat: 0.15, lng: 0.15, terrain: "hilly", tags: ["food"] },
-  { id: "c", name: "C", lat: 0.25, lng: 0.25, terrain: "flat", tags: ["river"] },
+  { id: "a", name: "A", lat: 0.05, lng: 0.05, tags: ["park"] },
+  { id: "b", name: "B", lat: 0.15, lng: 0.15, tags: ["food"] },
+  { id: "c", name: "C", lat: 0.25, lng: 0.25, tags: ["river"] },
 ];
 
 const conditionsAt = (reach: Reach | null, rules: PoolRule[] = []): PoolConditions => ({
   reach,
   floorPolygons: null,
-  terrain: "any",
   vibes: [],
   edgeOnly: false,
   rules,
@@ -117,7 +116,7 @@ const REGISTERED: {
     reason: "wrong-terrain",
     stable: "hilly|7",
     changed: "hilly|8",
-    why: "the climb band plus the number of routes measured so far - both change only when a route settles, never per frame",
+    why: "the climb band plus the number of routes measured so far - both change only when a route settles, never per frame. Landed in chunk 3 as `${state.climb}|${climbSettled}` in App.tsx",
   },
 ];
 

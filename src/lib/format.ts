@@ -72,3 +72,14 @@ export function formatClock(atMs: number): string {
   const meridiem = parts.find((part) => part.type === "dayPeriod")?.value ?? "";
   return `${hour}:${minute} ${meridiem.toLowerCase()}`;
 }
+
+/**
+ * Elevation, in feet, with no decimal.
+ *
+ * A foot of precision on a 30 m DEM is a fiction, and "112 ft" reads as a fact
+ * while "112.4 ft" reads as a measurement somebody took. Every displayed
+ * elevation goes through this.
+ */
+export function formatFeet(meters: number): string {
+  return `${Math.round(meters * 3.28084)} ft`;
+}

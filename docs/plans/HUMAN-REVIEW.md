@@ -143,6 +143,12 @@ never touched.
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
 
+**Chunk 3 — three boxes.** 73 of 76 ticked.
+
+- [ ] *`prefers-reduced-motion`.* Section 5.1. The chart has no animation.
+- [ ] *The result card at a phone width.* Section 5.3.
+- [ ] *`elevation-profile` criterion 14 — the measuring gate on screen.* Section 5.4.
+
 **Chunk 2 — two boxes.** 68 of 70 ticked.
 
 - [ ] *It was seen with `prefers-reduced-motion` on.* Section 5.1. This chunk adds no animation.
@@ -192,6 +198,31 @@ It is asserted by three tests instead (20, 21, 22), including the `MAX_MINUTES` 
 post-clamp check silently passes. What is owed is one look at the real notice, from an origin far
 enough out that ten minutes reaches nothing. The walkthrough should name a pin that produces it.
 
+### 5.3 The result card at a phone width
+
+The 390px iframe probe renders the rail, but the result card only exists after a spin, and the probe
+frame cannot be driven through one from outside. So the elevation chart, its scrubber and its
+figcaption have been seen only at desktop width.
+
+The chart is `width: 100%` inside `.result`, which is the column the probe *did* render without
+overflow, so the risk is the figcaption's three-item flex row wrapping rather than the chart itself.
+One look on a phone settles it.
+
+### 5.4 The "Measuring climb n/total" gate, on screen
+
+`elevation-profile`'s criterion 14 asks for the Spin button to read `Measuring climb n/total` and
+**stay** disabled past the twelve-second grace, until every base candidate has settled. That is the
+behaviour the whole `deferred` rule exists to produce.
+
+It could not be caught here. A local Valhalla plus the prefetch settles all 26 routes faster than the
+DOM can be sampled — polling every 80 ms against a cleared route store still only ever saw `Spin`.
+The spec's own method is to throttle the network, which this session has no way to do.
+
+What is known without seeing it: the gate is `routesPending && (state.climb !== "any" ||
+!warmGraceOver)`, so with a climb filter on the grace is bypassed entirely; the denominator is
+`pool.baseIncluded.length`, which a test asserts cannot shrink; and no spin was aborted mid-throw in
+any run this chunk. What is owed is one look with the network throttled.
+
 **Two things that were nearly in this section and are not**, because a way to observe them was found
 rather than assumed:
 
@@ -229,6 +260,8 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Walking-speed fixture | 1025.7 s → **963.5 s** on the same 1.047 km | Chunk 1 — see 6.1 |
 | App JS after chunk 2 | 74,644 B (72.9 KiB) | +2,784 B on chunk 1 — see 6.2 |
 | Tests after chunk 2 | 163 passing | |
+| App JS after chunk 3 | 76,798 B (75.0 KiB) | +2,154 B, under that spec's 2.5 KB line |
+| Tests after chunk 3 | 164 passing | |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
 
@@ -247,6 +280,7 @@ rather than so anybody does something about it.
 | 0 Foundations | +0.9 KB | +110 B (deferred to chunk 5 — nothing imports it yet) |
 | 1 Elevation wire | +0.7 KB | +545 B |
 | 2 `pool-reasoning` | +1.4 KB | **+2,784 B** |
+| 3 `elevation-profile` UI | +1.2 KB | +2,154 B (its own spec allowed 2.5 KB; README section 5's row is the low one) |
 
 ### 6.1 Every walking time in the app changed, and nothing on screen says so
 

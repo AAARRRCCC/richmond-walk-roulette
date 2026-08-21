@@ -1,7 +1,7 @@
 {
   "$comment": "Gzipped bytes of the app's own JS, excluding the MapLibre chunk. `actual` is rewritten by each chunk's commit from a real build; `ceiling` is the v0.5 plan's wall and is never raised to make a build pass. See docs/plans/README.md section 5.",
   "ceiling": 102400,
-  "actual": 74684,
+  "actual": 76845,
   "history": [
     {
       "label": "baseline (v0.4, before the harness)",
@@ -18,6 +18,10 @@
     {
       "label": "chunk 2 - pool-reasoning",
       "bytes": 74684
+    },
+    {
+      "label": "chunk 3 - elevation profile",
+      "bytes": 76845
     }
   ]
 }

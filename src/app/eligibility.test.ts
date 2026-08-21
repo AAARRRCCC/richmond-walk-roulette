@@ -45,10 +45,10 @@ const reachOf = (...bands: Band[]): Reach => ({
   areaSqMeters: 1,
 });
 
-const NEAR: Place = { id: "near", name: "Near", lat: 0.05, lng: 0.05, terrain: "flat", tags: ["park"] };
-const MIDP: Place = { id: "mid", name: "Mid", lat: 0.3, lng: 0.3, terrain: "hilly", tags: ["food"] };
-const EDGE: Place = { id: "edge", name: "Edge", lat: 0.8, lng: 0.8, terrain: "flat", tags: ["river", "park"] };
-const FAR: Place = { id: "far", name: "Far", lat: 5, lng: 5, terrain: "flat", tags: ["park"] };
+const NEAR: Place = { id: "near", name: "Near", lat: 0.05, lng: 0.05, tags: ["park"] };
+const MIDP: Place = { id: "mid", name: "Mid", lat: 0.3, lng: 0.3, tags: ["food"] };
+const EDGE: Place = { id: "edge", name: "Edge", lat: 0.8, lng: 0.8, tags: ["river", "park"] };
+const FAR: Place = { id: "far", name: "Far", lat: 5, lng: 5, tags: ["park"] };
 const ALL = [NEAR, MIDP, EDGE, FAR];
 
 const shutRule = (ids: string[], extra: Partial<PoolRule> = {}): PoolRule => ({
@@ -65,7 +65,6 @@ const shutRule = (ids: string[], extra: Partial<PoolRule> = {}): PoolRule => ({
 const conditionsOf = (extra: Partial<PoolConditions> = {}): PoolConditions => ({
   reach: reachOf({ minutes: 30, polygons: OUTER }),
   floorPolygons: null,
-  terrain: "any",
   vibes: [],
   edgeOnly: false,
   rules: [],
@@ -88,7 +87,10 @@ test("REASON_ORDER and REASON_COPY agree, at runtime", () => {
 test("explainPlace answers for one place without deriving the whole pool", () => {
   // The result card asks about exactly one place - the one that was clicked -
   // and paying for 62 verdicts to answer about one of them would be silly.
-  const verdict = explainPlace(MIDP, conditionsOf({ terrain: "flat" }));
+  const verdict = explainPlace(
+    MIDP,
+    conditionsOf({ rules: [shutRule(["mid"], { id: "climb", reason: "wrong-terrain" })] }),
+  );
   assert.equal(verdict.included, false);
   assert.equal(verdict.placeId, "mid");
   assert.deepEqual(verdict.included === false ? verdict.reasons : [], ["wrong-terrain"]);
@@ -121,8 +123,12 @@ test("a place inside the floor is inside-floor, not out-of-reach", () => {
   assert.deepEqual(reasonsFor(withoutFloor, NEAR.id), ["out-of-reach"]);
 });
 
-test("terrain and vibe accumulate", () => {
-  const report = derivePool(ALL, conditionsOf({ terrain: "flat", vibes: ["park"] }));
+test("a climb rule and a vibe chip accumulate", () => {
+  // Climb is measured per route, so it arrives as a rule rather than a field -
+  // but its reason still sorts ahead of the vibe chips, because REASON_ORDER is
+  // about how fundamental the obstacle is and not about where it came from.
+  const climb = shutRule(["mid"], { id: "climb", reason: "wrong-terrain" });
+  const report = derivePool(ALL, conditionsOf({ vibes: ["park"], rules: [climb] }));
   assert.deepEqual(reasonsFor(report, MIDP.id), ["wrong-terrain", "no-matching-vibe"]);
 });
 
@@ -265,7 +271,8 @@ test("two rules cannot collide through the signature joiner", () => {
 });
 
 test("summaryLine names the pool, then at most two reasons", () => {
-  const report = derivePool(ALL, conditionsOf({ terrain: "flat", rules: [shutRule(["near", "edge"])] }));
+  const climb = shutRule(["mid"], { id: "climb", reason: "wrong-terrain" });
+  const report = derivePool(ALL, conditionsOf({ rules: [climb, shutRule(["near", "edge"])] }));
   const line = summaryLine(report);
 
   assert.ok(line.startsWith("0 to spin"), line);
@@ -342,4 +349,38 @@ test("every REASON_COPY sentence is a sentence, and every clause says something"
     assert.ok(copy.clause(1).length > 0, `${reason} has a clause`);
     assert.ok(copy.heading.length > 0, `${reason} has a heading`);
   }
+});
+
+test("a deferred rule holds an unmeasured place out of the pool but inside the gate", () => {
+  // Chunk 3's climb rule, in the shape App builds it. The distinction that
+  // matters: "not measured yet" passes provisionally, so the pool does not
+  // shrink and grow as routes land, while "measured and wrong" is simply out.
+  const measured = new Map<string, string>([["near", "easy"], ["mid", "hilly"]]);
+  const climb: PoolRule = {
+    id: "climb",
+    reason: "wrong-terrain",
+    active: true,
+    clearLabel: "Any climb",
+    clear: () => {},
+    signature: `easy|${measured.size}`,
+    deferred: true,
+    excludes: (place) => {
+      const band = measured.get(place.id);
+      return band !== undefined && band !== "easy";
+    },
+  };
+
+  const report = derivePool(ALL, conditionsOf({ rules: [climb] }));
+
+  // `edge` has not been measured, so it passes provisionally and is in the pool.
+  // `mid` was measured and is the wrong band, so it is out of it.
+  assert.deepEqual(report.included.map((p) => p.id), ["near", "edge"]);
+
+  // But `mid` is still in the BASE pool, and that is the whole point of the
+  // flag: the base pool is everything whose climb might need measuring, so the
+  // "Measuring climb n/total" denominator does not shrink as answers land. A
+  // place excluded by a non-deferred rule is out of both - the test above this
+  // one covers that.
+  assert.deepEqual(report.baseIncluded.map((p) => p.id), ["near", "mid", "edge"]);
+  assert.equal(report.counts["wrong-terrain"], 1);
 });

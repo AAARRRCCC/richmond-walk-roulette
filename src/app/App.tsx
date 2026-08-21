@@ -29,8 +29,10 @@ import {
   isWarm,
   prefetchLadder,
 } from "../lib/isochrone";
+import { classifyClimb, type ClimbBand } from "../lib/elevation";
 import {
   cachedRoute,
+  elevationAvailable,
   fetchWalkingRoute,
   prefetchRoutes,
   routeFailed as routeSettledFailed,
@@ -46,6 +48,7 @@ import {
   type Failure,
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
+import { formatFeet } from "../lib/format";
 import { describeResult, walkClauses } from "./announce";
 import {
   REASON_COPY,
@@ -237,12 +240,67 @@ export function App() {
    * to `candidateKey`. A mutable binding along that path is a value the
    * compiler cannot prove stable.
    */
-  const rules: readonly PoolRule[] = [];
+  /**
+   * The climb of the walk to a place, as far as it is known right now.
+   *
+   * Three states, and the difference between the last two is the whole design:
+   * `undefined` means nothing has settled yet, `"unmeasurable"` means something
+   * settled and carried no usable profile. Read from the caches per render with
+   * no memoisation, per the house rule - the caches are mutable and a dependency
+   * array cannot see them.
+   *
+   * Round trip does not enter into it. Doubling ascent and doubling distance
+   * leaves metres per kilometre unchanged, so only the absolute floor would
+   * move; banding on the outbound keeps Easy meaning the same thing with the
+   * switch either way.
+   */
+  const climbOf = (place: Place): ClimbBand | "unmeasurable" | undefined => {
+    const cached = cachedRoute(origin, place);
+    if (cached === undefined) return routeSettledFailed(origin, place) ? "unmeasurable" : undefined;
+    if (cached === null || cached.profile === null) return "unmeasurable";
+    return classifyClimb(cached.profile.ascentMeters, cached.distanceMeters);
+  };
+
+  /**
+   * How many candidates have a settled answer about their climb.
+   *
+   * Part of the rule's signature, and the reason it is a count rather than a
+   * timestamp: it changes when a route settles and at no other moment, which is
+   * exactly when the rule's verdicts could have moved. A clock here would churn
+   * the memo, and a churning memo makes spinning impossible - see
+   * `signature.test.ts`.
+   */
+  const climbSettled = PLACES.filter((place) => climbOf(place) !== undefined).length;
+
+  const rules: readonly PoolRule[] =
+    state.climb === "any"
+      ? []
+      : [
+          {
+            id: "climb",
+            reason: "wrong-terrain",
+            active: true,
+            clearLabel: "Any climb",
+            clear: () => dispatch({ type: "climb", climb: "any" }),
+            signature: `${state.climb}|${climbSettled}`,
+            // Deferred, because it decides on data that arrives per place. A
+            // place it has not measured yet is held out of the pool but stays in
+            // `baseIncluded`, so the "Measuring climb 3/12" denominator does not
+            // count downward while the reader watches it.
+            deferred: true,
+            excludes: (place) => {
+              const band = climbOf(place);
+              // Not measured yet passes provisionally: excluding it would make
+              // the pool shrink and grow as routes land.
+              if (band === undefined) return false;
+              return band !== state.climb;
+            },
+          },
+        ];
 
   const conditions: PoolConditions = {
     reach,
     floorPolygons,
-    terrain: state.terrain,
     vibes: state.vibes,
     edgeOnly: state.edgeOnly,
     rules,
@@ -322,6 +380,16 @@ export function App() {
   const drawable = candidates.filter((place) => cachedRoute(origin, place));
 
   /**
+   * The pool before the climb filter measured anything.
+   *
+   * Everything that counts progress keys on this rather than on `candidates`:
+   * `candidates` shrinks as measurements land, so a denominator taken from it
+   * ticks down on both halves at once and the prefetch re-waves on every
+   * settling route.
+   */
+  const basePool = pool.baseIncluded;
+
+  /**
    * A candidate has settled when the question has an answer, whatever it is: a
    * route, a cached "there is no walking route here", or attempts spent on a
    * failure. Spin waits for all of them.
@@ -333,10 +401,10 @@ export function App() {
    * pool, which is the one thing this app is built not to do. Waiting costs a
    * second or two on a cold origin and makes the throw honest.
    */
-  const settledRoutes = candidates.filter(
+  const settledRoutes = basePool.filter(
     (place) => cachedRoute(origin, place) !== undefined || routeSettledFailed(origin, place),
   ).length;
-  const routesPending = candidates.length > 0 && settledRoutes < candidates.length;
+  const routesPending = basePool.length > 0 && settledRoutes < basePool.length;
 
   /**
    * Which pool the wait has run out for, rather than a flag that has to be
@@ -345,7 +413,7 @@ export function App() {
    * reset, and a timer left over from the previous pool cannot open the gate
    * for this one.
    */
-  const poolKey = `${pointKey(origin)}|${candidateKey}`;
+  const poolKey = `${pointKey(origin)}|${pool.baseKey}`;
   const [graceOverFor, setGraceOverFor] = useState<string | null>(null);
   useEffect(() => {
     const timer = window.setTimeout(() => setGraceOverFor(poolKey), ROUTE_WARM_GRACE_MS);
@@ -353,7 +421,12 @@ export function App() {
   }, [poolKey]);
   const warmGraceOver = graceOverFor === poolKey;
 
-  const routesWarming = routesPending && !warmGraceOver;
+  /**
+   * With a climb filter on there is no grace: the answer depends on a
+   * measurement, so opening the gate early would offer a pool that is a
+   * different pool a second later. Without one, the existing grace stands.
+   */
+  const routesWarming = routesPending && (state.climb !== "any" || !warmGraceOver);
   /** The wait ran out with routes still missing, so the reel will be short. */
   const reelIsShort = routesPending && warmGraceOver;
 
@@ -533,6 +606,25 @@ export function App() {
   const pickedVerdict = picked ? (pool.verdicts.get(picked.id) ?? null) : null;
 
   /**
+   * Where the reader is scrubbing the elevation chart, in metres along it.
+   *
+   * Not in `Session`: it is transient pointer state with no bearing on the walk,
+   * and putting it in the reducer would re-run every derivation on every frame
+   * of a drag.
+   */
+  const [hover, setHover] = useState<{ pickedId: string | null; meters: number | null }>({
+    pickedId: null,
+    meters: null,
+  });
+  // Reset by ownership rather than by an effect: the scrub belongs to the place
+  // it was made on, so a hover recorded against a different pick is simply not
+  // this pick's hover. An effect calling setState here would render twice on
+  // every pick and put a stale dot on the map for one frame.
+  const hoverMeters = hover.pickedId === state.pickedId ? hover.meters : null;
+  const setHoverMeters = (meters: number | null): void =>
+    setHover({ pickedId: state.pickedId, meters });
+
+  /**
    * The card's shared line block, in the fixed order the plan sets: conditions,
    * light, hours, handoff, meet. Empty until chunk 4 contributes the first one -
    * the block renders nothing at all rather than an empty box.
@@ -547,6 +639,13 @@ export function App() {
           picked.name,
           ...walkClauses(route, routeFailed, state.roundTrip),
           withinBudget ? "" : "outside your current time budget",
+          // The only path by which the chart's headline fact reaches a screen
+          // reader, since the card is deliberately not a live region.
+          route === null
+            ? ""
+            : route.profile === null
+              ? "climb not measured"
+              : `${formatFeet(state.roundTrip ? route.profile.ascentMeters + route.profile.descentMeters : route.profile.ascentMeters)} of climb`,
           // The only way an exclusion reaches a screen reader on a result. The
           // card shows it as a row; this is the same sentence, lowercased into
           // the middle of one.
@@ -588,8 +687,8 @@ export function App() {
   const applyFix = (): void => {
     switch (fix.kind) {
       case "drop-rule":
-        if (fix.reason === "wrong-terrain") dispatch({ type: "terrain", terrain: "any" });
-        else if (fix.reason === "no-matching-vibe") dispatch({ type: "clearVibes" });
+        // `wrong-terrain` is the climb rule now, and it brought its own clear.
+        if (fix.reason === "no-matching-vibe") dispatch({ type: "clearVibes" });
         else if (fix.reason === "not-far-edge") dispatch({ type: "toggleEdge" });
         else fix.clear();
         return;
@@ -607,7 +706,6 @@ export function App() {
   // A phone starts with the drawer shut, and a bare "Filters" over a shrunken
   // count is a cause the reader cannot see.
   const activeFilters =
-    (state.terrain === "any" ? 0 : 1) +
     state.vibes.length +
     (state.edgeOnly ? 1 : 0) +
     rules.filter((rule) => rule.active).length;
@@ -619,6 +717,8 @@ export function App() {
         reach={reach}
         places={PLACES}
         inReachIds={pool.includedIds}
+        hoverMeters={hoverMeters}
+        roundTrip={state.roundTrip}
         pickedId={active?.id ?? null}
         framingKey={state.framingKey}
         route={route}
@@ -762,7 +862,9 @@ export function App() {
             {state.spinning
               ? "Spinning"
               : status === "ready" && routesWarming
-                ? `Loading routes ${settledRoutes}/${candidates.length}`
+                ? state.climb === "any"
+                  ? `Loading routes ${settledRoutes}/${basePool.length}`
+                  : `Measuring climb ${settledRoutes}/${basePool.length}`
                 : "Spin"}
           </button>
 
@@ -772,7 +874,7 @@ export function App() {
                and a wheel that quietly omits some of its own pool is the same
                lie as a circle. */
             <div className="notice" {...inertWhen(picking)} role="status">
-              {drawable.length} of {candidates.length} routes are ready. The reel turns
+              {drawable.length} of {basePool.length} routes are ready. The reel turns
               through those; the rest are still coming from the engine.
             </div>
           )}
@@ -813,6 +915,8 @@ export function App() {
               withinBudget={withinBudget}
               lines={resultLines}
               verdict={pickedVerdict}
+              hoverMeters={hoverMeters}
+              onHoverRoute={setHoverMeters}
               onSpinAgain={spin}
               onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
               onDismiss={() => {
@@ -836,11 +940,12 @@ export function App() {
             {activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}
           </summary>
           <Filters
-            terrain={state.terrain}
+            climb={state.climb}
+            climbAvailable={elevationAvailable() !== false}
             vibes={state.vibes}
             roundTrip={state.roundTrip}
             edgeOnly={state.edgeOnly}
-            onTerrain={(terrain) => dispatch({ type: "terrain", terrain })}
+            onClimb={(climb) => dispatch({ type: "climb", climb })}
             onToggleVibe={(vibe) => dispatch({ type: "toggleVibe", vibe })}
             onToggleRoundTrip={() => dispatch({ type: "toggleRoundTrip" })}
             onToggleEdge={() => dispatch({ type: "toggleEdge" })}

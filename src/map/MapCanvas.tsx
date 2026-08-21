@@ -4,7 +4,13 @@ import type { FeatureCollection, MultiPolygon as MultiPolygonGeometry } from "ge
 import { darkBasemap } from "./basemap";
 import { weighted } from "./weight";
 import { smoothedForDisplay } from "./smooth";
-import { pointKey, type LngLat, type MultiPolygon } from "../lib/geometry";
+import {
+  cumulativeMeters,
+  pointAtMeters,
+  pointKey,
+  type LngLat,
+  type MultiPolygon,
+} from "../lib/geometry";
 import { formatArea, pluralize } from "../lib/format";
 import { isString, type Json } from "../lib/json";
 import type { Reach } from "../lib/isochrone";
@@ -81,6 +87,9 @@ export type MapCanvasProps = {
   /** Changes when the map should re-frame: origin change or dial commit. */
   framingKey: number;
   route: WalkingRoute | null;
+  /** Metres along the elevation profile the reader is scrubbing, or null. */
+  hoverMeters: number | null;
+  roundTrip: boolean;
   pickingOrigin: boolean;
   /**
    * True while the reel is turning. `pickedId` then changes on every tick, and
@@ -318,6 +327,23 @@ export function MapCanvas(props: MapCanvasProps) {
         },
       });
 
+      // Added after the place layers, and with no beforeId, so it paints on top
+      // of them. Registered next to the route source instead, it would slide
+      // under the picked-place marker at the exact moment the scrubber reached
+      // it - which is the moment the dot exists to answer.
+      map.addSource("route-hover", { type: "geojson", data: EMPTY });
+      map.addLayer({
+        id: "route-hover-dot",
+        type: "circle",
+        source: "route-hover",
+        paint: {
+          "circle-radius": weighted(5),
+          "circle-color": "#ffffff",
+          "circle-stroke-width": weighted(2),
+          "circle-stroke-color": ACCENT,
+        },
+      });
+
       readyRef.current = true;
       syncAll(map, handlers.current, bandsRef.current);
     });
@@ -386,6 +412,15 @@ export function MapCanvas(props: MapCanvasProps) {
     if (!map || !readyRef.current) return;
     syncBands(map, reach, bandsRef.current);
   }, [reach]);
+
+  // Its own effect, for the same reason every other sync in this file is: they
+  // fire on different inputs and batching them re-uploads geometry nothing asked
+  // to change.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !readyRef.current) return;
+    syncHover(map, route, props.hoverMeters, props.roundTrip);
+  }, [route, props.hoverMeters, props.roundTrip]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -628,6 +663,42 @@ function syncPlaces(
         state: place.id === pickedId ? "picked" : inReachIds.has(place.id) ? "in" : "out",
       },
     })),
+  });
+}
+
+/**
+ * The dot that answers "where on the walk is this?".
+ *
+ * On a round trip the chart shows the walk there and back, so a distance past
+ * the halfway point is a distance back along the same line: `m > L` folds to
+ * `2L - m`. Without the fold the dot would run off the end of the route at
+ * exactly the halfway mark and stay there for the whole return leg.
+ */
+function syncHover(
+  map: MapLibreMap,
+  route: WalkingRoute | null,
+  hoverMeters: number | null,
+  roundTrip: boolean,
+): void {
+  if (route === null || hoverMeters === null) {
+    setData(map, "route-hover", EMPTY);
+    return;
+  }
+
+  const cumulative = cumulativeMeters(route.coords);
+  const total = cumulative[cumulative.length - 1] ?? 0;
+  const along = roundTrip && hoverMeters > total ? 2 * total - hoverMeters : hoverMeters;
+  const at = pointAtMeters(route.coords, cumulative, along);
+  if (at === null) {
+    setData(map, "route-hover", EMPTY);
+    return;
+  }
+
+  setData(map, "route-hover", {
+    type: "FeatureCollection",
+    features: [
+      { type: "Feature", geometry: { type: "Point", coordinates: [at.lng, at.lat] }, properties: {} },
+    ],
   });
 }
 

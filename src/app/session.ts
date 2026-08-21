@@ -1,6 +1,7 @@
 import type { LngLat } from "../lib/geometry.ts";
 import { DIAL_STEP, MAX_MINUTES, MIN_MINUTES } from "../lib/isochrone.ts";
-import { DEFAULT_ORIGIN, type Origin, type Terrain, type Vibe } from "../data/places.ts";
+import { DEFAULT_ORIGIN, type Origin, type Vibe } from "../data/places.ts";
+import type { ClimbBand } from "../lib/elevation.ts";
 
 /**
  * What the user has chosen. Everything derived from it, the reachable area and
@@ -23,7 +24,7 @@ export type Session = {
   roundTrip: boolean;
   /** Restrict the pool to the outermost contour: "go as far as you can". */
   edgeOnly: boolean;
-  terrain: Terrain | "any";
+  climb: ClimbBand | "any";
   vibes: Vibe[];
   pickedId: string | null;
   spinning: boolean;
@@ -66,7 +67,7 @@ export type Action =
   | { type: "floor"; minutes: number }
   | { type: "toggleRoundTrip" }
   | { type: "toggleEdge" }
-  | { type: "terrain"; terrain: Terrain | "any" }
+  | { type: "climb"; climb: ClimbBand | "any" }
   | { type: "toggleVibe"; vibe: Vibe }
   | { type: "clearVibes" }
   | { type: "clearFilters" }
@@ -105,7 +106,7 @@ export const initialSession: Session = {
   floorMinutes: dialMinimum(DEFAULT_ROUND_TRIP),
   roundTrip: DEFAULT_ROUND_TRIP,
   edgeOnly: false,
-  terrain: "any",
+  climb: "any",
   vibes: [],
   pickedId: null,
   spinning: false,
@@ -184,8 +185,8 @@ export function reduce(state: Session, action: Action): Session {
     }
     case "toggleEdge":
       return { ...state, edgeOnly: !state.edgeOnly };
-    case "terrain":
-      return { ...state, terrain: action.terrain };
+    case "climb":
+      return { ...state, climb: action.climb };
     case "toggleVibe":
       return {
         ...state,
@@ -205,7 +206,7 @@ export function reduce(state: Session, action: Action): Session {
     // is the trap `beforeDark` is deliberately allowed to fall into and nothing
     // else is.
     case "clearFilters":
-      return { ...state, terrain: "any", vibes: [], edgeOnly: false };
+      return { ...state, climb: "any", vibes: [], edgeOnly: false };
     // Every one of these changes which walk is on screen, so each starts the
     // route's retry budget over and clears the cancelled-throw notice.
     case "spinStart":
