@@ -1,6 +1,6 @@
 import type { LngLat } from "../lib/geometry.ts";
 import { DIAL_STEP, MAX_MINUTES, MIN_MINUTES } from "../lib/isochrone.ts";
-import { DEFAULT_ORIGIN, type Origin, type Vibe } from "../data/places.ts";
+import { DEFAULT_ORIGIN, type Origin, type PlaceKind, type Vibe } from "../data/places.ts";
 import type { ClimbBand } from "../lib/elevation.ts";
 import type { TimeCap } from "./conditions.ts";
 import type { LocationNotice } from "../lib/locate.ts";
@@ -43,6 +43,13 @@ export type Session = {
   /** Restrict the pool to the outermost contour: "go as far as you can". */
   edgeOnly: boolean;
   climb: ClimbBand | "any";
+  /**
+   * Which tier the spin draws from. Mixed by default, because the surprise is
+   * the product: a detour is the best answer this app has to "twenty minutes,
+   * surprise me", and hiding the new half of the dataset behind a control
+   * nobody presses would waste it.
+   */
+  kind: PlaceKind;
   vibes: Vibe[];
   /** "Get back before dark". Opt-in; never set by the app itself. */
   beforeDark: boolean;
@@ -114,6 +121,7 @@ export type Action =
   | { type: "toggleRoundTrip" }
   | { type: "toggleEdge" }
   | { type: "climb"; climb: ClimbBand | "any" }
+  | { type: "kind"; kind: PlaceKind }
   | { type: "toggleVibe"; vibe: Vibe }
   | { type: "clearVibes" }
   | { type: "toggleBeforeDark" }
@@ -159,6 +167,7 @@ export const initialSession: Session = {
   roundTrip: DEFAULT_ROUND_TRIP,
   edgeOnly: false,
   climb: "any",
+  kind: "any",
   beforeDark: false,
   weatherAware: true,
   timeCap: null,
@@ -245,6 +254,8 @@ export function reduce(state: Session, action: Action): Session {
       return { ...state, edgeOnly: !state.edgeOnly };
     case "climb":
       return { ...state, climb: action.climb };
+    case "kind":
+      return { ...state, kind: action.kind };
     case "toggleVibe":
       return {
         ...state,
@@ -330,7 +341,7 @@ export function reduce(state: Session, action: Action): Session {
     // would have them switched back on by a button that says "clear". This
     // clears what the count counts.
     case "clearFilters":
-      return { ...state, climb: "any", vibes: [], edgeOnly: false };
+      return { ...state, climb: "any", kind: "any", vibes: [], edgeOnly: false };
     // Every one of these changes which walk is on screen, so each starts the
     // route's retry budget over and clears the cancelled-throw notice.
     case "spinStart":

@@ -2,11 +2,130 @@ import type { LngLat } from "../lib/geometry.ts";
 
 export type Vibe = "river" | "park" | "museum" | "history" | "food" | "scenic";
 
+/**
+ * A second tier of place: not somewhere to arrive, but a reason to walk a
+ * particular way.
+ *
+ * The *absence* of this field is the destination tier, which is why none of the
+ * hand-curated rows carry it and why adding the tier cost those rows nothing.
+ *
+ * The value is also the word the result card prints where a destination prints
+ * "Your walk". That is a *category*, not a description. The distinction is
+ * load-bearing: "the name is the whole offer" works for a destination because
+ * the name names a known thing - "Maymont" is a complete sentence in Richmond -
+ * and it does not survive contact with a plaque whose name is the first line of
+ * its inscription. Rather than answer that with a description field, the
+ * proposer drops any candidate whose name is not self-describing and the tier
+ * word supplies the category the name alone cannot.
+ */
+export type DetourKind =
+  | "mural"
+  | "art"
+  | "overlook"
+  | "stairs"
+  | "marker"
+  | "bridge"
+  | "street";
+
 export type Place = LngLat & {
   id: string;
   name: string;
   tags: Vibe[];
+  /** Second tier. Absent means a destination. */
+  detour?: DetourKind;
+  /**
+   * The OpenStreetMap element this row came from, as `type/id`, e.g.
+   * `way/23456789`.
+   *
+   * Identity, not data: it exists so a later pass can re-read tags for the same
+   * feature without re-matching by name, and `opening-hours` (chunk 9) is its
+   * consumer. Generated rows always carry it; the hand-curated rows do not yet,
+   * and chunk 9 backfills them by hand.
+   *
+   * **Presence of this field is not a reliable discriminator for "generated".**
+   * An earlier draft used it as one, which stops being true the moment chunk 9
+   * backfills. `HAND_CURATED_COUNT` is the discriminator - see below.
+   */
+  osm?: string;
 };
+
+/** Which tier the spin is drawing from. */
+export type PlaceKind = "any" | "destination" | "detour";
+
+/** Segments for the Kind control, in render order. */
+export const PLACE_KINDS: { id: PlaceKind; label: string }[] = [
+  { id: "any", label: "Any" },
+  { id: "destination", label: "Places" },
+  { id: "detour", label: "Detours" },
+];
+
+/**
+ * The card's eyebrow word per tier. A destination has no entry and prints
+ * "Your walk".
+ */
+export const DETOUR_LABELS = {
+  mural: "Mural",
+  art: "Public art",
+  overlook: "Overlook",
+  stairs: "Stairs",
+  marker: "Marker",
+  bridge: "Bridge",
+  street: "Street",
+  // `satisfies` rather than an annotation, the same way `REASON_COPY` is
+  // written: the record still has to be total over the union - a missing tier
+  // is a tsc error, which is the point - but the inferred type keeps each
+  // label's own literal rather than widening all seven to `string`.
+} satisfies Record<DetourKind, string>;
+
+/**
+ * The tier predicate.
+ *
+ * It lives **here** rather than in `osm-rules.ts`, and that placement is
+ * load-bearing rather than tidy: App builds a `PoolRule` around it, so whichever
+ * module holds it is in the app's import graph. Keeping it beside the data it
+ * questions is what lets `osm-rules.ts` stay proposer-and-test-only and ship
+ * zero bytes.
+ */
+export function matchesKind(place: Place, kind: PlaceKind): boolean {
+  if (kind === "any") return true;
+  return kind === "detour" ? place.detour !== undefined : place.detour === undefined;
+}
+
+/**
+ * Hard ceiling on the dataset, asserted by `places.test.ts`.
+ *
+ * A build-time wall rather than a runtime discovery, because at 600 places the
+ * cost is roughly +19 KB gzipped - about a fifth of the whole app JS budget -
+ * and that has to be a decision somebody argues for rather than something that
+ * happens.
+ */
+export const MAX_PLACES = 250;
+
+/**
+ * How many rows above the generated boundary are hand-curated.
+ *
+ * The discriminator, and it is a count rather than a field because the obvious
+ * field does not survive: `opening-hours` backfills `osm` onto the hand rows,
+ * after which presence of `osm` means nothing. `apply-places.mjs` is
+ * append-only, so the generated rows are always a suffix and one exact number
+ * separates them for good.
+ */
+export const HAND_CURATED_COUNT = 62;
+
+/**
+ * Longest name a **generated** row may carry, measured rather than guessed.
+ *
+ * The `.result-name` is 25 px in a fixed-width rail. The longest hand-curated
+ * name is "White House of the Confederacy" at 30 characters, so 32 is the
+ * ceiling that name already proves the rail can hold, with two characters of
+ * headroom.
+ *
+ * The hand-curated rows are exempt from the assertion, deliberately: a person
+ * naming a real Richmond institution has standing the proposer does not.
+ * `placeName` rejects an over-length OSM name at source rather than shipping
+ * one for the test to catch.
+ */
+export const NAME_MAX = 32;
 
 /**
  * Curated walking destinations in and around downtown Richmond.
@@ -112,6 +231,16 @@ export const PLACES: Place[] = [
   { id: "taylors-hill", name: "Taylor's Hill Park", lat: 37.53231, lng: -77.42292, tags: ["park", "scenic"] },
   { id: "shiplock", name: "Great Shiplock Park", lat: 37.52612, lng: -77.42183, tags: ["river", "park", "history"] },
   { id: "ancarrows", name: "Ancarrow's Landing", lat: 37.52067, lng: -77.42316, tags: ["river", "park", "history"] },
+
+  // ---------------------------------------------------------------------------
+  // Generated by scripts/apply-places.mjs from data/proposals/accepted.txt.
+  // Everything ABOVE this line is hand-curated and wins every conflict: the
+  // hand-picked coordinates were chosen by someone who has stood there, and the
+  // proposer refuses to emit a row within DEDUP_METERS of one. Edit generated
+  // rows freely - re-running apply never rewrites a row that already exists by
+  // id, it only appends.
+  // Map data (c) OpenStreetMap contributors, ODbL.
+  // ---------------------------------------------------------------------------
 ];
 
 export type Origin = LngLat & {

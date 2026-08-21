@@ -19,8 +19,8 @@ import { OriginPicker } from "../ui/OriginPicker";
 import { Filters } from "../ui/Filters";
 import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
 import { ResultCard, type ResultLine } from "../ui/ResultCard";
-import { PLACES, type Place } from "../data/places";
-import { contains, pointKey, type LngLat } from "../lib/geometry";
+import { DETOUR_LABELS, PLACES, matchesKind, type Place } from "../data/places";
+import { contains, metersBetween, pointKey, type LngLat } from "../lib/geometry";
 import type { Json } from "../lib/json";
 import {
   MAX_MINUTES,
@@ -184,6 +184,16 @@ const ROUTE_BACKOFF_MS = 900;
  * that the reel is short rather than quietly turning through what it has.
  */
 const ROUTE_WARM_GRACE_MS = 12_000;
+
+/**
+ * How many destinations the wide prefetch wave will warm per origin change.
+ *
+ * 90 sits under `route.ts`'s `CACHE_LIMIT` of 200 with room for the near wave
+ * and a spin's worth of misses. It is a cap on cost rather than on correctness:
+ * the spin still draws its winner from the full candidate list, and a place past
+ * the cap loads its route when it is picked.
+ */
+const WIDE_PREFETCH_LIMIT = 90;
 
 
 /**
@@ -452,7 +462,28 @@ export function App() {
     clear: () => dispatch({ type: "toggleWeatherAware" }),
   });
 
+  /**
+   * The tier filter, as a rule rather than a fifth argument to a filter
+   * function. Its signature is the chip itself: the verdict for a place depends
+   * on nothing else, so it changes exactly when the reader presses one.
+   */
+  const kindRule: readonly PoolRule[] =
+    state.kind === "any"
+      ? []
+      : [
+          {
+            id: "kind",
+            reason: "kind",
+            active: true,
+            clearLabel: "Any kind of place",
+            clear: () => dispatch({ type: "kind", kind: "any" }),
+            signature: state.kind,
+            excludes: (place) => !matchesKind(place, state.kind),
+          },
+        ];
+
   const rules: readonly PoolRule[] = [
+    ...kindRule,
     ...weatherPoolRules,
     ...(state.climb === "any"
       ? []
@@ -529,7 +560,11 @@ export function App() {
     const key = `${pointKey(origin)}|${candidateKey}`;
     if (candidateKey === "" || warmedNow.current === key) return;
     warmedNow.current = key;
-    const warming = PLACES.filter((place) => candidateKey.split(",").includes(place.id));
+    // A Set, built once. The obvious `.includes()` inside the filter is O(n^2),
+    // which at 250 places is ~62,500 string comparisons every time this effect
+    // runs - and it runs on every pool change.
+    const wanted = new Set(candidateKey.split(","));
+    const warming = PLACES.filter((place) => wanted.has(place.id));
     void prefetchRoutes(origin, warming, bumpRoutes);
   }, [candidateKey, origin]);
 
@@ -546,11 +581,21 @@ export function App() {
     warmedWide.current = key;
     const outermost = cachedReach(origin, MAX_MINUTES)?.bands.at(-1);
     if (!outermost) return;
-    void prefetchRoutes(
-      origin,
-      PLACES.filter((place) => contains(outermost.polygons, place)),
-      bumpRoutes,
-    );
+    // Nearest first, then capped. Uncapped, this wave is one `/route` call per
+    // place inside the 100-minute contour - at 250 places, 250 rate-limit units
+    // per origin change against a route cache that holds 200.
+    //
+    // The cap is about the cache and the limiter, not about correctness: a place
+    // past it simply loads its route when it is picked, through the existing
+    // retry effect. What it costs is honest and worth naming - `CACHE_LIMIT` was
+    // sized so that revisiting a start stays instant for "a few" origins, and a
+    // 90-place wave plus a near wave makes that about two rather than three.
+    const reachable = PLACES.filter((place) => contains(outermost.polygons, place))
+      .map((place) => ({ place, meters: metersBetween(origin, place) }))
+      .toSorted((a, b) => a.meters - b.meters)
+      .slice(0, WIDE_PREFETCH_LIMIT)
+      .map((entry) => entry.place);
+    void prefetchRoutes(origin, reachable, bumpRoutes);
   }, [widestReady, origin]);
 
   /**
@@ -954,7 +999,12 @@ export function App() {
     : state.spinning || !picked || routePending
       ? ""
       : describeResult([
-          picked.name,
+          // The tier opens the sentence for a detour. The sr-only line is the
+          // only screen-reader surface this card has, so a tier that is
+          // invisible there is invisible.
+          picked.detour === undefined
+            ? picked.name
+            : `${DETOUR_LABELS[picked.detour]}: ${picked.name}`,
           ...walkClauses(route, routeFailed, state.roundTrip),
           withinBudget ? "" : "outside your current time budget",
           // The only path by which the chart's headline fact reaches a screen
@@ -1404,7 +1454,9 @@ export function App() {
             roundTrip={state.roundTrip}
             edgeOnly={state.edgeOnly}
             weatherAware={state.weatherAware}
+            kind={state.kind}
             onClimb={(climb) => dispatch({ type: "climb", climb })}
+            onKind={(kind) => dispatch({ type: "kind", kind })}
             onToggleVibe={(vibe) => dispatch({ type: "toggleVibe", vibe })}
             onToggleRoundTrip={() => dispatch({ type: "toggleRoundTrip" })}
             onToggleEdge={() => dispatch({ type: "toggleEdge" })}

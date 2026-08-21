@@ -4,7 +4,7 @@ import { appleDirectionsUrl, googleDirectionsUrl } from "../lib/handoff";
 import { playPress } from "../lib/sound";
 import { elevationAvailable } from "../lib/route";
 import { ElevationProfile } from "./ElevationProfile";
-import type { Place } from "../data/places";
+import { DETOUR_LABELS, type Place } from "../data/places";
 import type { LngLat } from "../lib/geometry";
 import type { WalkingRoute } from "../lib/route";
 import { formatFeet, formatMiles, formatMinutes } from "../lib/format";
@@ -94,7 +94,15 @@ export function ResultCard(props: ResultCardProps) {
   return (
     <section className="result">
       <header className="result-head">
-        <p className="field-label">Your walk</p>
+        {/* The tier word, in a slot that already exists and in the small-caps
+            style already used everywhere. It is a CATEGORY, not a description:
+            "the name is the whole offer" holds for a destination because the
+            name names a known thing, and does not survive contact with a plaque
+            whose name is the first line of its inscription. This supplies what
+            the name alone cannot, without adding a description field. */}
+        <p className="field-label">
+          {place.detour === undefined ? "Your walk" : DETOUR_LABELS[place.detour]}
+        </p>
         <button type="button" className="icon-button" onClick={props.onDismiss} aria-label="Dismiss result">
           <XIcon size={15} weight="bold" aria-hidden="true" />
         </button>

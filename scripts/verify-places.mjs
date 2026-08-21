@@ -59,20 +59,34 @@ const vite = await createServer({
 
 let places;
 let bounds;
+let rules;
 try {
   places = await vite.ssrLoadModule("/src/data/places.ts");
   bounds = await vite.ssrLoadModule("/src/lib/bounds.ts");
+  rules = await vite.ssrLoadModule("/src/data/osm-rules.ts");
 } finally {
   await vite.close();
 }
 
 const { PLACES, PRESET_ORIGINS } = places;
 const { RICHMOND_BOUNDS, insideRichmond } = bounds;
+const { DEDUP_METERS } = rules;
 
 /** Present from chunk 8 onward; absent before it, and said so rather than assumed. */
 const handCuratedCount = places.HAND_CURATED_COUNT ?? null;
 const nameMax = places.NAME_MAX ?? null;
-const generated = Array.isArray(places.GENERATED_PLACES) ? places.GENERATED_PLACES : null;
+
+/**
+ * The generated rows: the suffix of `PLACES` past the hand-curated count.
+ *
+ * The harness expected a separate `GENERATED_PLACES` array here. Chunk 8 landed
+ * the other shape - one array with an append-only boundary and one exact count -
+ * because `apply-places.mjs` appends and `opening-hours` will backfill `osm`
+ * onto the hand rows, which destroys the obvious "has an osm id" discriminator.
+ * One number survives that; a field does not.
+ */
+const generated =
+  handCuratedCount === null ? null : PLACES.slice(handCuratedCount);
 
 function uniqueIds(label, rows) {
   const seen = new Map();
@@ -103,7 +117,7 @@ record(
 if (handCuratedCount === null) {
   notes.push(`PLACES.length = ${PLACES.length} (HAND_CURATED_COUNT arrives with chunk 8)`);
 } else {
-  const curated = generated === null ? PLACES.length : PLACES.length - generated.length;
+  const curated = PLACES.length - (generated?.length ?? 0);
   record(
     "the hand-curated rows still number HAND_CURATED_COUNT",
     curated === handCuratedCount,
@@ -111,8 +125,8 @@ if (handCuratedCount === null) {
   );
 }
 
-if (generated === null) {
-  notes.push("no generated rows yet (chunk 8 adds GENERATED_PLACES)");
+if (generated === null || generated.length === 0) {
+  notes.push(`no generated rows yet - all ${PLACES.length} are hand-curated`);
 } else {
   const tooLong = generated.filter((row) => row.name.length > nameMax);
   record(
@@ -121,9 +135,11 @@ if (generated === null) {
     nameMax === null ? "NAME_MAX is not exported" : `${tooLong.length} over ${nameMax}`,
   );
 
-  const curated = PLACES.filter((row) => !generated.includes(row));
+  const curated = PLACES.slice(0, handCuratedCount);
+  // DEDUP_METERS, not the snap distance: this asks "is this the same place
+  // under another name", which is a wider question than "did the anchor move".
   const collisions = generated.filter((row) =>
-    curated.some((hand) => metersBetween(row, hand) < SNAP_MAX_METERS),
+    curated.some((hand) => metersBetween(row, hand) < DEDUP_METERS),
   );
   record(
     "no generated row sits on top of a hand-curated one",

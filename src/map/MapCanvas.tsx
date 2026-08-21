@@ -23,7 +23,10 @@ import { PRESET_ORIGINS, type Place } from "../data/places";
  * current answer is reasonable. The result card says the walk exceeds the
  * budget rather than the map refusing to respond.
  */
-const PLACE_LAYERS = ["places", "places-out"];
+// `picked-place-dot` is in the list so the winner stays clickable: it draws
+// over the ordinary dot, and a click that only hit `places` underneath would be
+// a target the reader can see and cannot press.
+const PLACE_LAYERS = ["places", "places-out", "picked-place-dot"];
 
 /** Slot 0 renders at the bottom and always holds the outermost contour. */
 const SLOTS = [0, 1, 2] as const;
@@ -295,12 +298,45 @@ export function MapCanvas(props: MapCanvasProps) {
         source: "places",
         filter: ["!=", ["get", "state"], "out"],
         paint: {
-          "circle-radius": weighted(["match", ["get", "state"], "picked", 8, 4.5]),
-          "circle-color": ["match", ["get", "state"], "picked", "#ffffff", ACCENT],
-          // Only the winner carries a ring, and it is the accent rather than a
-          // dark cut-out: a halo the colour of the background reads as a hole
-          // punched in the contour it sits on.
-          "circle-stroke-width": ["match", ["get", "state"], "picked", 3, 0],
+          // A destination is a filled amber dot; a detour is a smaller hollow
+          // ring. One legend-free distinction that survives at city zoom, drawn
+          // from the same source and the same layer - a second layer would be
+          // a second thing to keep in step.
+          //
+          // Every zoom-scaled value goes through `weighted()`. A bare `["zoom"]`
+          // inside arithmetic makes MapLibre skip the layer with no throw and
+          // no log, which is a bad hour.
+          "circle-radius": weighted(["case", ["!=", ["get", "detour"], ""], 3.5, 4.5]),
+          "circle-color": ["case", ["!=", ["get", "detour"], ""], "#0b1014", ACCENT],
+          "circle-stroke-width": ["case", ["!=", ["get", "detour"], ""], 1.6, 0],
+          "circle-stroke-color": ACCENT_SOFT,
+        },
+      });
+      /**
+       * The winner, in a source of its own, holding zero or one feature.
+       *
+       * `pickedId` changes on every reel tick. While the winner was a `state`
+       * value on the shared source, every tick re-serialised and re-tiled the
+       * whole FeatureCollection - at 250 features, dozens of times a second, in
+       * exactly the moment this app spends its budget on feel. One feature
+       * changes instead.
+       *
+       * Rejected: `promoteId` + `setFeatureState`, the more general answer.
+       * Nothing here sets `promoteId` today, feature-state expressions would
+       * have to replace every paint `case`, and the volatile thing is genuinely
+       * one feature. A one-feature source is smaller and fails obviously.
+       */
+      map.addSource("place-picked", { type: "geojson", data: EMPTY });
+      map.addLayer({
+        id: "picked-place-dot",
+        type: "circle",
+        source: "place-picked",
+        paint: {
+          "circle-radius": weighted(8),
+          "circle-color": "#ffffff",
+          // The accent rather than a dark cut-out: a halo the colour of the
+          // background reads as a hole punched in the contour it sits on.
+          "circle-stroke-width": weighted(3),
           "circle-stroke-color": ACCENT,
         },
       });
@@ -309,8 +345,7 @@ export function MapCanvas(props: MapCanvasProps) {
         // throws on a duplicate rather than warning.
         id: "picked-place-label",
         type: "symbol",
-        source: "places",
-        filter: ["==", ["get", "state"], "picked"],
+        source: "place-picked",
         layout: {
           "text-field": ["get", "name"],
           "text-font": ["Noto Sans Regular"],
@@ -424,8 +459,20 @@ export function MapCanvas(props: MapCanvasProps) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !readyRef.current) return;
-    syncPlaces(map, places, inReachIds, pickedId);
-  }, [places, inReachIds, pickedId]);
+    syncPlaces(map, places, inReachIds);
+  }, [places, inReachIds]);
+
+  /**
+   * The winner, on its own effect and its own source.
+   *
+   * Split from the one above so a reel tick re-uploads one feature rather than
+   * every place in the city.
+   */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !readyRef.current) return;
+    syncPicked(map, places.find((place) => place.id === pickedId) ?? null);
+  }, [places, pickedId]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -626,7 +673,12 @@ function framePadding(map: MapLibreMap) {
 
 function syncAll(map: MapLibreMap, props: MapCanvasProps, lastBands: (MultiPolygon | null)[]): void {
   syncBands(map, props.reach, lastBands);
-  syncPlaces(map, props.places, props.inReachIds, props.pickedId);
+  syncPlaces(map, props.places, props.inReachIds);
+  // Both, not only the first. There are two paths into place rendering - the
+  // effects above and this, which runs once the style is ready and again on a
+  // style reload - and calling only `syncPlaces` here would leave the picked dot
+  // and its label absent on first paint whenever a pick was already in state.
+  syncPicked(map, props.places.find((place) => place.id === props.pickedId) ?? null);
   syncRoute(map, props.route);
 }
 
@@ -649,7 +701,6 @@ function syncPlaces(
   map: MapLibreMap,
   places: readonly Place[],
   inReachIds: ReadonlySet<string>,
-  pickedId: string | null,
 ): void {
   setData(map, "places", {
     type: "FeatureCollection",
@@ -659,9 +710,44 @@ function syncPlaces(
       properties: {
         id: place.id,
         name: place.name,
-        state: place.id === pickedId ? "picked" : inReachIds.has(place.id) ? "in" : "out",
+        // "picked" is gone from this vocabulary: the winner lives in its own
+        // source now. Two values, and the filters below read them.
+        state: inReachIds.has(place.id) ? "in" : "out",
+        // Empty string rather than absent, because a MapLibre `["get"]` on a
+        // missing property yields null and `["!=", null, ""]` is true - which
+        // would draw every destination as a detour.
+        detour: place.detour ?? "",
       },
     })),
+  });
+}
+
+/**
+ * The winner, alone in its own source.
+ *
+ * **The winner is drawn twice, and that is accepted.** The `places` layer keeps
+ * its `state != "out"` filter, so an in-reach winner still renders there as an
+ * ordinary dot underneath this one. It costs one circle and is invisible.
+ *
+ * The behaviour worth naming is the out-of-reach pick: while "picked" was a
+ * `state` value it overrode "out" and the grey dot vanished. Now the grey dot
+ * stays and the white one draws over it - which is the better reading, since a
+ * pick outside the contour should still look outside the contour underneath its
+ * marker, but it is a change rather than an accident.
+ */
+function syncPicked(map: MapLibreMap, place: Place | null): void {
+  setData(map, "place-picked", {
+    type: "FeatureCollection",
+    features:
+      place === null
+        ? []
+        : [
+            {
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [place.lng, place.lat] },
+              properties: { id: place.id, name: place.name },
+            },
+          ],
   });
 }
 

@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { VIBES, type Vibe } from "../data/places";
+import { PLACE_KINDS, VIBES, type PlaceKind, type Vibe } from "../data/places";
 import type { ClimbBand } from "../lib/elevation";
 import { playTap, playThock } from "../lib/sound";
 
@@ -15,6 +15,7 @@ export type FiltersProps = {
   roundTrip: boolean;
   edgeOnly: boolean;
   weatherAware: boolean;
+  kind: PlaceKind;
   /** False when the engine's graph has no elevation in it. */
   climbAvailable: boolean;
   onClimb: (climb: ClimbBand | "any") => void;
@@ -22,6 +23,7 @@ export type FiltersProps = {
   onToggleRoundTrip: () => void;
   onToggleEdge: () => void;
   onToggleWeatherAware: () => void;
+  onKind: (kind: PlaceKind) => void;
 };
 
 export function Filters(props: FiltersProps) {
@@ -62,6 +64,26 @@ export function Filters(props: FiltersProps) {
           hint="Trim the walk for rain, heat and dark"
         />
       </div>
+
+      {/* Before Climb, because the tier is the coarser question: what kind of
+          thing am I walking to, then how hard is the walk. */}
+      <fieldset className="chips">
+        <legend className="field-label">Kind</legend>
+        {PLACE_KINDS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className="chip"
+            aria-pressed={props.kind === option.id}
+            onClick={() => {
+              playTap(props.kind !== option.id);
+              props.onKind(option.id);
+            }}
+          >
+            {option.label}
+          </button>
+        ))}
+      </fieldset>
 
       <fieldset className="chips">
         <legend className="field-label">Climb</legend>
