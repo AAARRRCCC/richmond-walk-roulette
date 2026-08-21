@@ -143,6 +143,12 @@ never touched.
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
 
+**Chunk 5 — two boxes.** 67 of 69 ticked.
+
+- [ ] *`prefers-reduced-motion`.* Section 5.1. A flat fill and a text note, neither animated.
+- [ ] *The dead zone and the cap note at a phone width.* Section 5.3 — reaching the capped state
+  inside the iframe probe needs the dev clock hook, which lives on the outer window.
+
 **Chunk 4 — two boxes.** 61 of 63 ticked.
 
 - [ ] *`prefers-reduced-motion`.* Section 5.1. Two anchors and a line of text have nothing to animate.
@@ -289,6 +295,9 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Tests after chunk 3 | 164 passing | |
 | App JS after chunk 4 | 77,015 B (75.2 KiB) | +217 B |
 | Tests after chunk 4 | 172 passing | |
+| App JS after chunk 5 | 79,785 B (77.9 KiB) | +2,770 B; 22.0 KB of headroom left |
+| Tests after chunk 5 | 178 passing | |
+| `formatToParts` per 26-position scrub | 150 → **0** | Chunk 5 — see 6.3 |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
 
@@ -307,8 +316,32 @@ rather than so anybody does something about it.
 | 0 Foundations | +0.9 KB | +110 B (deferred to chunk 5 — nothing imports it yet) |
 | 1 Elevation wire | +0.7 KB | +545 B |
 | 2 `pool-reasoning` | +1.4 KB | **+2,784 B** |
+| 5 `daylight-budget` | +1.5 KB | +2,770 B (that spec's own line was 3 KB; README section 5's row is the low one) |
 | 4 `apple-maps` | +0.3 KB | +217 B — the closest any chunk has come |
 | 3 `elevation-profile` UI | +1.2 KB | +2,154 B (its own spec allowed 2.5 KB; README section 5's row is the low one) |
+
+### 6.3 A dev-only way to reach dusk, and one real performance find
+
+Two things came out of chunk 5 that are worth a person's attention.
+
+**`walkRouletteDev.clockOffset(ms)` exists, in dev builds only.** Three of this app's states cannot be
+reached without waiting until evening: the dial's dead zone, the after-dark statement and the fit
+warning. `setClockOffset` was already the seam `weather-filters` will use to correct a wrong device
+clock, so the dev build exposes it. It is inside an `import.meta.env.DEV` branch, which Vite folds to
+`false` and drops from a production bundle. GOAL.md's own final checklist asks for exactly this — a
+documented way to reach the states that are hardest to reach on purpose.
+
+There is a catch worth knowing, because it cost an hour: **the clock stops while the document is
+hidden, on purpose**, so a backgrounded tab shows no change at all until it is looked at. That is the
+feature working, and a tab being driven by automation counts as hidden. The comment above the hook
+says so.
+
+**The chart's memo was not covering the clock strings.** `elevation-profile`'s criterion 16 asks that
+scrubbing the dial not call `Intl.DateTimeFormat.formatToParts` per frame. Instrumenting it found
+**150 calls across a 26-position scrub**. The conditions memo was doing its job — `daylightAt` really
+does run once a minute — but `describeDusk` and `describeDeadline` each call `formatClock`, and three
+call sites render them on every frame. Both are now cached on the `Daylight` identity, the same
+`WeakMap` trick `smooth.ts` uses on contours. Measured after: **0**.
 
 ### 6.1 Every walking time in the app changed, and nothing on screen says so
 

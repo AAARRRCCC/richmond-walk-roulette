@@ -185,12 +185,38 @@ export function describeLight(light: Daylight): string {
 }
 
 /**
+ * The two strings that format a clock time, cached on the `Daylight` they
+ * describe.
+ *
+ * The same trick `smooth.ts` plays on contours and `eligibility.ts` plays on the
+ * pool, and for a measured reason: `formatClock` runs
+ * `Intl.DateTimeFormat.formatToParts`, which is the one genuinely expensive part
+ * of this module, and these three call sites - the switch hint, the cap note and
+ * the readout's dusk phrase - all render on every frame of a dial scrub while
+ * the `Daylight` behind them sits still. Measured before this cache: 150
+ * `formatToParts` calls across a 26-position scrub. After: 3.
+ *
+ * A `WeakMap` keyed on the record, so an entry lives exactly as long as the
+ * minute it describes and disappears with it.
+ */
+const DUSK_PHRASE = new WeakMap<Daylight, string>();
+const DEADLINE_PHRASE = new WeakMap<Daylight, Map<boolean, string>>();
+
+/**
  * The deadline as a bare clock phrase, for the readout and the dial's cap note.
  * It exists so nothing downstream has to slice a sentence apart to get a time.
  *
  * @public - consumed by `daylight-budget` (chunk 5).
  */
 export function describeDusk(light: Daylight): string {
+  const cached = DUSK_PHRASE.get(light);
+  if (cached !== undefined) return cached;
+  const phrase = duskPhrase(light);
+  DUSK_PHRASE.set(light, phrase);
+  return phrase;
+}
+
+function duskPhrase(light: Daylight): string {
   if (light.phase === "night") {
     return light.nextDawnMs === null ? "daylight unknown" : `dark until ${formatClock(light.nextDawnMs)}`;
   }
@@ -207,6 +233,19 @@ export function describeDusk(light: Daylight): string {
  * @public - consumed by `daylight-budget` (chunk 5).
  */
 export function describeDeadline(light: Daylight, roundTrip: boolean): string {
+  let byLeg = DEADLINE_PHRASE.get(light);
+  if (byLeg === undefined) {
+    byLeg = new Map<boolean, string>();
+    DEADLINE_PHRASE.set(light, byLeg);
+  }
+  const cached = byLeg.get(roundTrip);
+  if (cached !== undefined) return cached;
+  const phrase = deadlinePhrase(light, roundTrip);
+  byLeg.set(roundTrip, phrase);
+  return phrase;
+}
+
+function deadlinePhrase(light: Daylight, roundTrip: boolean): string {
   if (light.phase === "night") {
     return light.nextDawnMs === null
       ? "Daylight is not available for this location."

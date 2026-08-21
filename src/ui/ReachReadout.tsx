@@ -17,6 +17,8 @@ export type ReachReadoutProps = {
    * A hash of the counts would not do: those move on every frame of a scrub.
    */
   filterKey: string;
+  /** `describeDusk`'s bare clock phrase, or null while there is nothing to say. */
+  duskNote: string | null;
   /**
    * Bumped when the dial comes to rest. The visible line tracks every frame of
    * a scrub, which is the point of prefetching the ladder; the announced one
@@ -33,7 +35,8 @@ export function ReachReadout(props: ReachReadoutProps) {
   // is left after the filters.
   const line = ready
     ? `${formatArea(props.areaSqMeters)} within ${props.outerMinutes} min, ` +
-      `${pluralize(props.pool.inReach, "place")} in reach. ${summaryLine(props.pool)}`
+      `${pluralize(props.pool.inReach, "place")} in reach` +
+      `${props.duskNote === null ? "" : `, ${props.duskNote}`}. ${summaryLine(props.pool)}`
     : "";
 
   /**
@@ -49,8 +52,14 @@ export function ReachReadout(props: ReachReadoutProps) {
   const settledRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (settledRef.current && line !== "") settledRef.current.textContent = line;
+    // `line` itself stays out of the deps because it is rebuilt every frame of
+    // a scrub; `duskNote` is listed because it changes at most once a minute and
+    // only when a sentence-level fact did. The honest residue: a cap tick that
+    // moves the budget without changing the dusk phrase moves the visible
+    // numbers silently for one minute. The alternative is announcing a
+    // recomputed reach once a minute, unprompted, which is worse to listen to.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.commitKey, props.filterKey, ready]);
+  }, [props.commitKey, props.filterKey, props.duskNote, ready]);
 
   return (
     <>
@@ -65,6 +74,12 @@ export function ReachReadout(props: ReachReadoutProps) {
           <strong>{formatArea(props.areaSqMeters)}</strong> within {props.outerMinutes} min
           <span className="readout-sep" aria-hidden="true" />
           <strong>{pluralize(props.pool.inReach, "place")}</strong> in reach
+          {props.duskNote !== null && (
+            <>
+              <span className="readout-sep" aria-hidden="true" />
+              <strong>{props.duskNote}</strong>
+            </>
+          )}
         </p>
       )}
       {ready && (

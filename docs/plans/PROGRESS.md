@@ -515,3 +515,74 @@ done from here and is now a checkbox in `LAUNCH.md` under **Ship** with what to 
 yet: the switch, the dial's dead zone, the cap note, the light line on the card, and the fit warning.
 Its pure modules and their 20 tests have been sitting green and unimported since chunk 0, so this is
 wiring rather than arithmetic. Preconditions: `npm run verify` green (met).
+
+---
+
+## Chunk 5 — `daylight-budget` — done
+
+The dial promised a walk of N minutes and never knew whether those minutes existed. Set it to ninety
+at seven in the evening in November and the app would draw a confident contour across half the city
+and pick you a spot on Belle Isle you would reach in the dark.
+
+It knows now. Chunk 0's pure modules have been sitting green and unimported since; this is the wiring.
+
+### The three states, all seen
+
+| Clock | What the app does |
+| --- | --- |
+| 62 min to dusk, guard on | `max` drops to 62, the track shades from 62 to 100 behind a dashed edge, and the note reads **"Daylight limit 62 min · dusk 8:22 pm"** |
+| 10:30 pm, guard still on | The dial is back to **full range**. It does not clamp to zero. The switch stays on and operable, the hint becomes **"It is dark. Civil dawn is 6:03 am."**, the readout **"dark until 6:03 am"**, the card's clause **"after dark"**, and the fit warning fires — for a **seven-minute** walk, which is the case test 13 exists to catch |
+| 40 min to sunset | The card reads **"7 min out and back · sunset in 42"** and the warning is gone, because a seven-minute walk fits |
+
+The cap is drawn as a dead zone rather than a shorter slider, which is the whole decision: a reader
+can see what the light is costing them.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm run lint` | eslint, oxlint, knip all clean |
+| `npm test` | **178 passing**, 0 failing |
+| `npm run build` | succeeds |
+| `verify-bundle` | **79,785 B** gz, **+2,770 B**, under that spec's 3 KB line. 22.0 KB of headroom |
+| `verify-engine`, `verify-drift`, `verify-places`, `verify-signature` | clean |
+| `git diff` under `server/`, `worker/`, `public/`, `wrangler.toml` | empty — zero requests, as the spec claims |
+
+### Two things the acceptance criteria caught
+
+1. **`formatToParts` was running on every frame of a scrub.** Criterion 16 asks that it not, so it was
+   instrumented: **150 calls across a 26-position scrub**. The conditions memo was working — `daylightAt`
+   really does run once a minute — but `describeDusk` and `describeDeadline` each call `formatClock`,
+   and three call sites render them per frame. Both are now cached on the `Daylight` identity, the same
+   `WeakMap` trick `smooth.ts` uses on contours. Measured after: **0**.
+2. **The clock did not re-read when the freeze lifted.** The hook is frozen through a throw, and it
+   waited for the next minute boundary afterwards — up to sixty seconds of staleness at the moment the
+   reader is looking again. The same gap applied to a tab returning from the background. Both paths now
+   kick off an immediate tick rather than waiting. Found by criterion 10, which asks that the cap land
+   on the falling edge of a throw: it did not, and now it does.
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-05.md`: **67 of 69 ticked**. Two open, both environmental:
+`prefers-reduced-motion` (5.1) and the dead zone at a phone width (5.3).
+
+### Spec corrections
+
+The three README §2.1 amendments are implemented rather than the spec's original spelling:
+`useConditions(origin, frozen)`, the full `CapReason` union, and `Session.timeCap: TimeCap | null`
+with a `timeCap` action replacing `lightCapMinutes`/`lightCap`. App already calls
+`mergeCaps([lightCap])` — an array of one — so chunk 7 appends rain, storm, heat and cold rather than
+inventing a second clamp path.
+
+### Deferred
+
+- HUMAN-REVIEW 6.3 — `walkRouletteDev.clockOffset(ms)` exists in dev builds, and the catch that goes
+  with it: the clock stops while the document is hidden, which is the feature working and reads as a
+  bug to anyone automating the page.
+
+### Next
+
+**Chunk 6 — `geolocate`.** The phone says where you are, with a refusal when the fix is too coarse to
+draw. `src/lib/bounds.ts` has been in place since the harness with the exact contract that spec
+writes, and its three tests pass. Preconditions: `npm run verify` green (met).

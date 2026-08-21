@@ -56,6 +56,8 @@ export type ResultCardProps = {
   /** Metres along the profile the reader is scrubbing, or null. */
   hoverMeters: number | null;
   onHoverRoute: (meters: number | null) => void;
+  /** False when the measured walk does not finish before civil dusk. */
+  fitsLight: boolean;
   onSpinAgain: () => void;
   onRetryRoute: () => void;
   onDismiss: () => void;
@@ -182,6 +184,13 @@ export function ResultCard(props: ResultCardProps) {
           {reasons.includes("inside-floor")
             ? "Closer than your range's lower end."
             : "Outside your current time budget."}
+        </p>
+      )}
+
+      {!props.fitsLight && (
+        <p className="result-warning">
+          <WarningIcon size={15} weight="fill" aria-hidden="true" />
+          This walk does not fit in the light left.
         </p>
       )}
 

@@ -898,6 +898,41 @@ code {
   color: var(--accent);
 }
 
+/*
+ * The dead zone: from the cap to a hundred.
+ *
+ * Drawn rather than cut, which is the whole decision - a shorter slider would
+ * hide what the light is costing, and this shows it. A flat fill, not a blur,
+ * so `prefers-reduced-transparency` has nothing to turn off.
+ */
+.dial-track.is-capped::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--cap-percent);
+  right: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 1px dashed var(--line-strong);
+  border-radius: 0 999px 999px 0;
+  pointer-events: none;
+}
+
+.dial-cap-note {
+  margin: 4px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The switch vocabulary supplies the rest. */
+.guard-row {
+  display: block;
+  padding-top: 2px;
+}
+
 /* ------------------------------------------------ elevation profile */
 
 .profile {

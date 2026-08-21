@@ -51,6 +51,13 @@ whole argument for the app.
   loading it keeps turning rather than parking on a name. A wheel that has
   stopped has already decided, and it should not have.
 - **Far edge only** narrows the pool to places between the last two contours.
+- **Daylight is computed locally**, from NOAA's algorithm - no API, no key, no
+  request. The deadline is civil dusk, not sunset: sunset is when it starts to
+  feel dark and is the number people know, so the card quotes it, but civil dusk
+  is the last moment you can read a trail without a torch, so that is what the
+  clamp uses. **Get back before dark** shades the dial from whatever the light
+  allows up to a hundred, rather than shortening the track, so you can see what
+  the light is costing. After dark it stops clamping and says so instead.
 - **The panel always says how many places are in reach, and why the rest are
   not.** Every place gets a verdict rather than a yes-or-no, so the line under
   the readout reads "6 to spin - 12 shut - 20 wrong terrain" instead of leaving
@@ -94,7 +101,7 @@ snapshot wrong.
   key.
 - Valhalla for isochrones and walking routes, behind a same-origin proxy
 - Cloudflare Worker in production. The Vite dev server mounts the same handler.
-- 75 KB gzipped of app JavaScript, plus MapLibre's own 277 KB. Both measured by
+- 77 KB gzipped of app JavaScript, plus MapLibre's own 277 KB. Both measured by
   `node scripts/verify-bundle.mjs` rather than remembered; the line used to claim
   64 KB and 276 KB and had been wrong for some number of commits
 

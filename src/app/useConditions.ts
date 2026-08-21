@@ -62,12 +62,22 @@ export function useConditions(origin: LngLat, frozen: boolean): Conditions {
 
     let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const schedule = (): void => {
-      const untilNextMinute = msToNextMinute(Date.now() + clockOffsetMs());
+    /**
+     * `immediate` re-reads now instead of waiting for the boundary.
+     *
+     * Two paths arrive with a clock that may have moved while nothing was
+     * listening: a tab returning from the background, and a throw ending - the
+     * hook is frozen through a throw, so it stops reading. Waiting out the
+     * boundary would leave the dial's cap up to a minute stale at exactly the
+     * moment the reader is looking at it again. On mount it costs one timeout
+     * that sets the value it already has, which React drops.
+     */
+    const schedule = (immediate = false): void => {
+      const delay = immediate ? 0 : msToNextMinute(Date.now() + clockOffsetMs());
       timer = setTimeout(() => {
         setAtMs(nowMinute());
         schedule();
-      }, untilNextMinute);
+      }, delay);
     };
 
     const stop = (): void => {
@@ -78,13 +88,12 @@ export function useConditions(origin: LngLat, frozen: boolean): Conditions {
     const onVisibility = (): void => {
       stop();
       if (document.visibilityState === "hidden") return;
-      // Re-read before rescheduling: the tab may have been hidden for hours,
-      // and the first thing a returning reader sees must not be a stale minute.
-      setAtMs(nowMinute());
-      schedule();
+      // The tab may have been hidden for hours, and the first thing a returning
+      // reader sees must not be a stale minute.
+      schedule(true);
     };
 
-    if (document.visibilityState !== "hidden") schedule();
+    if (document.visibilityState !== "hidden") schedule(true);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       stop();

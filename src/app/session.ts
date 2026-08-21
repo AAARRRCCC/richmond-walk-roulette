@@ -2,6 +2,7 @@ import type { LngLat } from "../lib/geometry.ts";
 import { DIAL_STEP, MAX_MINUTES, MIN_MINUTES } from "../lib/isochrone.ts";
 import { DEFAULT_ORIGIN, type Origin, type Vibe } from "../data/places.ts";
 import type { ClimbBand } from "../lib/elevation.ts";
+import type { TimeCap } from "./conditions.ts";
 
 /**
  * What the user has chosen. Everything derived from it, the reachable area and
@@ -26,6 +27,19 @@ export type Session = {
   edgeOnly: boolean;
   climb: ClimbBand | "any";
   vibes: Vibe[];
+  /** "Get back before dark". Opt-in; never set by the app itself. */
+  beforeDark: boolean;
+  /**
+   * The time constraint currently clamping the dial, or null for "no usable
+   * clamp" - either the mode is off, or it is already dark and a cap would be a
+   * fiction. Derived, pushed in by the `timeCap` action; never persisted.
+   *
+   * A `TimeCap` rather than a bare number so the dial's note can name *which*
+   * condition is clamping. `weather-filters` routes rain, storm, heat and cold
+   * onset through the same field, which is what keeps one cap on the dial
+   * instead of two competing ones.
+   */
+  timeCap: TimeCap | null;
   pickedId: string | null;
   spinning: boolean;
   /**
@@ -70,6 +84,8 @@ export type Action =
   | { type: "climb"; climb: ClimbBand | "any" }
   | { type: "toggleVibe"; vibe: Vibe }
   | { type: "clearVibes" }
+  | { type: "toggleBeforeDark" }
+  | { type: "timeCap"; cap: TimeCap | null }
   | { type: "clearFilters" }
   | { type: "spinStart" }
   | { type: "spinCancel" }
@@ -102,11 +118,15 @@ const DEFAULT_BUDGET_MINUTES = 50;
 
 export const initialSession: Session = {
   origin: DEFAULT_ORIGIN,
-  budgetMinutes: clampBudget(DEFAULT_BUDGET_MINUTES, DEFAULT_ROUND_TRIP),
+  // No state to take a cap from at module scope, and none is wanted: the mode
+  // defaults off, so the effective cap is null either way.
+  budgetMinutes: clampBudget(DEFAULT_BUDGET_MINUTES, DEFAULT_ROUND_TRIP, null),
   floorMinutes: dialMinimum(DEFAULT_ROUND_TRIP),
   roundTrip: DEFAULT_ROUND_TRIP,
   edgeOnly: false,
   climb: "any",
+  beforeDark: false,
+  timeCap: null,
   vibes: [],
   pickedId: null,
   spinning: false,
@@ -153,30 +173,30 @@ export function reduce(state: Session, action: Action): Session {
       // Clearing the failure matters as much: one contour that exhausted its
       // retries must not lock every other dial position out of trying.
       {
-        const budgetMinutes = clampBudget(action.minutes, state.roundTrip);
+        const budgetMinutes = clampBudget(action.minutes, state.roundTrip, effectiveCap(state));
         return {
           ...state,
           budgetMinutes,
           // The floor cannot overtake the budget: a range whose ends crossed
           // would ask for a band with nothing in it.
-          floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, state.roundTrip),
+          floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, state.roundTrip, effectiveCap(state)),
           failure: null,
         };
       }
     case "floor":
       return {
         ...state,
-        floorMinutes: clampFloor(action.minutes, state.budgetMinutes, state.roundTrip),
+        floorMinutes: clampFloor(action.minutes, state.budgetMinutes, state.roundTrip, effectiveCap(state)),
         failure: null,
       };
     case "toggleRoundTrip": {
       const roundTrip = !state.roundTrip;
-      const budgetMinutes = clampBudget(state.budgetMinutes, roundTrip);
+      const budgetMinutes = clampBudget(state.budgetMinutes, roundTrip, effectiveCap({ ...state, roundTrip }));
       return {
         ...state,
         roundTrip,
         budgetMinutes,
-        floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, roundTrip),
+        floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, roundTrip, effectiveCap({ ...state, roundTrip })),
         // Halves or doubles the outbound contour with no dial commit to
         // piggyback on, so the map has to be told to re-frame.
         failure: null,
@@ -197,6 +217,45 @@ export function reduce(state: Session, action: Action): Session {
     // The offered fix for `no-matching-vibe` clears the vibes and nothing else.
     // `clearFilters` is a sledgehammer aimed at an unknown nail, and toggling
     // each vibe off one at a time is N dispatches and N renders.
+    /**
+     * Flips the guard and re-clamps, the same shape as `toggleRoundTrip` and
+     * for the same reason: the outbound contour can move with no dial commit to
+     * piggyback on, so the map needs a re-frame of its own.
+     */
+    case "toggleBeforeDark": {
+      const beforeDark = !state.beforeDark;
+      const cap = effectiveCap({ ...state, beforeDark });
+      const budgetMinutes = clampBudget(state.budgetMinutes, state.roundTrip, cap);
+      return {
+        ...state,
+        beforeDark,
+        budgetMinutes,
+        floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, state.roundTrip, cap),
+        failure: null,
+        framingKey: state.framingKey + 1,
+      };
+    }
+    /**
+     * The once-a-minute tick lands here, and almost always changes nothing.
+     * Returning the same object when nothing moved is what keeps that tick from
+     * re-rendering the whole app - it costs one Object.is comparison instead.
+     *
+     * Deliberately does NOT bump `framingKey`: a passive tick must not lurch
+     * the camera once a minute.
+     */
+    case "timeCap": {
+      const next = { ...state, timeCap: action.cap };
+      const cap = effectiveCap(next);
+      const budgetMinutes = clampBudget(state.budgetMinutes, state.roundTrip, cap);
+      const floorMinutes = clampFloor(state.floorMinutes, budgetMinutes, state.roundTrip, cap);
+      const same =
+        state.timeCap?.minutes === action.cap?.minutes &&
+        state.timeCap?.reason === action.cap?.reason &&
+        state.timeCap?.untilMs === action.cap?.untilMs &&
+        state.budgetMinutes === budgetMinutes &&
+        state.floorMinutes === floorMinutes;
+      return same ? state : { ...next, budgetMinutes, floorMinutes };
+    }
     case "clearVibes":
       return state.vibes.length === 0 ? state : { ...state, vibes: [] };
     // THE CONTRACT: every sibling filter field must be reset here, and must
@@ -279,11 +338,16 @@ export function budgetStep(): number {
  * immediately re-snaps to something else, and the button lies about the number
  * written on its own face.
  */
-export function clampBudget(minutes: number, roundTrip: boolean): number {
+export function clampBudget(
+  minutes: number,
+  roundTrip: boolean,
+  cap: number | null,
+): number {
   const low = dialMinimum(roundTrip);
   const step = budgetStep();
   const snapped = low + Math.round((minutes - low) / step) * step;
-  return Math.min(MAX_MINUTES, Math.max(low, snapped));
+  const ceiling = cap === null ? MAX_MINUTES : Math.min(MAX_MINUTES, cap);
+  return Math.min(ceiling, Math.max(low, snapped));
 }
 
 /**
@@ -291,11 +355,46 @@ export function clampBudget(minutes: number, roundTrip: boolean): number {
  * whole band below the budget. A floor equal to the dial minimum is the
  * "no lower bound" position rather than a 5 minute hole.
  */
-function clampFloor(minutes: number, budgetMinutes: number, roundTrip: boolean): number {
+function clampFloor(
+  minutes: number,
+  budgetMinutes: number,
+  roundTrip: boolean,
+  cap: number | null,
+): number {
   const low = dialMinimum(roundTrip);
   const step = budgetStep();
   const snapped = low + Math.round((minutes - low) / step) * step;
-  return Math.min(Math.max(low, budgetMinutes - step), Math.max(low, snapped));
+  const ceiling = cap === null ? budgetMinutes : Math.min(budgetMinutes, cap);
+  return Math.min(Math.max(low, ceiling - step), Math.max(low, snapped));
+}
+
+/**
+ * The cap that is actually in force, or null.
+ *
+ * Null when the mode is off, when nothing is clamping, or when the cap has
+ * fallen below the dial's own minimum - because a cap of zero is not a dial and
+ * a cap with one position on it is not one either. After dark the mode says
+ * something honest instead of clamping to a fiction.
+ */
+function effectiveCap(
+  state: Pick<Session, "beforeDark" | "timeCap" | "roundTrip">,
+): number | null {
+  if (!state.beforeDark || state.timeCap === null) return null;
+  return state.timeCap.minutes < dialMinimum(state.roundTrip) ? null : state.timeCap.minutes;
+}
+
+/**
+ * The dial's usable ceiling. The *track* still spans `dialMinimum..MAX_MINUTES`
+ * - the clamp is drawn as a dead zone rather than a shorter slider, so a reader
+ * can see how much walk the light is costing them.
+ *
+ * @public - consumed by App and `TimeDial`.
+ */
+export function dialMaximum(
+  state: Pick<Session, "beforeDark" | "timeCap" | "roundTrip">,
+): number {
+  const cap = effectiveCap(state);
+  return cap === null ? MAX_MINUTES : Math.min(cap, MAX_MINUTES);
 }
 
 /** Minutes of *outbound* walking, which is what the isochrone measures. */

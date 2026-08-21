@@ -1,4 +1,4 @@
-import { useId, useRef } from "react";
+import { useId, useRef, type CSSProperties } from "react";
 import { playDetent } from "../lib/sound";
 import { MAX_MINUTES } from "../lib/isochrone";
 
@@ -10,6 +10,15 @@ export type TimeDialProps = {
    */
   floorMinutes: number;
   minimum: number;
+  /**
+   * The highest budget the two inputs will accept. The *track* still spans
+   * `minimum..MAX_MINUTES` on purpose: the clamp is drawn as a dead zone rather
+   * than as a shorter slider, so a reader can see how much walk the light is
+   * costing them.
+   */
+  maximum: number;
+  /** "Daylight limit 62 min · dusk 8:21 pm", when something is clamping. */
+  capNote?: string | undefined;
   /** How far one notch moves the budget. Doubled for round trips. */
   step: number;
   outboundMinutes: number;
@@ -34,6 +43,14 @@ export function TimeDial(props: TimeDialProps) {
     (_, i) => props.minimum + i * props.step,
   );
   const warming = props.warmedFraction < 1;
+  const capped = props.maximum < MAX_MINUTES;
+  const pct = (minutes: number): number => ((minutes - props.minimum) / span) * 100;
+
+  // SAFETY: React's CSSProperties has no index signature for custom
+  // properties, so a `--cap-percent` key cannot be expressed without an
+  // assertion. The value is a string this component just built from a number
+  // it already had; nothing is widened and nothing is trusted from outside.
+  const trackStyle = { "--cap-percent": `${pct(props.maximum)}%` } as CSSProperties;
 
   /**
    * A commit re-frames the camera, so it has to mean "the value moved". Four
@@ -70,7 +87,10 @@ export function TimeDial(props: TimeDialProps) {
         </span>
       </div>
 
-      <div className={`dial-track${hasFloor ? " has-floor" : ""}`}>
+      <div
+        className={`dial-track${hasFloor ? " has-floor" : ""}${capped ? " is-capped" : ""}`}
+        style={trackStyle}
+      >
         <div className="dial-marks" aria-hidden="true">
           {ticks.map((tick) => (
             <span
@@ -85,7 +105,7 @@ export function TimeDial(props: TimeDialProps) {
           className="dial-input"
           type="range"
           min={props.minimum}
-          max={MAX_MINUTES}
+          max={props.maximum}
           step={props.step}
           value={props.minutes}
           disabled={props.disabled === true}
@@ -95,9 +115,9 @@ export function TimeDial(props: TimeDialProps) {
           // already give a reader "50". What it cannot derive is that in round
           // trip mode fifty minutes is a twenty-five minute walk out.
           aria-valuetext={
-            props.roundTrip
+            (props.roundTrip
               ? `${props.minutes} minutes, ${props.outboundMinutes} out and ${props.outboundMinutes} back`
-              : `${props.minutes} minutes, one way`
+              : `${props.minutes} minutes, one way`) + (capped ? ", limited by daylight" : "")
           }
           onChange={(event) => {
             const next = Number(event.target.value);
@@ -123,7 +143,7 @@ export function TimeDial(props: TimeDialProps) {
           className="dial-input is-floor"
           type="range"
           min={props.minimum}
-          max={MAX_MINUTES}
+          max={props.maximum}
           step={props.step}
           value={props.floorMinutes}
           disabled={props.disabled === true}
@@ -144,6 +164,8 @@ export function TimeDial(props: TimeDialProps) {
           onBlur={commit}
         />
       </div>
+
+      {props.capNote !== undefined && <p className="dial-cap-note">{props.capNote}</p>}
 
       <div className="dial-scale" aria-hidden="true">
         <span>{props.minimum}</span>

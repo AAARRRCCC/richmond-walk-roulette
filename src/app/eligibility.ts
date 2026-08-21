@@ -634,8 +634,12 @@ export function suggestFix(
       // to 60 and the proposed budget still would not reach the place the button
       // names. DIAL_STEP is 1 today, which makes this a no-op - and the step is a
       // function precisely because it has changed before.
-      let snapped = clampBudget(raw, budget.roundTrip);
-      if (snapped < raw) snapped = clampBudget(raw + budgetStep(), budget.roundTrip);
+      // No cap here on purpose: this is a *proposal* for a budget the reader
+      // has not got yet, and the reducer will clamp it against whatever cap is
+      // in force when it lands. Passing one would have the fix quietly refuse
+      // to suggest a walk that daylight forbids, without saying so.
+      let snapped = clampBudget(raw, budget.roundTrip, null);
+      if (snapped < raw) snapped = clampBudget(raw + budgetStep(), budget.roundTrip, null);
       if (snapped >= raw) {
         return {
           kind: "widen-budget",

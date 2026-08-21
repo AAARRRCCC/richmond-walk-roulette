@@ -40,6 +40,7 @@ import {
 import {
   budgetStep,
   customOrigin,
+  dialMaximum,
   dialMinimum,
   initialSession,
   outboundFloorMinutes,
@@ -48,7 +49,11 @@ import {
   type Failure,
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
-import { formatFeet } from "../lib/format";
+import { formatFeet, formatMinutes } from "../lib/format";
+import { useConditions } from "./useConditions";
+import { capFromLight, describeDeadline, describeDusk, describeLight, fitsInLight } from "./daylight";
+import { clockOffsetMs, mergeCaps, setClockOffset, type TimeCap } from "./conditions";
+import { DaylightSwitch } from "../ui/DaylightSwitch";
 import { describeResult, walkClauses } from "./announce";
 import {
   REASON_COPY,
@@ -72,6 +77,35 @@ import { onSoundChange, playPress, playTap, setSoundOn, soundOn } from "../lib/s
  * `vite dev --host` from a phone still shows the dev instructions.
  */
 const isDevServer = import.meta.env.DEV;
+
+/**
+ * A way to reach dusk and after-dark on purpose, in dev only.
+ *
+ * Three of this app's states are hard to see deliberately - the dial's dead
+ * zone, the after-dark statement, and the fit warning - because reaching them
+ * means waiting until evening. `setClockOffset` is already the seam
+ * `weather-filters` will use to correct a wrong device clock; this exposes it in
+ * dev so the same seam can move the clock forward on demand:
+ *
+ *   __walkRoulette.clockOffset(4 * 60 * 60 * 1000)   // four hours later
+ *   __walkRoulette.clockOffset(0)                     // back to the device
+ *
+ * Never in a production bundle: the assignment is inside an `import.meta.env.DEV`
+ * branch, which Vite folds to `false` and drops entirely.
+ */
+type DevGlobal = typeof globalThis & {
+  walkRouletteDev?: { clockOffset: (ms: number) => void; readOffset: () => number };
+};
+
+if (import.meta.env.DEV) {
+  // SAFETY: one debug function attached to the global in a dev-only branch.
+  // The named type above widens `globalThis` by exactly this one optional
+  // property rather than erasing it; nothing is read back from here.
+  (globalThis as DevGlobal).walkRouletteDev = {
+    clockOffset: setClockOffset,
+    readOffset: clockOffsetMs,
+  };
+}
 
 /** Where the rail stops being a bottom sheet. Must match the stylesheet. */
 const WIDE = "(min-width: 900px)";
@@ -214,6 +248,13 @@ export function App() {
    * bands across the range rather than the budget, punches the floor contour
    * out of each one, and measures the area from what is left.
    */
+  /**
+   * The one clock. Frozen during a throw: a minute boundary crossed mid-reel
+   * would move the cap, which moves the budget, which moves the reach, which
+   * changes the pool the reel is already turning through.
+   */
+  const conditions = useConditions(origin, state.spinning);
+
   const floorOutbound = outboundFloorMinutes(state);
   const reach = cachedReach(origin, outbound, floorOutbound ?? 0);
 
@@ -298,14 +339,14 @@ export function App() {
           },
         ];
 
-  const conditions: PoolConditions = {
+  const poolConditions: PoolConditions = {
     reach,
     floorPolygons,
     vibes: state.vibes,
     edgeOnly: state.edgeOnly,
     rules,
   };
-  const pool = poolReport(PLACES, conditions);
+  const pool = poolReport(PLACES, poolConditions);
   const candidates = pool.included;
   const candidateKey = pool.includedKey;
   const picked = PLACES.find((place) => place.id === state.pickedId) ?? null;
@@ -606,12 +647,63 @@ export function App() {
   const pickedVerdict = picked ? (pool.verdicts.get(picked.id) ?? null) : null;
 
   /**
+   * Does the walk on screen finish before civil dusk?
+   *
+   * Judged only against a *measured* walk: while the route is pending there is
+   * nothing to accuse, and the card is showing skeletons anyway. Note what is
+   * absent - `state.beforeDark`. The warning fires whether or not the mode is
+   * on, because the mode is about clamping and the warning is about truth.
+   */
+  const walkMinutesNow =
+    route === null
+      ? null
+      : Math.ceil((state.roundTrip ? route.durationSeconds * 2 : route.durationSeconds) / 60);
+  const walkFitsLight =
+    picked === null || routePending || walkMinutesNow === null
+      ? true
+      : fitsInLight(conditions.light, walkMinutesNow);
+
+  /**
    * Where the reader is scrubbing the elevation chart, in metres along it.
    *
    * Not in `Session`: it is transient pointer state with no bearing on the walk,
    * and putting it in the reducer would re-run every derivation on every frame
    * of a drag.
    */
+  /**
+   * The cap, derived in render and dispatched by a one-value effect.
+   *
+   * A `number | null` in the deps, so it compares by value and the effect runs
+   * only when the cap actually moves - not once a minute. The `spinning` guard
+   * is load-bearing: a cap that moves the budget mid-throw changes the reach,
+   * which changes `candidateKey`, which fires the spin-abort effect. A throw is
+   * a couple of seconds; the minute can wait, and because `state.spinning` is in
+   * the deps the pending cap lands on the falling edge of the reel.
+   */
+  const lightCapMinutes = state.beforeDark
+    ? capFromLight(conditions.light, state.roundTrip, dialMinimum(state.roundTrip), budgetStep())
+    : null;
+
+  const lightCap: TimeCap | null =
+    lightCapMinutes === null || conditions.light.events.civilDuskMs === null
+      ? null
+      : {
+          minutes: lightCapMinutes,
+          reason: "daylight",
+          untilMs: conditions.light.events.civilDuskMs,
+        };
+
+  // `mergeCaps` of one is the cap, and that is the point: chunk 7 adds rain,
+  // storm, heat and cold to this array rather than inventing a second clamp.
+  const timeCap = mergeCaps([lightCap]);
+
+  useEffect(() => {
+    if (state.spinning) return;
+    dispatch({ type: "timeCap", cap: timeCap });
+    // The cap's own fields are the value; the object is rebuilt every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeCap?.minutes, timeCap?.reason, timeCap?.untilMs, state.spinning]);
+
   const [hover, setHover] = useState<{ pickedId: string | null; meters: number | null }>({
     pickedId: null,
     meters: null,
@@ -630,6 +722,20 @@ export function App() {
    * the block renders nothing at all rather than an empty box.
    */
   const resultLines: readonly ResultLine[] = [
+    ...(route !== null && !routePending
+      ? [
+          {
+            // The duration repeated from the stat directly above, deliberately.
+            // A stat is a label-over-value pair that is scanned in a grid; a
+            // sentence is read. "sunset in 40" beside a bare "52 min" in a
+            // column is two facts, and "52 min out and back · sunset in 40" is
+            // one comparison - which is the entire point of the line.
+            key: "light" as const,
+            text: `${formatMinutes(state.roundTrip ? route.durationSeconds * 2 : route.durationSeconds)} ${state.roundTrip ? "out and back" : "on foot"} · ${describeLight(conditions.light)}`,
+            tier: "fact" as const,
+          },
+        ]
+      : []),
     {
       // Neither handoff carries our walk - both send two coordinates and let
       // the other app recompute with its own graph and its own pedestrian
@@ -665,6 +771,7 @@ export function App() {
           // The only way an exclusion reaches a screen reader on a result. The
           // card shows it as a row; this is the same sentence, lowercased into
           // the middle of one.
+          walkFitsLight ? "" : "does not fit in the light left",
           pickedVerdict === null || pickedVerdict.included || pickedVerdict.reasons[0] === undefined
             ? ""
             : `not in the pool: ${asClause(REASON_COPY[pickedVerdict.reasons[0]].sentence)}`,
@@ -689,7 +796,7 @@ export function App() {
    * one moment nothing else is happening.
    */
   const fix: PoolFix = emptyPool
-    ? suggestFix(PLACES, conditions, cachedWalkMinutes(origin), { roundTrip: state.roundTrip })
+    ? suggestFix(PLACES, poolConditions, cachedWalkMinutes(origin), { roundTrip: state.roundTrip })
     : NO_FIX;
 
   /**
@@ -816,6 +923,12 @@ export function App() {
             minutes={state.budgetMinutes}
             floorMinutes={state.floorMinutes}
             minimum={dialMinimum(state.roundTrip)}
+            maximum={dialMaximum(state)}
+            capNote={
+              dialMaximum(state) < MAX_MINUTES
+                ? `Daylight limit ${dialMaximum(state)} min · ${describeDusk(conditions.light)}`
+                : undefined
+            }
             step={budgetStep()}
             outboundMinutes={outbound}
             roundTrip={state.roundTrip}
@@ -825,6 +938,13 @@ export function App() {
             onChange={(minutes) => dispatch({ type: "budget", minutes })}
             onFloorChange={(minutes) => dispatch({ type: "floor", minutes })}
             onCommit={() => dispatch({ type: "frame" })}
+          />
+
+          <DaylightSwitch
+            checked={state.beforeDark}
+            deadline={describeDeadline(conditions.light, state.roundTrip)}
+            disabled={picking}
+            onToggle={() => dispatch({ type: "toggleBeforeDark" })}
           />
 
           {status === "not-configured" ? (
@@ -850,7 +970,8 @@ export function App() {
               status={status}
               areaSqMeters={reach?.areaSqMeters ?? 0}
               pool={pool}
-              filterKey={conditionsSignature(conditions)}
+              filterKey={conditionsSignature(poolConditions)}
+              duskNote={status === "ready" ? describeDusk(conditions.light) : null}
               outerMinutes={outer?.minutes ?? outbound}
               commitKey={state.framingKey}
             />
@@ -933,6 +1054,7 @@ export function App() {
               verdict={pickedVerdict}
               hoverMeters={hoverMeters}
               onHoverRoute={setHoverMeters}
+              fitsLight={walkFitsLight}
               onSpinAgain={spin}
               onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
               onDismiss={() => {
