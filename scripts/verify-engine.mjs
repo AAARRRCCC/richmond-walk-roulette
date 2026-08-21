@@ -13,6 +13,7 @@
 // So every check here posts a real request and reads the answer. Run it at the
 // start of every chunk that touches the engine, and from LAUNCH.md's checklist.
 import { readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 
 const args = process.argv.slice(2);
 const asJson = args.includes("--json");
@@ -41,8 +42,23 @@ async function engineUrl() {
   return null;
 }
 
-/** Matches server/proxy.ts. Restating it here is what the speed fixture checks. */
-const WALKING_SPEED_KMH = 3.69;
+/**
+ * Read from `src/lib/speed.ts` rather than restated.
+ *
+ * A copy here would make this check assert its own literal against the engine
+ * while the app asked for something else entirely - which is the exact drift
+ * the fixture exists to catch, hiding in the checker. Parsed rather than
+ * imported because this is plain `.mjs` and that is a `.ts` module; the regex
+ * is anchored on the export so a rename fails loudly instead of matching
+ * something else.
+ */
+const speedSource = readFileSync(new URL("../src/lib/speed.ts", import.meta.url), "utf8");
+const speedMatch = /export const WALKING_SPEED_KMH = ([\d.]+);/.exec(speedSource);
+if (speedMatch === null) {
+  console.error("verify-engine: could not read WALKING_SPEED_KMH from src/lib/speed.ts");
+  process.exit(1);
+}
+const WALKING_SPEED_KMH = Number(speedMatch[1]);
 
 /** Valhalla's sentinel for "this tile carries no elevation data". */
 const NO_ELEVATION = -500;

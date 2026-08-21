@@ -132,6 +132,57 @@ observed with the flag flipped on locally, against the real Open-Meteo through t
 the flag was returned to `false` before the commit. The shipped default is dark; the code path is
 verified.
 
+### 2.5 The walking speed stays at 3.69 km/h, and it is settled
+
+**The question.** Section 6.1 records that the elevation rebuild changed every ETA in the app: a
+fixed fixture route went 1025.7 s to 963.5 s on an unchanged 1.047 km, because pedestrian costing's
+`use_hills` now has grades to read. The pinned 3.69 km/h was measured against Google's isochrones on
+a graph with no hills in it, so the worry was that it had quietly become a *flat-ground* pace the
+terrain modulates rather than the pace, and that the app was now promising more reach than it
+delivers. GOAL.md asks for this to be settled at chunk 8 because that chunk was expected to recut
+all eleven snapshots anyway.
+
+**It was measured before it was decided.** One route cannot answer it — `use_hills` makes a descent
+quicker and a climb slower, so a route picked for its descent measures the effect at its largest,
+and the fixture (Grace Street down to Main Street Station) is exactly that route. A contour is drawn
+from every direction at once. So: **all 62 hand-curated places from all 11 preset origins, 673 real
+routes through the live engine**, effective pace per route.
+
+| | km/h |
+| --- | --- |
+| min | 3.056 |
+| p10 | 3.462 |
+| **median** | **3.610** |
+| p90 | 3.740 |
+| max | 3.904 |
+| **mean** | **3.606** |
+
+**The mean effective pace is 3.606 km/h — 2.3% *slower* than the pin, not faster.** The fixture was
+the unrepresentative case. Averaged over every direction the uphill penalty slightly outweighs the
+downhill bonus, so the app now delivers marginally *less* reach than 3.69 implies rather than more.
+
+**The branch taken.** Leave `WALKING_SPEED_KMH` at **3.69**. It errs in the conservative direction
+by 2.3%, which is comfortably inside the noise of any walking-pace estimate and on the
+under-promising side of it. Changing it to chase 3.606 would move every contour, every ETA and every
+snapshot to correct an error smaller than the difference between two people's walking.
+
+**What reverses it.** One number, and it really is one number now — see below.
+
+**What else would have to change.** `SNAPSHOT_VERSION` and all eleven `public/reach/*.json`, because
+`seedFromSnapshot` refuses a snapshot stamped with a different pace. That is the cost this decision
+was scheduled early to avoid paying twice, and it is not being paid at all.
+
+**The escape hatch was not real, and now it is.** GOAL.md and section 6.1 both say the decision is
+"one constant, `WALKING_SPEED_KMH` in `server/proxy.ts`". It was in **three** places: `server/proxy.ts`,
+`src/lib/speed.ts` and `scripts/verify-engine.mjs` — the last of which asserts the engine's answer
+against its own literal, so a changed pace would have left the checker checking the wrong number
+while reporting green. `speed.ts`'s own comment claimed it "lives alone in its own module" and it
+did not. Fixed as this chunk's first act: the proxy imports it (the second sanctioned
+`server/ -> src/` import, on the same argument as `RICHMOND_BOUNDS` — the client already ships this
+constant because `seedFromSnapshot` reads it, so there was no policy being protected) and
+`verify-engine.mjs` parses it out of `speed.ts` rather than restating it. `grep` finds exactly one
+literal in the repo.
+
 ---
 
 ## 3. Plan-level decisions
@@ -287,6 +338,23 @@ screen, before the split, that read "3 places are in reach; 4 of them are held b
 
 Additive to the union, and both `switch` statements over it are exhaustive with no `default`, so
 `tsc` found every site.
+
+### 3.9 Chunk 8 recuts no snapshots, so the walking-speed decision was cheaper than scheduled
+
+GOAL.md's chunk-8 checklist says *"This chunk recuts all eleven snapshots anyway, which is the only
+cheap moment to change it: decide now and recut once, or decide later and recut twice."* That
+premise is wrong, and pleasantly so.
+
+`scripts/build-reach.mjs` reads `PRESET_ORIGINS` and nothing else — a snapshot is a contour ladder
+for one origin, and a contour is a property of the graph and the pace, not of the destination list.
+Place membership is decided client-side by point-in-polygon against those contours. So adding two
+hundred places invalidates no snapshot, and with the pace staying at 3.69 (section 2.5) chunk 8
+regenerates nothing at all.
+
+What this changes: the acceptance box "the snapshot regeneration cost was measured and recorded" has
+nothing to measure, and the deadline pressure behind the walking-speed decision was imaginary. The
+decision was still worth making now — it was made on 673 measured routes rather than on a schedule —
+but nobody needs to treat it as a last chance.
 
 ## 4. Unticked boxes
 
@@ -513,6 +581,8 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | App JS after chunk 7 | 82,262 B (80.3 KiB) | +1,250 B; that spec's line was 4,096 B. 19.7 KB of headroom left |
 | Tests after chunk 7 | 246 passing | +55, the largest jump of the run |
 | Open-Meteo free tier | 600/min, 5,000/hr, 10,000/day, 300,000/month | Chunk 7, fetched 2026-08-21 - see 2.4 |
+| Mean effective walking pace | **3.606 km/h** over 673 routes | Chunk 8, against a pinned 3.69 - see 2.5 |
+| Effective pace spread | 3.056 min, 3.610 median, 3.904 max | Chunk 8, 11 origins x 62 places |
 | `formatToParts` per 26-position scrub | 150 → **0** | Chunk 5 — see 6.3 |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
@@ -573,11 +643,15 @@ grades the engine rightly makes a downhill walk quicker. But it means the pinned
 `server/proxy.ts`'s comment on `WALKING_SPEED_KMH` still describes the older, simpler thing.
 
 **Nothing was changed in response.** Two reasons: the plan does not ask for it, and the new behaviour
-is more honest than the old one — a walk downhill *is* quicker. But somebody should decide whether
-the 3.69 that was measured against Google's isochrones on an elevation-less graph is still the right
-number now that the graph has hills in it, because that measurement is the whole basis for the
-constant. It is one number in one file, `WALKING_SPEED_KMH` in `server/proxy.ts`, and changing it
-means recutting the snapshots again.
+is more honest than the old one — a walk downhill *is* quicker.
+
+**Settled at chunk 8 — see section 2.5.** The worry this note raises turns out to be backwards. Over
+673 routes from all 11 presets to all 62 places the mean effective pace is **3.606 km/h**, 2.3%
+*slower* than the pin: the fixture above is a descent, and averaged over every direction the uphill
+penalty slightly outweighs the downhill bonus. The pin stays at 3.69, erring on the under-promising
+side by an amount smaller than the difference between two people's walking. This note's closing
+claim was also wrong twice over: the constant was in three files, not one, and it now really is in
+one (`src/lib/speed.ts`).
 
 **Chunk 0's measured bundle delta is +0.1 KB against an estimate of +0.9 KB, and the estimate is not
 wrong — it is early.** Nothing imports `solar.ts`, `daylight.ts` or `conditions.ts` yet, so the

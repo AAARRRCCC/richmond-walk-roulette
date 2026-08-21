@@ -25,6 +25,18 @@ import {
 // before the engine does. Costing stays duplicated - the client must never see
 // policy - and this stays the exception.
 import { RICHMOND_BOUNDS } from "../src/lib/bounds.ts";
+// The second `server/ -> src/` import, and it is the same argument as bounds:
+// this is not policy the client must not see, it is a number both sides already
+// hold. `seedFromSnapshot` refuses a snapshot stamped with a different pace, so
+// the client ships this constant whatever the proxy does - and while the proxy
+// declared its own copy, "one number in one file" was a claim rather than a
+// fact. Costing itself stays duplicated; the pace does not.
+import { WALKING_SPEED_KMH } from "../src/lib/speed.ts";
+
+// Re-exported because `proxy.test.ts` asserts the costing body and the cache
+// key against it, and a test that imported the client copy while the proxy used
+// its own would pass through exactly the drift it exists to catch.
+export { WALKING_SPEED_KMH };
 
 export type ProxyEnv = {
   /** Base URL of a Valhalla instance, e.g. http://localhost:8002 */
@@ -50,20 +62,6 @@ export type ProxyEnv = {
    */
   WEATHER_URL?: string | undefined;
 };
-
-/**
- * Walking speed, km/h, applied to isochrones and routes alike so the contour
- * on the map and the minutes on the result card are answers to the same
- * question.
- *
- * 3.69 is not arbitrary: it is the pace at which Valhalla's 25 minute area
- * from Monroe Park matched Google's isochrone during the provider comparison
- * (see LAUNCH.md), i.e. the pace the app's shipped contours have always
- * implied. Changing it moves every contour, every ETA and every candidate
- * pool, so treat it as a product decision to be measured, not a constant to
- * be tweaked.
- */
-export const WALKING_SPEED_KMH = 3.69;
 
 /** Valhalla accepts up to 120 min; we cap lower: this is a walking app. */
 const MIN_MINUTES = 1;
