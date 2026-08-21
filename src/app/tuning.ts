@@ -48,10 +48,10 @@ export type Tuning = {
 export const TUNING_DEFAULTS: Tuning = {
   spinDurationMs: 3000,
   spinFirstFlipMs: 10,
-  spinLastFlipMs: 100,
-  spinEaseExponent: 1,
+  spinLastFlipMs: 60,
+  spinEaseExponent: 0.5,
   spinMaxHoldMs: 4000,
-  spinSettleMs: 420,
+  spinSettleMs: 500,
   soundVolume: 0.5,
   soundEnabled: true,
   spinCircularOrder: true,
