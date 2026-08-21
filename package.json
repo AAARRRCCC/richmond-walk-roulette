@@ -11,6 +11,7 @@
     "lint:oxlint": "oxlint",
     "lint:dead": "knip",
     "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify.mjs",
     "test": "node --test \"server/*.test.ts\" \"src/**/*.test.ts\""
   },
   "dependencies": {

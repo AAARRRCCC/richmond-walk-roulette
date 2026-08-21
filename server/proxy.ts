@@ -20,6 +20,7 @@ import {
   type Json,
   type JsonObject,
 } from "../src/lib/json.ts";
+import { withinBounds } from "../src/lib/bounds.ts";
 
 export type ProxyEnv = {
   /** Base URL of a Valhalla instance, e.g. http://localhost:8002 */
@@ -104,13 +105,6 @@ const LADDER_BUDGET_MS = 60_000;
  */
 const CACHE_VERSION = "v1";
 
-/**
- * Requests outside this box are rejected. The app is about one city; without
- * a bound, a leaked endpoint is a free worldwide routing service on whatever
- * box hosts the engine.
- */
-const BOUNDS = { south: 37.3, west: -77.9, north: 37.8, east: -77.1 };
-
 type LatLng = { latitude: number; longitude: number };
 
 function json(body: Json, status: number): Response {
@@ -170,8 +164,7 @@ function readLatLng(value: Json | undefined): LatLng | null {
   if (!isJsonObject(value)) return null;
   const { latitude, longitude } = value;
   if (!isFiniteNumber(latitude) || !isFiniteNumber(longitude)) return null;
-  if (latitude < BOUNDS.south || latitude > BOUNDS.north) return null;
-  if (longitude < BOUNDS.west || longitude > BOUNDS.east) return null;
+  if (!withinBounds(latitude, longitude)) return null;
   return { latitude, longitude };
 }
 

@@ -83,6 +83,15 @@ pace. Summary here; the history has the full text.
 
 Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re-run against your production instance once it exists.
 
+- [ ] `node scripts/verify-engine.mjs` passes against the deployed engine.
+      It probes capability rather than availability: `/status` answering is
+      not the same claim as elevation being real, and an instance can
+      advertise `height` while returning `null` for every point of it. Run
+      this before anything below, and before believing a green `/api/health`.
+- [ ] `node scripts/verify-drift.mjs` is clean against the deployed engine,
+      or the snapshots in `public/reach/` were regenerated against it and
+      `SNAPSHOT_VERSION` was bumped. A snapshot cut from different tiles is
+      the app drawing a city that is not there, and nothing else detects it.
 - [x] Contours return and follow streets. The reachable edge traces the river
       bank and crosses only at bridges.
 - [x] Routes return polyline6 with pedestrian costing. Monroe Park to VMFA
