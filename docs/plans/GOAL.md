@@ -4,6 +4,30 @@
 **Reads:** `docs/plans/README.md` §4 (build order) is the authority on what each chunk contains.
 Each chunk's own spec is the authority on how.
 
+## Resuming: read these three things first
+
+This run is partly done. **Do not start a chunk before reading:**
+
+1. **`docs/plans/PROGRESS.md`, last entry.** Where it stopped, what landed, and what the next chunk's
+   preconditions are. Step 6's checklist at the bottom of this file names the commit for every chunk
+   that is in.
+2. **`docs/plans/HUMAN-REVIEW.md` §2 and §6.** Decisions already made that constrain what you do next
+   — the bundle ceiling, the `dev:lan` refusal, the one-way elevation chart, and §6.1, which is the
+   one that costs money if it is read late (see chunk 8's checklist).
+3. **`docs/plans/acceptance/chunk-*.md`.** Every open box is open for a stated reason. Do not re-open
+   settled ones or re-verify what is already ticked.
+
+**The engine has to be running before anything.** `npm run verify` includes `verify-places`, which
+makes a live `/locate` call for all 73 coordinates, so with Valhalla down *every gate in this document
+fails for a reason that has nothing to do with the code*. Check it first:
+
+```
+curl -s http://127.0.0.1:8002/status      # expect a version and a tileset date
+```
+
+If it is down: in WSL, `cd valhalla && ./scripts/run-engine.sh start`. The graph survives a reboot —
+it is the one built with elevation on 2026-08-21, and rebuilding it is not required and not free.
+
 ## The objective
 
 Implement all twelve chunks of v0.5 — chunk 0 through chunk 11 — in the order `docs/plans/README.md`
@@ -421,8 +445,17 @@ rewritten as binary checks. Tick as you go. The file is the chunk's record and i
 - [ ] An unreachable weather API blocks nothing: spinning still works, and the panel says what is missing
 - [ ] Rain-onset caps route through chunk 5's `timeCap`, not into `selectCandidates`
 
-**Chunk 8 — places-expansion** — *deferred decision: the additions*
+**Chunk 8 — places-expansion** — *deferred decisions: the additions, and the walking speed*
 
+- [ ] **Settle the walking speed before recutting anything.** `HUMAN-REVIEW.md` §6.1: the elevation
+      rebuild changed every ETA in the app — the fixed fixture route went 1025.7 s to 963.5 s on an
+      unchanged 1.047 km — because pedestrian costing's `use_hills` now has grades to read. The pinned
+      3.69 km/h was measured against Google's isochrones on a graph with no hills in it, so it is now
+      a flat-ground pace the terrain modulates rather than the pace. **This chunk recuts all eleven
+      snapshots anyway**, which is the only cheap moment to change it: decide now and recut once, or
+      decide later and recut twice. It is one constant, `WALKING_SPEED_KMH` in `server/proxy.ts`.
+      "Leave it at 3.69" is a perfectly good answer — record it as settled either way, so nobody has
+      to rediscover the question at chunk 11
 - [ ] `harvest-osm.mjs` output is committed, so the build is reproducible without Overpass
 - [ ] `propose-places.mjs` produces the review artefact
 - [ ] The review artefact is committed and linked from `HUMAN-REVIEW.md`, ready to be skimmed cold
