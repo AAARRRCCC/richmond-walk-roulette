@@ -18,6 +18,7 @@ import {
   handleApiRequest,
   isochroneCacheKey,
   isochroneQueryCost,
+  routeCacheKey,
   MAX_LADDER,
   MAX_MINUTES,
   WALKING_SPEED_KMH,
@@ -32,6 +33,7 @@ import {
 import { readJson, type Json } from "../src/lib/json.ts";
 
 const MONROE = { latitude: 37.5464, longitude: -77.4517 };
+const VMFA = { latitude: 37.556058, longitude: -77.474895 };
 const LADDER = Array.from({ length: 56 }, (_, i) => i + 5);
 /** The real dial ladder: every minute from 5 to 100. */
 const FULL_LADDER = Array.from({ length: 96 }, (_, i) => i + 5);
@@ -406,6 +408,19 @@ test("the query cost is what the engine will actually be asked for", () => {
   // A request that is about to be a 400 costs one, not nothing and not many.
   assert.equal(isochroneQueryCost({ location: MONROE, minutes: [] }, ENV), 1);
   assert.equal(isochroneQueryCost(null, ENV), 1);
+});
+
+test("routes and isochrones are versioned apart, so bumping one cannot evict the other", () => {
+  // They shared one constant until v0.5. That meant a one-line change to the
+  // route body evicted every 1.7 MB contour ladder on the edge - an eviction
+  // nobody asked for and nobody would connect to the change that caused it.
+  // The prefixes are pinned as literals here precisely so the two cannot be
+  // quietly conflated again by a refactor that "tidies up" the versions.
+  const isochrone = isochroneCacheKey({ location: MONROE, minutes: [5, 25] });
+  const route = routeCacheKey({ origin: MONROE, destination: VMFA });
+
+  assert.ok(isochrone?.startsWith("/api/isochrone/v1-"), `isochrone key was ${isochrone}`);
+  assert.ok(route?.startsWith("/api/route/v2-"), `route key was ${route}`);
 });
 
 test("the cache key is canonical, coarse to 5 decimals, and refuses bad requests", () => {

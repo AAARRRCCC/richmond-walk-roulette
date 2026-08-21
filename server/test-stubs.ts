@@ -73,29 +73,46 @@ const unused = (): Promise<never> => Promise.reject(new Error("not used by the W
 
 /**
  * Stands `caches` up for one test, since Node has no edge cache and the
- * Worker's isochrone path is built around one. Returns the entry map so a
- * test can see what was stored and under which key.
+ * Worker's isochrone path is built around one. Returns a map of cache name to
+ * that cache's entries, so a test can see what was stored, under which key, and
+ * - the part that used to be untestable - in which cache.
+ *
+ * One Map per name. `open()` previously handed every caller the same Map, which
+ * made "the share cache is not the isochrone cache" a claim no test could check:
+ * a feature could open the wrong cache by name and every assertion would still
+ * pass. `shareable-spins` (chunk 10) opens a cache of its own, and this is what
+ * lets it prove it.
  *
  * Every method the Worker does not call rejects rather than pretending: a
  * stub that answers a question the code never asks is a stub that can quietly
  * stop matching the code.
  */
-export function stubEdgeCache(t: TestContext): Map<string, Response> {
-  const entries = new Map<string, Response>();
-  const cache: Cache = {
-    match: (request) => Promise.resolve(entries.get(new Request(request).url)?.clone()),
-    put: (request, response) => {
-      entries.set(new Request(request).url, response);
-      return Promise.resolve();
-    },
-    add: unused,
-    addAll: unused,
-    delete: unused,
-    keys: unused,
-    matchAll: unused,
+export function stubEdgeCache(t: TestContext): Map<string, Map<string, Response>> {
+  const byName = new Map<string, Map<string, Response>>();
+
+  const cacheNamed = (name: string): Cache => {
+    let entries = byName.get(name);
+    if (entries === undefined) {
+      entries = new Map<string, Response>();
+      byName.set(name, entries);
+    }
+    const stored = entries;
+    return {
+      match: (request) => Promise.resolve(stored.get(new Request(request).url)?.clone()),
+      put: (request, response) => {
+        stored.set(new Request(request).url, response);
+        return Promise.resolve();
+      },
+      add: unused,
+      addAll: unused,
+      delete: unused,
+      keys: unused,
+      matchAll: unused,
+    };
   };
+
   globalThis.caches = {
-    open: () => Promise.resolve(cache),
+    open: (name) => Promise.resolve(cacheNamed(name)),
     has: unused,
     delete: unused,
     keys: unused,
@@ -104,7 +121,19 @@ export function stubEdgeCache(t: TestContext): Map<string, Response> {
   t.after(() => {
     Reflect.deleteProperty(globalThis, "caches");
   });
-  return entries;
+  return byName;
+}
+
+/**
+ * The entries of one named cache. An empty map when nothing was stored there,
+ * which is the assertion "this went into some other cache" needs to be able to
+ * make without a null check at every call.
+ */
+export function cacheEntries(
+  byName: Map<string, Map<string, Response>>,
+  name: string,
+): Map<string, Response> {
+  return byName.get(name) ?? new Map<string, Response>();
 }
 
 /** What fetch rejects with when an `AbortSignal.timeout` fires. */

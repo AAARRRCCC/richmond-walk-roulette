@@ -3,6 +3,7 @@
   "entry": [
     "worker/index.ts",
     "server/*.test.ts",
+    "src/**/*.test.ts",
     "valhalla/stub.mjs",
     "scripts/*.mjs"
   ],

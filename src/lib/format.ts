@@ -27,3 +27,48 @@ export function formatArea(sqMeters: number): string {
 export function pluralize(count: number, singular: string, plural = `${singular}s`): string {
   return `${count} ${count === 1 ? singular : plural}`;
 }
+
+/**
+ * Richmond, always. Every clock time this app prints is a Richmond time,
+ * whatever the device is set to: a walker in Richmond wants dusk in Richmond,
+ * and a reader elsewhere looking at a shared spin wants to know when it gets
+ * dark *there*, not where they are sitting.
+ *
+ * @public - consumed by `daylight-budget` (chunk 5) and `opening-hours`
+ * (chunk 9); nothing imports it yet.
+ */
+export const RICHMOND_TZ = "America/New_York";
+
+/**
+ * One formatter, built once at module scope rather than per call: constructing
+ * an Intl.DateTimeFormat is the expensive part, and this one runs on a
+ * once-a-minute tick behind every clock string in the app.
+ *
+ * No try/catch. A platform without full-ICU `Intl` cannot format a Richmond
+ * time from a UTC instant at all, and a fallback would print a plausible wrong
+ * time in the device's own zone - which is exactly the failure this app is
+ * being rebuilt to stop making silently.
+ */
+const CLOCK = new Intl.DateTimeFormat("en-US", {
+  timeZone: RICHMOND_TZ,
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+/**
+ * "8:21 pm" - lowercase meridiem, no leading zero, Richmond time.
+ *
+ * Assembled from parts rather than taken from `format()` because the meridiem
+ * separator and casing are locale output, not contract, and this string is
+ * compared literally in tests and embedded in copy by three features.
+ *
+ * @public - consumed by `daylight-budget` (chunk 5) onward.
+ */
+export function formatClock(atMs: number): string {
+  const parts = CLOCK.formatToParts(atMs);
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "";
+  const minute = parts.find((part) => part.type === "minute")?.value ?? "";
+  const meridiem = parts.find((part) => part.type === "dayPeriod")?.value ?? "";
+  return `${hour}:${minute} ${meridiem.toLowerCase()}`;
+}

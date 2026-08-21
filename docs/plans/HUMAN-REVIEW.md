@@ -65,9 +65,11 @@ bounding box, and GOAL.md requires it to *import* that box rather than restate i
 exactly one bounding box in the repo. That box lived as a `const` inside `server/proxy.ts` and was
 not exported. The harness is built before chunk 0, so the extraction had to come with it.
 
-**What landed.** `src/lib/bounds.ts` exporting `BOUNDS` and `withinBounds`, and `server/proxy.ts`
-importing `withinBounds` in place of its two inline comparisons. Behaviour identical; the proxy's own
-tests pass unchanged.
+**What landed.** `src/lib/bounds.ts`, and `server/proxy.ts` importing it in place of its private
+const. It shipped with the harness under provisional names and was renamed inside chunk 0 to the
+names `geolocate.md` actually writes — `Bounds`, `RICHMOND_BOUNDS`, `insideRichmond` — so the module
+that lands early is the module that spec will find when it arrives. Behaviour identical; the proxy's
+own tests pass unchanged, and `bounds.test.ts` covers the three cases that spec names.
 
 **Why it is safe to have moved.** It is the first bullet of chunk 0 and a pure extraction with no
 user-visible surface. Chunk 0's acceptance file ticks it as landed here rather than there, and says
@@ -85,6 +87,24 @@ check that passes vacuously is a fail.
 `verify-signature exists and passes` as its first box, and no chunk from 2 onward can be reported
 done without it.
 
+### 3.3 "Fully ticked" excludes boxes recorded in section 5
+
+**The problem.** GOAL.md makes "every earlier chunk's acceptance file is fully ticked" a precondition
+for the next chunk. One box in the universal checklist cannot be answered from this machine at all -
+`prefers-reduced-motion` (section 5.1) - so read literally, no chunk can ever be done and the run
+stops at chunk 0 with everything else green.
+
+**The branch taken.** A chunk counts as done when every box is ticked *except* ones recorded in
+section 5 as environmentally unobservable, each with the reason in its own acceptance file.
+
+**Why it is the conservative one.** The alternative that keeps the letter of the rule is to tick a
+box that was not observed, which is the single thing GOAL.md says makes the whole document
+worthless. This way the box stays visibly open, in the file, forever, and lands in front of the
+person doing the feel pass - which is where a "needs a real device" check belongs anyway.
+
+**What reverses it.** Nothing structural. Run the pass on a machine where the media feature can be
+set and tick the boxes; they are one line each in `docs/plans/acceptance/chunk-*.md`.
+
 ---
 
 ## 4. Unticked boxes
@@ -92,7 +112,13 @@ done without it.
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
 
-_Nothing yet; the run has not reached chunk 0._
+**Chunk 0 — one box, and it is section 5.1's.**
+
+- [ ] *It was seen with `prefers-reduced-motion` on.* Not observable from this machine; see 5.1. Chunk
+  0 added no animation, so nothing in this chunk is at risk from it.
+
+Every other box in `docs/plans/acceptance/chunk-00.md` is ticked, 53 of 54, each with a note saying
+how it was observed.
 
 ---
 
@@ -101,7 +127,27 @@ _Nothing yet; the run has not reached chunk 0._
 Anything needing a real phone, a second person, a GPS fix outside Richmond, a specific season, or
 weather that did not occur during the run. Not failures — the work this pass inherits.
 
-_Nothing yet._
+### 5.1 `prefers-reduced-motion: reduce` — every chunk
+
+The browser tooling available to this run cannot emulate the media feature, and the machine it runs
+on reports `no-preference`, which is a system setting and not mine to change. So the universal
+checklist's reduced-motion box is open on every chunk, and will stay open until somebody runs the
+walkthrough with the setting on.
+
+**What is known without observing it:** `src/styles/app.css` carries a
+`@media (prefers-reduced-motion: reduce)` block, and chunk 0 added no animation, transition or
+transform of any kind — its only new render path is a `<div>` of `<p>` elements. The risk this box
+covers is real for chunks 2, 3 and 11, and near zero for chunk 0.
+
+**Two things that were nearly in this section and are not**, because a way to observe them was found
+rather than assumed:
+
+- **Phone viewport.** `resize_window` reports success and the viewport does not move. The app mounts
+  in a 390px iframe on its own origin instead, where media queries evaluate against the frame, and
+  the real bottom-sheet layout renders with no horizontal overflow. Good enough to see the layout;
+  not a substitute for a real phone's touch targets, which the feel pass still owes.
+- **Network-free dial scrub, and the snapshot cold start.** Both are readable from the network panel
+  and both were measured rather than inferred.
 
 ---
 
@@ -117,8 +163,16 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Hand-curated places | 62 | Harness baseline, measured by import |
 | Preset origins | 11 | Harness baseline |
 | Worst place snap distance | 51 m (`diamond`) | Harness baseline |
+| App JS after chunk 0 | 71,315 B (69.6 KiB) | +110 B on the baseline |
+| Tests after chunk 0 | 100 passing | 68 at the baseline |
+| Worst solar error vs USNO | 73 s (2026-03-20 sunset) | Chunk 0, across 15 phenomena |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
+
+**Chunk 0's measured bundle delta is +0.1 KB against an estimate of +0.9 KB, and the estimate is not
+wrong — it is early.** Nothing imports `solar.ts`, `daylight.ts` or `conditions.ts` yet, so the
+bundler drops them entirely. Those bytes arrive in chunk 5, when the switch and the cap start reading
+them, and README section 5's chunk-0 row should be read as chunk 5's row until then.
 
 **The snapshots in `public/reach/` are already stale, before chunk 1 touches anything.** The first run
 of `verify-drift.mjs` measured 14.16% worst-case area drift and 35 place-membership flips against the

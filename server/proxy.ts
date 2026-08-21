@@ -20,7 +20,11 @@ import {
   type Json,
   type JsonObject,
 } from "../src/lib/json.ts";
-import { withinBounds } from "../src/lib/bounds.ts";
+// The one `server/ -> src/` import in this file, and it is deliberate: bounds
+// are geography both sides have to agree on, so the client can refuse a fix
+// before the engine does. Costing stays duplicated - the client must never see
+// policy - and this stays the exception.
+import { RICHMOND_BOUNDS } from "../src/lib/bounds.ts";
 
 export type ProxyEnv = {
   /** Base URL of a Valhalla instance, e.g. http://localhost:8002 */
@@ -102,8 +106,20 @@ const LADDER_BUDGET_MS = 60_000;
  * Bumped when the meaning of a cached isochrone changes for a reason the key
  * cannot see — a tile rebuild, or a change to the costing options below. The
  * walking speed is part of the key itself, so that one invalidates on its own.
+ *
+ * Isochrones only, and `/api/locate` alongside them. It used to version routes
+ * as well, which meant a one-line change to a route body evicted every 1.7 MB
+ * contour ladder on the edge — an eviction nobody asked for and nobody would
+ * connect to the change that caused it.
  */
 const CACHE_VERSION = "v1";
+
+/**
+ * The same idea for routes, moved to its own number so the two can be bumped
+ * independently. It starts at "v2" rather than "v1" precisely so it can never be
+ * confused with the isochrone version at a glance, in a log line, or in a test.
+ */
+const ROUTE_CACHE_VERSION = "v2";
 
 type LatLng = { latitude: number; longitude: number };
 
@@ -164,7 +180,8 @@ function readLatLng(value: Json | undefined): LatLng | null {
   if (!isJsonObject(value)) return null;
   const { latitude, longitude } = value;
   if (!isFiniteNumber(latitude) || !isFiniteNumber(longitude)) return null;
-  if (!withinBounds(latitude, longitude)) return null;
+  if (latitude < RICHMOND_BOUNDS.south || latitude > RICHMOND_BOUNDS.north) return null;
+  if (longitude < RICHMOND_BOUNDS.west || longitude > RICHMOND_BOUNDS.east) return null;
   return { latitude, longitude };
 }
 
@@ -243,7 +260,7 @@ export function routeCacheKey(payload: Json): string | null {
   if (!origin || !destination) return null;
   const from = `${origin.latitude.toFixed(5)},${origin.longitude.toFixed(5)}`;
   const to = `${destination.latitude.toFixed(5)},${destination.longitude.toFixed(5)}`;
-  return `/api/route/${CACHE_VERSION}-${WALKING_SPEED_KMH}/${from}/${to}`;
+  return `/api/route/${ROUTE_CACHE_VERSION}-${WALKING_SPEED_KMH}/${from}/${to}`;
 }
 
 /**

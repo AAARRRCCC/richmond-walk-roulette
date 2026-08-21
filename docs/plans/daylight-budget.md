@@ -282,8 +282,11 @@ export type Conditions = {
   light: Daylight;
 };
 
-/** Why a time constraint exists. `weather-filters` adds "rain" and "storm". */
-export type CapReason = "daylight";
+/** Why a time constraint exists. Amended by README section 2.1 to the full
+ *  union, shipped whole in chunk 0: a union that widens later is a contract
+ *  that changes later, and `mergeCaps` and the dial's cap note are written
+ *  against it. Only "daylight" is produced until chunk 7. */
+export type CapReason = "daylight" | "rain" | "storm" | "heat" | "cold";
 
 export type TimeCap = {
   /** Total budget minutes this reason permits, already on the dial's step. */
@@ -312,8 +315,12 @@ export function arrivalMs(atMs: number, outboundSeconds: number): number;
 
 ```ts
 /** Ticks on the minute boundary; pauses while the document is hidden and
- *  resynchronises on visibilitychange. One interval for the whole app. */
-export function useConditions(origin: LngLat): Conditions;
+ *  resynchronises on visibilitychange. One interval for the whole app.
+ *
+ *  `frozen` holds the clock still through a throw, per README section 2.1 -
+ *  it replaces both this spec's implicit assumption and `opening-hours`'
+ *  private `frozenArrivalRef` latch. App passes `state.spinning`. */
+export function useConditions(origin: LngLat, frozen: boolean): Conditions;
 ```
 
 ### `src/lib/format.ts` additions
@@ -404,7 +411,7 @@ knip fails the lint gate (`knip.json` honours the tag).
 
 **`src/app/conditions.test.ts` — NEW.**
 
-**`src/app/useConditions.ts` — NEW.** `useConditions(origin)`. One `useState<number>` holding the
+**`src/app/useConditions.ts` — NEW.** `useConditions(origin, frozen)`. One `useState<number>` holding the
 minute-truncated `Date.now() + clockOffsetMs()`; a `setTimeout` chain scheduled to the next minute
 boundary (not `setInterval`, which drifts and fires twice after a wake); a `visibilitychange`
 listener that clears the timer while hidden and re-reads the clock on show. Returns
@@ -535,7 +542,7 @@ one minute. That residue is accepted rather than papered over: the alternative i
 recomputed reach once a minute, unprompted, which is worse for the person who has to listen to it.
 
 **`src/app/App.tsx` — MODIFIED.**
-- `const conditions = useConditions(origin);` near the top of the derived section.
+- `const conditions = useConditions(origin, state.spinning);` near the top of the derived section.
 - The cap is **derived in render and dispatched by a one-value effect**, so the dependency array is
   complete and no `exhaustive-deps` disable is needed (`npm run lint` runs eslint with
   `--max-warnings 0` and `eslint-plugin-react-hooks` recommended, so a stale dep is fatal, not
@@ -989,8 +996,8 @@ than hunting for an instant; the type is a plain record and that is what makes i
 2. **Is civil dusk the right deadline for Richmond's unlit walks?** Belle Isle, Buttermilk Trail and
    Reedy Creek have no lighting at all; Cary Street does. A per-place `lit?: boolean` on `Place`
    would let the cap use sunset for unlit destinations and civil dusk for lit ones — a real
-   improvement and a real curation cost across the **78** entries in `src/data/places.ts` today
-   (App.tsx's comment at the point-in-polygon sweep still says 51 and is stale; fix it in passing),
-   and it belongs to `places-expansion` if
+   improvement and a real curation cost across the **62** entries in `src/data/places.ts` today
+   (corrected from 78 per README section 2.6; App.tsx's point-in-polygon comment said 51 and was
+   fixed in chunk 0), and it belongs to `places-expansion` if
    anywhere. Spec'd as one deadline for all destinations; someone who walks these trails should say
    whether that is generous enough to be wrong.

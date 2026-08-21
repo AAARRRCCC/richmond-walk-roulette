@@ -67,7 +67,7 @@ try {
 }
 
 const { PLACES, PRESET_ORIGINS } = places;
-const { BOUNDS, withinBounds } = bounds;
+const { RICHMOND_BOUNDS, insideRichmond } = bounds;
 
 /** Present from chunk 8 onward; absent before it, and said so rather than assumed. */
 const handCuratedCount = places.HAND_CURATED_COUNT ?? null;
@@ -91,12 +91,12 @@ function uniqueIds(label, rows) {
 uniqueIds("PLACES", PLACES);
 uniqueIds("PRESET_ORIGINS", PRESET_ORIGINS);
 
-const outside = [...PLACES, ...PRESET_ORIGINS].filter((row) => !withinBounds(row.lat, row.lng));
+const outside = [...PLACES, ...PRESET_ORIGINS].filter((row) => !insideRichmond(row));
 record(
   "every coordinate is inside the proxy's bounds",
   outside.length === 0,
   outside.length === 0
-    ? `box ${BOUNDS.south},${BOUNDS.west} to ${BOUNDS.north},${BOUNDS.east}`
+    ? `box ${RICHMOND_BOUNDS.south},${RICHMOND_BOUNDS.west} to ${RICHMOND_BOUNDS.north},${RICHMOND_BOUNDS.east}`
     : `outside: ${outside.map((row) => row.id).join(", ")}`,
 );
 

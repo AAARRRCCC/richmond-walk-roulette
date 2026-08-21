@@ -81,9 +81,11 @@ function rateLimited(): Response {
  * runtime that is not a Worker. `globalThis.caches` is typed as always
  * present and is not, so this asks before reaching for it.
  */
+export const ISOCHRONE_CACHE = "walk-roulette-isochrone";
+
 async function edgeCache(): Promise<Cache | null> {
   if (!("caches" in globalThis)) return null;
-  return globalThis.caches.open("walk-roulette-isochrone");
+  return globalThis.caches.open(ISOCHRONE_CACHE);
 }
 
 /**
@@ -104,13 +106,20 @@ type EdgeEntry = {
   fill(response: Response, ctx: WorkerContext): Promise<Response>;
 };
 
+/**
+ * `keyFor` sees the request as well as the body, so a key can refuse to exist
+ * for a request that must not be cached at all - a GET endpoint with a query
+ * string on it, say, where the body says nothing about what was asked for. The
+ * existing key functions take one parameter and stay that way: a narrower
+ * function is assignable, so this widening costs no call site anything.
+ */
 async function edgeEntry(
   request: Request,
   payload: Json,
-  keyFor: (payload: Json) => string | null,
+  keyFor: (payload: Json, request: Request) => string | null,
   seconds: number,
 ): Promise<EdgeEntry> {
-  const key = keyFor(payload);
+  const key = keyFor(payload, request);
   const cache = key === null ? null : await edgeCache();
   const cacheKey = cache === null || key === null ? null : new Request(new URL(key, request.url));
   const hit = cache && cacheKey ? ((await cache.match(cacheKey)) ?? null) : null;

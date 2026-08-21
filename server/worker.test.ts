@@ -9,8 +9,19 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { handleWorkerRequest, type Env, type WorkerContext } from "../worker/index.ts";
-import { contourResponse, stubConsoleError, stubEdgeCache, stubFetch } from "./test-stubs.ts";
+import {
+  handleWorkerRequest,
+  ISOCHRONE_CACHE,
+  type Env,
+  type WorkerContext,
+} from "../worker/index.ts";
+import {
+  cacheEntries,
+  contourResponse,
+  stubConsoleError,
+  stubEdgeCache,
+  stubFetch,
+} from "./test-stubs.ts";
 import { readJson, type Json } from "../src/lib/json.ts";
 
 const MONROE = { latitude: 37.5464, longitude: -77.4517 };
@@ -145,7 +156,8 @@ test("without the binding the Worker still serves; without a match it serves ass
 });
 
 test("an isochrone answer is served from the edge cache the second time", async (t) => {
-  const entries = stubEdgeCache(t);
+  const caches = stubEdgeCache(t);
+  const entries = () => cacheEntries(caches, ISOCHRONE_CACHE);
   const calls = stubFetch(t, (call) => contourResponse(call.body));
 
   const first = await handleWorkerRequest(
@@ -155,12 +167,12 @@ test("an isochrone answer is served from the edge cache the second time", async 
   );
   assert.equal(first.status, 200);
   assert.equal(calls.length, 1);
-  assert.equal(entries.size, 1);
+  assert.equal(entries().size, 1);
 
   // The stored entry is the only cacheable copy; what the browser gets
   // answers a POST and cannot be cached by anything.
   assert.equal(first.headers.get("cache-control"), "no-store");
-  assert.ok([...entries.values()][0]?.headers.get("cache-control")?.startsWith("public,"));
+  assert.ok([...entries().values()][0]?.headers.get("cache-control")?.startsWith("public,"));
 
   // Same request written differently: same origin to five decimals, same
   // minutes once deduped and sorted.
@@ -177,7 +189,8 @@ test("an isochrone answer is served from the edge cache the second time", async 
 });
 
 test("a failing isochrone is neither cached nor silent", async (t) => {
-  const entries = stubEdgeCache(t);
+  const caches = stubEdgeCache(t);
+  const entries = () => cacheEntries(caches, ISOCHRONE_CACHE);
   const logs = stubConsoleError(t);
   stubFetch(t, () => new Error("ECONNREFUSED"));
 
@@ -188,7 +201,7 @@ test("a failing isochrone is neither cached nor silent", async (t) => {
   );
 
   assert.equal(response.status, 502);
-  assert.equal(entries.size, 0);
+  assert.equal(entries().size, 0);
   assert.equal(response.headers.get("cache-control"), "no-store");
 
   // One structured line per non-2xx, which is what `wrangler tail` reads.
@@ -200,7 +213,8 @@ test("a failing isochrone is neither cached nor silent", async (t) => {
 });
 
 test("a partial ladder is answered but not kept", async (t) => {
-  const entries = stubEdgeCache(t);
+  const caches = stubEdgeCache(t);
+  const entries = () => cacheEntries(caches, ISOCHRONE_CACHE);
   // Two chunks against a 50-contour limit; the second one fails, so the
   // answer carries 50 of the 96 rungs asked for.
   let chunk = 0;
@@ -219,7 +233,7 @@ test("a partial ladder is answered but not kept", async (t) => {
   // gaps - but a truncation stored as a whole ladder would serve one blip to
   // every later visitor for a day.
   assert.equal(response.status, 200);
-  assert.equal(entries.size, 0, "a partial ladder is not what the edge keeps");
+  assert.equal(entries().size, 0, "a partial ladder is not what the edge keeps");
 });
 
 test("an answer already at the edge is charged one, not the ladder's cost", async (t) => {
@@ -249,7 +263,8 @@ test("an answer already at the edge is charged one, not the ladder's cost", asyn
 });
 
 test("the same walk is asked for once, however many visitors want it", async (t) => {
-  const entries = stubEdgeCache(t);
+  const caches = stubEdgeCache(t);
+  const entries = () => cacheEntries(caches, ISOCHRONE_CACHE);
   // "shape" is Valhalla's wire key for a leg's encoded polyline, assigned
   // rather than declared so the name stays the engine's without becoming a
   // symbol in this codebase.
@@ -264,7 +279,7 @@ test("the same walk is asked for once, however many visitors want it", async (t)
 
   assert.equal(first.status, 200);
   assert.equal(calls.length, 1);
-  assert.equal(entries.size, 1);
+  assert.equal(entries().size, 1);
   // The browser's copy answers a POST, so nothing downstream may keep it.
   assert.equal(first.headers.get("cache-control"), "no-store");
 
@@ -275,7 +290,8 @@ test("the same walk is asked for once, however many visitors want it", async (t)
 });
 
 test("a route the engine could not answer is not kept", async (t) => {
-  const entries = stubEdgeCache(t);
+  const caches = stubEdgeCache(t);
+  const entries = () => cacheEntries(caches, ISOCHRONE_CACHE);
   stubFetch(t, () => new Response("no", { status: 500 }));
 
   const response = await handleWorkerRequest(
@@ -285,5 +301,5 @@ test("a route the engine could not answer is not kept", async (t) => {
   );
 
   assert.ok(response.status >= 400);
-  assert.equal(entries.size, 0);
+  assert.equal(entries().size, 0);
 });

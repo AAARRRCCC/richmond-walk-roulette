@@ -19,10 +19,9 @@ import { TimeDial } from "../ui/TimeDial";
 import { OriginPicker } from "../ui/OriginPicker";
 import { Filters } from "../ui/Filters";
 import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
-import { ResultCard } from "../ui/ResultCard";
+import { ResultCard, type ResultLine } from "../ui/ResultCard";
 import { PLACES, type Place, type Terrain, type Vibe } from "../data/places";
 import { contains, pointKey, type LngLat } from "../lib/geometry";
-import { formatMiles, formatMinutes } from "../lib/format";
 import {
   MAX_MINUTES,
   NotConfiguredError,
@@ -37,7 +36,6 @@ import {
   fetchWalkingRoute,
   prefetchRoutes,
   routeFailed as routeSettledFailed,
-  type WalkingRoute,
 } from "../lib/route";
 import {
   budgetStep,
@@ -50,6 +48,7 @@ import {
   type Failure,
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
+import { describeResult, walkClauses } from "./announce";
 import { TuningPanel } from "../ui/TuningPanel";
 import { onSoundChange, playPress, playTap, setSoundOn, soundOn } from "../lib/sound";
 
@@ -162,7 +161,7 @@ export function App() {
   }, [origin]);
 
   // Read straight from the cache on every render. These are Map lookups plus a
-  // point-in-polygon sweep over 51 places, which is cheaper than the
+  // point-in-polygon sweep over 62 places, which is cheaper than the
   // bookkeeping memoising them would need against an external cache. The
   // whole ladder is prefetched, so during a scrub this is a hit on every
   // frame and the contour and the readout track the dial exactly.
@@ -459,11 +458,23 @@ export function App() {
    * which is why a failed route composes a line rather than holding this back.
    */
   const routePending = routeLoading && !routeFailed;
+
+  /**
+   * The card's shared line block, in the fixed order the plan sets: conditions,
+   * light, hours, handoff, meet. Empty until chunk 4 contributes the first one -
+   * the block renders nothing at all rather than an empty box.
+   */
+  const resultLines: readonly ResultLine[] = [];
+
   const announcement = state.spinAborted
     ? "Filters changed, spin again."
     : state.spinning || !picked || routePending
       ? ""
-      : describeResult(picked, route, routeFailed, state.roundTrip, withinBudget);
+      : describeResult([
+          picked.name,
+          ...walkClauses(route, routeFailed, state.roundTrip),
+          withinBudget ? "" : "outside your current time budget",
+        ]);
 
   // Rebuilt each render rather than memoised: it is read during TimeDial's
   // render, and App already re-renders whenever the contour cache changes.
@@ -685,6 +696,7 @@ export function App() {
               routeFailed={routeFailed}
               roundTrip={state.roundTrip}
               withinBudget={withinBudget}
+              lines={resultLines}
               onSpinAgain={spin}
               onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
               onDismiss={() => {
@@ -772,32 +784,6 @@ export function App() {
  */
 function routeMissed(origin: LngLat, destination: Place): boolean {
   return routeSettledFailed(origin, destination);
-}
-
-/**
- * The one line a screen reader gets for a result: what the reel and the card
- * say between them, in a sentence.
- */
-function describeResult(
-  place: Place,
-  route: WalkingRoute | null,
-  routeFailed: boolean,
-  roundTrip: boolean,
-  withinBudget: boolean,
-): string {
-  const parts = [place.name];
-  if (route) {
-    parts.push(
-      `${formatMinutes(roundTrip ? route.durationSeconds * 2 : route.durationSeconds)} ${
-        roundTrip ? "out and back" : "on foot"
-      }`,
-      formatMiles(roundTrip ? route.distanceMeters * 2 : route.distanceMeters),
-    );
-  } else {
-    parts.push(routeFailed ? "walk time unavailable" : "no walking route");
-  }
-  if (!withinBudget) parts.push("outside your current time budget");
-  return `${parts.join(", ")}.`;
 }
 
 /**

@@ -833,6 +833,26 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
+/*
+ * The shared line block: everything four features want to say about tonight,
+ * in one place, in one voice. It sits after the stats and before the warnings
+ * because a warning is louder than a note and reading order should match.
+ */
+.result-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.result-line {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+/* An assumption, not a fact - hours nobody published, a pace nobody measured. */
+.result-line.is-assumed {
+  color: var(--ink-3);
+}
+
 .result-warning {
   margin: 0;
   display: flex;
