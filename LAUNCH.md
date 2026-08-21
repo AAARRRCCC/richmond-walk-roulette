@@ -125,7 +125,24 @@ Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re
 - [ ] Hit the deployed URL once with `VALHALLA_URL` unset, to confirm the
       not-configured panel appears rather than a blank map.
 - [ ] A real phone, not a resized desktop window. The bottom sheet, the dial
-      drag and the map pan all need thumbs.
+      drag and the map pan all need thumbs. While you have one: scrub the
+      elevation chart, and check the result card's three-item profile readout
+      does not wrap badly at 320px.
+- [ ] **The Apple Maps link, opened for real**, from (a) an iPhone with Apple
+      Maps installed, (b) Chrome on Windows, (c) Chrome on Android. Confirm the
+      destination is right and the mode is walking.
+
+      None of this can be checked from a status code: `maps.apple.com` is a
+      JS-rendered SPA that answers 200 with the same shell for essentially any
+      path, so reachability proves the host answers and nothing more. Three
+      things remain unverified until somebody looks: whether the **web** app
+      honours `mode=walking`, how a unified URL degrades on a pre-18.4 device,
+      and Apple's supported-browser matrix.
+
+      If the web app ignores the mode, ship anyway - the route still renders and
+      the Google link is untouched - but write down what you saw here. If the
+      link fails on an old device, the legacy URL form is in a comment at the
+      top of `src/lib/handoff.ts` with the citation that motivated the change.
 - [ ] Screen reader pass over the rail. The hidden list at the bottom is the
       keyboard equivalent of clicking dots on the map.
 - [ ] `og:image`. `index.html` declares the OG tags but no image exists yet. A

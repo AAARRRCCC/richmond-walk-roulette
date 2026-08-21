@@ -438,3 +438,80 @@ sampled, even polling every 80 ms against a cleared store.
 **Chunk 4 — `apple-maps`.** The afternoon: one pure module, eight assertions, two anchors and a CSS
 grid. Preconditions: `npm run verify` green (met), and chunk 0's `.result-lines` block, which has been
 rendering an empty array since it landed and now gets its first line.
+
+---
+
+## Chunk 4 — `apple-maps` — done
+
+The afternoon, as advertised: one pure module, eight assertions, two anchors and a CSS grid.
+
+The card used to end in one way out. It now ends in two, side by side, on every platform — and
+admits, in one quiet line, that neither of them is carrying our walk.
+
+### What landed
+
+`src/lib/handoff.ts` with `googleDirectionsUrl` and `appleDirectionsUrl`; two named anchors in
+`.result-actions`; and the recompute caveat as a `ResultLine` with `key: "handoff"`.
+
+**No platform sniffing.** Google documents that its URL falls back to the browser when the app is
+absent; `maps.apple.com` is a universal link Apple's own app claims. Sniffing could only ever be
+wrong — it breaks the Mac user in Chrome and the Android user who wants Apple's web map — and two
+links is the smaller code.
+
+**The Apple form is the unified one**, which reverses an earlier draft of that spec. Apple's answer
+to a report that the legacy shape "no longer behaves as expected" was to point at a replacement
+rather than to say it still worked. The legacy URL is in a comment with the citation, as the thing to
+reach for if the manual check fails on an old device.
+
+**The origin is rounded to `COORD_PRECISION`; the destination is not.** This is the one place the app
+hands a coordinate to a third party, and with `geolocate` coming the origin can be a raw GPS fix.
+`pointKey` already collapses origins to exactly this precision, so the app itself cannot tell two
+origins apart below it — handing out more than we use is a leak with no function. A destination is a
+published landmark, so rounding it buys no privacy and would move a pin.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck` | clean |
+| `npm run lint` | eslint, oxlint, knip all clean |
+| `npm test` | **172 passing**, 0 failing |
+| `npm run build` | succeeds |
+| `verify-bundle` | **77,015 B** gz, **+217 B** against a +0.3 KB estimate — the closest any chunk has come |
+| everything else | clean |
+
+### Seen working
+
+"Spin again" full width, then "Google Maps" and "Apple Maps" sharing the row, then the caveat. Both
+anchors `target="_blank" rel="noreferrer"`, both with distinct `aria-label`s naming the destination
+and the provider, both calling `playPress()` — the old Google anchor had no cue at all.
+
+At a 316px viewport the three buttons each measure 282px in one column and none is clipped. That is
+the mobile rule doing its job rather than the text relieving the pressure: `.button` sets
+`white-space: nowrap`, so "Google Maps" cannot wrap.
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-04.md`: **61 of 63 ticked**. Two open: `prefers-reduced-motion` (5.1),
+and the Apple link opened on a real device (5.5), which is a required manual check that cannot be
+done from here and is now a checkbox in `LAUNCH.md` under **Ship** with what to look for.
+
+### Spec corrections
+
+- **`.result-note` was not added.** README §2.5 retires it and the caveat ships as a `ResultLine` —
+  which this spec's own `## Depends on` predicted, while its `## Changes` section still described the
+  class. The line renders in `--ink-3` with `margin: 0` from `.result-line.is-assumed`, which is what
+  the spec wanted the class for.
+
+### Deferred
+
+- HUMAN-REVIEW 5.5 — the Apple link on a real device, and the three things that stay unverified until
+  somebody opens it. A status code is not evidence: `maps.apple.com` answers 200 with the same shell
+  for essentially any path.
+
+### Next
+
+**Chunk 5 — `daylight-budget`.** The visible half of the clock chunk 0 built and nothing has consumed
+yet: the switch, the dial's dead zone, the cap note, the light line on the card, and the fit warning.
+Its pure modules and their 20 tests have been sitting green and unimported since chunk 0, so this is
+wiring rather than arithmetic. Preconditions: `npm run verify` green (met).

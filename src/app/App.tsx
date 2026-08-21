@@ -629,7 +629,23 @@ export function App() {
    * light, hours, handoff, meet. Empty until chunk 4 contributes the first one -
    * the block renders nothing at all rather than an empty box.
    */
-  const resultLines: readonly ResultLine[] = [];
+  const resultLines: readonly ResultLine[] = [
+    {
+      // Neither handoff carries our walk - both send two coordinates and let
+      // the other app recompute with its own graph and its own pedestrian
+      // speed. Their minutes will disagree with ours, and that disagreement is
+      // the whole reason this app exists. Better said here than discovered on
+      // the sidewalk.
+      //
+      // `assumed` rather than `fact`: it is a claim about somebody else's
+      // software. And deliberately not in `describeResult` - a constant caveat
+      // repeated on every landing is noise in a sentence that is already eight
+      // clauses long.
+      key: "handoff",
+      text: "Other apps will recalculate — their walk times will differ.",
+      tier: "assumed",
+    },
+  ];
 
   const announcement = state.spinAborted
     ? "Filters changed, spin again."

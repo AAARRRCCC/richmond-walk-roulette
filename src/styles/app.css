@@ -959,9 +959,13 @@ code {
 
 .result-actions {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 2px;
+}
+/* Spin again keeps its own full-width row above the two handoff links. */
+.result-actions > .is-primary {
+  grid-column: 1 / -1;
 }
 
 /* -------------------------------------------------------------- filters */
@@ -1183,6 +1187,16 @@ code {
 
   .brand {
     padding-top: 10px;
+  }
+
+  /*
+   * The two handoff links stack, unconditionally rather than as a contingency.
+   * `.button` sets `white-space: nowrap`, so "Google Maps" cannot wrap to
+   * relieve pressure: at 320px each grid cell would get about 128px for a label
+   * plus a 16px icon plus its own padding, and the text would be clipped.
+   */
+  .result-actions {
+    grid-template-columns: 1fr;
   }
 
   .dial-value {

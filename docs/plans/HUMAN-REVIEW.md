@@ -143,6 +143,11 @@ never touched.
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
 
+**Chunk 4 — two boxes.** 61 of 63 ticked.
+
+- [ ] *`prefers-reduced-motion`.* Section 5.1. Two anchors and a line of text have nothing to animate.
+- [ ] *The Apple link, opened on a real device.* Section 5.5.
+
 **Chunk 3 — three boxes.** 73 of 76 ticked.
 
 - [ ] *`prefers-reduced-motion`.* Section 5.1. The chart has no animation.
@@ -223,6 +228,26 @@ What is known without seeing it: the gate is `routesPending && (state.climb !== 
 `pool.baseIncluded.length`, which a test asserts cannot shrink; and no spin was aborted mid-throw in
 any run this chunk. What is owed is one look with the network throttled.
 
+### 5.5 The Apple Maps link, opened on a real device
+
+`apple-maps` names this as a required manual check and it is the one thing in that chunk that cannot
+be done from here. Three things stay unverified until somebody opens the link:
+
+- whether the Apple Maps **web** app honours `mode=walking` client-side;
+- how a unified URL degrades on a pre-18.4 device (best guess: the Maps app fails to parse the path
+  and shows a plain map — the fallback is the legacy form, kept in a comment at the top of
+  `src/lib/handoff.ts` with the citation that motivated the change);
+- Apple's supported-browser matrix, which is on a JS-rendered support page that would not yield its
+  content.
+
+**A status code is not evidence.** `maps.apple.com` is a JS-rendered SPA that answers 200 with the
+same shell for essentially any path, so reachability proves the host answers and nothing more. The
+checkbox is in `LAUNCH.md` under **Ship** with what to look for on each of iPhone, Chrome on Windows
+and Chrome on Android.
+
+If the web app ignores the mode: ship anyway. The route still renders and the Google link is
+untouched. Write down what was seen.
+
 **Two things that were nearly in this section and are not**, because a way to observe them was found
 rather than assumed:
 
@@ -262,6 +287,8 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Tests after chunk 2 | 163 passing | |
 | App JS after chunk 3 | 76,798 B (75.0 KiB) | +2,154 B, under that spec's 2.5 KB line |
 | Tests after chunk 3 | 164 passing | |
+| App JS after chunk 4 | 77,015 B (75.2 KiB) | +217 B |
+| Tests after chunk 4 | 172 passing | |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
 
@@ -280,6 +307,7 @@ rather than so anybody does something about it.
 | 0 Foundations | +0.9 KB | +110 B (deferred to chunk 5 — nothing imports it yet) |
 | 1 Elevation wire | +0.7 KB | +545 B |
 | 2 `pool-reasoning` | +1.4 KB | **+2,784 B** |
+| 4 `apple-maps` | +0.3 KB | +217 B — the closest any chunk has come |
 | 3 `elevation-profile` UI | +1.2 KB | +2,154 B (its own spec allowed 2.5 KB; README section 5's row is the low one) |
 
 ### 6.1 Every walking time in the app changed, and nothing on screen says so

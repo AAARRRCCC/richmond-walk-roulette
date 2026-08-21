@@ -1,6 +1,8 @@
 import { ArrowSquareOutIcon, ShuffleIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
 import { REASON_COPY, REASON_ORDER, type PlaceVerdict } from "../app/eligibility";
 import { mirrorProfile } from "../lib/elevation";
+import { appleDirectionsUrl, googleDirectionsUrl } from "../lib/handoff";
+import { playPress } from "../lib/sound";
 import { elevationAvailable } from "../lib/route";
 import { ElevationProfile } from "./ElevationProfile";
 import type { Place } from "../data/places";
@@ -84,10 +86,6 @@ export function ResultCard(props: ResultCardProps) {
     verdict === null || verdict.included
       ? []
       : REASON_ORDER.filter((reason) => verdict.reasons.includes(reason));
-  const mapsUrl =
-    "https://www.google.com/maps/dir/?api=1&travelmode=walking" +
-    `&origin=${props.origin.lat},${props.origin.lng}` +
-    `&destination=${place.lat},${place.lng}`;
 
   return (
     <section className="result">
@@ -192,9 +190,36 @@ export function ResultCard(props: ResultCardProps) {
           <ShuffleIcon size={16} weight="bold" aria-hidden="true" />
           Spin again
         </button>
-        <a className="button" href={mapsUrl} target="_blank" rel="noreferrer">
+        {/* Both, always, on every platform. Google documents that its URL
+            falls back to the browser when the app is absent, and maps.apple.com
+            is a universal link Apple's own app claims; sniffing the platform
+            could only ever be wrong, and would break the Mac user in Chrome and
+            the Android user who wants Apple's web map. Google is first because
+            it is the incumbent and moving it would retrain a habit for nothing.
+
+            Named links rather than two vague "Maps": in an accessibility tree,
+            "Directions" twice is a coin toss. */}
+        <a
+          className="button"
+          href={googleDirectionsUrl(props.origin, place)}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Walking directions to ${place.name} in Google Maps`}
+          onClick={() => playPress()}
+        >
           <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
-          Directions
+          Google Maps
+        </a>
+        <a
+          className="button"
+          href={appleDirectionsUrl(props.origin, place)}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Walking directions to ${place.name} in Apple Maps`}
+          onClick={() => playPress()}
+        >
+          <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
+          Apple Maps
         </a>
       </div>
     </section>
