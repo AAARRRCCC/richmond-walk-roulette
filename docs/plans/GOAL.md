@@ -578,7 +578,7 @@ moment to settle it.
 - [x] Chunk 4 — apple-maps — `e3938f8`, 61/63
 - [x] Chunk 5 — daylight-budget — `506d096`, 67/69
 - [x] Chunk 6 — geolocate — `e575427`, 65/71
-- [x] Chunk 7 — weather-filters — `PENDING`, 81/83
+- [x] Chunk 7 — weather-filters — `e62f166`, 81/83
 - [ ] Chunk 8 — places-expansion
 - [ ] Chunk 9 — opening-hours
 - [ ] Chunk 10 — shareable-spins
