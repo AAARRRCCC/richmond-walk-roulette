@@ -802,3 +802,150 @@ one that costs money if it is read late: `HUMAN-REVIEW.md` §6.1, the walking sp
 recuts all eleven snapshots anyway, which is the only cheap moment to change `WALKING_SPEED_KMH` —
 decide now and recut once, or decide later and recut twice. Preconditions: chunks 2 and 3 landed
 (both are), `npm run verify` green (it is), and the engine up.
+
+---
+
+## Chunk 8 — `places-expansion` — done
+
+Sixty-two places is a downtown list. It is 242 now, and the pipeline that made it
+is committed, reproducible and stops at a page a person clears.
+
+### The deferred decision, settled with 673 routes
+
+`HUMAN-REVIEW.md` §6.1 asked whether the pinned 3.69 km/h survives the elevation
+rebuild, and GOAL.md scheduled the answer here because this chunk "recuts all
+eleven snapshots anyway". Both halves of that turned out to need correcting.
+
+**The pace: 3.69 stays.** One route cannot answer the question — `use_hills`
+makes a descent quicker and a climb slower, and the fixture in §6.1 is a descent
+to the river, so it measures the effect at its largest. Measured across every
+direction instead: all 11 presets to all 62 places, 673 real routes, **mean
+effective pace 3.606 km/h**. That is 2.3% *slower* than the pin, not faster. The
+app under-promises by less than the difference between two people's walking.
+`scripts/measure-pace.mjs` is committed, because this question returns every time
+the graph is rebuilt.
+
+**The escape hatch was fiction.** GOAL and §6.1 both call it "one constant"; it
+was in three files, and the third was `verify-engine.mjs`, which asserts the
+engine's answer against its own literal — so a changed pace would have left the
+checker checking the wrong number and reporting green. One literal now.
+
+**And the deadline was imaginary.** `build-reach.mjs` reads `PRESET_ORIGINS` and
+nothing else. A snapshot is a contour ladder; it knows nothing about places. This
+chunk regenerates **zero** snapshots, `SNAPSHOT_VERSION` is untouched, and the
+"decide now or recut twice" pressure did not exist. HUMAN-REVIEW 3.9.
+
+### What the terrain deletion was worth
+
+Chunk 3 removed `Place.terrain` before this ran, and README §2.4 predicted this
+would be the largest single simplification in the plan. It was: the relief ring,
+`terrainFromRelief`, the null-abort, the elevation prerequisite and **nine
+`/api/locate` probes per candidate** all come out. One locate per candidate
+instead of nine is roughly 5,400 upstream calls removed, which is the difference
+between a propose run that takes minutes and one that takes an afternoon.
+
+### Coverage, which is the whole argument
+
+Measured from the centroid of the preset origins:
+
+| | before | after |
+| --- | --- | --- |
+| SE / NW / SW / NE | 29 / 16 / 9 / 8 | 95 / 79 / 29 / 39 |
+| south of the James | 4 | 25 |
+| west of −77.488 | 1 | 33 |
+| north of 37.56 | 5 | 59 |
+
+And the one that matters most: **a 100-minute round trip with Far edge only now
+has 38 candidates.** That band is what this feature exists for, and it was
+frequently empty.
+
+### The gate refused 434 and accepted 180
+
+Four of those rules exist *because the first run produced something wrong and it
+was read rather than shipped*. None of them is a data rule; all four are
+judgements, which is exactly the work a human reviewer was meant to do:
+
+1. **38 of 52 markers were street addresses** — Historic Richmond house plaques
+   named "2816 E. Grace". A street address is not an offer.
+2. **Three ghost bikes** came through as "Marker: Robyn Hightman" — a memorial
+   where a named cyclist was killed in traffic, drawn at random and presented as
+   a small delight. The card has no room to say otherwise.
+3. **34 of 63 gardens are community allotments** — a membership of raised beds,
+   usually gated.
+4. **`tourism=gallery` is refused wholesale.** Most of the 18 are commercial art
+   dealers and nothing in the tags separates them from The Anderson. Unsure is a
+   rejection, and this data layer has already shipped one closed storefront.
+
+A fifth came from the corpus rather than a row: the Canal Walk is tagged as
+several ways more than 90 m apart, so it arrived twice on top of the
+hand-curated one. Distance dedup cannot see that; name dedup can.
+
+HUMAN-REVIEW 2.6 has the full tally and the three committed artefacts.
+
+### Two measurements the spec asked for by name
+
+- **`osm` costs 1,288 B gzipped** over 180 rows — built twice to find out, which
+  is what open question 1 asked for instead of a decision on the estimate. It
+  stays; chunk 9 is its consumer.
+- **38.8 B gzipped per generated row**, against an estimate of 50. Lower for the
+  reason the spec predicted: in a real bundle these rows share a dictionary with
+  the rest of the app JS, which a standalone file cannot.
+
+### The 250-place performance work, measured
+
+`syncPlaces` re-uploaded the whole FeatureCollection on every reel tick, because
+the winner was a `state` value on the shared source. The winner has a
+one-feature source of its own now. Instrumented with a counter at 242 places:
+**syncPlaces 0, syncPicked 2 across a whole throw.** Before the split those were
+the same function.
+
+The wide prefetch wave is capped at 90, nearest-first. Uncapped it is one
+`/route` per place inside the 100-minute contour — up to 242 rate-limit units per
+origin change, against a route cache that holds 200. The cost is stated rather
+than hidden: `CACHE_LIMIT` was sized so revisiting a start stays instant for "a
+few" origins, and that is now about two.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint`, `npm run build` | clean, including over `scripts/` |
+| `npm test` | **294 passing**, 0 failing |
+| `verify-bundle` | **89,244 B** gz, **+6,982 B**; 12.8 KB of headroom |
+| `verify-places` | 242 of 242 through a live `/locate`; worst snap still `diamond` at 51 m |
+| `git diff public/` | empty — no snapshot recut |
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-08.md`: **84 of 85 ticked**. One open,
+`prefers-reduced-motion` (5.1), and this chunk animates nothing.
+
+Two criteria are ticked as **superseded** rather than met, both by chunk 3's
+deletion of `Place.terrain`. One, criterion 9, is ticked at a lower standard than
+it asks — `/api/locate` was exercised live under `npm run dev` and asserted
+through `handleWorkerRequest` with a stubbed edge, not under `wrangler dev`,
+which no endpoint in this repo has ever been. Named rather than ticked past.
+
+### Spec corrections
+
+Nine, in `places-expansion.md`'s new *Corrections after implementation*. The
+load-bearing ones: the terrain half is gone; the tier is a `PoolRule` rather than
+a fifth positional argument; `activeFilters` needed no change because it already
+counts rules; and `apply-places.mjs` counts by importing the module, having
+walked into **both** documented miscount traps in one sitting — 81 for 62 with a
+whole-file regex, 61 with a scoped one that skips `pyramid`.
+
+### Deferred
+
+- HUMAN-REVIEW **2.5** — the walking speed, settled at 3.69 with the measurement.
+- HUMAN-REVIEW **2.6** — the automated gate standing in for the human one, with
+  its four judgement calls and the committed artefacts.
+- HUMAN-REVIEW **3.9** — chunk 8 recuts no snapshots; GOAL's premise corrected.
+
+### Next
+
+**Chunk 9 — `opening-hours`**, which chunk 8 was ordered before precisely so that
+every generated row arrives carrying `osm` and only the 62 hand-curated rows need
+that spec's manual identity backfill. Preconditions: chunks 0, 2, 5 and 8 landed
+(all are), `npm run verify` green (it is), and `harvest-osm.mjs` already carries
+the query family that spec needs.

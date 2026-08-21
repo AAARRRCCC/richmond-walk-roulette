@@ -183,6 +183,71 @@ constant because `seedFromSnapshot` reads it, so there was no policy being prote
 `verify-engine.mjs` parses it out of `speed.ts` rather than restating it. `grep` finds exactly one
 literal in the repo.
 
+### 2.6 A script cleared 180 places instead of a person, and here is what it refused
+
+**The question.** `places-expansion` stops at a review page a human clears by
+hand: "a script that can write `src/data/places.ts` unattended is a script that
+can ship a marker standing in a highway median." Nobody is here. GOAL.md's
+chunk-8 checklist allows the substitution and asks for two things in return -
+every rejection reason logged, and anything the gate was unsure about excluded
+rather than included.
+
+**The branch taken.** The automated gate ran, and **180 rows were accepted
+against 434 rejections**. The artefacts are committed so the same list can be
+skimmed cold: `data/proposals/review.html` (one self-contained page, no network,
+`j`/`k`/`a`/`c`, snap-anchored rows flagged amber), `data/proposals/places.json`
+(every accepted row with its provenance, every rejected one with its reason) and
+`data/proposals/accepted.txt`.
+
+| Rejected | Count |
+| --- | --- |
+| unnamed (incl. addresses) | 187 |
+| duplicate, by distance | 104 |
+| no walkable anchor | 56 |
+| community or residential garden | 34 |
+| not a place | 17 |
+| no vibe | 17 |
+| duplicate, by name | 6 |
+| out of bounds | 4 |
+| access private | 4 |
+| in memoriam | 4 |
+| lifecycle | 1 |
+
+**The part that actually needs a person's eye is not the acceptances.** It is
+four rules that exist *because* the first run produced something wrong and it
+was read rather than shipped. Each is a judgement, not a data rule, and each is
+the kind of thing a reviewer would have caught in an afternoon:
+
+1. **A street address is not an offer.** 38 of 52 markers were Historic Richmond
+   house plaques named "2816 E. Grace", "605 N. 25th Street". "Marker: 635 North
+   27th Street" is not something to walk twenty minutes to.
+2. **Ghost bikes are refused.** Three came through as "Marker: Robyn Hightman" -
+   a memorial where a named cyclist was killed in traffic, drawn at random and
+   presented as a small delight. This is the one entry here that is purely a
+   question of taste, and it is the one most worth overruling if somebody
+   disagrees. `PRIVATE_GARDEN_TYPES`' neighbour in `src/data/osm-rules.ts`.
+3. **Community gardens are refused.** 34 of 63 named gardens are
+   `garden:type=community` - a membership of raised beds, usually gated.
+4. **`tourism=gallery` is refused wholesale.** Of 18 in the box, most are
+   commercial art dealers; nothing in the tags separates them from The Anderson
+   or Artspace, which are not. All 18 go. This is the costliest of the four and
+   the clearest application of "unsure is a rejection".
+
+**Why this is the conservative branch.** Every rule refuses more than it admits,
+and the failure it guards against is the one this app cannot recover from: a
+walker sent twenty minutes to a house number, a gated allotment, or a gallery
+that moved. A missing place is invisible; a wrong one is the whole product
+failing once, in person.
+
+**What reverses it.** Each rule is a few lines in `src/data/osm-rules.ts` with
+its measurement in the comment above it. Re-running `npm run propose:places`
+against the committed harvest re-derives the list in about two minutes; nothing
+needs Overpass again. Pruning the whole batch is deleting from the boundary
+comment in `places.ts` to the closing bracket.
+
+**What else would have to change.** Nothing structural. `HAND_CURATED_COUNT`
+stays 62 whatever happens to the suffix, which is what it is for.
+
 ---
 
 ## 3. Plan-level decisions
@@ -360,6 +425,20 @@ but nobody needs to treat it as a last chance.
 
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
+
+**Chunk 8 — one box.** 84 of 85 ticked.
+
+- [ ] *It was seen with `prefers-reduced-motion` on.* Section 5.1. This chunk
+  adds no animation: the tier mark is a paint expression and the Kind control is
+  a static fieldset.
+
+Two criteria in that file are ticked as **superseded** rather than met, both by
+chunk 3's deletion of `Place.terrain`: criterion 20's propose-time half (nine
+elevation probes, the null-abort, the four known-hilly rows) and criterion 5's
+"or terrain" clause. One, criterion 9, is ticked at a lower standard than it
+asks and says so: `/api/locate` was exercised live under `npm run dev` and
+asserted through `handleWorkerRequest` with a stubbed edge, not under
+`wrangler dev` - which no endpoint in this repo has ever been.
 
 **Chunk 7 — two boxes, and both are environmental.** 81 of 83 ticked, the best tally of the run.
 
@@ -583,6 +662,15 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Open-Meteo free tier | 600/min, 5,000/hr, 10,000/day, 300,000/month | Chunk 7, fetched 2026-08-21 - see 2.4 |
 | Mean effective walking pace | **3.606 km/h** over 673 routes | Chunk 8, against a pinned 3.69 - see 2.5 |
 | Effective pace spread | 3.056 min, 3.610 median, 3.904 max | Chunk 8, 11 origins x 62 places |
+| App JS after chunk 8 | 89,244 B (87.2 KiB) | +6,982 B; 12.8 KB of headroom left |
+| Tests after chunk 8 | 294 passing | |
+| Places | **242** | Chunk 8: 62 hand-curated + 180 generated |
+| `osm` field cost | **1,288 B** gzipped over 180 rows | Chunk 8, built twice - open question 1 |
+| Bytes per generated row | 38.8 B gzipped | Chunk 8, against a 50 B estimate |
+| Propose yield | 180 accepted, 434 rejected | Chunk 8 - see 2.6 |
+| Far-edge pool at 100 min | **38** candidates | Chunk 8; the band this feature exists for |
+| Harvested OSM elements | 845 in 277 KB, six queries | Chunk 8, committed to `data/osm/` |
+| Snapshot regeneration for chunk 8 | **zero** | Snapshots hold contours, not places - see 3.9 |
 | `formatToParts` per 26-position scrub | 150 → **0** | Chunk 5 — see 6.3 |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |

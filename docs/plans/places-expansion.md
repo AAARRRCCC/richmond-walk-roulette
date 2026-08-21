@@ -1,6 +1,6 @@
 # Beyond downtown, and the second tier of places
 
-**Status:** spec — not implemented
+**Status:** implemented in chunk 8. See *Corrections after implementation* at the end.
 **Slug:** places-expansion
 
 ## Depends on
@@ -1382,3 +1382,78 @@ for `{ ok: false, reason: "lifecycle" }` and "a `Classification`" for
    as well to origins, and the cost — a ~1.7 MB snapshot, a full ladder
    rebuild, a `SNAPSHOT_VERSION` bump — is a real number someone should weigh
    rather than inherit from this spec's silence.
+
+## Corrections after implementation
+
+Written against the code that shipped. Nine things, in the order they bit.
+
+1. **The terrain half of this spec is gone, and it was the expensive half.**
+   `elevation-profile` deleted `Place.terrain` before this ran, so
+   `terrainFromRelief`, the 250 m relief ring, the nine `/api/locate` probes per
+   candidate, the null-abort, the elevation prerequisite and the four
+   known-hilly-rows acceptance check all come out. `/api/locate` is called
+   **once** per candidate and returns no `meanElevation` at all. That is roughly
+   5,400 upstream calls removed from a propose run, and it is why the run takes
+   minutes rather than an afternoon. README section 2.4 called this in advance;
+   this section records that it held.
+
+2. **The tier filter is a `PoolRule`, not a fifth positional argument.**
+   `selectCandidates` no longer exists. The contract this spec asks of
+   `pool-reasoning` - "a positional fifth argument, and its rejection reason is
+   named `kind`" - is answered better than it was asked: the reason code is in
+   that spec's union already, and contributing a rule gets the summary line, the
+   drawer breakdown and the empty-pool fix for free.
+
+3. **`activeFilters` needed no change.** This spec asks for
+   `+ (state.kind === "any" ? 0 : 1)`; the count already sums active rules, so
+   the tier is counted by existing. Verified on screen: **FILTERS (1 ACTIVE)**
+   with Kind = Detours.
+
+4. **`placeName` rejects a street address.** Not anticipated here, and it should
+   have been: of 52 markers the first propose run accepted, **38** were Historic
+   Richmond house plaques named "2816 E. Grace" or "605 N. 25th Street". This
+   spec's own rule is that a name must be self-describing, and an address is
+   not. A leading house number is the whole tell; "17th Street Market" and
+   "1708 Gallery" survive it.
+
+5. **`memorial=ghost_bike` is refused, and the reason is a product decision.**
+   Four are in the box and the first run accepted three, as "Marker: Robyn
+   Hightman" - a person's name with no context, drawn at random and presented as
+   a small delight. A ghost bike marks where a named cyclist was killed in
+   traffic. The card has no room to say what that place is; the refusal is
+   written into the rules rather than left for a reviewer to catch.
+
+6. **Community gardens and `tourism=gallery` are refused.** 34 of 63 named
+   gardens are `garden:type=community`: a membership of raised beds, usually
+   behind a gate. Of 18 galleries, most are commercial art dealers and nothing
+   in the tags separates them from The Anderson or Artspace - so all 18 go,
+   because unsure is a rejection and this data layer has already shipped one
+   closed storefront.
+
+7. **Dedup is by name as well as by distance.** The Canal Walk is tagged as
+   several ways more than 90 m apart, so it came through twice on top of the
+   hand-curated `canal-walk`: three rows, one place. `placeId` would have papered
+   over it as `canal-walk-2`, which is a duplicate wearing a suffix.
+
+8. **The gate rung was measured, and it works - for the features it is for.**
+   This spec flags "unmeasured: how often rung 2 hits". One query answers it:
+   **195** shared park-outline/pedestrian-way nodes, against the **0** entrance
+   nodes that were already measured. In the run 17 of 180 rows anchored by gate
+   and 163 by snap, which looks lopsided until you notice most candidates are
+   *nodes* - a memorial or a mural has no centroid problem and skips the rung by
+   design. The review page's flag on snapped rows is therefore still meaningful.
+
+9. **`apply-places.mjs` counts by importing, and both ways of not doing that are
+   already documented mistakes.** It first counted `id:` across the whole file
+   and got **81** for 62, sweeping up `PRESET_ORIGINS` and `VIBES` - the exact
+   miscount README section 2.6 records. Scoped to the array literal it got
+   **61**, missing `pyramid`, the one multiline row - the other documented
+   miscount. It SSR-loads the module now.
+
+**Two counts to carry forward.** The yield is **180 accepted against 434
+rejections**, which answers open question 2: the wall was not the binding
+constraint in the end, though the first run did overflow it by 63 before the
+four rules above were written. And `osm` costs **1,288 bytes gzipped**, measured
+by building twice - open question 1 asked for exactly that rather than a
+decision on the estimate. It stays: `opening-hours` is the next chunk and is its
+consumer.

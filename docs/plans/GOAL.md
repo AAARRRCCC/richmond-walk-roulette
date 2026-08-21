@@ -562,13 +562,15 @@ and it is designed so that person can arrive cold, with no memory of the run, an
 
 ### Run this checklist to the end before declaring the work finished
 
-**Where the run is: chunk 7 landed, on 2026-08-21.**
-`npm run verify` green, working tree clean. Bundle 82,262 B gzipped against the 102,400 B ceiling;
-246 tests. Each ticked chunk names its commit and its acceptance tally — every open box in those
-tallies is recorded in `HUMAN-REVIEW.md` §4 and §5, and none of them is a `[!]`. `PROGRESS.md`
-carries a report per chunk; the next one to start is chunk 8, and its first act is the walking-speed
-decision in `HUMAN-REVIEW.md` §6.1 — that chunk recuts all eleven snapshots, which is the only cheap
-moment to settle it.
+**Where the run is: chunk 8 landed, on 2026-08-21.**
+`npm run verify` green, working tree clean. Bundle 89,244 B gzipped against the 102,400 B ceiling;
+294 tests; 242 places. Each ticked chunk names its commit and its acceptance tally — every open box
+in those tallies is recorded in `HUMAN-REVIEW.md` §4 and §5, and none of them is a `[!]`.
+`PROGRESS.md` carries a report per chunk; the next one to start is chunk 9.
+
+The walking speed is **settled at 3.69** with a 673-route measurement (`HUMAN-REVIEW.md` §2.5), and
+the premise that chunk 8 would recut the snapshots was wrong — it recut none, because a snapshot
+holds contours and knows nothing about places (§3.9).
 
 - [x] Harness built and committed — `25ac08b`
 - [x] Chunk 0 — foundations — `3d85202`, 53/54
@@ -579,7 +581,7 @@ moment to settle it.
 - [x] Chunk 5 — daylight-budget — `506d096`, 67/69
 - [x] Chunk 6 — geolocate — `e575427`, 65/71
 - [x] Chunk 7 — weather-filters — `e62f166`, 81/83
-- [ ] Chunk 8 — places-expansion
+- [x] Chunk 8 — places-expansion — `PENDING`, 84/85
 - [ ] Chunk 9 — opening-hours
 - [ ] Chunk 10 — shareable-spins
 - [ ] Chunk 11 — multiplayer-links + meet-in-the-middle, one landing
