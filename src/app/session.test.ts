@@ -71,3 +71,65 @@ test("session: the cap is a ceiling on the dial, not a shorter track", () => {
   assert.equal(dialMaximum(guarded(62)), 62);
   assert.equal(dialMaximum({ ...initialSession, beforeDark: false, timeCap: cap(62) }), MAX_MINUTES);
 });
+
+const rainCap = (minutes: number): TimeCap => ({
+  minutes,
+  reason: "rain",
+  untilMs: Date.parse("2026-08-21T19:00:00Z"),
+});
+
+test("session: a weather cap answers to the weather switch, not the daylight one", () => {
+  // Two switches, two reasons, one cap field. A weather cap that respected
+  // `beforeDark` would clamp the dial for a mode the reader never turned on.
+  const raining = reduce({ ...initialSession, beforeDark: false }, { type: "timeCap", cap: rainCap(30) });
+  assert.equal(raining.budgetMinutes, 30);
+  assert.equal(dialMaximum(raining), 30);
+
+  const ignored = reduce(
+    { ...initialSession, weatherAware: false, beforeDark: true },
+    { type: "timeCap", cap: rainCap(30) },
+  );
+  assert.equal(dialMaximum(ignored), MAX_MINUTES);
+  assert.equal(ignored.budgetMinutes, initialSession.budgetMinutes);
+});
+
+test("session: turning the weather off gives the dial back", () => {
+  // The one-way clamp is the bug this asserts against. Without
+  // `requestedBudgetMinutes` the reducer lowers `budgetMinutes` when the rain
+  // moves in and never raises it again, so the button offering to undo the
+  // cause undoes nothing and the pool stays empty.
+  const capped = reduce(initialSession, { type: "timeCap", cap: rainCap(20) });
+  assert.equal(capped.budgetMinutes, 20);
+
+  const freed = reduce(capped, { type: "toggleWeatherAware" });
+  assert.equal(freed.weatherAware, false);
+  assert.equal(freed.budgetMinutes, initialSession.budgetMinutes, "the dial comes back to 50");
+});
+
+test("session: the dial the reader set is the one that comes back, not the last clamp", () => {
+  const asked = reduce(initialSession, { type: "budget", minutes: 80 });
+  assert.equal(asked.requestedBudgetMinutes, 80);
+
+  const capped = reduce(asked, { type: "timeCap", cap: rainCap(25) });
+  assert.equal(capped.budgetMinutes, 25);
+  assert.equal(capped.requestedBudgetMinutes, 80, "the request survives the clamp");
+
+  const lifted = reduce(capped, { type: "timeCap", cap: null });
+  assert.equal(lifted.budgetMinutes, 80);
+});
+
+test("session: clearFilters leaves the weather switch alone", () => {
+  // Same trap as `beforeDark`, stated from both ends: `activeFilters` does not
+  // count the weather switch, so the count would not drop when this ran - and a
+  // reader who deliberately turned the rules off would have them switched back
+  // on by a button that says "clear".
+  const off = reduce({ ...initialSession, weatherAware: false }, { type: "clearFilters" });
+  assert.equal(off.weatherAware, false);
+});
+
+test("session: toggleWeatherAware never clears the pick", () => {
+  // A weather rule can move the pool under an existing pick, and the card's
+  // "outside your current time budget" warning is already the right answer.
+  const picked = reduce(initialSession, { type: "pickPlace", pickedId: "vmfa" });
+  assert.equal(reduce(picked, { type: "toggleWeatherAware" }).pickedId, "vmfa");
+});

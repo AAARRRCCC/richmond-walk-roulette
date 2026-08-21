@@ -23,6 +23,14 @@ binding = "ASSETS"
 VALHALLA_URL = ""
 VALHALLA_MAX_CONTOURS = "100"
 
+# The forecast upstream. Unlike VALHALLA_URL this has a working default in the
+# proxy, so it is here to make the vendor swappable rather than to configure
+# anything: point it at a different service and only server/proxy.ts's
+# normaliser has to change. /api/weather takes no parameters and is edge-cached
+# for 900 s under one constant key, so one upstream call serves every visitor
+# to a colo per refresh.
+WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
+
 # Per-IP rate limit on /api/*. The engine is self-hosted so the exposure is
 # CPU rather than a bill, but an open endpoint would still let one scraper
 # saturate a small box.

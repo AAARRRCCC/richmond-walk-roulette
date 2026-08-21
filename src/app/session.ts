@@ -14,8 +14,24 @@ export type Failure = { message: string; configured: boolean };
 
 export type Session = {
   origin: Origin;
-  /** Total minutes the walker has. Split across both legs when roundTrip. */
+  /**
+   * Total minutes the walker has, after every cap in force. Split across both
+   * legs when roundTrip. This is the number the map is drawn at.
+   */
   budgetMinutes: number;
+  /**
+   * The dial position the reader actually asked for, before any cap touched it.
+   *
+   * Without it a cap is one-way: the reducer clamps `budgetMinutes` down when
+   * the rain moves in, and switching the rules back off leaves the budget where
+   * the clamp put it, so the button offering to undo the cause undoes nothing.
+   * Every clamping path re-derives `budgetMinutes` from this rather than from
+   * its own previous output, which is what makes a cap reversible.
+   *
+   * Never rendered. The dial shows `budgetMinutes`, because a thumb that sits
+   * outside the shaded dead zone is the UI lying about what it will do.
+   */
+  requestedBudgetMinutes: number;
   /**
    * The lower end of the range, in the same total-minutes units as
    * `budgetMinutes`. Equal to the dial's minimum means no lower bound at all;
@@ -30,6 +46,16 @@ export type Session = {
   vibes: Vibe[];
   /** "Get back before dark". Opt-in; never set by the app itself. */
   beforeDark: boolean;
+  /**
+   * "Mind the weather". Gates every rule that changes the pool or the dial, and
+   * never the conditions line - the forecast is stated whatever this says,
+   * because the reader deciding to ignore the rain does not stop it raining.
+   *
+   * Defaults on, because the rules it gates are the ones a walker would apply
+   * from memory anyway: nobody sets out on a fifty-minute round trip into a
+   * thunderstorm on purpose.
+   */
+  weatherAware: boolean;
   /**
    * The time constraint currently clamping the dial, or null for "no usable
    * clamp" - either the mode is off, or it is already dark and a cap would be a
@@ -91,6 +117,7 @@ export type Action =
   | { type: "toggleVibe"; vibe: Vibe }
   | { type: "clearVibes" }
   | { type: "toggleBeforeDark" }
+  | { type: "toggleWeatherAware" }
   | { type: "timeCap"; cap: TimeCap | null }
   | { type: "clearFilters" }
   | { type: "spinStart" }
@@ -127,11 +154,13 @@ export const initialSession: Session = {
   // No state to take a cap from at module scope, and none is wanted: the mode
   // defaults off, so the effective cap is null either way.
   budgetMinutes: clampBudget(DEFAULT_BUDGET_MINUTES, DEFAULT_ROUND_TRIP, null),
+  requestedBudgetMinutes: clampBudget(DEFAULT_BUDGET_MINUTES, DEFAULT_ROUND_TRIP, null),
   floorMinutes: dialMinimum(DEFAULT_ROUND_TRIP),
   roundTrip: DEFAULT_ROUND_TRIP,
   edgeOnly: false,
   climb: "any",
   beforeDark: false,
+  weatherAware: true,
   timeCap: null,
   vibes: [],
   pickedId: null,
@@ -183,6 +212,9 @@ export function reduce(state: Session, action: Action): Session {
         return {
           ...state,
           budgetMinutes,
+          // The reader's own number, kept unclamped: this is the one action
+          // that sets it, because it is the only one where the reader said it.
+          requestedBudgetMinutes: clampBudget(action.minutes, state.roundTrip, null),
           // The floor cannot overtake the budget: a range whose ends crossed
           // would ask for a band with nothing in it.
           floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, state.roundTrip, effectiveCap(state)),
@@ -197,7 +229,7 @@ export function reduce(state: Session, action: Action): Session {
       };
     case "toggleRoundTrip": {
       const roundTrip = !state.roundTrip;
-      const budgetMinutes = clampBudget(state.budgetMinutes, roundTrip, effectiveCap({ ...state, roundTrip }));
+      const budgetMinutes = clampBudget(state.requestedBudgetMinutes, roundTrip, effectiveCap({ ...state, roundTrip }));
       return {
         ...state,
         roundTrip,
@@ -231,10 +263,31 @@ export function reduce(state: Session, action: Action): Session {
     case "toggleBeforeDark": {
       const beforeDark = !state.beforeDark;
       const cap = effectiveCap({ ...state, beforeDark });
-      const budgetMinutes = clampBudget(state.budgetMinutes, state.roundTrip, cap);
+      const budgetMinutes = clampBudget(state.requestedBudgetMinutes, state.roundTrip, cap);
       return {
         ...state,
         beforeDark,
+        budgetMinutes,
+        floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, state.roundTrip, cap),
+        failure: null,
+        framingKey: state.framingKey + 1,
+      };
+    }
+    /**
+     * The same shape as `toggleBeforeDark`, and for the same reason: a weather
+     * cap can move the outbound contour with no dial commit to piggyback on.
+     *
+     * It must **not** clear `pickedId`. A weather rule can move the pool under
+     * an existing pick, and the card's "outside your current time budget"
+     * warning is already the right answer for that.
+     */
+    case "toggleWeatherAware": {
+      const weatherAware = !state.weatherAware;
+      const cap = effectiveCap({ ...state, weatherAware });
+      const budgetMinutes = clampBudget(state.requestedBudgetMinutes, state.roundTrip, cap);
+      return {
+        ...state,
+        weatherAware,
         budgetMinutes,
         floorMinutes: clampFloor(state.floorMinutes, budgetMinutes, state.roundTrip, cap),
         failure: null,
@@ -252,7 +305,7 @@ export function reduce(state: Session, action: Action): Session {
     case "timeCap": {
       const next = { ...state, timeCap: action.cap };
       const cap = effectiveCap(next);
-      const budgetMinutes = clampBudget(state.budgetMinutes, state.roundTrip, cap);
+      const budgetMinutes = clampBudget(state.requestedBudgetMinutes, state.roundTrip, cap);
       const floorMinutes = clampFloor(state.floorMinutes, budgetMinutes, state.roundTrip, cap);
       const same =
         state.timeCap?.minutes === action.cap?.minutes &&
@@ -270,6 +323,12 @@ export function reduce(state: Session, action: Action): Session {
     // rule that clears but does not reset here survives "Clear filters", which
     // is the trap `beforeDark` is deliberately allowed to fall into and nothing
     // else is.
+    //
+    // `weatherAware` falls into it too, and for the same reason stated from
+    // both ends: `activeFilters` does not count it, so the count would not drop
+    // when this ran, and a reader who deliberately turned the weather rules off
+    // would have them switched back on by a button that says "clear". This
+    // clears what the count counts.
     case "clearFilters":
       return { ...state, climb: "any", vibes: [], edgeOnly: false };
     // Every one of these changes which walk is on screen, so each starts the
@@ -383,9 +442,15 @@ function clampFloor(
  * something honest instead of clamping to a fiction.
  */
 function effectiveCap(
-  state: Pick<Session, "beforeDark" | "timeCap" | "roundTrip">,
+  state: Pick<Session, "beforeDark" | "weatherAware" | "timeCap" | "roundTrip">,
 ): number | null {
-  if (!state.beforeDark || state.timeCap === null) return null;
+  if (state.timeCap === null) return null;
+  // Gated by whichever switch owns the reason. App already declines to produce
+  // a cap for a switch that is off, so this is the second belt - and it is the
+  // one that makes turning a switch off atomic: without it the stale cap would
+  // keep clamping for one render, until the effect dispatched a null.
+  const enabled = state.timeCap.reason === "daylight" ? state.beforeDark : state.weatherAware;
+  if (!enabled) return null;
   return state.timeCap.minutes < dialMinimum(state.roundTrip) ? null : state.timeCap.minutes;
 }
 
@@ -397,7 +462,7 @@ function effectiveCap(
  * @public - consumed by App and `TimeDial`.
  */
 export function dialMaximum(
-  state: Pick<Session, "beforeDark" | "timeCap" | "roundTrip">,
+  state: Pick<Session, "beforeDark" | "weatherAware" | "timeCap" | "roundTrip">,
 ): number {
   const cap = effectiveCap(state);
   return cap === null ? MAX_MINUTES : Math.min(cap, MAX_MINUTES);

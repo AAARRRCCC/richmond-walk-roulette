@@ -96,24 +96,62 @@ export async function postJson(
   body: Json,
   options?: { signal?: AbortSignal | undefined },
 ): Promise<Response> {
-  const caller = options?.signal;
+  return retrying(
+    url,
+    { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) },
+    MAX_ATTEMPTS,
+    options?.signal,
+  );
+}
+
+/**
+ * The same retry loop for a GET.
+ *
+ * `attempts` is a parameter for one caller: the forecast passes 2, because it
+ * is the one request in this app that nothing waits on, and burning three
+ * attempts and seventy seconds of backoff on a decoration is a waste of the
+ * user's radio.
+ *
+ * @public - consumed by `src/lib/weather.ts`.
+ */
+export async function getJson(
+  url: string,
+  options?: { signal?: AbortSignal | undefined; attempts?: number | undefined },
+): Promise<Response> {
+  return retrying(
+    url,
+    { method: "GET", headers: { accept: "application/json" } },
+    options?.attempts ?? MAX_ATTEMPTS,
+    options?.signal,
+  );
+}
+
+/**
+ * One request, retried. Both verbs go through here so the transient
+ * classification, the backoff and the caller's own abort cannot drift apart —
+ * which they did as soon as there were two copies of this loop.
+ */
+async function retrying(
+  url: string,
+  init: RequestInit,
+  attempts: number,
+  caller: AbortSignal | undefined,
+): Promise<Response> {
   let lastStatus = 0;
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
     const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
     let response: Response;
     try {
       response = await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
+        ...init,
         signal: caller ? AbortSignal.any([caller, timeout]) : timeout,
       });
     } catch (cause) {
       if (caller?.aborted === true) throw cause;
       // Network-level failure or a timed-out attempt. Same treatment as a 5xx.
       lastStatus = 0;
-      if (attempt === MAX_ATTEMPTS - 1) throw new TransientError(0);
+      if (attempt === attempts - 1) throw new TransientError(0);
       await sleep(BASE_BACKOFF_MS * 2 ** attempt + Math.random() * 250);
       continue;
     }
@@ -121,7 +159,7 @@ export async function postJson(
     if (!isTransient(response.status)) return response;
 
     lastStatus = response.status;
-    if (attempt === MAX_ATTEMPTS - 1) break;
+    if (attempt === attempts - 1) break;
     await sleep(backoffMs(response, attempt));
   }
 

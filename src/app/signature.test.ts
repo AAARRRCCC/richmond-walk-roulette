@@ -118,6 +118,22 @@ const REGISTERED: {
     changed: "hilly|8",
     why: "the climb band plus the number of routes measured so far - both change only when a route settles, never per frame. Landed in chunk 3 as `${state.climb}|${climbSettled}` in App.tsx",
   },
+  {
+    chunk: 7,
+    id: "heat-shelter",
+    reason: "weather",
+    stable: "river+park+museum+food",
+    changed: "park+museum+food",
+    why: "the rule's allow-list, and nothing else. Its sentence carries a temperature that moves with every refresh and its verdicts do not, so a signature built from the sentence would churn the memo once a minute. Landed in chunk 7 as `tags.join(\"+\")` in `toPoolRules`",
+  },
+  {
+    chunk: 7,
+    id: "heat-flat",
+    reason: "weather",
+    stable: "hilly|6",
+    changed: "hilly|7",
+    why: "the settled-route count, exactly as the climb rule's is - the veto reads a measured climb, so its verdicts move when a route lands and at no other moment. Landed in chunk 7 as `hilly${options.climbSignature}` in `toPoolRules`",
+  },
 ];
 
 /** A rule standing in for one a later chunk will contribute. */

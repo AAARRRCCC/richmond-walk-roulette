@@ -101,7 +101,7 @@ snapshot wrong.
   key.
 - Valhalla for isochrones and walking routes, behind a same-origin proxy
 - Cloudflare Worker in production. The Vite dev server mounts the same handler.
-- 77 KB gzipped of app JavaScript, plus MapLibre's own 277 KB. Both measured by
+- 80 KB gzipped of app JavaScript, plus MapLibre's own 277 KB. Both measured by
   `node scripts/verify-bundle.mjs` rather than remembered; the line used to claim
   64 KB and 276 KB and had been wrong for some number of commits
 
@@ -110,6 +110,33 @@ snapshot wrong.
 Both endpoints live in `server/proxy.ts`, which the dev server and the Worker
 each mount at `/api/isochrone` and `/api/route`. `VALHALLA_URL` names the
 instance. There is no `VITE_` prefix, so Vite will not inline it.
+
+## The weather never faces the browser either
+
+`GET /api/weather` is the same idea against a different upstream. It takes **no
+parameters** — Richmond's coordinates are pinned in the proxy next to the
+walking speed — so a scraped endpoint is not a worldwide weather service with
+this app's name on it. Any query string is a 400 and anything but `GET` is a
+405, both before the request costs anybody anything. The Worker edge-caches it
+for 900 seconds under one constant key, which matches the `current.interval`
+the upstream reports for itself, so one call serves every visitor to a colo per
+refresh.
+
+The proxy normalises the upstream's shape into this app's own rather than
+forwarding it, so switching vendors is one module. `WEATHER_URL` names the
+upstream and defaults to Open-Meteo.
+
+**Attribution and licence.** Weather data by Open-Meteo, CC-BY 4.0, credited on
+screen beside the reading. Their free API tier is sold as non-commercial use
+only, so this build assumes the commercial case and ships the client half
+switched off behind one constant — `WEATHER_ENABLED` in `src/lib/weather.ts`.
+With it off nothing is fetched and the panel says so. `docs/plans/HUMAN-REVIEW.md`
+§2.4 has the terms quoted and what flipping it costs.
+
+**Operationally, the thing to know:** an unreachable forecast degrades to a
+missing line and never blocks a spin — not the Spin button, not the route
+warm-up, not the reel — and it logs `at: "weather"`, never `at: "valhalla"`.
+A forecast blip must not be diagnosed as an engine outage.
 
 The proxy forces pedestrian costing, pins the walking speed, clamps the
 duration, and rejects origins outside a Richmond-area bounding box. A scraped

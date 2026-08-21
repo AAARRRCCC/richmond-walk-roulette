@@ -887,3 +887,12 @@ callback and a matching reset in `clearFilters`.
    decision, not a research one.
 3. **Does MapLibre's hit test include `circle-stroke-width`?** Named in *The decision* with the
    fallback. Ten minutes with a phone-sized viewport settles it.
+
+## Amended by chunk 7
+
+`PoolFix` gained a **`drop-cap`** member. `suggestFix` cannot see a time cap — a cap empties the pool
+by shrinking the contour rather than by excluding anything, so no counterfactual over the rule list
+finds it — and `drop-rule`'s copy ("N of them are held back") is arithmetic nonsense of one, because
+the places it recovers are outside the shrunken contour and are not counted in `inReach`. App builds
+that fix itself, because only App knows what the dial would be without the cap, and measures
+`recovers` by re-deriving the pool at the uncapped reach. See HUMAN-REVIEW 3.8.

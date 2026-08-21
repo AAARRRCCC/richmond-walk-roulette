@@ -104,6 +104,18 @@ Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re
       came back 2.597 km against 2.310 km straight-line, a 1.12× detour.
 - [x] A preset origin cold-starts from its snapshot: measured 3-7 ms, zero
       `/api/isochrone` calls.
+- [ ] `curl <deployed>/api/weather` answers 200 with `observedAt`, `now` and
+      `hours`, and `curl '<deployed>/api/weather?latitude=48.85'` answers 400
+      **with a warm cache entry already present** — that second one is the
+      guarantee that the endpoint is not a worldwide weather service, and the
+      edge is what actually decides it
+- [ ] A weather outage shows `{"at":"weather",...}` in `wrangler tail` and never
+      `{"at":"valhalla",...}`. Grepping a weather-only outage for `valhalla`
+      must return nothing; reading one as an engine outage is the most
+      expensive wrong diagnosis this system can produce
+- [ ] Two loads from different networks inside fifteen minutes produce **one**
+      `at: "weather"` line, not two — the edge really is storing an entry keyed
+      from a GET (HUMAN-REVIEW 5.7)
 - [ ] `curl <deployed>/api/health` answers `{"ok":true,...}` with a version
       and a tileset date. That is the whole reachability check in one
       command, and what an uptime monitor should poll.

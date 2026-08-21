@@ -279,6 +279,29 @@ export type PoolFix =
       readonly nearest: string;
       readonly nearestMinutes: number;
     }
+  /**
+   * A cap emptied the pool, and the fix is to lift the cap rather than to stop
+   * excluding anything.
+   *
+   * Its own member rather than a `drop-rule`, because the two recover places by
+   * different means and the copy cannot be shared: a rule holds places back
+   * inside the reach the reader can see, so "N of them are held back" is true
+   * of it and reads as arithmetic nonsense of a cap, whose recovered places are
+   * outside the shrunken contour entirely and are not counted in `inReach`.
+   * `derivePool` never produces this - App builds it, because only App knows
+   * what the dial would be without the cap.
+   */
+  | {
+      readonly kind: "drop-cap";
+      readonly clearLabel: string;
+      readonly clear: () => void;
+      /** Measured at the uncapped reach, not guessed. */
+      readonly recovers: number;
+      /** The budget the reader asked for, which the cap took away. */
+      readonly askedMinutes: number;
+      /** What the cap left them with. */
+      readonly cappedMinutes: number;
+    }
   | { readonly kind: "lower-floor"; readonly recovers: number }
   | { readonly kind: "none" };
 

@@ -3,7 +3,9 @@ import {
   isochroneCacheKey,
   isochroneQueryCost,
   routeCacheKey,
+  weatherCacheKey,
   LADDER_DROPPED_HEADER,
+  WEATHER_REFRESH_SECONDS,
   type ProxyEnv,
 } from "../server/proxy.ts";
 import { readJson, type Json } from "../src/lib/json.ts";
@@ -125,7 +127,7 @@ async function edgeEntry(
   const hit = cache && cacheKey ? ((await cache.match(cacheKey)) ?? null) : null;
 
   return {
-    hit: hit ? contours(await hit.arrayBuffer()) : null,
+    hit: hit ? cachedJson(await hit.arrayBuffer()) : null,
     async fill(response, ctx) {
       if (response.status !== 200) return response;
       // A ladder the engine only partly answered is a truncation, not a
@@ -147,17 +149,21 @@ async function edgeEntry(
           ),
         );
       }
-      return contours(body);
+      return cachedJson(body);
     },
   };
 }
 
 /**
  * What the browser gets either way. The entry the edge keeps is cacheable;
- * this copy is not, because the request it answers is a POST and no browser
- * cache can key one.
+ * this copy is not — for a POST because no browser cache can key one, and for
+ * weather because a fifteen-minute forecast held in a private cache outlives
+ * its own accuracy.
+ *
+ * Named for what it carries rather than for contours: three endpoints go
+ * through it now and the old name would lie in two of them.
  */
-function contours(body: ArrayBuffer): Response {
+function cachedJson(body: ArrayBuffer): Response {
   return new Response(body, {
     status: 200,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
@@ -181,6 +187,7 @@ export async function handleWorkerRequest(
   const isIsochrone = url.pathname === "/api/isochrone";
 
   const isRoute = url.pathname === "/api/route";
+  const isWeather = url.pathname === "/api/weather";
 
   // Read once and use twice: the ladder's size decides what the request costs
   // the limiter, and its contents decide what it is cached under.
@@ -196,6 +203,11 @@ export async function handleWorkerRequest(
     cache = await edgeEntry(request, payload, isochroneCacheKey, ISOCHRONE_CACHE_SECONDS);
   } else if (isRoute) {
     cache = await edgeEntry(request, payload, routeCacheKey, ROUTE_CACHE_SECONDS);
+  } else if (isWeather) {
+    // The body pre-read above stays POST-only; weather has none. The key
+    // refuses to exist for a query string, which is what makes the 400 in the
+    // proxy reachable in production rather than only in proxy.test.ts.
+    cache = await edgeEntry(request, null, weatherCacheKey, WEATHER_REFRESH_SECONDS);
   }
 
   const limiter = env.API_RATE_LIMIT;
@@ -207,7 +219,9 @@ export async function handleWorkerRequest(
     // preferring the expensive endpoint. The binding takes no weight
     // argument, so the charge is that many calls against the same key.
     // An answer already at the edge still costs one, so a cache the whole
-    // internet can reach is not a way around the limit.
+    // internet can reach is not a way around the limit. Weather costs one
+    // because one upstream call serves every visitor to this colo for fifteen
+    // minutes.
     const cost = cache?.hit ? 1 : isIsochrone ? isochroneQueryCost(payload, env) : 1;
     const charged = await Promise.all(
       Array.from({ length: cost }, () => limiter.limit({ key: ip })),

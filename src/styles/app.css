@@ -1387,3 +1387,38 @@ code {
   line-height: 1.45;
   color: var(--ink-3);
 }
+
+/* The conditions line: what the weather is, and what the app did about it.
+   Sits in `.panel`'s own 15px column gap; no new token, no new hue, and
+   nothing here animates. Rule lines borrow `.notice.is-warn`, which is already
+   the text-only warn paragraph `state.locationNotice` uses - `.result-warning`
+   is the icon-plus-text layout and it lives on the card. */
+.conditions {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+
+.conditions.is-quiet {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.conditions-credit {
+  margin-left: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* CC-BY 4.0 asks for credit, so the link is part of the data rather than
+   decoration on it: it inherits the credit's colour and keeps an underline at
+   every size. */
+.conditions-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

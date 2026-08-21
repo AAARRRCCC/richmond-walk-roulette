@@ -661,3 +661,144 @@ nothing. HUMAN-REVIEW 2.3.
 Open-Meteo licence. GOAL.md's instruction is to fetch the current terms rather than recall them, and
 to assume the commercial case — the conservative branch, since a non-commercial assumption that turns
 out wrong is a licence breach and the reverse is only wasted caution.
+
+---
+
+## Chunk 7 — `weather-filters` — done, and shipped switched off
+
+The forecast is built, tested, wired and dark. That is the chunk.
+
+### The licence, fetched rather than recalled
+
+GOAL.md's chunk-7 checklist asks for Open-Meteo's *current* terms and for the build to assume the
+commercial case. The terms, on 2026-08-21:
+
+> "The free API is for non-commercial use, rate-limited to 10,000 calls/day, and carries no uptime
+> guarantee."
+
+Commercial use — their examples are "websites or apps that have subscriptions or display
+advertisements" — needs a paid subscription and the key that comes with it. So the conservative
+branch applies: **`WEATHER_ENABLED = false` in `src/lib/weather.ts`**, one constant, one file.
+`refreshWeather` returns immediately, nothing leaves the browser, and the panel reads "Forecast is
+switched off in this build."
+
+The question a person has to answer is one sentence long and it is in HUMAN-REVIEW 2.4: *is Walk
+Roulette free and ad-free?* If yes, flipping that line is the whole of the work — no key, no
+account. If it ever carries ads or a subscription, it is either a paid plan or `api.weather.gov`,
+and the second costs a feature: NWS documents no UV index and no apparent temperature, which is
+three of the six rules.
+
+Everything below was observed with the flag flipped on locally, against the real Open-Meteo through
+the real proxy. The flag went back to `false` before the commit.
+
+### What it does
+
+Six rules, and the split between them is the design. **Rain** and **storm** produce a `TimeCap` and
+nothing else: they cannot remove a candidate, they lower the dial, and the contour visibly shrinks
+on the map so the reader can see what happened. **Heat shelter**, **UV shelter** and **cold** are
+`PoolRule`s with `minSurvivors: 3`: they steer the pool and set themselves aside rather than empty
+it. **Heat flat** is both — a cap of thirty minutes and a veto on hills — and it is `deferred`,
+because climb is measured per route now and a place not yet measured must stay in the warm-up's
+denominator.
+
+A cap is allowed to empty the pool and a rule is not. That asymmetry is the whole argument: a cap is
+the one weather effect you can *see*.
+
+Every sentence names the budget the map is actually drawn at, never the rule's own candidate cap.
+Rain at 40 and heat at 30 on a 50-minute round trip: the contour is at 30 and **both** lines say
+"Trimmed to 30 min", rather than one of them advertising a 35 that never happened.
+
+### Three bugs the acceptance criteria found, none of which a test would have
+
+1. **The rain cap ate its own window.** The cap lowered `budgetMinutes`, the shorter window no longer
+   contained the onset, the rule stopped firing, the cap lifted, and the next render started over.
+   On screen it was a dial sitting at 35 with nothing beside it to say why. The window is
+   `Session.requestedBudgetMinutes` now — the walk the reader asked for, which a cap cannot move.
+   That field is new, and it fixes the same latent bug in **Get back before dark**, which has taken
+   the dial and never given it back since chunk 5 (HUMAN-REVIEW 3.7).
+
+2. **`activeFilters` was counting the weather.** The drawer read **FILTERS (2 ACTIVE)** for a cause
+   **Clear filters** cannot clear, which criterion 12 forbids in as many words. That number counts
+   what the button beside it clears, and nothing else.
+
+3. **A forecast landing mid-throw stayed invisible after the reel stopped.** `holdWeather(false)`
+   applied the stash inside an effect and nothing repainted. It returns whether it applied one now,
+   and App bumps its own counter.
+
+A fourth, caught by reading rather than running: the empty-pool notice said "3 places are in reach;
+4 of them are held back." A cap recovers places from *outside* the shrunken contour, so `drop-rule`'s
+copy is arithmetic nonsense of one. `PoolFix` gained a `drop-cap` member with its own sentence
+(HUMAN-REVIEW 3.8).
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint`, `npm run build` | clean; eslint, oxlint and knip all three |
+| `npm test` | **246 passing**, 0 failing — up from 191, the largest jump of the run |
+| `verify-bundle` | **82,262 B** gz, **+1,250 B**, against that spec's 4,096 B line. 19.7 KB of headroom |
+| `verify-places`, `verify-signature` | clean; both new rules are in the REGISTERED table |
+| `git diff public/`, `SNAPSHOT_VERSION`, `scripts/build-reach.mjs` | empty — weather cannot be precomputed |
+
+### The endpoint
+
+`GET /api/weather`, no parameters, Richmond pinned in the proxy beside the walking speed. A query
+string is a 400 and a POST is a 405, both before anything is spent — and `weatherCacheKey` returns
+`null` for either, which is what makes those refusals true in the Worker rather than only in
+`proxy.test.ts`. The Worker consults the edge *before* it calls the proxy, so a key that merely
+ignored the query string would serve warm Richmond data for Paris with a 200.
+
+Edge-cached 900 s under one constant key, limiter cost 1. Failures speak in the forecast's own
+voice: the dev server printed `{"at":"weather","event":"upstream-unreachable",...}` with a dead
+upstream, and the body read "The forecast service is not answering." No line anywhere said
+`valhalla`. That was the point of writing a second failure vocabulary rather than reusing the
+engine's — a forecast blip read as a routing outage is the most expensive wrong diagnosis this
+system can produce.
+
+The spec's one genuinely unverified claim — that Cloudflare's Cache API will store an entry keyed
+from a real GET, where every other endpoint here keys from a POST — holds against `stubEdgeCache`:
+miss, fill, hit, one upstream call across two requests. A real colo is HUMAN-REVIEW 5.7 and one line
+in `LAUNCH.md`.
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-07.md`: **81 of 83 ticked**, the best tally of the run. Two open, both
+environmental: `prefers-reduced-motion` (5.1, and nothing here animates) and watching the
+five-minute ratchet through a real window (5.8 — the clock stops while the tab is hidden, so it is
+asserted over twenty simulated minutes instead: exactly four steps, every gap exactly five).
+
+The states that cannot be waited for were injected. `walkRouletteDev.weather(wire)` is dev-only,
+inside the same `import.meta.env.DEV` branch as chunk 5's `clockOffset`, and it pushes a forecast
+through `readReport` so what lands on screen has crossed the boundary a real one crosses. Richmond
+does not supply a heat index in the Danger band on request.
+
+### Spec corrections
+
+Ten, listed in `weather-filters.md`'s new *Corrections after implementation* section. The
+load-bearing ones: `dark-return` is deleted rather than deferred (chunk 5 owns darkness, and two
+caps on one dial answering to two switches is worse than either); `applyConditionRules` and
+`RuleOutcome` are gone in favour of `derivePool` and `PoolRule`s; the cap goes through chunk 5's
+`timeCap` rather than an "effective budget", which supersedes criterion 14's "the dial thumb does not
+move" — it moves, into a dead zone that says why; and `deriveConditions` is two functions, because a
+rule's sentence cannot know the budget until `mergeCaps` has weighed this module's caps against
+`daylight-budget`'s.
+
+`pool-reasoning.md` and `daylight-budget.md` each gain an *Amended by chunk 7* note.
+
+### Deferred
+
+- HUMAN-REVIEW **2.4** — the Open-Meteo licence, and `WEATHER_ENABLED`. The one decision in this
+  chunk that was meant to be a person's.
+- HUMAN-REVIEW **3.7** — `requestedBudgetMinutes`, an amendment to chunk 5's session shape, made now
+  rather than after chunk 10 encodes the session into a link.
+- HUMAN-REVIEW **3.8** — the `drop-cap` `PoolFix`.
+- HUMAN-REVIEW **5.7** — the edge cache keyed from a GET, on a real colo.
+- HUMAN-REVIEW **5.8** — the five-minute ratchet, watched in real time.
+
+### Next
+
+**Chunk 8 — `places-expansion`**, which carries the run's most expensive deferred decision and the
+one that costs money if it is read late: `HUMAN-REVIEW.md` §6.1, the walking speed. This chunk
+recuts all eleven snapshots anyway, which is the only cheap moment to change `WALKING_SPEED_KMH` —
+decide now and recut once, or decide later and recut twice. Preconditions: chunks 2 and 3 landed
+(both are), `npm run verify` green (it is), and the engine up.

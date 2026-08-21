@@ -10,10 +10,10 @@ export default defineConfig(({ mode }) => {
   //
   // The variables have no VITE_ prefix, so Vite will not inline them into the
   // client bundle either way.
-  const { VALHALLA_URL, VALHALLA_MAX_CONTOURS } = loadEnv(mode, process.cwd(), "");
+  const { VALHALLA_URL, VALHALLA_MAX_CONTOURS, WEATHER_URL } = loadEnv(mode, process.cwd(), "");
 
   return {
-    plugins: [react(), apiProxy({ VALHALLA_URL, VALHALLA_MAX_CONTOURS })],
+    plugins: [react(), apiProxy({ VALHALLA_URL, VALHALLA_MAX_CONTOURS, WEATHER_URL })],
     build: {
       target: "es2022",
       rollupOptions: {

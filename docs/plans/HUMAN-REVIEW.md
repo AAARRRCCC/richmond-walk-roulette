@@ -74,6 +74,64 @@ it, so there is nothing to unwind first.
 somebody does it, and criterion 6 — the insecure-context sentence, on screen — cannot be reached
 without it. The sentence itself is asserted by test 12.
 
+### 2.4 Open-Meteo's free tier is non-commercial only, so weather ships switched off
+
+**The question.** `weather-filters` needs a forecast, and Open-Meteo is the source the spec chose:
+key-free, one request, every field this app reads. GOAL.md's chunk-7 checklist requires its current
+terms to be fetched rather than recalled, and requires the build to assume the **commercial** case.
+
+**What the terms actually say**, fetched 2026-08-21 rather than remembered:
+
+> "The data obtained through the API is provided under the terms of the CC-BY 4.0 licence"
+> — <https://open-meteo.com/en/terms>
+
+> "The free API is for non-commercial use, rate-limited to 10,000 calls/day, and carries no uptime
+> guarantee."
+> — <https://open-meteo.com/en/pricing>
+
+Their own examples of the boundary: non-commercial is "private or non-profit websites or apps that
+do not have subscriptions or advertising"; commercial is "websites or apps that have subscriptions
+or display advertisements" and "integrating our service into commercial products". A paid
+subscription is what carries the commercial licence, and the API key comes with it. The free tier's
+published limits are 600 calls/min, 5,000/hour, 10,000/day, 300,000/month.
+
+**The branch taken.** `export const WEATHER_ENABLED = false;` in `src/lib/weather.ts`. The endpoint
+is built, the proxy works, the rules are written and tested, the panel is wired — and the client
+does not call it. With the flag off `refreshWeather` returns immediately, no request leaves the
+browser, and the conditions line reads "Forecast is switched off in this build."
+
+**Why it is the conservative one.** A non-commercial assumption that turns out wrong is a licence
+breach; the reverse is wasted caution. GOAL.md names this branch in advance for exactly that reason:
+*"If the commercial case needs a paid tier or an API key, the feature ships behind a single flag,
+defaulting off, with the panel saying weather is unavailable rather than fetching."*
+
+**What reverses it.** One line: `WEATHER_ENABLED` in `src/lib/weather.ts:32`. Nothing else changes.
+`weather.test.ts` asserts it is `false`, so flipping it is a deliberate act with a test to update
+rather than a value that can drift.
+
+**What else would have to change — and the question a person actually has to answer.** *Is Walk
+Roulette a free, ad-free app?* If yes, it is non-commercial under any reading of those words, the
+free tier covers it, and flipping the flag is the whole of the work: no key, no account, no second
+vendor. If it ever carries advertising or a subscription, there are two routes and they cost very
+differently:
+
+- **A paid Open-Meteo plan.** An API key, threaded through `WEATHER_URL` (or a new `WEATHER_KEY`).
+  Hours.
+- **`api.weather.gov`.** Public-domain U.S. Government data, free for any purpose, no key — but it
+  requires a self-identifying `User-Agent`, needs **two** round trips (`/points/{lat},{lon}` then
+  the gridpoint forecast), publishes no rate limit, and documents **no UV index**. That last one is
+  not cosmetic: `uv-shelter` would never fire, and `heat-shelter`/`heat-flat` need an apparent
+  temperature NWS does not return directly. Half a day plus a feature reduction, not an hour.
+
+The proxy normalises Open-Meteo into this app's own response shape rather than forwarding it, which
+is what makes either route one module instead of a rewrite. That was the spec's reason for
+normalising and it is worth having.
+
+**What this costs the run.** Nothing that is not recoverable. Every acceptance criterion below was
+observed with the flag flipped on locally, against the real Open-Meteo through the real proxy, and
+the flag was returned to `false` before the commit. The shipped default is dark; the code path is
+verified.
+
 ---
 
 ## 3. Plan-level decisions
@@ -185,10 +243,66 @@ mirrorProfile(route.profile) : route.profile` in `ResultCard`, and drop the `rou
 
 ---
 
+### 3.7 `Session` gained `requestedBudgetMinutes`, because a cap was one-way
+
+**What was wrong.** Chunk 5's `timeCap` action clamps `budgetMinutes` down to the cap and re-derives
+the next clamp from its own previous output. So a cap is one-way: the rain moves in, the dial drops
+from 50 to 35, and turning the rules back off leaves it at 35. `weather-filters`' acceptance
+criterion 18 requires that pressing **Ignore the weather** "restores the full uncapped pool
+immediately", and it simply could not: the button undid the cause and the effect stayed.
+
+The same was already true of **Get back before dark**, silently, since chunk 5 — the daylight cap
+takes the dial and does not give it back.
+
+**What changed.** `Session` carries `requestedBudgetMinutes`, the dial position the reader last
+asked for, set only by the `budget` action and never by a clamp. Every clamping path —
+`toggleRoundTrip`, `toggleBeforeDark`, `toggleWeatherAware`, `timeCap` — re-derives `budgetMinutes`
+from it rather than from its own last answer. `budgetMinutes` keeps its exact meaning, so no
+consumer changed; `TimeDial`, the readout and the reach all still read the capped number, which is
+what the map is drawn at.
+
+**Why it is here rather than in chunk 5.** It is an amendment to the chunk that owns the field, made
+from chunk 7 because chunk 7 is where a criterion demanded it. It is done now rather than later
+because chunk 10 encodes the session into a share link: adding a budget field after that is a
+migration, and before it is a line.
+
+**What reverses it.** Deleting the field and putting `state.budgetMinutes` back into the four
+`clampBudget` calls. `session.test.ts` has three cases that would fail first.
+
+### 3.8 `PoolFix` gained a `drop-cap` member
+
+`suggestFix` finds the one change most likely to refill an empty pool by re-running the verdict with
+exactly one cause dropped. A *cap* is invisible to it: a cap empties the pool by shrinking the
+contour, not by excluding anything, so no counterfactual over the rule list can find it, and the
+reader is offered a wider budget the cap immediately clamps back down.
+
+App builds the `drop-cap` fix itself — only App knows what the dial would be without the cap — and
+measures `recovers` by re-deriving the pool at the uncapped reach with every weather rule dropped.
+No number that was not counted.
+
+It is a separate member rather than a `drop-rule` because the copy cannot be shared. `drop-rule`
+says "N of them are held back", which is true of a rule and arithmetic nonsense of a cap: the
+recovered places are outside the shrunken contour entirely and are not in `inReach` at all. On
+screen, before the split, that read "3 places are in reach; 4 of them are held back."
+
+Additive to the union, and both `switch` statements over it are exhaustive with no `default`, so
+`tsc` found every site.
+
 ## 4. Unticked boxes
 
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
+
+**Chunk 7 — two boxes, and both are environmental.** 81 of 83 ticked, the best tally of the run.
+
+- [ ] *It was seen with `prefers-reduced-motion` on.* Section 5.1. Nothing this chunk adds animates:
+  the new CSS block contains no `transition`, `animation` or `@keyframes`, which grep proves.
+- [ ] *`weather-filters` criterion 15 — the five-minute ratchet, watched through a real window.*
+  Section 5.8. The clock stops while the document is hidden and a tab under automation is hidden, so
+  it is asserted over twenty simulated minutes instead: exactly four steps, every gap exactly five.
+
+Nothing else in that file is open, and nothing in it is a `[!]`. The licence decision that gates the
+whole feature is section 2.4, not a box.
 
 **Chunk 6 — six boxes.** 65 of 71 ticked.
 
@@ -338,6 +452,31 @@ rather than assumed:
 
 ---
 
+### 5.7 The edge cache storing a synthetic-GET key, on a real colo
+
+`weather-filters` names this its own open question, and it is the one the cost model rests on: every
+other cached endpoint in this Worker synthesises its key from a **POST**, where the browser's own
+`Cache-Control` cannot interfere. Weather is the first real GET. `server/worker.test.ts` proves the
+round trip against `stubEdgeCache` — miss, fill, hit, one upstream call across two requests — but
+that stub is a `Map`, not Cloudflare.
+
+If it does not hold in production the fallback is documented in the spec: key on `new Request(request.url)`,
+which is already canonical because the endpoint takes no parameters. The only thing lost is the
+version segment, which then has to be invalidated by hand on a shape change.
+
+The cost if it fails is a floor of one upstream call per visitor per fifteen minutes rather than one
+per colo — about 2,500 tab-hours a day against the free tier's 10,000 calls. Fine for this app,
+with no headroom. **Check it once after the first deploy**: two loads from different networks inside
+fifteen minutes, and `wrangler tail` showing one `at: "weather"` line rather than two.
+
+### 5.8 The five-minute cap ratchet, watched in real time
+
+The anti-ratchet quantiser is asserted over twenty simulated minutes — exactly four steps, every gap
+exactly five minutes — but never watched. It cannot be, from here: the clock stops while the
+document is hidden (6.3), and a tab driven by automation is hidden. Somebody should leave the app
+open through a rain onset and confirm the contour steps in once rather than five times, and that no
+route warm-up restarts more than once in that window.
+
 ## 6. Numbers
 
 Final measurements, replacing `docs/plans/README.md` §5's estimates.
@@ -371,6 +510,9 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Tests after chunk 5 | 178 passing | |
 | App JS after chunk 6 | 81,058 B (79.2 KiB) | +1,273 B; 20.8 KB of headroom left |
 | Tests after chunk 6 | 191 passing | |
+| App JS after chunk 7 | 82,262 B (80.3 KiB) | +1,250 B; that spec's line was 4,096 B. 19.7 KB of headroom left |
+| Tests after chunk 7 | 246 passing | +55, the largest jump of the run |
+| Open-Meteo free tier | 600/min, 5,000/hr, 10,000/day, 300,000/month | Chunk 7, fetched 2026-08-21 - see 2.4 |
 | `formatToParts` per 26-position scrub | 150 → **0** | Chunk 5 — see 6.3 |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |

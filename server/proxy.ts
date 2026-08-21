@@ -41,6 +41,14 @@ export type ProxyEnv = {
    * against any instance.
    */
   VALHALLA_MAX_CONTOURS?: string | undefined;
+  /**
+   * The forecast upstream; unset means Open-Meteo. Exists so the vendor can be
+   * swapped without a code change and so a test or a self-host can point
+   * somewhere else. Unlike VALHALLA_URL there is no "not configured" state:
+   * this one has a working default, so an unset value is a choice rather than
+   * an omission.
+   */
+  WEATHER_URL?: string | undefined;
 };
 
 /**
@@ -131,6 +139,30 @@ const ROUTE_CACHE_VERSION = "v2";
  * under a kilometre.
  */
 const ELEVATION_INTERVAL_M = 30;
+
+/**
+ * Richmond's centre, pinned here for exactly the reason `RICHMOND_BOUNDS` is
+ * pinned: an endpoint that takes coordinates is a worldwide weather service
+ * with this app's name on it, and this one takes none.
+ */
+const WEATHER_ORIGIN = { latitude: 37.5407, longitude: -77.436 };
+const WEATHER_TIMEZONE = "America/New_York";
+const WEATHER_HOURS = 12;
+const DEFAULT_WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
+
+/**
+ * Shorter than `UPSTREAM_TIMEOUT_MS`, and deliberately: nothing waits on the
+ * forecast, and one that takes eight seconds has already missed its moment.
+ */
+const WEATHER_TIMEOUT_MS = 8_000;
+
+/**
+ * The edge TTL, the `refreshSeconds` in the body, and the number the Worker
+ * caches for — one constant so the three cannot drift. 900 s matches the
+ * `current.interval: 900` the API reports for itself, so the edge never serves
+ * data more than one upstream refresh stale.
+ */
+export const WEATHER_REFRESH_SECONDS = 900;
 
 type LatLng = { latitude: number; longitude: number };
 
@@ -272,6 +304,247 @@ export function routeCacheKey(payload: Json): string | null {
   const from = `${origin.latitude.toFixed(5)},${origin.longitude.toFixed(5)}`;
   const to = `${destination.latitude.toFixed(5)},${destination.longitude.toFixed(5)}`;
   return `/api/route/${ROUTE_CACHE_VERSION}-${WALKING_SPEED_KMH}/${from}/${to}`;
+}
+
+/**
+ * The forecast's own failure vocabulary, separate from the engine's.
+ *
+ * `unreachable()` hardcodes "The routing engine is not answering." and
+ * `logUpstream()` hardcodes `at: "valhalla"`. Reusing either would make an
+ * Open-Meteo blip read, in the visitor's notice *and* in `wrangler tail`, as a
+ * routing outage — the single most expensive wrong diagnosis this system can
+ * produce.
+ */
+function logWeather(event: string, fields: JsonObject): void {
+  console.error(JSON.stringify({ at: "weather", event, ...fields }));
+}
+
+function weatherUnreachable(base: string, timedOut: boolean): Response {
+  logWeather(timedOut ? "upstream-timeout" : "upstream-unreachable", { base });
+  return timedOut
+    ? json({ error: "upstream-timeout", detail: "The forecast service did not answer in time." }, 504)
+    : json({ error: "upstream-unreachable", detail: "The forecast service is not answering." }, 502);
+}
+
+/**
+ * The edge key for the one forecast this app serves, or null for a request
+ * that must not be cached at all.
+ *
+ * The null is the load-bearing half. The Worker consults the edge *before* it
+ * ever calls `handleApiRequest`, so a key that ignored the query string would
+ * serve the warm Richmond entry to `GET /api/weather?latitude=48.85` with a
+ * 200, and the 400 below would be unreachable in production. A null key skips
+ * the cache entirely and the request falls through to that 400.
+ *
+ * The version segment carries the hour count because changing the requested
+ * window must not be served from an entry cut for a different one. `payload` is
+ * unused and stays in the signature so the Worker's `keyFor` slot is one shape.
+ */
+export function weatherCacheKey(_payload: Json, request: Request): string | null {
+  if (request.method !== "GET") return null;
+  if (new URL(request.url).search !== "") return null;
+  return `/api/weather/${CACHE_VERSION}-${WEATHER_HOURS}/richmond`;
+}
+
+/** One forecast slot, in the units this app displays. The wire shape. */
+type WeatherSlotWire = {
+  /** Whole minutes from `observedAt`. Negative for the hour already in progress. */
+  atMinutes: number;
+  temperatureF: number;
+  feelsLikeF: number;
+  /** Null past a model's horizon. Null is unknown, never zero. */
+  precipInches: number | null;
+  precipChance: number | null;
+  weatherCode: number;
+  windMph: number;
+  uvIndex: number | null;
+  isDay: boolean;
+};
+
+type WeatherReportWire = {
+  /** Absolute UTC instant, so no timezone string crosses the wire. */
+  observedAt: string;
+  refreshSeconds: number;
+  now: WeatherSlotWire;
+  hours: WeatherSlotWire[];
+  source: string;
+};
+
+/** A finite number, or null. Anything else — a string, a missing key — is null. */
+const optionalNumber = (value: Json | undefined): number | null =>
+  isFiniteNumber(value) ? value : null;
+
+/** A finite number, or `fallback`. For fields that cannot invent a hazard. */
+const numberOr = (value: Json | undefined, fallback: number): number =>
+  isFiniteNumber(value) ? value : fallback;
+
+/**
+ * Open-Meteo reports a local wall-clock time and a separate offset. Read the
+ * text as if it were UTC and subtract the offset, which is the only arithmetic
+ * that survives a DST boundary without a timezone database on both sides.
+ */
+function localToUtcMs(local: Json | undefined, offsetSeconds: number): number | null {
+  if (!isString(local)) return null;
+  const asUtc = Date.parse(`${local}Z`);
+  return Number.isFinite(asUtc) ? asUtc - offsetSeconds * 1000 : null;
+}
+
+/**
+ * Open-Meteo's shape into this app's own.
+ *
+ * Exported so `server/weather.test.ts` can assert the translation directly as
+ * well as through a stubbed fetch. Normalising rather than forwarding is what
+ * makes the vendor swappable: `api.weather.gov` is a different module behind
+ * the same response, not a rewrite of everything downstream.
+ *
+ * **Tolerance is per field, not per slot.** Open-Meteo returns null past a
+ * model's horizon — `precipitation_probability` and `uv_index` are the two that
+ * do it in practice — so dropping a whole slot for one null would quietly stop
+ * the rain rule firing on exactly the slots it exists for. Only `time`,
+ * `temperature_2m` and `apparent_temperature` are required.
+ *
+ * @public - consumed by `server/weather.test.ts`.
+ */
+export function normalizeWeather(body: Json): WeatherReportWire | null {
+  if (!isJsonObject(body)) return null;
+  const current = body.current;
+  if (!isJsonObject(current)) return null;
+
+  const offsetSeconds = numberOr(body.utc_offset_seconds, 0);
+  const observedAtMs = localToUtcMs(current.time, offsetSeconds);
+  if (observedAtMs === null) return null;
+
+  const temperature = current.temperature_2m;
+  const feelsLike = current.apparent_temperature;
+  if (!isFiniteNumber(temperature) || !isFiniteNumber(feelsLike)) return null;
+
+  // `is_day` arrives as 0/1, not a JSON boolean, and json.ts has no boolean
+  // guard. Narrow the number and compare; an assertion here would be both
+  // rejected by the anti-slop plugin and wrong.
+  const nowIsDay = numberOr(current.is_day, 0) === 1;
+
+  const now: WeatherSlotWire = {
+    atMinutes: 0,
+    temperatureF: temperature,
+    feelsLikeF: feelsLike,
+    precipInches: optionalNumber(current.precipitation),
+    precipChance: optionalNumber(current.precipitation_probability),
+    weatherCode: numberOr(current.weather_code, 0),
+    windMph: numberOr(current.wind_speed_10m, 0),
+    uvIndex: optionalNumber(current.uv_index),
+    isDay: nowIsDay,
+  };
+
+  const hourly = isJsonObject(body.hourly) ? body.hourly : null;
+  const times = hourly !== null && isJsonArray(hourly.time) ? hourly.time : [];
+  const at = (key: string, index: number): Json | undefined => {
+    if (hourly === null) return undefined;
+    const column = hourly[key];
+    return isJsonArray(column) ? column[index] : undefined;
+  };
+
+  const hours: WeatherSlotWire[] = [];
+  times.forEach((time, index) => {
+    const slotMs = localToUtcMs(time, offsetSeconds);
+    const slotTemp = at("temperature_2m", index);
+    const slotFeels = at("apparent_temperature", index);
+    if (slotMs === null || !isFiniteNumber(slotTemp) || !isFiniteNumber(slotFeels)) return;
+    hours.push({
+      atMinutes: Math.round((slotMs - observedAtMs) / 60_000),
+      temperatureF: slotTemp,
+      feelsLikeF: slotFeels,
+      precipInches: optionalNumber(at("precipitation", index)),
+      precipChance: optionalNumber(at("precipitation_probability", index)),
+      weatherCode: numberOr(at("weather_code", index), 0),
+      windMph: numberOr(at("wind_speed_10m", index), 0),
+      uvIndex: optionalNumber(at("uv_index", index)),
+      // The one field that falls back to the current slot rather than to a
+      // constant: a missing `is_day` at 2pm is not night.
+      isDay: at("is_day", index) === undefined ? nowIsDay : numberOr(at("is_day", index), 0) === 1,
+    });
+  });
+
+  return {
+    observedAt: new Date(observedAtMs).toISOString(),
+    refreshSeconds: WEATHER_REFRESH_SECONDS,
+    now,
+    hours: hours.toSorted((a, b) => a.atMinutes - b.atMinutes),
+    source: "open-meteo",
+  };
+}
+
+/**
+ * A GET with a deadline, translated into this proxy's error vocabulary by the
+ * caller.
+ *
+ * Deliberately not routed through `callValhalla`, whose signature is
+ * POST-and-Valhalla-shaped and whose failure path answers with the routing
+ * engine's prose. The duplicated try/catch is the price of the two upstreams
+ * failing in their own words.
+ */
+async function callUpstream(url: string, timeoutMs: number): Promise<Response | Error> {
+  try {
+    return await fetch(url, {
+      headers: { accept: "application/json" },
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (cause) {
+    return cause instanceof Error ? cause : new Error("fetch failed");
+  }
+}
+
+/** `GET /api/weather`. Richmond only, no parameters, one shape. */
+async function weather(env: ProxyEnv): Promise<Response> {
+  // `||` rather than `??`: an env key that is present-but-blank yields "",
+  // which is falsy but not nullish, and `""` as a base URL fetches the origin's
+  // own root.
+  const base = env.WEATHER_URL || DEFAULT_WEATHER_URL;
+  const query = new URLSearchParams({
+    latitude: String(WEATHER_ORIGIN.latitude),
+    longitude: String(WEATHER_ORIGIN.longitude),
+    timezone: WEATHER_TIMEZONE,
+    forecast_hours: String(WEATHER_HOURS),
+    current:
+      "temperature_2m,apparent_temperature,precipitation,precipitation_probability,weather_code,wind_speed_10m,uv_index,is_day",
+    hourly:
+      "temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,wind_speed_10m,uv_index,is_day",
+    temperature_unit: "fahrenheit",
+    wind_speed_unit: "mph",
+    precipitation_unit: "inch",
+  });
+
+  const upstream = await callUpstream(`${base}?${query.toString()}`, WEATHER_TIMEOUT_MS);
+  if (upstream instanceof Error) {
+    return weatherUnreachable(base, upstream.name === "TimeoutError");
+  }
+
+  if (!upstream.ok) {
+    logWeather("upstream-error", { base, status: upstream.status });
+    if (upstream.status === 429 || upstream.status === 408) {
+      const headers = new Headers({
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+      });
+      const retryAfter = upstream.headers.get("retry-after");
+      if (retryAfter !== null) headers.set("retry-after", retryAfter);
+      return new Response(JSON.stringify({ error: `upstream ${upstream.status}` }), {
+        status: upstream.status,
+        headers,
+      });
+    }
+    return json({ error: `upstream ${upstream.status}` }, upstream.status < 500 ? 400 : 502);
+  }
+
+  const body = await readJson(upstream).catch(() => null);
+  const report = normalizeWeather(body);
+  if (report === null) {
+    logWeather("upstream-empty", { base });
+    return json(
+      { error: "upstream-empty", detail: "The forecast service returned nothing we recognise." },
+      502,
+    );
+  }
+  return json(report, 200);
 }
 
 /**
@@ -530,7 +803,15 @@ export async function handleApiRequest(request: Request, env: ProxyEnv): Promise
   const { pathname } = new URL(request.url);
   const isIsochrone = pathname === "/api/isochrone";
   const isHealth = pathname === "/api/health";
-  if (!isIsochrone && !isHealth && pathname !== "/api/route") return null;
+  const isWeather = pathname === "/api/weather";
+  if (!isIsochrone && !isHealth && !isWeather && pathname !== "/api/route") return null;
+
+  // Beside `isHealth`, which is the existing precedent for a GET endpoint.
+  if (isWeather) {
+    if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
+    if (new URL(request.url).search !== "") return badRequest("weather takes no parameters");
+    return weather(env);
+  }
 
   if (isHealth) {
     if (request.method !== "GET") return json({ error: "method not allowed" }, 405);

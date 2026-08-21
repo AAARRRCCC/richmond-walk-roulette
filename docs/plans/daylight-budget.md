@@ -1001,3 +1001,12 @@ than hunting for an instant; the type is a plain record and that is what makes i
    fixed in chunk 0), and it belongs to `places-expansion` if
    anywhere. Spec'd as one deadline for all destinations; someone who walks these trails should say
    whether that is generous enough to be wrong.
+
+## Amended by chunk 7
+
+`Session` gained **`requestedBudgetMinutes`**, and every clamping path in the reducer now re-derives
+`budgetMinutes` from it rather than from its own previous output. Without it a cap is one-way: this
+spec's own **Get back before dark** takes the dial down to the cap and never gives it back when the
+switch is turned off. `weather-filters`' criterion 18 is what made it visible, but the bug was here
+first. `effectiveCap` also gates by the cap's `reason` now, so a daylight cap answers to
+`beforeDark` and a weather cap to `weatherAware`. See HUMAN-REVIEW 3.7.

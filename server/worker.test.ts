@@ -303,3 +303,101 @@ test("a route the engine could not answer is not kept", async (t) => {
   assert.ok(response.status >= 400);
   assert.equal(entries().size, 0);
 });
+
+/**
+ * The forecast at the edge.
+ *
+ * This is the "unverified, check first" claim the whole cost model rests on:
+ * that the Cache API will store an entry under a synthetic GET key derived from
+ * a real GET request. Everywhere else in this Worker the key is synthesised
+ * from a POST, where the browser's own `Cache-Control` cannot interfere. If
+ * this ever stops holding, it is discovered here rather than as an
+ * Open-Meteo bill.
+ */
+const WEATHER_BODY = {
+  utc_offset_seconds: -14400,
+  current: {
+    time: "2026-08-21T03:15",
+    interval: 900,
+    temperature_2m: 72.4,
+    apparent_temperature: 74.1,
+    precipitation: 0,
+    precipitation_probability: 8,
+    weather_code: 3,
+    wind_speed_10m: 6.2,
+    uv_index: 0,
+    is_day: 0,
+  },
+  hourly: {
+    time: ["2026-08-21T03:00"],
+    temperature_2m: [72.1],
+    apparent_temperature: [73.8],
+    precipitation_probability: [8],
+    precipitation: [0],
+    weather_code: [3],
+    wind_speed_10m: [6],
+    uv_index: [0],
+    is_day: [0],
+  },
+};
+
+function weatherGet(path = "/api/weather"): Request {
+  return new Request(`http://app.local${path}`, {
+    method: "GET",
+    headers: { "cf-connecting-ip": "203.0.113.7" },
+  });
+}
+
+test("a weather miss fills the edge and the next visitor never reaches upstream", async (t) => {
+  const caches = stubEdgeCache(t);
+  const calls = stubFetch(t, () => Response.json(WEATHER_BODY));
+
+  const first = await handleWorkerRequest(weatherGet(), env({}), CTX);
+  assert.equal(first.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(cacheEntries(caches, ISOCHRONE_CACHE).size, 1);
+
+  const second = await handleWorkerRequest(weatherGet(), env({}), CTX);
+  assert.equal(second.status, 200);
+  assert.equal(calls.length, 1, "one upstream call serves every visitor for fifteen minutes");
+  assert.deepEqual(await readJson(second), await readJson(first));
+  // A fifteen-minute forecast held in a private cache outlives its accuracy.
+  assert.equal(second.headers.get("cache-control"), "no-store");
+});
+
+test("a query string is a 400 even with a warm edge entry", async (t) => {
+  stubEdgeCache(t);
+  const calls = stubFetch(t, () => Response.json(WEATHER_BODY));
+
+  await handleWorkerRequest(weatherGet(), env({}), CTX);
+  assert.equal(calls.length, 1);
+
+  // The whole reason `weatherCacheKey` refuses a key rather than ignoring the
+  // query string: the Worker consults the edge before it ever calls the proxy,
+  // so an ignoring key would serve warm Richmond data for Paris with a 200 and
+  // the proxy's 400 would be unreachable in production.
+  const paris = await handleWorkerRequest(weatherGet("/api/weather?latitude=48.85"), env({}), CTX);
+  assert.equal(paris.status, 400);
+  assert.equal(calls.length, 1, "and it did not go upstream either");
+});
+
+test("weather costs the limiter exactly one", async (t) => {
+  stubEdgeCache(t);
+  stubFetch(t, () => Response.json(WEATHER_BODY));
+  const weather = limiter();
+
+  await handleWorkerRequest(weatherGet(), env({ API_RATE_LIMIT: weather.binding }), CTX);
+  assert.equal(weather.charged(), 1);
+});
+
+test("a failed forecast is not stored", async (t) => {
+  const lines = stubConsoleError(t);
+  const caches = stubEdgeCache(t);
+  stubFetch(t, () => new Response("nope", { status: 500 }));
+
+  const response = await handleWorkerRequest(weatherGet(), env({}), CTX);
+
+  assert.equal(response.status, 502);
+  assert.equal(cacheEntries(caches, ISOCHRONE_CACHE).size, 0);
+  assert.ok(lines.some((line) => line.includes('"at":"api"')));
+});

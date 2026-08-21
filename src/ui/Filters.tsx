@@ -14,12 +14,14 @@ export type FiltersProps = {
   vibes: Vibe[];
   roundTrip: boolean;
   edgeOnly: boolean;
+  weatherAware: boolean;
   /** False when the engine's graph has no elevation in it. */
   climbAvailable: boolean;
   onClimb: (climb: ClimbBand | "any") => void;
   onToggleVibe: (vibe: Vibe) => void;
   onToggleRoundTrip: () => void;
   onToggleEdge: () => void;
+  onToggleWeatherAware: () => void;
 };
 
 export function Filters(props: FiltersProps) {
@@ -47,6 +49,17 @@ export function Filters(props: FiltersProps) {
           }}
           label="Far edge only"
           hint="Only places in the outermost contour"
+        />
+        {/* A third switch needs no CSS: `.switch-row` is a single-column flex
+            column at every width, so it stacks. */}
+        <Switch
+          checked={props.weatherAware}
+          onChange={() => {
+            playThock(!props.weatherAware);
+            props.onToggleWeatherAware();
+          }}
+          label="Mind the weather"
+          hint="Trim the walk for rain, heat and dark"
         />
       </div>
 

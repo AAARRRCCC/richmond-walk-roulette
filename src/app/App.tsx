@@ -21,6 +21,7 @@ import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
 import { ResultCard, type ResultLine } from "../ui/ResultCard";
 import { PLACES, type Place } from "../data/places";
 import { contains, pointKey, type LngLat } from "../lib/geometry";
+import type { Json } from "../lib/json";
 import {
   MAX_MINUTES,
   NotConfiguredError,
@@ -50,16 +51,40 @@ import {
   type Failure,
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
-import { formatFeet, formatMinutes } from "../lib/format";
+import { formatClock, formatFeet, formatMinutes } from "../lib/format";
 import { describeGeolocationError, judgeFix, type PermissionHint } from "../lib/locate";
 import { useConditions } from "./useConditions";
-import { capFromLight, describeDeadline, describeDusk, describeLight, fitsInLight } from "./daylight";
+import {
+  capFromLight,
+  describeDeadline,
+  describeDusk,
+  describeLight,
+  fitsInLight,
+  type Daylight,
+} from "./daylight";
 import { clockOffsetMs, mergeCaps, setClockOffset, type TimeCap } from "./conditions";
+import {
+  WEATHER_ENABLED,
+  applyReport,
+  cachedWeather,
+  readReport,
+  holdWeather,
+  refreshWeather,
+  weatherUnavailable,
+} from "../lib/weather";
+import {
+  describeWeatherRule,
+  deriveWeatherRules,
+  toPoolRules,
+  weatherCaps,
+} from "../lib/weather-rules";
+import { ConditionsLine } from "../ui/ConditionsLine";
 import { DaylightSwitch } from "../ui/DaylightSwitch";
 import { describeResult, walkClauses } from "./announce";
 import {
   REASON_COPY,
   conditionsSignature,
+  derivePool,
   poolReport,
   suggestFix,
   type PoolConditions,
@@ -95,8 +120,19 @@ const isDevServer = import.meta.env.DEV;
  * Never in a production bundle: the assignment is inside an `import.meta.env.DEV`
  * branch, which Vite folds to `false` and drops entirely.
  */
+/**
+ * How the dev hooks below tell React that module state moved. Assigned once by
+ * the mounted App; a no-op before that, which is when nothing is on screen to
+ * repaint anyway.
+ */
+let devRepaint: () => void = () => {};
+
 type DevGlobal = typeof globalThis & {
-  walkRouletteDev?: { clockOffset: (ms: number) => void; readOffset: () => number };
+  walkRouletteDev?: {
+    clockOffset: (ms: number) => void;
+    readOffset: () => number;
+    weather: (wire: Json) => boolean;
+  };
 };
 
 if (import.meta.env.DEV) {
@@ -106,6 +142,22 @@ if (import.meta.env.DEV) {
   (globalThis as DevGlobal).walkRouletteDev = {
     clockOffset: setClockOffset,
     readOffset: clockOffsetMs,
+    /**
+     * Push a forecast in by hand, in the wire shape `/api/weather` answers.
+     *
+     * Rain forty minutes out, a heat index in the NWS Danger band and a UV of
+     * nine are the three states this feature exists for, and none of them can
+     * be waited for: two need a season and the third needs a storm. It goes
+     * through `readReport` rather than around it, so what lands on screen has
+     * crossed the same boundary a real forecast crosses.
+     */
+    weather: (wire) => {
+      const parsed = readReport(wire);
+      if (parsed === null) return false;
+      applyReport(parsed);
+      devRepaint();
+      return true;
+    },
   };
 }
 
@@ -132,6 +184,7 @@ const ROUTE_BACKOFF_MS = 900;
  * that the reel is short rather than quietly turning through what it has.
  */
 const ROUTE_WARM_GRACE_MS = 12_000;
+
 
 /**
  * `inert`, written by hand. React 18 has no boolean handling for the attribute
@@ -241,6 +294,12 @@ export function App() {
    */
   const [, bumpContours] = useReducer((n: number) => n + 1, 0);
   const [, bumpRoutes] = useReducer((n: number) => n + 1, 0);
+  // Its own counter, for the same reason those two are separate: a landed
+  // forecast must not invalidate the reach or restart route warming.
+  const [, bumpWeather] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    if (import.meta.env.DEV) devRepaint = bumpWeather;
+  }, []);
 
   // The mute is stored, not React state, because the sound engine reads it
   // outside render. This is how a change reaches the icon.
@@ -284,6 +343,36 @@ export function App() {
    * changes the pool the reel is already turning through.
    */
   const conditions = useConditions(origin, state.spinning);
+
+  /**
+   * The forecast, read straight from module state like `reach` and `route`.
+   *
+   * The refresh is driven by the minute tick rather than by a mount effect, so
+   * a tab left open keeps up without a second timer, and `refreshWeather` is a
+   * no-op in the common case. The hold is what stops a forecast landing
+   * mid-throw from moving the pool under a reel that is already turning.
+   */
+  const report = cachedWeather();
+  useEffect(() => {
+    refreshWeather(bumpWeather);
+  }, [conditions.atMs]);
+  useEffect(() => {
+    // The release can hand back a report that landed during the throw, and
+    // nothing else is going to announce it.
+    if (holdWeather(state.spinning)) bumpWeather();
+  }, [state.spinning]);
+
+  const weather = deriveWeatherRules(report, {
+    nowMs: conditions.atMs,
+    // The walk the reader ASKED for, not the one a cap left them with. Feeding
+    // the capped budget back in is a loop that eats itself: the rain cap
+    // narrows the window, the window no longer contains the onset, the rule
+    // stops firing, the cap lifts, and the whole thing starts again on the next
+    // render. Seen doing exactly that before this line said `requested`.
+    budgetMinutes: state.requestedBudgetMinutes,
+    dialMinimumMinutes: dialMinimum(state.roundTrip),
+    weatherAware: state.weatherAware,
+  });
 
   const floorOutbound = outboundFloorMinutes(state);
   const reach = cachedReach(origin, outbound, floorOutbound ?? 0);
@@ -343,8 +432,29 @@ export function App() {
    */
   const climbSettled = PLACES.filter((place) => climbOf(place) !== undefined).length;
 
-  const rules: readonly PoolRule[] =
-    state.climb === "any"
+  /**
+   * The budget the map is actually drawn at, when something is capping it.
+   *
+   * Null when nothing binds - including the case where a cap exists but sits
+   * above where the reader left the dial, which is not a trim and must not be
+   * described as one. Every weather sentence names this number and no other, so
+   * a rule whose own cap was not the binding one still says what the reader is
+   * looking at rather than advertising a number that never happened.
+   */
+  const cappedTo = dialMaximum(state);
+  const appliedBudget =
+    cappedTo < MAX_MINUTES && state.budgetMinutes >= cappedTo ? cappedTo : null;
+
+  const weatherPoolRules = toPoolRules(weather, {
+    appliedBudget,
+    climbSignature: `|${climbSettled}`,
+    isHilly: (place) => climbOf(place) === "hilly",
+    clear: () => dispatch({ type: "toggleWeatherAware" }),
+  });
+
+  const rules: readonly PoolRule[] = [
+    ...weatherPoolRules,
+    ...(state.climb === "any"
       ? []
       : [
           {
@@ -366,8 +476,9 @@ export function App() {
               if (band === undefined) return false;
               return band !== state.climb;
             },
-          },
-        ];
+          } satisfies PoolRule,
+        ]),
+  ];
 
   const poolConditions: PoolConditions = {
     reach,
@@ -765,9 +876,11 @@ export function App() {
           untilMs: conditions.light.events.civilDuskMs,
         };
 
-  // `mergeCaps` of one is the cap, and that is the point: chunk 7 adds rain,
-  // storm, heat and cold to this array rather than inventing a second clamp.
-  const timeCap = mergeCaps([lightCap]);
+  // One array, one cap, one clamp. Rain, storm, heat and cold arrive here
+  // rather than through a second clamp path of their own, which is what keeps
+  // the dial answering to one condition at a time instead of two competing
+  // ones. `mergeCaps` takes the earliest deadline; ties go to the shorter walk.
+  const timeCap = mergeCaps([lightCap, ...(state.weatherAware ? weatherCaps(weather) : [])]);
 
   useEffect(() => {
     if (state.spinning) return;
@@ -794,6 +907,17 @@ export function App() {
    * the block renders nothing at all rather than an empty box.
    */
   const resultLines: readonly ResultLine[] = [
+    ...(weather.headline === null
+      ? []
+      : [
+          {
+            // First in the block's fixed order, and a fact: it is a
+            // measurement somebody else took, reported unchanged.
+            key: "conditions" as const,
+            text: weather.headline,
+            tier: "fact" as const,
+          },
+        ]),
     ...(route !== null && !routePending
       ? [
           {
@@ -846,6 +970,14 @@ export function App() {
           // card shows it as a row; this is the same sentence, lowercased into
           // the middle of one.
           walkFitsLight ? "" : "does not fit in the light left",
+          // The only path by which the forecast reaches a screen reader on a
+          // result. Deliberately with a result rather than before one: the
+          // pre-spin path is ConditionsLine's own paragraphs, which are
+          // ordinary static text in the panel and need no live region.
+          // Not lowercased, unlike the REASON_COPY clauses `asClause` handles:
+          // this sentence is mostly units and a proper label, and "84°f, feels
+          // 86°. uv 9" is what a screen reader has to say out loud.
+          weather.headline ?? "",
           pickedVerdict === null || pickedVerdict.included || pickedVerdict.reasons[0] === undefined
             ? ""
             : `not in the pool: ${asClause(REASON_COPY[pickedVerdict.reasons[0]].sentence)}`,
@@ -869,8 +1001,52 @@ export function App() {
    * exactly the moment `suggestFix` needs this. One pass of Map lookups, at the
    * one moment nothing else is happening.
    */
+  /**
+   * The one cause `suggestFix` cannot see.
+   *
+   * A weather *cap* is not a `PoolRule` - it empties the pool by shrinking the
+   * contour, not by excluding anything - so the counterfactual that re-runs the
+   * verdict with one rule dropped will never find it, and the reader is offered
+   * a wider budget the cap would immediately clamp back down. So it is measured
+   * here, the same way and to the same standard: re-derive the pool at the
+   * budget the reader actually asked for, with every weather rule dropped
+   * alongside the cap, and count the survivors. No number that was not counted.
+   *
+   * Returns null when the cap is daylight's - that switch is `beforeDark`, and
+   * offering to ignore the weather would not move it.
+   */
+  const weatherCapFix = (): PoolFix | null => {
+    if (!state.weatherAware || appliedBudget === null) return null;
+    if (state.timeCap === null || state.timeCap.reason === "daylight") return null;
+
+    const asked = state.requestedBudgetMinutes;
+    const uncapped = cachedReach(
+      origin,
+      state.roundTrip ? Math.floor(asked / 2) : asked,
+      floorOutbound ?? 0,
+    );
+    if (uncapped === null) return null;
+
+    const recovers = derivePool(PLACES, {
+      ...poolConditions,
+      reach: uncapped,
+      rules: rules.filter((rule) => rule.reason !== "weather"),
+    }).included.length;
+    if (recovers === 0) return null;
+
+    return {
+      kind: "drop-cap",
+      clearLabel: "Ignore the weather",
+      clear: () => dispatch({ type: "toggleWeatherAware" }),
+      recovers,
+      askedMinutes: asked,
+      cappedMinutes: appliedBudget,
+    };
+  };
+
   const fix: PoolFix = emptyPool
-    ? suggestFix(PLACES, poolConditions, cachedWalkMinutes(origin), { roundTrip: state.roundTrip })
+    ? (weatherCapFix() ??
+      suggestFix(PLACES, poolConditions, cachedWalkMinutes(origin), { roundTrip: state.roundTrip }))
     : NO_FIX;
 
   /**
@@ -889,6 +1065,9 @@ export function App() {
         else if (fix.reason === "not-far-edge") dispatch({ type: "toggleEdge" });
         else fix.clear();
         return;
+      case "drop-cap":
+        fix.clear();
+        return;
       case "widen-budget":
         dispatch({ type: "budget", minutes: fix.budgetMinutes });
         return;
@@ -905,7 +1084,13 @@ export function App() {
   const activeFilters =
     state.vibes.length +
     (state.edgeOnly ? 1 : 0) +
-    rules.filter((rule) => rule.active).length;
+    // Weather is deliberately not counted, and the reason is the button next to
+    // the number: this counts what **Clear filters** clears, and that button
+    // does not touch the weather switch. A count that cannot be cleared by the
+    // control beside it is worse than no count. The cause of a shrunken pool is
+    // named in prose by ConditionsLine instead, which is always visible in the
+    // panel rather than hidden behind the collapsed drawer.
+    rules.filter((rule) => rule.active && rule.reason !== "weather").length;
 
   return (
     <div className={`shell${picking ? " is-picking" : ""}`}>
@@ -1046,11 +1231,7 @@ export function App() {
             floorMinutes={state.floorMinutes}
             minimum={dialMinimum(state.roundTrip)}
             maximum={dialMaximum(state)}
-            capNote={
-              dialMaximum(state) < MAX_MINUTES
-                ? `Daylight limit ${dialMaximum(state)} min · ${describeDusk(conditions.light)}`
-                : undefined
-            }
+            capNote={cappedTo < MAX_MINUTES ? capNote(state.timeCap, cappedTo, conditions.light) : undefined}
             step={budgetStep()}
             outboundMinutes={outbound}
             roundTrip={state.roundTrip}
@@ -1096,6 +1277,23 @@ export function App() {
               duskNote={status === "ready" ? describeDusk(conditions.light) : null}
               outerMinutes={outer?.minutes ?? outbound}
               commitKey={state.framingKey}
+            />
+          )}
+
+          {/* The last thing read before the decision to press Spin, which is
+              why it is here and not in the drawer: on a phone the drawer is
+              shut, and the cause of a shrunken pool has to be visible. It needs
+              no `inertWhen(picking)` - `.panel` already carries it. */}
+          {status === "ready" && (
+            <ConditionsLine
+              report={report}
+              unavailable={weatherUnavailable()}
+              disabled={!WEATHER_ENABLED}
+              verdict={weather}
+              withdrawn={pool.withdrawn}
+              appliedBudget={appliedBudget}
+              keptCount={candidates.length}
+              describe={describeWeatherRule}
             />
           )}
 
@@ -1205,10 +1403,12 @@ export function App() {
             vibes={state.vibes}
             roundTrip={state.roundTrip}
             edgeOnly={state.edgeOnly}
+            weatherAware={state.weatherAware}
             onClimb={(climb) => dispatch({ type: "climb", climb })}
             onToggleVibe={(vibe) => dispatch({ type: "toggleVibe", vibe })}
             onToggleRoundTrip={() => dispatch({ type: "toggleRoundTrip" })}
             onToggleEdge={() => dispatch({ type: "toggleEdge" })}
+            onToggleWeatherAware={() => dispatch({ type: "toggleWeatherAware" })}
           />
         </details>
 
@@ -1259,4 +1459,26 @@ function routeMissed(origin: LngLat, destination: Place): boolean {
   return routeSettledFailed(origin, destination);
 }
 
-
+/**
+ * The dial's cap note, naming the condition that is clamping it.
+ *
+ * One sentence per reason rather than a shared "Time limit", because the note
+ * exists to answer "why is half my dial dead", and "Daylight limit" beside a
+ * thunderstorm is the wrong answer confidently given. Every branch names the
+ * deadline in the same clock voice `describeDusk` uses.
+ */
+function capNote(cap: TimeCap | null, minutes: number, light: Daylight): string {
+  if (cap === null) return `Limit ${minutes} min`;
+  switch (cap.reason) {
+    case "daylight":
+      return `Daylight limit ${minutes} min · ${describeDusk(light)}`;
+    case "rain":
+      return `Rain limit ${minutes} min · rain ${formatClock(cap.untilMs)}`;
+    case "storm":
+      return `Storm limit ${minutes} min · storms ${formatClock(cap.untilMs)}`;
+    case "heat":
+      return `Heat limit ${minutes} min · the heat index is in the danger band`;
+    case "cold":
+      return `Cold limit ${minutes} min · it is dangerously cold`;
+  }
+}

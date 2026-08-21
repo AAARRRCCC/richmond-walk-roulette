@@ -562,11 +562,13 @@ and it is designed so that person can arrive cold, with no memory of the run, an
 
 ### Run this checklist to the end before declaring the work finished
 
-**Where the run stopped: after chunk 6, on 2026-08-21, at the reader's request.**
-Seven commits on `v0.4`, `npm run verify` green, working tree clean. Bundle 81,058 B gzipped against
-the 102,400 B ceiling; 191 tests. Each ticked chunk names its commit and its acceptance tally —
-every open box in those tallies is recorded in `HUMAN-REVIEW.md` §4 and §5, and none of them is a
-`[!]`. `PROGRESS.md` carries a report per chunk; the next one to start is chunk 7.
+**Where the run is: chunk 7 landed, on 2026-08-21.**
+`npm run verify` green, working tree clean. Bundle 82,262 B gzipped against the 102,400 B ceiling;
+246 tests. Each ticked chunk names its commit and its acceptance tally — every open box in those
+tallies is recorded in `HUMAN-REVIEW.md` §4 and §5, and none of them is a `[!]`. `PROGRESS.md`
+carries a report per chunk; the next one to start is chunk 8, and its first act is the walking-speed
+decision in `HUMAN-REVIEW.md` §6.1 — that chunk recuts all eleven snapshots, which is the only cheap
+moment to settle it.
 
 - [x] Harness built and committed — `25ac08b`
 - [x] Chunk 0 — foundations — `3d85202`, 53/54
@@ -576,7 +578,7 @@ every open box in those tallies is recorded in `HUMAN-REVIEW.md` §4 and §5, an
 - [x] Chunk 4 — apple-maps — `e3938f8`, 61/63
 - [x] Chunk 5 — daylight-budget — `506d096`, 67/69
 - [x] Chunk 6 — geolocate — `e575427`, 65/71
-- [ ] Chunk 7 — weather-filters
+- [x] Chunk 7 — weather-filters — `PENDING`, 81/83
 - [ ] Chunk 8 — places-expansion
 - [ ] Chunk 9 — opening-hours
 - [ ] Chunk 10 — shareable-spins

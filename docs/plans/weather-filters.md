@@ -1,6 +1,6 @@
 # Weather, and weather-conscious filters
 
-**Status:** spec — not implemented
+**Status:** implemented in chunk 7. See *Corrections after implementation* at the end.
 **Slug:** `weather-filters`
 
 ## Depends on
@@ -1205,3 +1205,67 @@ Each of these is checkable by running something or looking at something.
 3. **Does the edge cache actually store a synthetic-GET-keyed entry derived from a real GET?**
    Test 15 answers it. The fallback if not is documented above; the cost model changes but does not
    break.
+
+## Corrections after implementation
+
+Written against the code that shipped. Ten things this spec got wrong, in the order they bit.
+
+1. **`dark-return` is deleted, not deferred.** The spec ships it with `civilDuskMs: null` on the
+   assumption `daylight-budget` might land second. It landed first, owns the dark deadline, and
+   clamps for it through the same `timeCap`. A second darkness cap here would put two caps on one
+   dial answering to two switches. `ConditionRuleId` loses the member; a test asserts no weather cap
+   ever carries `reason: "daylight"`.
+
+2. **`applyConditionRules` and `RuleOutcome` are gone.** `pool-reasoning` shipped `derivePool`, which
+   owns withdrawal, the `minSurvivors` guard and the reporting. This spec contributes `PoolRule`s
+   through `toPoolRules` instead, and `PoolReport.withdrawn` is what the panel reads. The spec's own
+   `## Depends on` predicted this; the body did not follow it through.
+
+3. **The window is the budget the reader ASKED for, not the current one.** The spec derives the trip
+   window from `inputs.budgetMinutes` and then lowers that same budget with the cap. That is a loop
+   that eats itself: the cap narrows the window, the window no longer contains the onset, the rule
+   stops firing, the cap lifts. Seen on screen as a dial sitting at 35 with nothing beside it to
+   explain why. `WeatherInputs.budgetMinutes` is `Session.requestedBudgetMinutes` — see
+   HUMAN-REVIEW 3.7 for the field that made it possible.
+
+4. **The cap does not lower an "effective budget"; it goes through `timeCap`.** The spec has App
+   compute `effectiveBudget = conditions.budgetCapMinutes ?? state.budgetMinutes` and feed it into
+   `cachedReach` while the dial keeps showing `state.budgetMinutes`. Chunk 5 landed the other
+   arrangement — the reducer clamps `budgetMinutes` and `TimeDial` draws the shaded dead zone — and
+   two caps behaving differently on one dial is worse than either. So criterion 14's "the dial thumb
+   does not move" is **superseded**: the thumb moves, into a dead zone that says why.
+
+5. **`deriveConditions` is two functions.** A rule's sentence has to name the budget the map is drawn
+   at, which is only known after `mergeCaps` has weighed this module's caps against
+   `daylight-budget`'s — which this module never sees. So `deriveWeatherRules` produces `detail` and
+   App calls `describeWeatherRule(rule, appliedBudget)` once the number is settled. The spec's
+   two-pass argument is right; it just cannot both happen in one call.
+
+6. **Test 22's second half is wrong.** "Rain 40 min out, 30-minute round trip → no cap; the headline
+   still names it." The spec's own algorithm filters slots to `[-60, window]`, so an onset outside
+   the walk is outside the sentence too — and naming rain the walk never meets is a reason to shorten
+   a walk for nothing. The test asserts the headline stays silent.
+
+7. **Test 30 uses two weather caps.** It was written as rain at 40 against dusk at 25, which needs
+   this spec to own the dark cap (see 1) and assumes a margin `capFromLight` does not apply. Rain and
+   thunder in the same hour make the same point with the same arithmetic: the storm's wider margin
+   binds at 25, and both sentences say 25.
+
+8. **`.result-conditions` is not a new element.** `apple-maps` landed the shared `ResultLine` block
+   and its key union already contains `conditions`. The card takes a line, not a class. `README.md`
+   §2.5 said so and this spec predates it.
+
+9. **`formatClock` returns `"8:21 pm"`, not `"7:54p"`.** Landed in chunk 0. The spec's `formatToParts`
+   handling is otherwise exactly what shipped.
+
+10. **`ConditionInputs.roundTrip` is dropped.** Nothing reads it: `budgetMinutes` is total minutes
+    for both legs either way, so the window is the walk whichever way the switch is set.
+
+Two more things worth knowing, neither a spec error:
+
+- **`activeFilters` had to explicitly exclude weather.** The count is `vibes + edgeOnly + active
+  rules`, and weather rules are rules, so the drawer read **FILTERS (2 ACTIVE)** for a cause
+  **Clear filters** cannot clear. Criterion 12 forbids it and the code now says why in a comment.
+- **Releasing a held forecast has to repaint.** `holdWeather(false)` applied the stash inside an
+  effect and nothing bumped, so a report that landed mid-throw sat invisible after the reel stopped.
+  It returns whether it applied one now.

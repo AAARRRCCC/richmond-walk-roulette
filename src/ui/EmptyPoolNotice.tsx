@@ -51,6 +51,8 @@ function line(props: EmptyPoolNoticeProps): string {
       return `Nothing to spin. ${props.inReach} places are in reach; ${fix.recovers} of them are held back.`;
     case "widen-budget":
       return `Nothing is in reach in ${props.outerMinutes} min. The nearest match is ${fix.nearest}, about ${fix.nearestMinutes} min away.`;
+    case "drop-cap":
+      return `Nothing to spin inside ${fix.cappedMinutes} min. The weather trimmed your ${fix.askedMinutes} min, and everything that matches is outside what is left.`;
     case "lower-floor":
       return "Everything that matches is closer than your range starts.";
     case "none":
@@ -64,6 +66,8 @@ function label(fix: PoolFix): string {
       return `${fix.clearLabel} (${fix.recovers} back)`;
     case "widen-budget":
       return `Try ${fix.budgetMinutes} min`;
+    case "drop-cap":
+      return `${fix.clearLabel} (${fix.recovers} back)`;
     case "lower-floor":
       return "Drop the lower bound";
     case "none":

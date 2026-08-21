@@ -74,6 +74,43 @@ export function formatClock(atMs: number): string {
 }
 
 /**
+ * "72°F". Rounded: a tenth of a degree is noise on a sidewalk, and a decimal
+ * reads as a measurement somebody took rather than as the model output it is.
+ *
+ * @public - consumed by `weather-filters` (chunk 7).
+ */
+export function formatFahrenheit(f: number): string {
+  return `${Math.round(f)}°F`;
+}
+
+/**
+ * "now", "in 40 min", "in 2 hr 10 min". Minutes, not seconds — this is a
+ * forecast horizon, and a forecast is not accurate to the second.
+ *
+ * Anything at or below zero is "now" rather than a negative: a rule reading a
+ * horizon that has already passed is still describing this minute's weather.
+ *
+ * @public - consumed by `weather-filters` (chunk 7).
+ */
+export function formatHorizon(minutes: number): string {
+  const whole = Math.round(minutes);
+  if (whole <= 0) return "now";
+  if (whole < 60) return `in ${whole} min`;
+  const hours = Math.floor(whole / 60);
+  const rest = whole % 60;
+  return rest === 0 ? `in ${hours} hr` : `in ${hours} hr ${rest} min`;
+}
+
+/**
+ * "UV 9". Whole numbers, because the EPA scale is one.
+ *
+ * @public - consumed by `weather-filters` (chunk 7).
+ */
+export function formatUv(index: number): string {
+  return `UV ${Math.round(index)}`;
+}
+
+/**
  * Elevation, in feet, with no decimal.
  *
  * A foot of precision on a 30 m DEM is a fiction, and "112 ft" reads as a fact
