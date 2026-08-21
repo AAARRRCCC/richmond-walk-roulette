@@ -14,6 +14,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { RICHMOND_BOUNDS } from "../src/lib/bounds.ts";
 import {
   handleApiRequest,
   isochroneCacheKey,
@@ -135,6 +136,32 @@ test("an origin outside the Richmond box never reaches the engine", async (t) =>
 
   assert.equal(response?.status, 400);
   assert.equal(calls.length, 0);
+});
+
+test("the shared bounds constant is the one the proxy enforces", async (t) => {
+  // Charlottesville is 90 km away and refused; a point at exactly the box's own
+  // northern edge is accepted. Taken from `RICHMOND_BOUNDS` rather than from a
+  // literal, so a client that refuses a fix and a server that refuses a request
+  // cannot drift apart - which is the whole reason the constant moved out of
+  // this file and into `src/lib/bounds.ts`.
+  const calls = stubFetch(t, (call) => contourResponse(call.body));
+
+  const away = await handleApiRequest(
+    post("/api/isochrone", { location: { latitude: 38.0293, longitude: -78.4767 }, minutes: [25] }),
+    { ...ENV, VALHALLA_MAX_CONTOURS: "100" },
+  );
+  assert.equal(away?.status, 400);
+  assert.equal(calls.length, 0, "a refusal costs the engine nothing");
+
+  const edge = await handleApiRequest(
+    post("/api/isochrone", {
+      location: { latitude: RICHMOND_BOUNDS.north, longitude: -77.45 },
+      minutes: [25],
+    }),
+    { ...ENV, VALHALLA_MAX_CONTOURS: "100" },
+  );
+  assert.equal(edge?.status, 200, "the edge of the box is inside it");
+  assert.equal(calls.length, 1);
 });
 
 test("malformed minutes are rejected without an upstream call", async (t) => {

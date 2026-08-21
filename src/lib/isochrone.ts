@@ -212,6 +212,19 @@ export function snapshotName(origin: LngLat): string {
  */
 const PRESET_SNAPSHOTS = new Set(PRESET_ORIGINS.map(snapshotName));
 
+/**
+ * Whether this origin has a baked ladder waiting for it.
+ *
+ * `geolocate` asks so it can say out loud that a personal origin pays the full
+ * warm-up price. The set is the same one the fetch path consults, so the notice
+ * cannot disagree with what actually happens.
+ *
+ * @public - consumed by `geolocate` (chunk 6).
+ */
+export function hasSnapshot(origin: LngLat): boolean {
+  return PRESET_SNAPSHOTS.has(snapshotName(origin));
+}
+
 /** 0 to 1 as a ratio, in whatever unit the current phase can honestly count. */
 export type PrefetchProgress = { done: number; total: number };
 

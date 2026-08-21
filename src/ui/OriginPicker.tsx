@@ -1,3 +1,5 @@
+import { playPress } from "../lib/sound";
+import { locateActionLabel, type PermissionHint } from "../lib/locate";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CaretDownIcon, CrosshairIcon, MapPinIcon } from "@phosphor-icons/react";
 import { PRESET_ORIGINS, type Origin } from "../data/places";
@@ -6,6 +8,8 @@ export type OriginPickerProps = {
   origin: Origin;
   pickingOrigin: boolean;
   locating: boolean;
+  /** What the Permissions API says, if anything. A hint for the label, never a gate. */
+  permissionHint: PermissionHint;
   onSelect: (origin: Origin) => void;
   onBeginPickOnMap: () => void;
   onCancelPickOnMap: () => void;
@@ -74,6 +78,10 @@ export function OriginPicker(props: OriginPickerProps) {
         className="origin-chip"
         aria-expanded={open}
         aria-haspopup="true"
+        // The press closes the popup, so the action's own label is gone by the
+        // time the call is in flight. The chip is what is left on screen, and a
+        // reader deserves to know it is waiting on something.
+        aria-busy={props.locating}
         onClick={() => setOpen((value) => !value)}
       >
         <MapPinIcon size={17} weight="fill" aria-hidden="true" />
@@ -88,12 +96,13 @@ export function OriginPicker(props: OriginPickerProps) {
             className="origin-action"
             disabled={props.locating}
             onClick={() => {
+              playPress();
               props.onUseMyLocation();
               close(true);
             }}
           >
             <CrosshairIcon size={15} aria-hidden="true" />
-            {props.locating ? "Locating..." : "Use my location"}
+            {props.locating ? "Locating..." : locateActionLabel(props.permissionHint)}
           </button>
           <button
             type="button"

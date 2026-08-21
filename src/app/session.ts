@@ -3,6 +3,7 @@ import { DIAL_STEP, MAX_MINUTES, MIN_MINUTES } from "../lib/isochrone.ts";
 import { DEFAULT_ORIGIN, type Origin, type Vibe } from "../data/places.ts";
 import type { ClimbBand } from "../lib/elevation.ts";
 import type { TimeCap } from "./conditions.ts";
+import type { LocationNotice } from "../lib/locate.ts";
 
 /**
  * What the user has chosen. Everything derived from it, the reachable area and
@@ -61,12 +62,17 @@ export type Session = {
   warmed: number;
   failure: Failure | null;
   /**
-   * Why the browser would not share a location. Lives here rather than beside
-   * the geolocation call so it is cleared by the same origin change that
-   * clears `failure`: the advice it gives is "drop a pin instead", and it used
-   * to still be on screen after the pin was dropped.
+   * Anything the app has to say about where you are: why the browser would not
+   * share a location, why we would not use what it shared, or a caveat on a fix
+   * we did accept - plus, sometimes, a preset to offer as the way out.
+   *
+   * Lives here rather than beside the geolocation call so it is cleared by the
+   * same origin change that clears `failure`. That is what stops "you are
+   * outside Richmond" from surviving the user taking the offered preset, and it
+   * is the same bug the advice "drop a pin instead" used to have when it stayed
+   * on screen after the pin was dropped.
    */
-  locationError: string | null;
+  locationNotice: LocationNotice | null;
   /**
    * Bumped when the map should re-frame: a new origin, or a dial that has come
    * to rest. Not every dial value, or a drag would restart the camera on every
@@ -97,7 +103,7 @@ export type Action =
   | { type: "routeAttempt"; attempt: number }
   | { type: "warmProgress"; fraction: number }
   | { type: "failed"; failure: Failure }
-  | { type: "locationError"; message: string | null }
+  | { type: "locationNotice"; notice: LocationNotice | null }
   | { type: "frame" };
 
 /**
@@ -135,7 +141,7 @@ export const initialSession: Session = {
   pickingOrigin: false,
   warmed: 0,
   failure: null,
-  locationError: null,
+  locationNotice: null,
   framingKey: 0,
 };
 
@@ -155,13 +161,13 @@ export function reduce(state: Session, action: Action): Session {
         pickingOrigin: false,
         warmed: 0,
         failure: null,
-        locationError: null,
+        locationNotice: null,
         framingKey: state.framingKey + 1,
       };
     case "warmProgress":
       return { ...state, warmed: action.fraction };
-    case "locationError":
-      return { ...state, locationError: action.message };
+    case "locationNotice":
+      return { ...state, locationNotice: action.notice };
     case "failed":
       return { ...state, failure: action.failure, spinning: false };
     case "frame":

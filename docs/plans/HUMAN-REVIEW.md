@@ -52,6 +52,28 @@ Recorded in `scripts/bundle-budget.json` under `history`. Vite prints 71.34 **kB
 gate measures 69.5 **KiB** (binary) at gzip level 9. Both describe the same 71,205 bytes. Every
 figure in `bundle-budget.json` is bytes, so no unit argument can hide in it.
 
+### 2.3 `dev:lan` was not built, so LAN HTTPS is still unavailable
+
+**The question.** `geolocate` needs a secure context — browsers will not share a location over plain
+`http` on a LAN address, which is how you would test it on a phone against a dev server. That spec
+offers two branches and names them itself: *"a `dev:lan` script that serves real HTTPS, or nothing"*,
+with the instruction *"check it on a real iPhone before adding the dependency, not after."*
+
+**The branch taken.** Nothing. No script, no certificate tooling, no dependency.
+
+**Why it is the conservative one.** The whole justification for the dependency is an unverified claim
+about what an iPhone does with a self-signed certificate. There is no iPhone here, so adding it would
+be shipping a dependency on the strength of a guess — which is the exact shape of decision this plan
+keeps refusing. The feature itself is unaffected: it works over `https` in production and over
+`localhost` in dev, which is where it was tested.
+
+**What reverses it.** Adding a `dev:lan` script and whatever it needs. Nothing in the app refers to
+it, so there is nothing to unwind first.
+
+**What else would have to change.** `geolocate`'s acceptance criteria 6 and 13 stay open until
+somebody does it, and criterion 6 — the insecure-context sentence, on screen — cannot be reached
+without it. The sentence itself is asserted by test 12.
+
 ---
 
 ## 3. Plan-level decisions
@@ -142,6 +164,15 @@ never touched.
 
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
+
+**Chunk 6 — six boxes.** 65 of 71 ticked.
+
+- [ ] *`prefers-reduced-motion`* and *phone viewport*. Sections 5.1 and 5.3.
+- [ ] *Criterion 6 — the insecure-context sentence on screen*, and *criterion 13 — `dev:lan`*. Both
+  follow from section 2.3: the script was deliberately not built, so there is no non-secure origin to
+  serve from.
+- [ ] *Criterion 10 — the warm-up notice on screen.* Section 5.6.
+- [ ] *The warm-up state box*, same cause.
 
 **Chunk 5 — two boxes.** 67 of 69 ticked.
 
@@ -254,6 +285,22 @@ and Chrome on Android.
 If the web app ignores the mode: ship anyway. The route still renders and the Google link is
 untouched. Write down what was seen.
 
+### 5.6 The "not pre-baked" warm-up notice, on screen
+
+`geolocate`'s criterion 10 asks that a `me` origin show its warm-up notice while the ladder builds.
+All three parts of the condition held — `origin.id === "me"`, no snapshot, `warmed < 1` — and a real
+cold ladder was warmed from the engine. The notice was never caught on screen: at
+`VALHALLA_MAX_CONTOURS=100` the local engine answers the whole 96-rung ladder in a single query, so
+the notice lives for roughly 200 ms, and polling every 120 ms never saw it.
+
+Against a remote engine, or a stock one that splits the ladder into 24 queries, it is seconds. Worth
+one look on the deployed instance, where it is the honest admission the feature owes: a personal
+origin pays full price and the app says so.
+
+This is the third time a state has been too fast to catch locally — the others are chunk 3's
+`Measuring climb n/total` (5.4) and this. They share a cause and they share a fix: look at them on
+the deployed engine, not on the one running on the same machine.
+
 **Two things that were nearly in this section and are not**, because a way to observe them was found
 rather than assumed:
 
@@ -297,6 +344,8 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Tests after chunk 4 | 172 passing | |
 | App JS after chunk 5 | 79,785 B (77.9 KiB) | +2,770 B; 22.0 KB of headroom left |
 | Tests after chunk 5 | 178 passing | |
+| App JS after chunk 6 | 81,058 B (79.2 KiB) | +1,273 B; 20.8 KB of headroom left |
+| Tests after chunk 6 | 191 passing | |
 | `formatToParts` per 26-position scrub | 150 → **0** | Chunk 5 — see 6.3 |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
@@ -316,6 +365,7 @@ rather than so anybody does something about it.
 | 0 Foundations | +0.9 KB | +110 B (deferred to chunk 5 — nothing imports it yet) |
 | 1 Elevation wire | +0.7 KB | +545 B |
 | 2 `pool-reasoning` | +1.4 KB | **+2,784 B** |
+| 6 `geolocate` | +1.1 KB | +1,273 B (that spec's own line was 2 KB) |
 | 5 `daylight-budget` | +1.5 KB | +2,770 B (that spec's own line was 3 KB; README section 5's row is the low one) |
 | 4 `apple-maps` | +0.3 KB | +217 B — the closest any chunk has come |
 | 3 `elevation-profile` UI | +1.2 KB | +2,154 B (its own spec allowed 2.5 KB; README section 5's row is the low one) |

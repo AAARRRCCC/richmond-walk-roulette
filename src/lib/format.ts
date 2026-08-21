@@ -83,3 +83,19 @@ export function formatClock(atMs: number): string {
 export function formatFeet(meters: number): string {
   return `${Math.round(meters * 3.28084)} ft`;
 }
+
+/**
+ * A GPS accuracy radius, with its unit attached.
+ *
+ * The unit has to live in here. A caller that formats the magnitude and appends
+ * " m" itself will one day print "within about 3.1 m" for a 3.1 km fix, in the
+ * one sentence whose whole job is to state a magnitude honestly.
+ *
+ * Metres, against this file's own imperial house rule, and deliberately: this is
+ * the device's own number, reported in metres by the Geolocation API, and
+ * converting it would dress a plus-or-minus 3000 m guess up as "10171 ft".
+ */
+export function formatAccuracy(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  return `${(meters / 1000).toFixed(1)} km`;
+}

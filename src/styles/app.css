@@ -927,6 +927,18 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
+/*
+ * A sentence and, sometimes, the way out of it. The button sits outside the
+ * live region above it, so an assertive announcement carries the explanation
+ * and the reader reaches the offer by the ordinary Tab.
+ */
+.notice-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
 /* The switch vocabulary supplies the rest. */
 .guard-row {
   display: block;

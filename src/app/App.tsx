@@ -26,6 +26,7 @@ import {
   NotConfiguredError,
   cachedReach,
   fetchReach,
+  hasSnapshot,
   isWarm,
   prefetchLadder,
 } from "../lib/isochrone";
@@ -50,6 +51,7 @@ import {
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
 import { formatFeet, formatMinutes } from "../lib/format";
+import { describeGeolocationError, judgeFix, type PermissionHint } from "../lib/locate";
 import { useConditions } from "./useConditions";
 import { capFromLight, describeDeadline, describeDusk, describeLight, fitsInLight } from "./daylight";
 import { clockOffsetMs, mergeCaps, setClockOffset, type TimeCap } from "./conditions";
@@ -179,10 +181,38 @@ const describe = (cause: unknown): Failure => ({
 export function App() {
   const [state, dispatch] = useReducer(reduce, initialSession);
   const [locating, setLocating] = useState(false);
+
+  /**
+   * What the Permissions API says, if it says anything.
+   *
+   * A hint, never a gate: Safari reports "prompt" where other browsers report
+   * nothing at all, and a browser without the API leaves this "unknown". The
+   * only thing it changes is the button's label and one early return.
+   */
+  const [permissionHint, setPermissionHint] = useState<PermissionHint>("unknown");
+
+  useEffect(() => {
+    let status: PermissionStatus | null = null;
+    const onChange = (): void => {
+      if (status !== null) setPermissionHint(status.state);
+    };
+    navigator.permissions
+      ?.query({ name: "geolocation" })
+      .then((result) => {
+        status = result;
+        setPermissionHint(result.state);
+        result.addEventListener("change", onChange);
+      })
+      // A rejection or a missing API leaves the hint "unknown", which is the
+      // state that changes nothing.
+      .catch(() => {});
+    return () => status?.removeEventListener("change", onChange);
+  }, []);
   const [wide, setWide] = useState(() => window.matchMedia(WIDE).matches);
   const [filtersOpen, setFiltersOpen] = useState(wide);
   const [railCollapsed, setRailCollapsed] = useState(false);
   const emptyNoticeId = useId();
+  const locationNoticeId = useId();
   const spinRef = useRef<HTMLButtonElement>(null);
 
   /**
@@ -584,35 +614,77 @@ export function App() {
   }, [state.pickingOrigin]);
 
   const useMyLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      dispatch({ type: "locationError", message: "This browser cannot share a location." });
+    if (!("geolocation" in navigator)) {
+      dispatch({
+        type: "locationNotice",
+        notice: {
+          message: "This browser can't share a location. Drop a pin on the map instead.",
+          tone: "warn",
+          suggest: null,
+        },
+      });
       return;
     }
+
+    // A denied permission cannot prompt, so calling would produce nothing at
+    // all - a button that visibly does not work, which is the entire class of
+    // failure this rewrite exists to remove. Say why instead.
+    if (permissionHint === "denied") {
+      dispatch({
+        type: "locationNotice",
+        notice: describeGeolocationError(1, window.isSecureContext),
+      });
+      return;
+    }
+
+    /**
+     * Read before clearing, because it decides whether a cached fix is
+     * acceptable.
+     *
+     * A cached fix carries its *original* accuracy, so a stale 250 m wifi fix is
+     * just as eligible for instant replay as a good one. With a flat
+     * `maximumAge`, somebody pressing again after an accuracy refusal gets the
+     * identical refusal back instantly with no new acquisition attempted. So:
+     * the first press accepts a minute-old fix, free and indistinguishable at
+     * this app's resolution, and any press made while a notice is standing
+     * forces a fresh one.
+     */
+    const retry = state.locationNotice !== null;
+
     setLocating(true);
-    dispatch({ type: "locationError", message: null });
+    dispatch({ type: "locationNotice", notice: null });
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocating(false);
-        dispatch({
-          type: "origin",
-          origin: {
-            id: "me",
-            name: "My location",
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          },
+        const outcome = judgeFix({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracyMeters: position.coords.accuracy,
         });
+        if (outcome.kind === "rejected") {
+          dispatch({ type: "locationNotice", notice: outcome.error });
+          return;
+        }
+        // The origin action clears the notice field, so a caveat dispatched
+        // first would vanish. This order is load-bearing.
+        dispatch({ type: "origin", origin: outcome.origin });
+        if (outcome.caveat !== null) {
+          dispatch({ type: "locationNotice", notice: outcome.caveat });
+        }
       },
-      () => {
+      (error) => {
         setLocating(false);
         dispatch({
-          type: "locationError",
-          message: "Location unavailable. Drop a pin instead.",
+          type: "locationNotice",
+          notice: describeGeolocationError(error.code, window.isSecureContext),
         });
       },
-      { enableHighAccuracy: true, timeout: 8000 },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: retry ? 0 : 60_000 },
     );
-  }, []);
+    // Both are read at call time and both change what the call does, so they
+    // belong in the deps rather than being smuggled in through a ref.
+    // `OriginPicker` is not memoised, so a fresh identity costs nothing.
+  }, [permissionHint, state.locationNotice]);
 
   const moveOrigin = useCallback((at: LngLat) => {
     dispatch({ type: "origin", origin: customOrigin(at) });
@@ -911,13 +983,62 @@ export function App() {
             onSelect={(next) => dispatch({ type: "origin", origin: next })}
             onBeginPickOnMap={() => dispatch({ type: "beginPickOrigin" })}
             onCancelPickOnMap={() => dispatch({ type: "cancelPickOrigin" })}
+            permissionHint={permissionHint}
             onUseMyLocation={useMyLocation}
           />
-          {state.locationError && (
-            <p className="notice is-warn" role="alert">
-              {state.locationError}
-            </p>
+          {state.locationNotice && (
+            <div className="notice-stack" {...inertWhen(picking)}>
+              <p
+                id={locationNoticeId}
+                className={state.locationNotice.tone === "warn" ? "notice is-warn" : "notice"}
+                role={state.locationNotice.tone === "warn" ? "alert" : "status"}
+              >
+                {state.locationNotice.message}
+              </p>
+              {/* Outside the live region on purpose. An assertive region
+                  announces its text on insertion, and a focusable control inside
+                  one is announced inconsistently and gives the listener no
+                  obvious route to it. So the region holds the sentence and
+                  nothing else; the button is the very next element in DOM order,
+                  and `aria-describedby` makes it announce as "Start from Scott's
+                  Addition, button" followed by the sentence that explains why. */}
+              {state.locationNotice.suggest && (
+                <button
+                  type="button"
+                  className="link-button"
+                  aria-describedby={locationNoticeId}
+                  onClick={() => {
+                    playTap(true);
+                    if (state.locationNotice?.suggest) {
+                      dispatch({ type: "origin", origin: state.locationNotice.suggest });
+                    }
+                  }}
+                >
+                  Start from {state.locationNotice.suggest.name}
+                </button>
+              )}
+            </div>
           )}
+
+          {origin.id === "me" &&
+            !hasSnapshot(origin) &&
+            state.warmed < 1 &&
+            status !== "error" &&
+            status !== "not-configured" && (
+              /* Information, not a warning: a personal origin has no baked
+                 snapshot, so it pays the full price and the app says so. No
+                 `role` - TimeDial already announces warm-up progress in quarters
+                 through its own status line, and a second region double-speaks.
+
+                 The `id === "me"` half is not redundant with `hasSnapshot`: every
+                 cold origin lacks one, and today the commonest is a dropped pin.
+                 The copy says "your own spot", which is a sentence about a
+                 geolocated fix. */
+              <p className="notice" {...inertWhen(picking)}>
+                Your own spot is not pre-baked the way the presets are, so the reachable area is
+                being computed from scratch. The dial fills in as it arrives.
+              </p>
+            )}
 
           <TimeDial
             minutes={state.budgetMinutes}

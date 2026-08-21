@@ -586,3 +586,78 @@ inventing a second clamp path.
 **Chunk 6 — `geolocate`.** The phone says where you are, with a refusal when the fix is too coarse to
 draw. `src/lib/bounds.ts` has been in place since the harness with the exact contract that spec
 writes, and its three tests pass. Preconditions: `npm run verify` green (met).
+
+---
+
+## Chunk 6 — `geolocate` — done
+
+The phone can say where you are, and the app can refuse what it says.
+
+That refusal is the feature. This app's whole argument is that a contour is measured rather than
+assumed, and a fix with a 3 km error circle cannot support it — the 95% circle swallows the innermost
+band whole. So a bad fix is turned down by name, with its own accuracy quoted back at it, rather than
+drawing a confident shape around a guess.
+
+### Six outcomes, all seen
+
+Driven through the real handler by standing in for `navigator.geolocation`:
+
+| Fix | What the app says |
+| --- | --- |
+| Denied | "Location is blocked for this site. You can turn it back on in your browser's site settings — or just drop a pin on the map." |
+| Unavailable | "Your device couldn't get a fix. That usually means no GPS and no known wifi — try again outdoors, or drop a pin on the map." |
+| Timeout | "Locating took too long and gave up. Try again, or drop a pin on the map." |
+| Charlottesville | The out-of-bounds sentence, plus **"Start from Scott's Addition"** — which, pressed, set the preset and cleared the notice |
+| 3100 m accuracy | "…to within about **3.1 km**. A five-minute walk is about 300 m, so a contour drawn from that fix would be mostly guesswork." |
+| 140 m accuracy | Accepted. Origin becomes "My location", and a plain `.notice` with `role="status"` reads "Located to within about 140 m — the edges are approximate." |
+
+Three distinct refusals, none of them offering a preset — a permission problem is not solved by
+starting from Maymont — and every one of them naming the pin, which always works.
+
+The accepted-with-caveat case exercises the ordering the spec calls load-bearing: the origin action
+clears the notice field, so the caveat must be dispatched *after* it or it vanishes.
+
+### The retry, measured
+
+The spec argues that a flat `maximumAge` makes the button visibly do nothing after an accuracy
+refusal — a cached fix carries its *original* accuracy, so the identical refusal comes back
+instantly. Recorded the options the handler actually passes:
+
+    first press, nothing standing   maximumAge: 60000
+    second press, notice standing   maximumAge: 0
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint`, `npm run build` | clean |
+| `npm test` | **191 passing**, 0 failing |
+| `verify-bundle` | **81,058 B** gz, **+1,273 B**, under that spec's 2 KB line |
+| everything else | clean |
+
+`grep` over `server/proxy.ts` finds no literal bounding box: the proxy imports `RICHMOND_BOUNDS`,
+and a new proxy test proves the shared constant is the one in force by accepting a point at exactly
+`RICHMOND_BOUNDS.north` and refusing Charlottesville without an upstream call.
+
+### Spec corrections
+
+**`dev:lan` was deliberately not built.** That spec offers two branches in its own words — "a
+`dev:lan` script that serves real HTTPS, or nothing" — with the instruction to check it on a real
+iPhone *before* adding the dependency. There is no iPhone here, so the conservative branch is
+nothing. HUMAN-REVIEW 2.3.
+
+### Deferred
+
+- HUMAN-REVIEW 2.3 — no `dev:lan`, so criteria 6 and 13 stay open and the insecure-context sentence
+  cannot be reached on screen.
+- HUMAN-REVIEW 5.6 — the "not pre-baked" warm-up notice was never caught on screen. The condition
+  held and a real cold ladder warmed, but a local engine answers all 96 rungs in one query, so the
+  notice lives about 200 ms. Third time a state has been too fast to catch locally; all three want a
+  look at the deployed engine.
+
+### Next
+
+**Chunk 7 — `weather-filters`**, which carries the run's first genuinely deferred decision: the
+Open-Meteo licence. GOAL.md's instruction is to fetch the current terms rather than recall them, and
+to assume the commercial case — the conservative branch, since a non-commercial assumption that turns
+out wrong is a licence breach and the reverse is only wasted caution.
