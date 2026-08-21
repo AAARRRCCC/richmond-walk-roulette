@@ -40,6 +40,7 @@ import {
   routeFailed as routeSettledFailed,
 } from "../lib/route";
 import {
+  applyShare,
   budgetStep,
   customOrigin,
   dialMaximum,
@@ -51,6 +52,15 @@ import {
   type Failure,
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
+import {
+  SHARE_PATH,
+  canonicalQuery,
+  decodeShare,
+  encodeShare,
+  shareUrl,
+  type ShareInput,
+} from "./share";
+import { PRESET_ORIGINS } from "../data/places";
 import { formatClock, formatFeet, formatMinutes } from "../lib/format";
 import { describeGeolocationError, judgeFix, type PermissionHint } from "../lib/locate";
 import { useConditions } from "./useConditions";
@@ -252,7 +262,16 @@ const describe = (cause: unknown): Failure => ({
 });
 
 export function App() {
-  const [state, dispatch] = useReducer(reduce, initialSession);
+  /**
+   * A share link is restored in the lazy initialiser, not in a mount effect.
+   *
+   * An effect would paint the default session first and then jump to the shared
+   * one, so the map would frame twice and the card would appear a beat late.
+   * This way the first frame is already the shared walk.
+   */
+  const [state, dispatch] = useReducer(reduce, initialSession, (base) =>
+    applyShare(base, decodeShare(window.location.search), PLACES, PRESET_ORIGINS),
+  );
   const [locating, setLocating] = useState(false);
 
   /**
@@ -1103,6 +1122,8 @@ export function App() {
     : state.spinning || !picked || routePending
       ? ""
       : describeResult([
+          // How this arrived, first, so the one sr-only line says it.
+          state.shared === null ? "" : "Shared walk",
           // The tier opens the sentence for a detour. The sr-only line is the
           // only screen-reader surface this card has, so a tier that is
           // invisible there is invisible.
@@ -1144,6 +1165,46 @@ export function App() {
   // render, and App already re-renders whenever the contour cache changes.
   const dialWarm = (minutes: number) =>
     isWarm(origin, state.roundTrip ? Math.floor(minutes / 2) : minutes);
+
+  /**
+   * This spin, as a link would carry it. A plain expression like everything else
+   * here: it is read once per render and never memoised.
+   */
+  const shareInput: ShareInput = {
+    origin,
+    budgetMinutes: state.budgetMinutes,
+    floorMinutes: state.floorMinutes,
+    dialMinimumMinutes: dialMinimum(state.roundTrip),
+    roundTrip: state.roundTrip,
+    edgeOnly: state.edgeOnly,
+    climb: state.climb,
+    kind: state.kind,
+    vibes: state.vibes,
+    placeId: picked?.id ?? "",
+  };
+
+  /**
+   * Clear the address bar the moment it stops describing the screen.
+   *
+   * The comparison is against the LINK's own fields, not against `shared`
+   * being null - which is the trap this is written to avoid. `shared`
+   * deliberately survives dial and filter changes, because they do not stop this
+   * being the walk that was shared; but they do make `b=34` in the address bar a
+   * lie while the screen says 60. So the URL goes on the next paint and the
+   * arrival notices stay until they are dismissed.
+   *
+   * Ref-guarded, and the app never writes the URL otherwise.
+   */
+  const urlCleared = useRef(false);
+  useEffect(() => {
+    if (urlCleared.current) return;
+    const live = canonicalQuery(decodeShare(encodeShare(shareInput)));
+    if (state.shared !== null && live === state.shared.linkQuery) return;
+    if (window.location.pathname === SHARE_PATH || window.location.search !== "") {
+      window.history.replaceState(null, "", "/");
+    }
+    urlCleared.current = true;
+  });
 
   const picking = state.pickingOrigin;
   const collapsed = railCollapsed && !wide;
@@ -1490,6 +1551,37 @@ export function App() {
                 : "Spin"}
           </button>
 
+          {state.shared !== null &&
+            (state.shared.missingPlaceId !== null || state.shared.clampedFromMinutes !== null) && (
+              /* One "about the link you followed" block with one Dismiss. Two
+                 separate dismiss controls on two one-line notices is more chrome
+                 than either sentence is worth. */
+              <div className="notice-stack" {...inertWhen(picking)}>
+                {state.shared.missingPlaceId !== null && (
+                  <p className="notice is-warn">
+                    The place this link points to is no longer on the map. Everything else about
+                    the walk is set up — spin for somewhere new.
+                  </p>
+                )}
+                {state.shared.clampedFromMinutes !== null && (
+                  <p className="notice">
+                    This link asked for {state.shared.clampedFromMinutes} minutes; the closest the
+                    dial goes is {state.budgetMinutes}.
+                  </p>
+                )}
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => {
+                    playTap(true);
+                    dispatch({ type: "dismissShared" });
+                  }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
           {reelIsShort && !emptyPool && (
             /* Said rather than hidden. The reel can only turn through walks it
                can draw, so with routes still missing it is showing a subset -
@@ -1540,6 +1632,10 @@ export function App() {
               hoverMeters={hoverMeters}
               onHoverRoute={setHoverMeters}
               fitsLight={walkFitsLight}
+              shareUrl={shareUrl(window.location.origin, shareInput)}
+              originName={origin.name}
+              budgetMinutes={state.budgetMinutes}
+              sharedArrival={state.shared !== null}
               onSpinAgain={spin}
               onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
               onDismiss={() => {

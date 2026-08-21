@@ -1016,9 +1016,27 @@ code {
   gap: 8px;
   margin-top: 2px;
 }
-/* Spin again keeps its own full-width row above the two handoff links. */
-.result-actions > .is-primary {
-  grid-column: 1 / -1;
+/* Two rows of two: what to do next on top - spin, or send it - and the two
+   handoffs below. Spin again no longer spans, because Share earns the cell
+   beside it more than the empty space did. */
+
+.result-share-note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  min-height: 1em;
+}
+
+/* Shown only when the clipboard refused, so the reader can select it by hand. */
+.result-share-fallback {
+  width: 100%;
+  background: var(--raise);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
 }
 
 /* -------------------------------------------------------------- filters */

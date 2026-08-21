@@ -7,6 +7,21 @@ compatibility_date = "2026-07-01"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+# The Worker must see these before the asset store does. Without it, static
+# assets win first and /s has no matching asset - and not_found_handling
+# defaults to "none", so it is a hard 404 rather than the app.
+#
+# "/s" exactly, NOT "/s*": that pattern also matches /site.webmanifest, and
+# routing the manifest through the Worker is a silent regression with no error
+# anywhere. /s/ and /s/anything are not share paths and stay 404s.
+#
+# "/api/*" has to be listed too. Dropping it once this key exists at all
+# silently reverts the API to asset-first.
+#
+# not_found_handling is deliberately left at its default, "none". /s never
+# relies on a SPA fallback - the Worker fetches "/" explicitly - so setting it
+# would only change what happens to every OTHER unmatched path on the site.
+run_worker_first = ["/api/*", "/s"]
 
 # Where the self-hosted Valhalla lives, and the contour limit its config
 # allows per /isochrone call (see valhalla/README.md). The URL is not a

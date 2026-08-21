@@ -4,6 +4,7 @@ import { DEFAULT_ORIGIN, type Origin, type PlaceKind, type Vibe } from "../data/
 import type { ClimbBand } from "../lib/elevation.ts";
 import type { TimeCap } from "./conditions.ts";
 import type { LocationNotice } from "../lib/locate.ts";
+import { canonicalQuery, isEmptyLink, type ShareLink } from "./share.ts";
 
 /**
  * What the user has chosen. Everything derived from it, the reachable area and
@@ -11,6 +12,29 @@ import type { LocationNotice } from "../lib/locate.ts";
  * duplicating it here is what let a stale budget and a stale reach disagree.
  */
 export type Failure = { message: string; configured: boolean };
+
+/**
+ * How this session arrived.
+ *
+ * Non-null only when the app was opened from a share link, and cleared by the
+ * first action that changes which walk is on screen.
+ */
+export type SharedArrival = {
+  /** Set when the link named a place this build no longer has. */
+  missingPlaceId: string | null;
+  /** The budget the link asked for, when the dial could not honour it. */
+  clampedFromMinutes: number | null;
+  /**
+   * `canonicalQuery` of the link exactly as it arrived.
+   *
+   * App compares the live session's canonical query against this to decide when
+   * the address bar has stopped describing the screen. Without it the
+   * URL-clearing rule and the `shared` flag would have to be the same thing,
+   * and they are not: moving the dial makes the URL wrong immediately, while the
+   * arrival notices stay relevant until they are dismissed.
+   */
+  linkQuery: string;
+};
 
 export type Session = {
   origin: Origin;
@@ -122,6 +146,8 @@ export type Session = {
    * pixel now that the contours arrive instantly.
    */
   framingKey: number;
+  /** Non-null only on a session restored from a share link. */
+  shared: SharedArrival | null;
 };
 
 export type Action =
@@ -150,7 +176,8 @@ export type Action =
   | { type: "warmProgress"; fraction: number }
   | { type: "failed"; failure: Failure }
   | { type: "locationNotice"; notice: LocationNotice | null }
-  | { type: "frame" };
+  | { type: "frame" }
+  | { type: "dismissShared" };
 
 /**
  * Defaults for a fresh session.
@@ -193,6 +220,7 @@ export const initialSession: Session = {
   failure: null,
   locationNotice: null,
   framingKey: 0,
+  shared: null,
 };
 
 export function reduce(state: Session, action: Action): Session {
@@ -213,6 +241,7 @@ export function reduce(state: Session, action: Action): Session {
         failure: null,
         locationNotice: null,
         framingKey: state.framingKey + 1,
+        shared: null,
       };
     case "warmProgress":
       return { ...state, warmed: action.fraction };
@@ -361,7 +390,14 @@ export function reduce(state: Session, action: Action): Session {
     // Every one of these changes which walk is on screen, so each starts the
     // route's retry budget over and clears the cancelled-throw notice.
     case "spinStart":
-      return { ...state, spinning: true, pickedId: null, spinAborted: false, routeAttempt: 0 };
+      return {
+        ...state,
+        spinning: true,
+        pickedId: null,
+        spinAborted: false,
+        routeAttempt: 0,
+        shared: null,
+      };
     case "spinCancel":
       return { ...state, spinning: false, spinAborted: true };
     case "spinEnd":
@@ -371,6 +407,7 @@ export function reduce(state: Session, action: Action): Session {
         pickedId: action.pickedId,
         spinAborted: false,
         routeAttempt: 0,
+        shared: null,
       };
     case "pickPlace":
       return {
@@ -379,9 +416,19 @@ export function reduce(state: Session, action: Action): Session {
         pickedId: action.pickedId,
         spinAborted: false,
         routeAttempt: 0,
+        shared: null,
       };
     case "clearPick":
-      return { ...state, spinning: false, pickedId: null, spinAborted: false, routeAttempt: 0 };
+      return {
+        ...state,
+        spinning: false,
+        pickedId: null,
+        spinAborted: false,
+        routeAttempt: 0,
+        shared: null,
+      };
+    case "dismissShared":
+      return state.shared === null ? state : { ...state, shared: null };
     case "routeAttempt":
       return { ...state, routeAttempt: action.attempt };
     case "beginPickOrigin":
@@ -510,6 +557,78 @@ export function outboundFloorMinutes(
 ): number | null {
   if (state.floorMinutes <= dialMinimum(state.roundTrip)) return null;
   return state.roundTrip ? Math.floor(state.floorMinutes / 2) : state.floorMinutes;
+}
+
+/**
+ * A fresh session as a share link describes it.
+ *
+ * Pure, and the lazy initialiser for App's `useReducer` — restoring through a
+ * burst of existing actions would fire each one's resets in turn (`origin`
+ * clears `pickedId`, `toggleRoundTrip` re-clamps the budget) and end somewhere
+ * the link did not ask for.
+ *
+ * It lives here rather than in `share.ts` because it needs `clampBudget` and
+ * `clampFloor`, which are this module's own and stay that way.
+ *
+ * @public - consumed by App and by `share.test.ts`.
+ */
+export function applyShare(base: Session, link: ShareLink, places: readonly { id: string }[], presets: readonly Origin[]): Session {
+  // Identity on an empty link, so a cold start with no query costs nothing and
+  // `shared` stays null rather than becoming an empty arrival.
+  if (isEmptyLink(link)) return base;
+
+  // Bound to a local so the narrowing survives into the closure below.
+  const from = link.origin;
+  let origin = base.origin;
+  if (from !== null) {
+    origin =
+      from.kind === "preset"
+        ? // An unknown preset falls back to the default rather than failing: the
+          // rest of the link is still a walk worth restoring.
+          (presets.find((preset) => preset.id === from.id) ?? base.origin)
+        : customOrigin({ lat: from.lat, lng: from.lng });
+  }
+
+  const roundTrip = link.roundTrip ?? base.roundTrip;
+  const asked = link.budgetMinutes ?? base.budgetMinutes;
+  // No cap: a link is not subject to the recipient's daylight or weather, whose
+  // switches it deliberately does not carry. The `timeCap` effect clamps on the
+  // next render if their conditions call for it, and the notice says so.
+  const budgetMinutes = clampBudget(asked, roundTrip, null);
+  const floorMinutes = clampFloor(
+    link.floorMinutes ?? dialMinimum(roundTrip),
+    budgetMinutes,
+    roundTrip,
+    null,
+  );
+
+  const found = link.placeId === null ? null : places.find((place) => place.id === link.placeId);
+  const missing = link.placeId !== null && found === undefined;
+
+  return {
+    ...base,
+    origin,
+    budgetMinutes,
+    // The reader never asked for this budget - the link did - but it is the
+    // number they would be putting back if a cap moved it, so it is the request.
+    requestedBudgetMinutes: budgetMinutes,
+    floorMinutes,
+    roundTrip,
+    edgeOnly: link.edgeOnly ?? base.edgeOnly,
+    climb: link.climb ?? base.climb,
+    kind: link.kind ?? base.kind,
+    vibes: link.vibes.length > 0 ? [...link.vibes] : base.vibes,
+    pickedId: found?.id ?? null,
+    framingKey: base.framingKey + 1,
+    shared: {
+      missingPlaceId: missing ? link.placeId : null,
+      clampedFromMinutes:
+        link.budgetMinutes !== null && link.budgetMinutes !== budgetMinutes
+          ? link.budgetMinutes
+          : null,
+      linkQuery: canonicalQuery(link),
+    },
+  };
 }
 
 export function customOrigin(at: LngLat): Origin {

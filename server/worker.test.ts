@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import {
   handleWorkerRequest,
   ISOCHRONE_CACHE,
+  SHARE_CACHE,
   type Env,
   type WorkerContext,
 } from "../worker/index.ts";
@@ -21,8 +22,11 @@ import {
   stubConsoleError,
   stubEdgeCache,
   stubFetch,
+  stubHtmlRewriter,
 } from "./test-stubs.ts";
 import { readJson, type Json } from "../src/lib/json.ts";
+import { SHARE_CACHE_VERSION, shareCacheKey, shareMeta } from "./share-meta.ts";
+import type { SharedArrival } from "../src/app/session.ts";
 
 const MONROE = { latitude: 37.5464, longitude: -77.4517 };
 const FULL_LADDER = Array.from({ length: 96 }, (_, i) => i + 5);
@@ -458,4 +462,226 @@ test("a locate costs the limiter exactly one", async (t) => {
     CTX,
   );
   assert.equal(anchor.charged(), 1);
+});
+
+/**
+ * `/s`, the share path.
+ *
+ * The routing is the part no unit test can prove - `run_worker_first` lives in
+ * `wrangler.toml` and only a deployed curl can check it, which is why
+ * `LAUNCH.md` carries that check. What is testable is everything after the
+ * request arrives: which document is fetched, what gets rewritten, what is
+ * cached and what is deliberately not.
+ */
+const HEAD_FIXTURE = [
+  "<!doctype html><html><head>",
+  "<title>Walk Roulette | Richmond</title>",
+  '<meta name="description" content="generic" />',
+  '<meta property="og:title" content="Walk Roulette | Richmond" />',
+  '<meta property="og:description" content="generic" />',
+  '<meta property="og:url" content="/" />',
+  '<meta property="og:image" content="/og.png" />',
+  '<link rel="canonical" href="/" />',
+  "</head><body></body></html>",
+].join("");
+
+/** An asset binding that answers the index document, and counts the asks. */
+function assetEnv(extra: Partial<Env> = {}) {
+  const asked: string[] = [];
+  const bindings: Env = {
+    VALHALLA_URL: "http://engine.local:8002",
+    ASSETS: {
+      fetch: (request: Request) => {
+        asked.push(new URL(request.url).pathname);
+        return Promise.resolve(
+          new Response(HEAD_FIXTURE, {
+            status: 200,
+            headers: { "content-type": "text/html; charset=utf-8" },
+          }),
+        );
+      },
+    },
+    ...extra,
+  };
+  return { env: bindings, asked };
+}
+
+const shareGet = (search: string, method = "GET"): Request =>
+  new Request(`http://app.local/s${search}`, {
+    method,
+    headers: { "cf-connecting-ip": "203.0.113.7" },
+  });
+
+const SPIN = "?o=carytown&b=34&rt=1&p=shiplock";
+
+test("a share link is rewritten with a place-specific head", async (t) => {
+  stubHtmlRewriter(t);
+  stubEdgeCache(t);
+  const { env: assets, asked } = assetEnv();
+
+  const response = await handleWorkerRequest(shareGet(SPIN), assets, CTX);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "text/html; charset=utf-8");
+
+  const html = await response.text();
+  assert.match(html, /<title>Great Shiplock Park — inside 34 min<\/title>/);
+  assert.match(html, /og:title" content="Great Shiplock Park — inside 34 min"/);
+  assert.match(html, /og:description" content="[^"]*Carytown/);
+  // Absolute, both of them, because a crawler has no base to resolve against.
+  assert.match(html, /og:url" content="http:\/\/app\.local\/s\?o=carytown/);
+  assert.match(html, /og:image" content="http:\/\/app\.local\/og\.png"/);
+  assert.match(html, /rel="canonical" href="http:\/\/app\.local\/s\?o=carytown/);
+
+  // "/" and never "/index.html": html_handling defaults to auto-trailing-slash
+  // and answers the latter with a 307, which would trip the status guard and
+  // degrade every share.
+  assert.deepEqual(asked, ["/"]);
+});
+
+test("a share link that names nothing is still the app, never a 404", async (t) => {
+  stubHtmlRewriter(t);
+  stubEdgeCache(t);
+
+  for (const search of ["?x=1", "", "?o=carytown&b=34&rt=1&p=a-deleted-place"]) {
+    const { env: assets } = assetEnv();
+    const response = await handleWorkerRequest(shareGet(search), assets, CTX);
+    assert.equal(response.status, 200, search);
+    const html = await response.text();
+    // The generic head, untouched. A share link that cannot be described is
+    // still the app.
+    assert.match(html, /<title>Walk Roulette \| Richmond<\/title>/, search);
+  }
+});
+
+test("a second identical share is served from its own cache, not the isochrone one", async (t) => {
+  stubHtmlRewriter(t);
+  const caches = stubEdgeCache(t);
+  const first = assetEnv();
+  await handleWorkerRequest(shareGet(SPIN), first.env, CTX);
+
+  const second = assetEnv();
+  const response = await handleWorkerRequest(shareGet(SPIN), second.env, CTX);
+  assert.equal(response.status, 200);
+  assert.deepEqual(second.asked, [], "the document was not fetched again");
+  assert.match(await response.text(), /Great Shiplock Park/);
+
+  assert.equal(cacheEntries(caches, SHARE_CACHE).size, 1);
+  assert.equal(
+    cacheEntries(caches, ISOCHRONE_CACHE).size,
+    0,
+    "and nothing landed in the isochrone cache",
+  );
+});
+
+test("two spins differing only in a filter are two documents", async (t) => {
+  stubHtmlRewriter(t);
+  const caches = stubEdgeCache(t);
+
+  await handleWorkerRequest(shareGet(SPIN + "&c=easy"), assetEnv().env, CTX);
+  await handleWorkerRequest(shareGet(SPIN + "&c=hilly"), assetEnv().env, CTX);
+
+  // Keying them together would hand the second sender's crawler the first
+  // sender's og:url - a share link resolving to somebody else's filters.
+  assert.equal(cacheEntries(caches, SHARE_CACHE).size, 2);
+});
+
+test("a dropped-pin share is rendered every time and never stored", async (t) => {
+  stubHtmlRewriter(t);
+  const caches = stubEdgeCache(t);
+  const { env: assets, asked } = assetEnv();
+
+  const pin = "?o=37.534,-77.431&b=30&rt=1&p=shiplock";
+  await handleWorkerRequest(shareGet(pin), assets, CTX);
+  await handleWorkerRequest(shareGet(pin), assets, CTX);
+
+  // Coordinates are the one field with an unbounded value space, so a scraper
+  // could otherwise mint entries forever. A pin link is sent by one person
+  // anyway, so there is nothing to amortise.
+  assert.equal(cacheEntries(caches, SHARE_CACHE).size, 0);
+  assert.deepEqual(asked, ["/", "/"]);
+});
+
+test("a HEAD never fills the cache", async (t) => {
+  stubHtmlRewriter(t);
+  const caches = stubEdgeCache(t);
+
+  const head = await handleWorkerRequest(shareGet(SPIN, "HEAD"), assetEnv().env, CTX);
+  assert.equal(head.status, 200);
+  // Crawlers do issue HEAD. A stored empty body would serve an empty document
+  // to the next GET of the same spin.
+  assert.equal(cacheEntries(caches, SHARE_CACHE).size, 0);
+
+  const get = assetEnv();
+  const response = await handleWorkerRequest(shareGet(SPIN), get.env, CTX);
+  assert.match(await response.text(), /Great Shiplock Park/, "and the next GET is still rewritten");
+});
+
+test("a share costs the limiter nothing", async (t) => {
+  stubHtmlRewriter(t);
+  stubEdgeCache(t);
+  const share = limiter();
+  const { env: assets } = assetEnv({ API_RATE_LIMIT: share.binding });
+
+  await handleWorkerRequest(shareGet(SPIN), assets, CTX);
+  // It never calls the engine, so charging it would be charging for nothing.
+  assert.equal(share.charged(), 0);
+});
+
+test("without HTMLRewriter a share is the app's document, not an error", async (t) => {
+  stubEdgeCache(t);
+  const { env: assets, asked } = assetEnv();
+
+  const response = await handleWorkerRequest(shareGet(SPIN), assets, CTX);
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /<title>Walk Roulette \| Richmond<\/title>/);
+  assert.deepEqual(asked, ["/"]);
+  void t;
+});
+
+test("shareMeta refuses to name a walk it cannot describe", () => {
+  // Null is not a failure - the Worker then serves the generic document, which
+  // is the right unfurl for a link naming a place that no longer exists.
+  const origin = "https://walk.example";
+  assert.equal(shareMeta("?o=carytown&b=34&rt=1&p=gone", origin), null, "unknown place");
+  assert.equal(shareMeta("?o=carytown&rt=1&p=shiplock", origin), null, "no budget");
+  assert.equal(shareMeta("?b=34&rt=1&p=shiplock", origin), null, "no origin");
+  assert.equal(shareMeta("?o=not-a-preset&b=34&rt=1&p=shiplock", origin), null, "unknown preset");
+});
+
+test("shareMeta names a dropped pin without publishing it in the sentence", () => {
+  const meta = shareMeta("?o=37.534,-77.431&b=30&rt=1&p=shiplock", "https://walk.example");
+  assert.ok(meta !== null);
+  assert.match(meta.description, /a dropped pin/);
+  // The coordinate is in the URL, which the recipient needs, and not in the
+  // sentence a group chat renders in full.
+  assert.equal(/37.5/.test(meta.description), false);
+});
+
+test("the share cache key carries the whole query and refuses a pin", () => {
+  const key = shareCacheKey("?o=carytown&b=34&rt=1&c=easy&p=shiplock");
+  assert.ok(String(key).startsWith("/__share/" + SHARE_CACHE_VERSION + "?"), String(key));
+  assert.match(String(key), /c=easy/, "a filter is part of the document, so part of the key");
+
+  // Order and vibe permutations of one walk are one entry.
+  assert.equal(
+    shareCacheKey("?b=34&o=carytown&rt=1&p=shiplock&v=park.river"),
+    shareCacheKey("?o=carytown&v=river.park&b=34&p=shiplock&rt=1"),
+  );
+
+  assert.equal(shareCacheKey("?o=37.534,-77.431&b=30&rt=1&p=shiplock"), null, "a pin");
+  assert.equal(shareCacheKey("?o=carytown&b=34&rt=1"), null, "no place");
+});
+
+test("a SharedArrival carries what the notices and the URL rule each need", () => {
+  // Three fields, three consumers: the missing-place notice, the clamp notice,
+  // and App's address-bar comparison. They are separate because they expire at
+  // different moments.
+  const arrival: SharedArrival = {
+    missingPlaceId: null,
+    clampedFromMinutes: 7,
+    linkQuery: "o=home&b=7&rt=1&p=capitol",
+  };
+  assert.equal(arrival.clampedFromMinutes, 7);
+  assert.equal(arrival.missingPlaceId, null);
+  assert.match(arrival.linkQuery, /^o=home/);
 });

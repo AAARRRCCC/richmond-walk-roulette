@@ -159,3 +159,75 @@ export function contourResponse(body: UpstreamBody): Response {
     })),
   });
 }
+
+/**
+ * A minimal `HTMLRewriter` for one test's fixture head.
+ *
+ * **It is not a parser and does not pretend to be.** Its job is to prove the
+ * Worker registers the right selectors and computes the right values; it
+ * collects `on()` registrations and applies them to a small fixed document by
+ * string substitution. A real head goes through the real rewriter at the edge,
+ * which is exactly the part a unit test cannot reach and `LAUNCH.md`'s curl
+ * checks can.
+ */
+export function stubHtmlRewriter(t: TestContext): void {
+  type Handlers = { element(element: RewriterElement): void };
+  type RewriterElement = {
+    setInnerContent(content: string): void;
+    setAttribute(name: string, value: string): void;
+  };
+
+  class Stub {
+    private readonly registered: { selector: string; handlers: Handlers }[] = [];
+
+    on(selector: string, handlers: Handlers): Stub {
+      this.registered.push({ selector, handlers });
+      return this;
+    }
+
+    transform(response: Response): Response {
+      const rewritten = response.text().then((html) => {
+        let out = html;
+        for (const { selector, handlers } of this.registered) {
+          handlers.element({
+            setInnerContent: (content) => {
+              // Only <title> is set this way in the Worker.
+              out = out.replace(/<title>[^<]*<\/title>/, () => `<title>${content}</title>`);
+            },
+            setAttribute: (name, value) => {
+              // Matches meta[property="x"], meta[name="x"] and link[rel="x"].
+              const match = /^(\w+)\[(\w+)="([^"]+)"\]$/.exec(selector);
+              if (match === null) return;
+              const [, tag, key, id] = match;
+              const pattern = new RegExp(
+                `<${tag}\\s+${key}="${id}"[^>]*?\\s${name}="[^"]*"`,
+              );
+              out = out.replace(pattern, () => `<${tag} ${key}="${id}" ${name}="${value}"`);
+            },
+          });
+        }
+        return out;
+      });
+
+      return new Response(
+        new ReadableStream({
+          async start(controller) {
+            controller.enqueue(new TextEncoder().encode(await rewritten));
+            controller.close();
+          },
+        }),
+        { status: response.status, headers: response.headers },
+      );
+    }
+  }
+
+  // `Reflect.get` is typed `any`, so what comes back is recorded as "was there
+  // something here" rather than kept as a value. Node has no HTMLRewriter, so
+  // there never is - and restoring by deletion is the honest inverse of adding
+  // it.
+  const existed = "HTMLRewriter" in globalThis;
+  Reflect.set(globalThis, "HTMLRewriter", Stub);
+  t.after(() => {
+    if (!existed) Reflect.deleteProperty(globalThis, "HTMLRewriter");
+  });
+}

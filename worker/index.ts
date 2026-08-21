@@ -10,12 +10,37 @@ import {
   type ProxyEnv,
 } from "../server/proxy.ts";
 import { readJson, type Json } from "../src/lib/json.ts";
+import { shareCacheKey, shareMeta } from "../server/share-meta.ts";
+import { SHARE_PATH } from "../src/app/share.ts";
 
 export type Env = ProxyEnv & {
   ASSETS: { fetch(request: Request): Promise<Response> };
   /** Optional binding from `[[unsafe.bindings]] type = "ratelimit"` in wrangler.toml. */
   API_RATE_LIMIT?: { limit(options: { key: string }): Promise<{ success: boolean }> };
 };
+
+/**
+ * The slice of Cloudflare's HTMLRewriter this Worker uses.
+ *
+ * Declared rather than depended on: `@cloudflare/workers-types` would be a
+ * devDependency for six method signatures, and this repo already declares the
+ * one slice of `ExecutionContext` it needs for the same reason. Narrow on
+ * purpose - if a later change needs `text` or `comments` handlers, it adds
+ * them here and the addition is visible.
+ */
+type RewriterElement = {
+  setInnerContent(content: string): void;
+  setAttribute(name: string, value: string): void;
+};
+
+type RewriterHandlers = { element(element: RewriterElement): void };
+
+type HtmlRewriter = {
+  on(selector: string, handlers: RewriterHandlers): HtmlRewriter;
+  transform(response: Response): Response;
+};
+
+declare const HTMLRewriter: { new (): HtmlRewriter };
 
 /** The slice of Cloudflare's ExecutionContext this Worker uses. */
 export type WorkerContext = { waitUntil(promise: Promise<unknown>): void };
@@ -52,6 +77,115 @@ const ROUTE_CACHE_SECONDS = 7 * 86_400;
  * time somebody runs it.
  */
 const LOCATE_CACHE_SECONDS = 30 * 86_400;
+
+/**
+ * How long the edge keeps a rendered share document, and how long the browser
+ * keeps its copy.
+ *
+ * An hour at the edge because the document is a function of the query and
+ * nothing else; five minutes in the browser because a person who reloads a share
+ * link is usually reloading it for a reason.
+ */
+const SHARE_HTML_CACHE_SECONDS = 3_600;
+const SHARE_CLIENT_CACHE_SECONDS = 300;
+
+/** Its own cache, so a test can prove it is not the isochrone one. */
+export const SHARE_CACHE = "walk-roulette-share";
+
+/**
+ * The app's own document.
+ *
+ * `env.ASSETS.fetch(request)` cannot stand in for this. `not_found_handling`
+ * defaults to "none", so a `/s` request matches no asset and comes back **404**
+ * - which would turn every one of this feature's careful degradations into a
+ * broken link. The URL is "/" and not "/index.html" because `html_handling`
+ * defaults to "auto-trailing-slash" and answers the latter with a 307. The
+ * method is forced to GET so a crawler's HEAD does not fetch an empty body for
+ * the rewriter to work on.
+ */
+function indexDocument(request: Request, env: Env): Promise<Response> {
+  return env.ASSETS.fetch(new Request(new URL("/", request.url), { method: "GET" }));
+}
+
+/**
+ * `/s`, with the head rewritten for this spin - or null, meaning "serve the
+ * app's document unmodified", which is a correct answer rather than a failure.
+ *
+ * It never calls the engine, never reaches `handleApiRequest`, and is not
+ * charged against the rate limiter, because it costs the engine nothing. Abuse
+ * control is the query-length cap in `decodeShare`, a canonical cache key, and
+ * no cache entry at all for a dropped-pin origin.
+ */
+async function shareResponse(
+  request: Request,
+  env: Env,
+  ctx: WorkerContext,
+): Promise<Response | null> {
+  if (request.method !== "GET" && request.method !== "HEAD") return null;
+  // The type says this is always here and it is not - the same guard
+  // `edgeCache()` makes about `caches`.
+  if (!("HTMLRewriter" in globalThis)) return null;
+
+  const url = new URL(request.url);
+  const meta = shareMeta(url.search, url.origin);
+  if (meta === null) return null;
+
+  const key = shareCacheKey(url.search);
+  const cache = key === null ? null : await edgeCacheNamed(SHARE_CACHE);
+  const cacheKey = cache === null || key === null ? null : new Request(new URL(key, request.url));
+
+  if (cache !== null && cacheKey !== null) {
+    const hit = await cache.match(cacheKey);
+    if (hit) return shareHtml(await hit.arrayBuffer());
+  }
+
+  const asset = await indexDocument(request, env);
+  if (asset.status !== 200) return null;
+
+  const rewritten = new HTMLRewriter()
+    .on("title", { element: (e) => e.setInnerContent(meta.title) })
+    .on('meta[name="description"]', { element: (e) => e.setAttribute("content", meta.description) })
+    .on('meta[property="og:title"]', { element: (e) => e.setAttribute("content", meta.title) })
+    .on('meta[property="og:description"]', {
+      element: (e) => e.setAttribute("content", meta.description),
+    })
+    .on('meta[property="og:url"]', { element: (e) => e.setAttribute("content", meta.url) })
+    .on('meta[property="og:image"]', { element: (e) => e.setAttribute("content", meta.image) })
+    .on('link[rel="canonical"]', { element: (e) => e.setAttribute("href", meta.url) })
+    .transform(asset);
+
+  // Buffered rather than streamed, which costs HTMLRewriter's famous property
+  // and is the right trade for a 2 KB head: one body cannot be both served and
+  // stored without it.
+  const body = await rewritten.arrayBuffer();
+
+  // **HEAD never fills the cache.** The key is derived from the query, not the
+  // method, so a HEAD that stored its empty body would serve an empty document
+  // to the next GET of the same spin. Crawlers do issue HEAD.
+  if (cache !== null && cacheKey !== null && request.method === "GET") {
+    ctx.waitUntil(
+      cache.put(
+        cacheKey,
+        new Response(body, {
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+            "cache-control": `public, max-age=${SHARE_HTML_CACHE_SECONDS}`,
+          },
+        }),
+      ),
+    );
+  }
+  return shareHtml(body);
+}
+
+function shareHtml(body: ArrayBuffer): Response {
+  return new Response(body, {
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": `public, max-age=${SHARE_CLIENT_CACHE_SECONDS}`,
+    },
+  });
+}
 
 /**
  * One structured line per non-2xx `/api/*` answer. `wrangler tail` picks it
@@ -95,8 +229,13 @@ function rateLimited(): Response {
 export const ISOCHRONE_CACHE = "walk-roulette-isochrone";
 
 async function edgeCache(): Promise<Cache | null> {
+  return edgeCacheNamed(ISOCHRONE_CACHE);
+}
+
+/** Any named edge cache, or null where there is not one. */
+async function edgeCacheNamed(name: string): Promise<Cache | null> {
   if (!("caches" in globalThis)) return null;
-  return globalThis.caches.open(ISOCHRONE_CACHE);
+  return globalThis.caches.open(name);
 }
 
 /**
@@ -190,6 +329,14 @@ export async function handleWorkerRequest(
   ctx: WorkerContext,
 ): Promise<Response> {
   const url = new URL(request.url);
+
+  // Before the /api/ check, and never through it: /s produces HTML, costs the
+  // engine nothing, and its fallback is the app's own document rather than
+  // `env.ASSETS.fetch(request)`, which for this path is a 404.
+  if (url.pathname === SHARE_PATH) {
+    return (await shareResponse(request, env, ctx)) ?? (await indexDocument(request, env));
+  }
+
   if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
 
   const started = Date.now();
