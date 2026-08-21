@@ -1,0 +1,2807 @@
+{
+  "osm3s": {
+    "timestamp_osm_base": "2026-08-21T22:18:16Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+    {
+      "type": "node",
+      "id": 356602284,
+      "tags": {
+        "ele": "44",
+        "gnis:feature_id": "1780480",
+        "name": "Gambles Hill",
+        "natural": "peak"
+      }
+    },
+    {
+      "type": "node",
+      "id": 356602345,
+      "tags": {
+        "ele": "61",
+        "gnis:feature_id": "1780520",
+        "historic": "district",
+        "leisure": "park",
+        "name": "Ginter Park Historic District",
+        "wikidata": "Q49493870"
+      }
+    },
+    {
+      "type": "node",
+      "id": 898650652,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Tredegar Iron Works",
+        "subject:wikidata": "Q7837469"
+      }
+    },
+    {
+      "type": "node",
+      "id": 898650767,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Manchester & Free Bridges"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2179727313,
+      "tags": {
+        "check_date": "2026-05-07",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Lockwood Double House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:1809 E Grace St, Lockwood Double House plaque.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247716,
+      "tags": {
+        "leisure": "garden",
+        "name": "Children's Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247798,
+      "tags": {
+        "leisure": "garden",
+        "name": "Four Seasons Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247802,
+      "tags": {
+        "leisure": "garden",
+        "name": "West Island Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247822,
+      "tags": {
+        "leisure": "garden",
+        "name": "Lace House Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247823,
+      "tags": {
+        "leisure": "garden",
+        "name": "Lucy Payne Minor Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2805247825,
+      "tags": {
+        "leisure": "garden",
+        "name": "Vienna Cobb Anderson Meadow"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2975991287,
+      "tags": {
+        "name": "TDIA 1895 James River Overlook",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3017455573,
+      "tags": {
+        "name": "Oregon Hill Overlook",
+        "tourism": "viewpoint",
+        "website": "https://oregonhill.net/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3017991713,
+      "tags": {
+        "name": "Highest Point In Henrico County",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3070522846,
+      "tags": {
+        "name": "Pipeline Overlook",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3500856476,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "14",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "South 14th Street",
+        "name": "First Freedom Center",
+        "opening_hours": "Mo off; Tu-Sa 10:00-17:00; Su 12:00-17:00",
+        "phone": "+1 804-649-0711",
+        "source": "esri_USDOT_Virgina;survey",
+        "tourism": "museum",
+        "website": "https://www.firstfreedom.org/",
+        "wikidata": "Q5453036"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3696244196,
+      "tags": {
+        "historic": "monument",
+        "name": "Reconciliation Statue"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3741870436,
+      "tags": {
+        "artist_name": "James Rosati",
+        "artwork_subject": "A large red abstract tripod",
+        "artwork_type": "sculpture",
+        "material": "aluminium",
+        "name": "Future",
+        "start_date": "1974-10-09",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4261567908,
+      "tags": {
+        "name": "Triple Crossing",
+        "tourism": "attraction",
+        "wikidata": "Q7843362",
+        "wikipedia": "en:Triple Crossing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5209437090,
+      "tags": {
+        "artwork_type": "statue",
+        "name": "Arthur Ashe Statue",
+        "tourism": "artwork",
+        "wikidata": "Q97166627"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5411281241,
+      "tags": {
+        "leisure": "garden",
+        "name": "Lake View Garden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5417333240,
+      "tags": {
+        "artwork_type": "bust",
+        "material": "metal",
+        "name": "Maggie Lena Walker",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5420002328,
+      "tags": {
+        "artwork_type": "statue",
+        "historic": "memorial",
+        "material": "bronze",
+        "memorial": "statue",
+        "name": "Edgar Allan Poe",
+        "tourism": "artwork",
+        "wikidata": "Q141130993"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5696388058,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "428",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "North Boulevard",
+        "fee": "no",
+        "museum": "history",
+        "name": "Virginia Museum of History and Culture",
+        "opening_hours": "10:00-17:00; PH 10:00-17:00; Nov Th[4] off; Jan 01 off; Dec 25 off",
+        "phone": "+1 804-340-1800",
+        "tourism": "museum",
+        "website": "https://www.virginiahistory.org/",
+        "wikidata": "Q7934315"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5775290150,
+      "tags": {
+        "amenity": "clock",
+        "artist_name": "Ernest S. Leland",
+        "artwork_type": "sculpture",
+        "check_date": "2025-10-10",
+        "display": "sundial",
+        "material": "stone",
+        "name": "Dooley sundial",
+        "start_date": "1930",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6618860841,
+      "tags": {
+        "artwork_type": "statue",
+        "description": "Copy of David statue by Michelangelo",
+        "name": "David",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7095866280,
+      "tags": {
+        "artist:wikidata": "Q1396516",
+        "artist_name": "Jaume Plensa",
+        "artwork_type": "sculpture",
+        "name": "Chloe",
+        "start_date": "2016",
+        "tourism": "artwork",
+        "wikidata": "Q127820194",
+        "wikimedia_commons": "File:08_-_Richmond_-_VMFA_(39923871531).jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7095879702,
+      "tags": {
+        "artist_name": "Kehinde Wiley",
+        "artwork_type": "statue",
+        "name": "Rumors of War",
+        "start_date": "2019-12-10",
+        "tourism": "artwork",
+        "wikidata": "Q85798167"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7678867202,
+      "tags": {
+        "artwork_type": "statue",
+        "name": "Maggie Lena Walker Statue",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7682158122,
+      "tags": {
+        "artist_name": "Lloyd Lillie",
+        "artwork_type": "statue",
+        "material": "bronze",
+        "name": "Wind's Up",
+        "start_date": "1986-11",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8295609184,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "6640",
+        "addr:postcode": "23224",
+        "addr:state": "VA",
+        "addr:street": "Hull Street Road",
+        "leisure": "park",
+        "name": "Homeless Camp Ground",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9208267175,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "3110",
+        "addr:postcode": "23230",
+        "addr:state": "VA",
+        "addr:street": "West Leigh Street",
+        "amenity": "pub",
+        "check_date": "2025-01-12",
+        "microbrewery": "yes",
+        "name": "Strangeways Brewing RVA-Scott's Addition",
+        "opening_hours": "Mo-Th 14:00-21:00; Fr-Sa 12:00-23:00; Su 12:00-20:00",
+        "outdoor_seating": "yes",
+        "payment:american_express": "yes",
+        "payment:discover_card": "yes",
+        "payment:mastercard": "yes",
+        "payment:visa": "yes",
+        "phone": "+1 804-358-2049",
+        "source": "esri_USDOT_Virgina",
+        "source:opening_hours": "website",
+        "website": "https://strangewaysbrewing.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10164803159,
+      "tags": {
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Hydroelectric Plant"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10253486981,
+      "tags": {
+        "name": "Powhatan Hill Overlook",
+        "tourism": "viewpoint"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10553699900,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "400",
+        "addr:postcode": "23224",
+        "addr:state": "VA",
+        "addr:street": "Hull Street",
+        "amenity": "marketplace",
+        "name": "Hatch Local",
+        "source": "esri_USDOT_Virgina",
+        "website": "https://www.hatchlocalfoodhall.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10968066382,
+      "tags": {
+        "description": "One of central Virginia's premier rock climbing areas, offering multiple routes for trad climbing, sport climbing, and top roping. The sixty-foot granite wall is a remnant of the Richmond and Petersburg Railroad Bridge which spanned the James River.",
+        "height": "17",
+        "name": "Manchester Wall Rock Climbing",
+        "natural": "cliff",
+        "sport": "climbing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10968377014,
+      "tags": {
+        "amenity": "ice_cream",
+        "indoor_seating": "yes",
+        "name": "Scoop",
+        "opening_hours": "Su-Th 12:00-22:00; Fr-Sa 12:00-23:00",
+        "outdoor_seating": "yes",
+        "takeaway": "yes",
+        "wheelchair": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11082221505,
+      "tags": {
+        "artwork_type": "sculpture",
+        "material": "steel",
+        "name": "Park Guardian II",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11089269438,
+      "tags": {
+        "artist_name": "Charles Pool",
+        "artwork_type": "sculpture",
+        "material": "steel",
+        "name": "Park Guardian I",
+        "start_date": "1993",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12952541160,
+      "tags": {
+        "description": "African American burying ground on the site of the former Westham plantation.",
+        "landuse": "cemetery",
+        "name": "Burying Ground"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13294886983,
+      "tags": {
+        "historic": "memorial",
+        "material": "stone",
+        "memorial": "stone",
+        "name": "Powhatan Stone",
+        "wikidata": "Q136757087"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13351826899,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "122",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Leigh Street",
+        "museum": "history",
+        "name": "Black History Museum and Cultural Center of Virginia",
+        "phone": "+1 804-780-9093",
+        "tourism": "museum",
+        "website": "https://blackhistorymuseum.org/",
+        "wikidata": "Q117072297"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13352676244,
+      "tags": {
+        "fee": "yes",
+        "name": "Edgar Allan Poe Museum",
+        "opening_hours": "Tu-Sa 10:00-17:00; Su 11:00-17:00",
+        "phone": "+1 804-767-5809",
+        "tourism": "museum",
+        "website": "https://poemuseum.org/",
+        "wikidata": "Q1130116"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13353752420,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2500",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Broad Street",
+        "description": "Kid-focused, hands-on exhibits about animals, the human body, the cosmos and the environment.",
+        "museum": "children",
+        "name": "Science Museum of Virginia",
+        "opening_hours": "Mo-Sa 09:30-17:00; Su 11:30-17:00",
+        "phone": "+1-804-864-1400",
+        "tourism": "museum",
+        "website": "https://smv.org/",
+        "wikidata": "Q7433575",
+        "wikipedia": "en:Science Museum of Virginia"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13361298862,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "212",
+        "addr:postcode": "23224",
+        "addr:state": "VA",
+        "addr:street": "West 6th Street",
+        "amenity": "marketplace",
+        "check_date": "2025-12-08",
+        "check_date:currency:XBT": "2025-12-08",
+        "contact:facebook": "rvamakersmarket",
+        "contact:instagram": "rvamakersmarket",
+        "craft": "handicraft",
+        "currency:XBT": "yes",
+        "description": "Market held on the first Saturday of each month.",
+        "name": "Richmond Makers Market",
+        "opening_hours": "Sa 12:00-18:00",
+        "payment:lightning": "yes",
+        "payment:lightning:operator": "square",
+        "payment:lightning_contactless": "no",
+        "payment:onchain": "no",
+        "phone": "+1 804 813 9965",
+        "temporary": "yes",
+        "website": "https://www.rvamakersmarket.us/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13544263043,
+      "tags": {
+        "leisure": "park",
+        "name": "University Forum"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13568547124,
+      "tags": {
+        "leisure": "park",
+        "name": "Street Lamp"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13568547130,
+      "tags": {
+        "description": "Out of Service",
+        "leisure": "park",
+        "name": "Emergency Call Box"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13585970444,
+      "tags": {
+        "artist_name": "Michał Sepe Wrega;Daniel Chazme Kalinowski",
+        "artwork_type": "mural",
+        "name": "Crash Dummies",
+        "start_date": "2014",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13585998968,
+      "tags": {
+        "artist_name": "Ever (Nicolás Romero Escalada)",
+        "artwork_type": "mural",
+        "description": "Beams emerge from the eyes of four faces into two colorful circles",
+        "name": "La Comunidad II",
+        "start_date": "2013",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13599643336,
+      "tags": {
+        "artist:website": "https://davidmeggshooke.com/",
+        "artist_name": "David “Meggs” Hooke",
+        "artwork_type": "mural",
+        "direction": "300",
+        "name": "A Pearl of Wisdom",
+        "start_date": "2014",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:The_Pig_and_Pearl.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615520971,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Bloody Run",
+        "operator": "Preservation Virginia",
+        "operator:wikidata": "Q7241041",
+        "wikimedia_commons": "File:Bloody Run Plaque.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589401,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=149659",
+        "name": "Royster House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "149659",
+        "wikimedia_commons": "File:Historic marker at Royster House in Richmond, VA.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13615589407,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "The Parsons House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historical marker at the Parsons House.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245533,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Ann Carrington House",
+        "wikimedia_commons": "File:Ann Carrington House.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245540,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "C.W. Hardwicke Carriage House",
+        "wikimedia_commons": "File:C.W. Hardwicke Carriage House plaque.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245554,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Netherwood House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:2612 E. Grace Street Netherwood House plaque from Historic Richmond - 55126353174.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245561,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Gen'l Joseph L Johnston",
+        "wikimedia_commons": "File:Gen. Joseph L Johnston plaque from Confederate Memorial Literary Society - 55126353284.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13616245564,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "The J.M. Carter House",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:The J.M. Carter House plaque from National Register for Historic Places - 55126353319.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13632907505,
+      "tags": {
+        "check_date": "2026-03-09",
+        "direction": "225",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Richardson's Drug Store",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "File:Historic marker at 501 N 31st street, 2026-03-09.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13636183195,
+      "tags": {
+        "check_date": "2026-03-10",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Hiram Oliver House",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "wikimedia_commons": "file:Historical marker at Hiram Oliver House, 2026-03-10.jpeg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321239,
+      "tags": {
+        "check_date": "2023-02-18",
+        "direction": "315",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Myrtle Terrace",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historical Marker at Myrtle Terrace.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13641321240,
+      "tags": {
+        "check_date": "2026-03-01",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "The Pulliam House",
+        "operator": "United States Department of the Interior",
+        "operator:wikidata": "Q608427",
+        "wikimedia_commons": "File:Historic Marker at The Pulliam House.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857198,
+      "tags": {
+        "check_date": "2024-09-07",
+        "direction": "180",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "memorial:website": "https://www.hmdb.org/m.asp?m=256384",
+        "name": "2014 Princess Anne Avenue",
+        "operator": "Historic Richmond",
+        "operator:wikidata": "Q5773630",
+        "ref:hmdb": "256384",
+        "wikimedia_commons": "File:Historic Marker at 2014 Princess Anne Avenue.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13645857200,
+      "tags": {
+        "check_date": "2019-05-11",
+        "direction": "45",
+        "historic": "memorial",
+        "memorial": "plaque",
+        "name": "Elliott House",
+        "wikimedia_commons": "File:Historic Marker at Elliott House 2609 E. Leigh Street.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13646021692,
+      "tags": {
+        "artist_name": "NILS",
+        "artwork_type": "mural",
+        "description": "Topless Woman",
+        "name": "Icarus Fallen",
+        "note": "Behind building. West wall",
+        "tourism": "artwork",
+        "website": "https://www.nilswestergard.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658855185,
+      "tags": {
+        "artist_name": "David Marion, MeMe",
+        "artwork_type": "mural",
+        "inscription": "Water Rights For All",
+        "name": "Silence Isn't Golden",
+        "note": "East Wall",
+        "start_date": "2020",
+        "tourism": "artwork",
+        "website": "https://www.mendingwallsrva.com/walls/water-rights-for-all"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658881408,
+      "tags": {
+        "artist_name": "Noah Scalin, Alfonso Perez",
+        "artwork_type": "mural",
+        "name": "Together We Rise",
+        "note": "South (Back) Wall",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658908095,
+      "tags": {
+        "artist:website": "https://www.auzmiles.com",
+        "artist_name": "Auz Miles",
+        "artwork_type": "mural",
+        "name": "I Can Because I Said So",
+        "note": "West Wall",
+        "start_date": "2020",
+        "tourism": "artwork",
+        "website": "https://www.auzmiles.com/murals?pgid=kjtbvls12-33eaa23c-712c-4059-a6c7-6d460ac17cfd",
+        "wikimedia_commons": "File:Mural on 23 W Brookland Park Boulevard, Richmond, Virginia.jpg"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658908505,
+      "tags": {
+        "artist_name": "Silly Genius",
+        "artwork_type": "mural",
+        "name": "Happy Children",
+        "note": "West Wall",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13658911353,
+      "tags": {
+        "artwork_type": "mural",
+        "name": "Hope",
+        "note": "South Wall",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13666091333,
+      "tags": {
+        "artist_name": "Noah Scalin",
+        "artwork_type": "sculpture",
+        "material": "steel",
+        "name": "Cardinal Points",
+        "start_date": "2026-02-13",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13727734577,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "303",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Bates Street",
+        "fixme": "A building exists here starting some time in late 2025/early 2026. Should be added once aerial imagery is updated to see it.",
+        "mapillary": "1501317741634440",
+        "museum": "history",
+        "name": "The JXN Haus",
+        "operator": "The JXN Project",
+        "operator:wikidata": "Q139270866",
+        "owner": "The JXN Project",
+        "owner:wikidata": "Q139270866",
+        "tourism": "museum",
+        "wikidata": "Q139270711"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13978497121,
+      "tags": {
+        "amenity": "clock",
+        "artist_name": "Koninkiijke Eijsbouts",
+        "artwork_type": "architecture",
+        "description": "A 45-foot limestown tower featuring a clock, 25 bells, and sculptures of bronze canal bargemen that rotate every 15 minutes.",
+        "display": "analog",
+        "faces": "3",
+        "man_made": "tower",
+        "material": "stone",
+        "name": "Boatman's Tower",
+        "start_date": "1987",
+        "tourism": "artwork",
+        "tower:type": "bell_tower"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6036457,
+      "tags": {
+        "leisure": "park",
+        "name": "Pony Pasture Park",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "source": "http://www.richmondgov.com/Parks/index.aspx",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 6243498,
+      "tags": {
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/95000246",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-0455/",
+        "historic": "district",
+        "leisure": "nature_reserve",
+        "name": "Belle Isle",
+        "nrhp:criteria": "(A)",
+        "nrhp:inscription_date": "1995-03-17",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "ref:US-VA:vlr": "127-0455",
+        "ref:nrhp": "95000246",
+        "type": "multipolygon",
+        "vlr:inscription_date": "1995-01-15",
+        "wikidata": "Q4883643",
+        "wikipedia": "en:Belle Isle (Richmond, Virginia)"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 9294688,
+      "tags": {
+        "ele": "55",
+        "gnis:feature_id": "1780802",
+        "leisure": "nature_reserve",
+        "name": "Powhite Park",
+        "natural": "wood",
+        "type": "multipolygon",
+        "wikidata": "Q14713095"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 9972905,
+      "tags": {
+        "leisure": "nature_reserve",
+        "name": "Lewis G. Larus Park",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 10049004,
+      "tags": {
+        "ele": "47",
+        "leisure": "park",
+        "name": "Chimborazo Park",
+        "name:etymology:wikidata": "Q14081",
+        "name:etymology:wikipedia": "en:Chimborazo",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "type": "multipolygon",
+        "wikidata": "Q5099313",
+        "wikipedia": "en:Chimborazo Park"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 11520213,
+      "tags": {
+        "leisure": "park",
+        "name": "Falling Creek Linear Park",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 11520214,
+      "tags": {
+        "addr:city": "North Chesterfield",
+        "addr:housenumber": "3000",
+        "addr:postcode": "23234",
+        "addr:state": "VA",
+        "addr:street": "Cogbill Road",
+        "leisure": "park",
+        "name": "Gates Mill Park",
+        "operator": "Chesterfield County Parks and Recreation",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 11623994,
+      "tags": {
+        "leisure": "park",
+        "name": "Hidden Creek Park",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 11623997,
+      "tags": {
+        "addr:city": "Henrico",
+        "addr:housenumber": "9900",
+        "addr:postcode": "23233",
+        "addr:state": "VA",
+        "addr:street": "Ridgefield Parkway",
+        "leisure": "park",
+        "name": "Deep Run Park",
+        "owner": "Henrico County",
+        "type": "multipolygon",
+        "website": "http://www.co.henrico.va.us/rec/",
+        "wikidata": "Q5250289"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 13728919,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2803",
+        "addr:postcode": "23234",
+        "addr:state": "VA",
+        "addr:street": "Dock Street",
+        "leisure": "park",
+        "name": "Great Shiplock Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "type": "multipolygon",
+        "wikidata": "Q49495628"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 16078640,
+      "tags": {
+        "leisure": "park",
+        "name": "Dock Street Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 16271271,
+      "tags": {
+        "layer": "2",
+        "man_made": "bridge",
+        "name": "Robert E. Lee Memorial Bridge",
+        "name:etymology": "Robert E. Lee",
+        "name:etymology:wikidata": "Q165557",
+        "name:etymology:wikipedia": "en:Robert E. Lee",
+        "type": "multipolygon",
+        "wikidata": "Q7343851"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 16467781,
+      "tags": {
+        "leisure": "park",
+        "name": "Lombardy Park",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 17173266,
+      "tags": {
+        "gnis:feature_id": "1479247",
+        "landuse": "cemetery",
+        "name": "Oakwood Cemetery",
+        "type": "multipolygon",
+        "wikidata": "Q7074292",
+        "wikipedia": "en:Oakwood Cemetery (Richmond, Virginia)"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 19397249,
+      "tags": {
+        "leisure": "park",
+        "name": "Westwood Playground",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 19483472,
+      "tags": {
+        "leisure": "park",
+        "name": "Oakwood Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "relation",
+      "id": 21036259,
+      "tags": {
+        "barrier": "fence",
+        "leisure": "park",
+        "name": "Library Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q29093055",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "type": "multipolygon"
+      }
+    },
+    {
+      "type": "way",
+      "id": 38173754,
+      "tags": {
+        "leisure": "pitch",
+        "lit": "yes",
+        "name": "The Diamond",
+        "sport": "baseball",
+        "toilets:wheelchair": "yes",
+        "wheelchair": "limited",
+        "wikidata": "Q7730070",
+        "wikipedia": "en:The Diamond (Richmond, Virginia)"
+      }
+    },
+    {
+      "type": "way",
+      "id": 38176596,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1701",
+        "addr:postcode": "23231",
+        "addr:state": "VA",
+        "addr:street": "Williamsburg Road",
+        "fax": "+1-804-795-1064",
+        "landuse": "cemetery",
+        "name": "Richmond National Cemetery",
+        "phone": "+1 804-795-2031",
+        "website": "https://www.cem.va.gov/cems/nchp/Richmond.asp",
+        "wikidata": "Q7330920"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44659688,
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Forest Lawn Cemetery",
+        "wikidata": "Q5469017"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44660433,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2715",
+        "addr:postcode": "23225",
+        "addr:state": "VA",
+        "addr:street": "Bainbridge Street",
+        "ele": "47",
+        "leisure": "park",
+        "name": "Carter Jones Park",
+        "opening_hours": "dawn-dusk",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q49477101"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44703271,
+      "tags": {
+        "gnis:feature_id": "1478781",
+        "landuse": "cemetery",
+        "name": "Holy Cross Cemetery",
+        "religion": "christian"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44703326,
+      "tags": {
+        "gnis:feature_id": "1476943",
+        "landuse": "cemetery",
+        "name": "Woodland Cemetery",
+        "wikidata": "Q8032818"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44703329,
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Hebrew Cemetery",
+        "religion": "jewish",
+        "wikidata": "Q5695834",
+        "wikipedia": "en:Hebrew Cemetery (Richmond, Virginia)"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44884751,
+      "tags": {
+        "gnis:feature_id": "1780569",
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/02000364",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-5679/",
+        "historic": "heritage",
+        "landuse": "cemetery",
+        "name": "Barton Heights Cemetery",
+        "nrhp:criteria": "(A)",
+        "nrhp:inscription_date": "2002-04-10",
+        "ref:US-VA:vlr": "127-5679",
+        "ref:nrhp": "02000364",
+        "start_date": "1815",
+        "vlr:inscription_date": "2001-06-13",
+        "wikidata": "Q16164769",
+        "wikipedia": "en:Barton Heights Cemeteries"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44888557,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2626",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Broad Street",
+        "building": "yes",
+        "check_date": "2023-12-27",
+        "description": "Interactive exhibits enable kids to move, climb, farm, draw, play & learn about their world.",
+        "internet_access": "no",
+        "museum": "children",
+        "name": "Children's Museum of Richmond",
+        "opening_hours": "Mo off; Tu-Su 09:30-17:00",
+        "payment:cash": "yes",
+        "payment:credit_cards": "yes",
+        "payment:debit_cards": "yes",
+        "phone": "+1 804-474-7000",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "website": "https://c-mor.org",
+        "wheelchair": "yes",
+        "wikidata": "Q5098181"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44888595,
+      "tags": {
+        "alt_name": "Hotchkiss Park",
+        "ele": "50",
+        "leisure": "park",
+        "name": "Hotchkiss Field Community Center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 44908077,
+      "tags": {
+        "ele": "57",
+        "gnis:feature_id": "1779888",
+        "leisure": "park",
+        "name": "Highland Plaza",
+        "wikidata": "Q49501195"
+      }
+    },
+    {
+      "type": "way",
+      "id": 45087752,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "620",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Main Street",
+        "designation": "Monroe Park",
+        "leisure": "park",
+        "name": "Monroe Park",
+        "wikidata": "Q6902235",
+        "wikipedia": "en:Monroe Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 45902101,
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Westhampton Memorial Park",
+        "wikidata": "Q117446495"
+      }
+    },
+    {
+      "type": "way",
+      "id": 45902915,
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Ridge Cemetery",
+        "wikidata": "Q117585783"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76211910,
+      "tags": {
+        "highway": "steps",
+        "name": "Reedy Creek Trail",
+        "surface": "ground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76227376,
+      "tags": {
+        "highway": "steps",
+        "name": "22nd Street Pedestrian Stairs",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "concrete"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76314480,
+      "tags": {
+        "description": "This open, grassy park on a river island offers city & waterway views, walking paths & concerts.",
+        "leisure": "park",
+        "name": "Brown's Island",
+        "name:etymology:wikidata": "Q123458780",
+        "not:operator:wikidata": "Q43421",
+        "operator": "City of Richmond",
+        "phone": "+1 804-788-6466",
+        "website": "http://www.brownsisland.com/",
+        "wikidata": "Q4975950",
+        "wikipedia": "en:Brown's Island"
+      }
+    },
+    {
+      "type": "way",
+      "id": 76362268,
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Hollywood Cemetery",
+        "phone": "+1 804-648-8501",
+        "website": "https://www.hollywoodcemetery.org/",
+        "wikidata": "Q5882648"
+      }
+    },
+    {
+      "type": "way",
+      "id": 113030476,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1520",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Main Street",
+        "building": "train_station",
+        "building:levels": "5",
+        "fixme": "Redo entire station in accordance with https://wiki.openstreetmap.org/w/images/thumb/8/83/A-simple-station.svg/1000px-A-simple-station.svg.png",
+        "internet_access": "wlan",
+        "name": "Main Street Station",
+        "source": "esri_USDOT_Virgina",
+        "toilets": "yes",
+        "toilets:access": "yes",
+        "website": "http://www.richmondgov.com/MainStreetStation/index.aspx",
+        "wikidata": "Q141093771"
+      }
+    },
+    {
+      "type": "way",
+      "id": 143098974,
+      "tags": {
+        "description": "Paradise Park is one of the Richmond Fan District's pocket parks. It was designed by Carlton Abbott in 1968 and is a unique example of classic modern architecture.",
+        "leisure": "park",
+        "name": "Paradise Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 167824983,
+      "tags": {
+        "bicycle": "yes",
+        "foot": "yes",
+        "highway": "steps",
+        "motor_vehicle": "no",
+        "name": "Manchester Floodwall Walk",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "concrete"
+      }
+    },
+    {
+      "type": "way",
+      "id": 171211185,
+      "tags": {
+        "leisure": "park",
+        "name": "Bandy Field Nature Park",
+        "website": "https://www.bandyfield.org/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 224530979,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1224",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Broad Street",
+        "building": "yes",
+        "description": "1814 Greek classical landmark built by Robert Mills as memorial to the 72 people lost in the 1811 Richmond Theatre fire.",
+        "historic": "building",
+        "name": "Monumental Church",
+        "phone": "+1 804-643-7407",
+        "source": "esri_USDOT_Virgina",
+        "wikidata": "Q6906925"
+      }
+    },
+    {
+      "type": "way",
+      "id": 224601753,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1201",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Clay Street",
+        "building": "yes",
+        "building:levels": "4",
+        "check_date": "2023-04-22",
+        "museum": "history",
+        "name": "White House of the Confederacy",
+        "official_name": "Executive Mansion of the Confederacy",
+        "old_name": "Museum of the Confederacy",
+        "operator:type": "private",
+        "operator:wikidata": "Q3736543",
+        "phone": "+1 804-649-1861",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "website": "https://acwm.org/",
+        "wikidata": "Q7994925"
+      }
+    },
+    {
+      "type": "way",
+      "id": 224601757,
+      "tags": {
+        "leisure": "park",
+        "name": "Patterson Memorial Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 224601768,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1015",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Clay Street",
+        "building": "yes",
+        "building:levels": "3",
+        "description": "Circa-1812 landmark house turned museum with exhibits & artifacts exploring Richmond's history.",
+        "name": "The Valentine",
+        "phone": "+1 804-649-0711",
+        "tourism": "museum",
+        "website": "https://thevalentine.org/",
+        "wikidata": "Q7911006"
+      }
+    },
+    {
+      "type": "way",
+      "id": 225274659,
+      "tags": {
+        "leisure": "park",
+        "name": "Kanawha Plaza",
+        "wikidata": "Q49509299"
+      }
+    },
+    {
+      "type": "way",
+      "id": 225586238,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2000",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "East Cary Street",
+        "building": "yes",
+        "building:levels": "3",
+        "check_date:opening_hours": "2023-07-12",
+        "fee": "no",
+        "name": "Virginia Holocaust Museum",
+        "opening_hours": "Mo-Fr 09:00-17:00, Sa-Su 11:00-17:00, Nov We[4] 09:00-13:00; Nov Th[4] off, Jan 01 off, easter off, Dec 25 off, Dec 31 off",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "website": "https://www.vaholocaust.org/",
+        "wikidata": "Q882998",
+        "wikipedia": "en:Virginia Holocaust Museum"
+      }
+    },
+    {
+      "type": "way",
+      "id": 226503191,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1200",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "West Broad Street",
+        "building": "stadium",
+        "name": "Stuart C. Siegel Center",
+        "operator": "Virginia Commonwealth University",
+        "source": "esri_USDOT_Virgina",
+        "source:geometry": "Bing",
+        "website": "https://maps.vcu.edu/monroepark/siegelcenter/",
+        "wikidata": "Q7626383",
+        "wikipedia": "en:Siegel Center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 229722610,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "201",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "North Harrison Street",
+        "leisure": "park",
+        "name": "Harrison Park",
+        "source": "esri_USDOT_Virgina"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236026086,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2907",
+        "addr:postcode": "23221",
+        "addr:state": "VA",
+        "addr:street": "West Cary Street",
+        "amenity": "restaurant",
+        "building": "yes",
+        "check_date": "2025-08-21",
+        "cuisine": "indian",
+        "name": "Carytown Indian Cuisine",
+        "opening_hours": "Mo-Fr 11:30-14:30,16:00-22:00; Sa-Su 12:00-22:00",
+        "phone": "+1 804-918-1404",
+        "source": "esri_USDOT_Virgina;survey;website",
+        "website": "https://www.carytownindiancuisine.com/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236147597,
+      "tags": {
+        "leisure": "park",
+        "name": "Meadow Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236147602,
+      "tags": {
+        "leisure": "park",
+        "name": "Federal Park",
+        "opening_hours": "Mo-Fr 08:00-17:00"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236147603,
+      "tags": {
+        "leisure": "park",
+        "name": "Grace Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236147606,
+      "tags": {
+        "leisure": "park",
+        "name": "Sydney Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236150754,
+      "tags": {
+        "leisure": "garden",
+        "name": "Italian Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 236152567,
+      "tags": {
+        "building": "service",
+        "name": "Byrd Park Pump House",
+        "wikidata": "Q16895812",
+        "wikipedia": "en:New Pump-House"
+      }
+    },
+    {
+      "type": "way",
+      "id": 252837456,
+      "tags": {
+        "ele": "45",
+        "leisure": "park",
+        "name": "Holly Street Park",
+        "wikidata": "Q49502428"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264469781,
+      "tags": {
+        "leisure": "park",
+        "name": "Maymont",
+        "opening_hours": "10:00-17:00; Mar-Oct 10:00-17:00 || Mar-Oct 17:00-19:00 \"weather permitting\"",
+        "phone": "+1 804-358-7166",
+        "website": "https://www.maymont.org/",
+        "wikidata": "Q6797360"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264469782,
+      "tags": {
+        "dog": "no",
+        "leisure": "park",
+        "name": "Byrd Park",
+        "name:etymology": "William Byrd II",
+        "name:etymology:wikidata": "Q55022486",
+        "name:etymology:wikipedia": "en:William Byrd II",
+        "opening_hours": "24/7",
+        "website": "http://www.richmondgov.com/parks/parkbyrd.aspx",
+        "wikidata": "Q5004228",
+        "wikipedia": "en:Byrd Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264474191,
+      "tags": {
+        "leisure": "park",
+        "name": "Huguenot Flatwater Park",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264479485,
+      "tags": {
+        "leisure": "park",
+        "name": "Gambles Hill Park",
+        "wikidata": "Q5519680",
+        "wikipedia": "en:Gambles Hill"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264670674,
+      "tags": {
+        "leisure": "park",
+        "name": "Thomas Square"
+      }
+    },
+    {
+      "type": "way",
+      "id": 264670697,
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Mount Calvary Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266499307,
+      "tags": {
+        "leisure": "park",
+        "name": "Abner Clay Park",
+        "wikidata": "Q49471795"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266877983,
+      "tags": {
+        "leisure": "park",
+        "name": "Canoe Run Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266890327,
+      "tags": {
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/90002097",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-0192/",
+        "historic": "heritage",
+        "leisure": "park",
+        "name": "Patrick Henry Park",
+        "name:etymology:wikidata": "Q311885",
+        "nrhp:inscription_date": "1991-01-17",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "ref:US-VA:vlr": "127-0192",
+        "ref:nrhp": "90002097",
+        "vlr:inscription_date": "1990-04-17",
+        "wikidata": "Q49540180"
+      }
+    },
+    {
+      "type": "way",
+      "id": 266890328,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "East Marshall Street",
+        "leisure": "park",
+        "name": "Jefferson Park",
+        "name:etymology:wikidata": "Q11812",
+        "opening_hours": "Mo-Su 06:00-24:00",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "wikidata": "Q49507300"
+      }
+    },
+    {
+      "type": "way",
+      "id": 294031479,
+      "tags": {
+        "bicycle": "no",
+        "foot": "yes",
+        "highway": "steps",
+        "name": "Pipeline Trail",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539"
+      }
+    },
+    {
+      "type": "way",
+      "id": 296201488,
+      "tags": {
+        "leisure": "park",
+        "name": "Cheswick Park",
+        "wikidata": "Q49477970"
+      }
+    },
+    {
+      "type": "way",
+      "id": 296208595,
+      "tags": {
+        "leisure": "park",
+        "name": "Three Lakes Park",
+        "source": "Henrico Conty Parks & Rec",
+        "wikidata": "Q49570514"
+      }
+    },
+    {
+      "type": "way",
+      "id": 296545526,
+      "tags": {
+        "bicycle": "no",
+        "foot": "yes",
+        "highway": "steps",
+        "incline": "down",
+        "name": "North Bank Trail",
+        "operator": "City of Richmond",
+        "operator:wikidata": "Q136502539",
+        "surface": "ground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 298621404,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "3215",
+        "addr:postcode": "23223",
+        "addr:street": "East Broad Street",
+        "building": "government",
+        "construction_date": "1909",
+        "fee": "no",
+        "name": "Chimborazo Medical Museum",
+        "name:etymology:wikidata": "Q5099313",
+        "opening_hours": "We-Su 09:00-16:30",
+        "operator": "National Park Service",
+        "tourism": "museum",
+        "website": "https://www.virginia.org/listing/chimborazo-medical-museum/6127/",
+        "wikidata": "Q100324858",
+        "wikipedia": "en:Chimborazo Hospital"
+      }
+    },
+    {
+      "type": "way",
+      "id": 298621431,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2801",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "East Franklin Street",
+        "leisure": "park",
+        "name": "Libby Hill Park",
+        "name:etymology:wikidata": "Q124650219",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q49516400"
+      }
+    },
+    {
+      "type": "way",
+      "id": 303803586,
+      "tags": {
+        "leisure": "park",
+        "name": "JRPS Texas Beach Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 307757135,
+      "tags": {
+        "ele": "53",
+        "gnis:feature_id": "1479358",
+        "leisure": "park",
+        "name": "Pollard Park",
+        "wikidata": "Q49544730"
+      }
+    },
+    {
+      "type": "way",
+      "id": 315035710,
+      "tags": {
+        "leisure": "park",
+        "name": "Rockwood Park",
+        "owner": "Chesterfield County",
+        "source": "Commonwealth of Virginia, Department of Conservation and Recreation",
+        "website": "https://www.dcr.virginia.gov/natural_heritage/cldownload.shtml",
+        "wikidata": "Q49552790"
+      }
+    },
+    {
+      "type": "way",
+      "id": 315535969,
+      "tags": {
+        "addr:full": "1554 E Broad St., Richmond, VA 23219",
+        "description": "Historically known as the \"Burial Ground for Negroes\", was established in 1799 and closed in 1816. It is the older of Richmond's two African Burial Grounds.",
+        "historic": "memorial_cemetery",
+        "landuse": "grass",
+        "name": "Shockoe Bottom African Burial Ground",
+        "note": "The \"Shockoe Hill African Burying Ground\" established as the Burial Ground for Negroes replacement in 1816, is located at 1305 N 5th St., a mile away.",
+        "website": "https://www.sacredgroundproject.net/p/richmonds-african-burial-ground.html",
+        "wikidata": "Q108581831"
+      }
+    },
+    {
+      "type": "way",
+      "id": 315813183,
+      "tags": {
+        "leisure": "park",
+        "name": "Huguenot Park",
+        "owner": "Chesterfield County",
+        "source": "Commonwealth of Virginia, Department of Conservation and Recreation",
+        "website": "https://www.dcr.virginia.gov/natural_heritage/cldownload.shtml"
+      }
+    },
+    {
+      "type": "way",
+      "id": 316099498,
+      "tags": {
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/02001369",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-5677/",
+        "historic": "heritage",
+        "leisure": "park",
+        "name": "Bryan Park",
+        "nrhp:criteria": "(A),(C)",
+        "nrhp:inscription_date": "2002-11-21",
+        "owner": "City of Richmond",
+        "ref:US-VA:vlr": "127-5677",
+        "ref:nrhp": "02001369",
+        "start_date": "1909",
+        "vlr:inscription_date": "2002-09-11",
+        "website": "http://www.richmondgov.com/Parks/index.aspx",
+        "wikidata": "Q4980293",
+        "wikipedia": "en:Bryan Park (Richmond, Virginia)"
+      }
+    },
+    {
+      "type": "way",
+      "id": 342205613,
+      "tags": {
+        "alt_name": "Matthew James Robinson Park",
+        "ele": "51",
+        "gnis:feature_id": "1760418",
+        "leisure": "park",
+        "name": "Robinson Park",
+        "wikidata": "Q49522726"
+      }
+    },
+    {
+      "type": "way",
+      "id": 345031039,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "818",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "East Marshall Street",
+        "building": "yes",
+        "description": "Historic home of a 19th-century Supreme Court justice preserves period furnishings & architecture.",
+        "name": "John Marshall House",
+        "phone": "+1 804-648-7998",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "website": "https://preservationvirginia.org/historic-sites/john-marshall-house/",
+        "wikidata": "Q6246895"
+      }
+    },
+    {
+      "type": "way",
+      "id": 365619045,
+      "tags": {
+        "leisure": "park",
+        "name": "Triangle Park",
+        "opening_hours": "sunrise-sunset",
+        "website": "https://friendsoftrianglepark.com/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 366222782,
+      "tags": {
+        "leisure": "park",
+        "name": "Humphrey Calder Community Center"
+      }
+    },
+    {
+      "type": "way",
+      "id": 368238477,
+      "tags": {
+        "area": "yes",
+        "historic": "yes",
+        "name": "Lumpkin's Slave Jail"
+      }
+    },
+    {
+      "type": "way",
+      "id": 402536157,
+      "tags": {
+        "leisure": "park",
+        "name": "Pony Pasture Park - Wetland Park",
+        "natural": "wood",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "source": "http://www.richmondgov.com/Parks/index.aspx"
+      }
+    },
+    {
+      "type": "way",
+      "id": 463588973,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "102",
+        "addr:postcode": "23224",
+        "addr:state": "VA",
+        "addr:street": "Hull Street",
+        "building": "yes",
+        "description": "http://www.richmondrailroadmuseum.org/",
+        "name": "The Richmond Railroad Museum",
+        "opening_hours": "Sa 11:00-16:00; Su 01:00-16:00",
+        "railway:historic": "station",
+        "source": "esri_USDOT_Virgina",
+        "tourism": "museum",
+        "wikidata": "Q14712591"
+      }
+    },
+    {
+      "type": "way",
+      "id": 491695518,
+      "tags": {
+        "description": "Part of the James River Park System",
+        "leisure": "park",
+        "name": "Floodwall Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 502860808,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "5900",
+        "addr:postcode": "23226",
+        "addr:state": "VA",
+        "addr:street": "Fergusson Road",
+        "capacity": "200",
+        "leisure": "park",
+        "name": "Westview Park",
+        "phone": "+1 804-646-0761",
+        "website": "https://parksandrecreation.richmondgov.com/wbwsc/webtrac.wsc/wbsa1221.html?xxcim=0&xxmod=FR&xxrowid=0x000000000006ca81&wbsi=870ac8ba-5245-dab2-1d14-44b730a4db46"
+      }
+    },
+    {
+      "type": "way",
+      "id": 546227792,
+      "tags": {
+        "ele": "51",
+        "gnis:feature_id": "1760345",
+        "leisure": "park",
+        "name": "Kiehr Field",
+        "wikidata": "Q49510626"
+      }
+    },
+    {
+      "type": "way",
+      "id": 574960663,
+      "tags": {
+        "leisure": "park",
+        "name": "Lucks Field Playground",
+        "website": "http://www.richmondgov.com/parks/communitycentergill.aspx"
+      }
+    },
+    {
+      "type": "way",
+      "id": 576071486,
+      "tags": {
+        "leisure": "park",
+        "name": "Bill Robinson Playground",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 576461461,
+      "tags": {
+        "ele": "41",
+        "gnis:feature_id": "1479377",
+        "leisure": "park",
+        "name": "Powhatan Playground",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q49545687"
+      }
+    },
+    {
+      "type": "way",
+      "id": 597002701,
+      "tags": {
+        "leisure": "park",
+        "leisure_1": "playground",
+        "name": "ARCpark"
+      }
+    },
+    {
+      "type": "way",
+      "id": 600879394,
+      "tags": {
+        "leisure": "park",
+        "name": "Pump House Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 601799933,
+      "tags": {
+        "leisure": "park",
+        "name": "Oregon Hill Linear Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 603735933,
+      "tags": {
+        "bench": "yes",
+        "man_made": "pier",
+        "name": "Fishing Dock",
+        "trash": "yes"
+      }
+    },
+    {
+      "type": "way",
+      "id": 658620590,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "101",
+        "addr:postcode": "23219",
+        "addr:state": "VA",
+        "addr:street": "North 9th Street",
+        "building": "yes",
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/69000347",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-0121/",
+        "historic": "heritage",
+        "man_made": "tower",
+        "name": "Bell Tower",
+        "nrhp:criteria": "(A),(C)",
+        "nrhp:inscription_date": "1969-06-11",
+        "ref:US-VA:vlr": "127-0121",
+        "ref:nrhp": "69000347",
+        "source": "esri_USDOT_Virgina",
+        "start_date": "1824",
+        "tower:type": "bell_tower",
+        "vlr:inscription_date": "1968-11-05",
+        "wikidata": "Q121323871"
+      }
+    },
+    {
+      "type": "way",
+      "id": 677107281,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2803",
+        "addr:postcode": "23222",
+        "addr:state": "VA",
+        "addr:street": "Dupont Circle",
+        "ele": "40",
+        "gnis:feature_id": "1478158",
+        "leisure": "park",
+        "name": "Battery Park",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "wikidata": "Q49473807"
+      }
+    },
+    {
+      "type": "way",
+      "id": 679275523,
+      "tags": {
+        "leisure": "park",
+        "name": "Roy West Park (Washington Park)",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia"
+      }
+    },
+    {
+      "type": "way",
+      "id": 679310817,
+      "tags": {
+        "leisure": "park",
+        "name": "Wayside Spring Park",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "source": "http://www.richmondgov.com/Parks/index.aspx"
+      }
+    },
+    {
+      "type": "way",
+      "id": 679324138,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1200",
+        "addr:postcode": "23234",
+        "addr:state": "VA",
+        "addr:street": "Brander Street",
+        "leisure": "park",
+        "name": "Ancarrow's Landing",
+        "name:etymology:wikidata": "Q123473213",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia",
+        "source": "http://www.richmondgov.com/Parks/index.aspx"
+      }
+    },
+    {
+      "type": "way",
+      "id": 697524178,
+      "tags": {
+        "leisure": "garden",
+        "name": "Learning & Therapy Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 700377908,
+      "tags": {
+        "leisure": "garden",
+        "name": "Butterfly Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 700377915,
+      "tags": {
+        "leisure": "garden",
+        "name": "Fragrance Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 708736666,
+      "tags": {
+        "addr:city": "Henrico",
+        "addr:housenumber": "3812",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "Nine Mile Road",
+        "building": "yes",
+        "name": "Dabbs House Museum",
+        "tourism": "museum",
+        "website": "https://henrico.gov/rec/places/dabbs-house/",
+        "wikidata": "Q125928234"
+      }
+    },
+    {
+      "type": "way",
+      "id": 710713202,
+      "tags": {
+        "layer": "1",
+        "man_made": "bridge",
+        "name": "Fifth Street Viaduct",
+        "wikidata": "Q5447555",
+        "wikipedia": "en:Fifth Street Viaduct"
+      }
+    },
+    {
+      "type": "way",
+      "id": 737415531,
+      "tags": {
+        "leisure": "park",
+        "name": "Lakeside Landing Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 746447566,
+      "tags": {
+        "ele": "31",
+        "gnis:feature_id": "1780467",
+        "leisure": "park",
+        "name": "Taylor's Hill Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q49569347"
+      }
+    },
+    {
+      "type": "way",
+      "id": 751156302,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2813",
+        "addr:postcode": "23223",
+        "addr:street": "East Marshall Street",
+        "amenity": "place_of_worship",
+        "building": "yes",
+        "denomination": "methodist",
+        "ele": "48",
+        "gnis:feature_id": "1780568",
+        "name": "Asbury Church Hill United Methodist Church",
+        "religion": "christian"
+      }
+    },
+    {
+      "type": "way",
+      "id": 761038913,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1303",
+        "addr:postcode": "23224",
+        "addr:street": "Perry Street",
+        "leisure": "park",
+        "name": "Alice Fitz Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 761043823,
+      "tags": {
+        "area": "yes",
+        "artwork_type": "statue",
+        "name": "The Giant Cigarette",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 761047752,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "2207",
+        "addr:postcode": "23224",
+        "addr:street": "Halifax Avenue",
+        "leisure": "park",
+        "name": "Oak Grove Playground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 840378385,
+      "tags": {
+        "leisure": "park",
+        "name": "Montrose Heights Playground",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "wikidata": "Q139567649"
+      }
+    },
+    {
+      "type": "way",
+      "id": 846245203,
+      "tags": {
+        "addr:housenumber": "7913",
+        "addr:postcode": "23229",
+        "addr:street": "Dogwood Road",
+        "leisure": "park",
+        "name": "Westham Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264851,
+      "tags": {
+        "leisure": "park",
+        "name": "Bethlehem Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264852,
+      "tags": {
+        "addr:housenumber": "5906",
+        "addr:postcode": "23226",
+        "addr:street": "Keystone Drive",
+        "leisure": "park",
+        "name": "Westwood Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264853,
+      "tags": {
+        "addr:housenumber": "195",
+        "addr:postcode": "23229",
+        "addr:street": "Roslyn Hills Drive",
+        "leisure": "park",
+        "name": "Roslyn Hills Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 847264859,
+      "tags": {
+        "leisure": "park",
+        "name": "Spring Park Historic Site"
+      }
+    },
+    {
+      "type": "way",
+      "id": 949602698,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1900",
+        "addr:state": "VA",
+        "addr:street": "North Avenue",
+        "leisure": "park",
+        "name": "Yancey Street Playground"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1042936185,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "904",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "Catherine Street",
+        "leisure": "park",
+        "name": "Smith-Peters Parks",
+        "operator": "City of Richmond Parks, Recreation and Community Facilities"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1052171286,
+      "tags": {
+        "alt_name": "Fendall Avenue Park",
+        "leisure": "park",
+        "name": "North Central Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1084702409,
+      "tags": {
+        "ele": "44",
+        "gnis:feature_id": "1780800",
+        "leisure": "park",
+        "name": "Pocosham Park",
+        "wikidata": "Q49544475"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1089482397,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "7650",
+        "addr:postcode": "23220",
+        "addr:state": "VA",
+        "addr:street": "Riverside Drive",
+        "leisure": "park",
+        "name": "Riverside Meadow Greenspace",
+        "opening_hours": "sunrise-sunset",
+        "operator": "City of Richmond",
+        "operator:type": "public",
+        "operator:wikidata": "Q43421",
+        "parking": "no"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1102588967,
+      "tags": {
+        "ele": "91",
+        "gnis:feature_id": "1759995",
+        "landuse": "cemetery",
+        "name": "Providence Cemetery"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1210574643,
+      "tags": {
+        "leisure": "garden",
+        "name": "Monroe Park Learning Garden",
+        "operator": "Virginia Commonwealth University"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1266567346,
+      "tags": {
+        "leisure": "garden",
+        "name": "Rick's Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1300716641,
+      "tags": {
+        "leisure": "garden",
+        "name": "Albert Hill Native Plant Garden"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1414587754,
+      "tags": {
+        "leisure": "park",
+        "name": "Providence Park"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1415709159,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "4308",
+        "addr:postcode": "23227",
+        "addr:state": "VA",
+        "addr:street": "Hermitage Road",
+        "amenity": "marketplace",
+        "name": "RVA Big Market",
+        "opening_hours": "Nov-Apr: Sa 09:00-12:00; May-Oct: Sa 08:00-12:00",
+        "operator": "GrowRVA",
+        "website": "https://www.growrva.com/rvabigmkt"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1415711161,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1311",
+        "addr:postcode": "23227",
+        "addr:state": "VA",
+        "addr:street": "Westwood Avenue",
+        "amenity": "marketplace",
+        "name": "RVA Black Farmers Market",
+        "opening_hours": "Jun-Nov: Su[2,4] 11:00-15:00",
+        "organic": "yes",
+        "website": "https://www.rvablackfarmersmarket.com/"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1417444939,
+      "tags": {
+        "highway": "steps",
+        "name": "Connecting Lodge Footpath"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1425681874,
+      "tags": {
+        "addr:city": "Richmond",
+        "addr:housenumber": "1901",
+        "addr:postcode": "23223",
+        "addr:state": "VA",
+        "addr:street": "Conrad Street",
+        "leisure": "park",
+        "name": "Conrad Street Mini Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421",
+        "operator:wikipedia": "en:Richmond, Virginia"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1425951819,
+      "tags": {
+        "leisure": "park",
+        "name": "Briel Street Playground",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1425951820,
+      "tags": {
+        "leisure": "park",
+        "name": "James S. Christian Jr. Park",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1425951821,
+      "tags": {
+        "landuse": "cemetery",
+        "name": "M Street Cemetery",
+        "note": "William Catlin family graveyard",
+        "operator": "City of Richmond",
+        "operator:type": "government",
+        "operator:wikidata": "Q43421"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1446280636,
+      "tags": {
+        "alt_name": "Garden of Lilies",
+        "landuse": "cemetery",
+        "name": "Colored Paupers Cemetery",
+        "wikidata": "Q139279400"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1467380190,
+      "tags": {
+        "landuse": "cemetery",
+        "name": "Franklin Street Burial Grounds",
+        "religion": "jewish"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481952849,
+      "tags": {
+        "artist:wikidata": "Q20713848",
+        "artist_name": "Remi Rough",
+        "artwork_type": "mural",
+        "name": "Visual Symphony",
+        "start_date": "2017",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481952850,
+      "tags": {
+        "artwork_type": "mural",
+        "name": "Peppermint Butler",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481981173,
+      "tags": {
+        "artist_name": "Nils Westergard;Silly Genius",
+        "artwork_type": "mural",
+        "description": "This mural centers a portrait of Richmond’s rapper & emcee, Radio Blitz, with his hands raised, his gaze upward, and surrounded by the names of those whose lives were unjustly taken.",
+        "name": "Say Their Names",
+        "start_date": "2020-07-17",
+        "tourism": "artwork",
+        "website": "https://www.mendingwallsrva.com/walls/say-their-names"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1481985613,
+      "tags": {
+        "artist:website": "https://woesmartin.bigcartel.com/",
+        "artist_name": "Woes Martin",
+        "artwork_type": "mural",
+        "name": "GRIZZLY",
+        "start_date": "2013",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:Bear_mural_by_Woes.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482292129,
+      "tags": {
+        "artist:website": "https://www.nilswestergard.com/",
+        "artist:wikidata": "Q114890636",
+        "artist:wikipedia": "nl:Nils_Westergard",
+        "artist_name": "Nils Westergard",
+        "artwork_type": "mural",
+        "name": "Girl with phone",
+        "start_date": "2016-04-04",
+        "tourism": "artwork",
+        "website": "https://www.nilswestergard.com/2016/4/4/girl-with-phone",
+        "wikimedia_commons": "File:Mural_by_Nils_(25590272584).jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482311468,
+      "tags": {
+        "artist:website": "https://www.nilswestergard.com/",
+        "artist:wikidata": "Q114890636",
+        "artist:wikipedia": "nl:Nils_Westergard",
+        "artist_name": "Nils Westergard",
+        "artwork_type": "mural",
+        "description": "Black and white head and shoulders of a man with beard wearding a baseball cap. Area around the eyes is tinted blue.",
+        "name": "Chris",
+        "start_date": "2013",
+        "tourism": "artwork",
+        "website": "https://www.nilswestergard.com/street/gfiookldagncq9gntzshzfr9vk4f5p",
+        "wikimedia_commons": "File:Virginia_(20401200194).jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1482362873,
+      "tags": {
+        "artist:website": "https://whosham.com",
+        "artist_name": "Hamilton Glass",
+        "artwork_type": "mural",
+        "name": "Think",
+        "start_date": "2018",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:Mural by Hamilton Glass in Richmond, Virginia.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1484770948,
+      "tags": {
+        "artist:website": "https://www.aryz.es/",
+        "artist:wikidata": "Q76446647",
+        "artist_name": "Aryz",
+        "artwork_type": "mural",
+        "description": "Colorful fruits and vegetables on the ground",
+        "name": "Fruits and Veggies",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1484771674,
+      "tags": {
+        "artist": "Nico Cathcart",
+        "artwork_type": "mural",
+        "description": "Flowers and misc items surround large white letters \"LAKESIDE\"",
+        "inscription": "Neighbors Helping Neighbors\nVolunteer Rescue Squad",
+        "name": "Lakeside",
+        "tourism": "artwork",
+        "website": "https://www.nicocathcart.com/muralportfolio?pgid=jt0ajgnx-cdd33f74-38ca-4a18-8bad-f442ee04a8c2"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1487363788,
+      "tags": {
+        "artist:website": "https://www.herrsuite.com",
+        "artist_name": "Herr Suite",
+        "artwork_type": "mural",
+        "name": "Nate's Bagels",
+        "start_date": "2024",
+        "tourism": "artwork",
+        "wikimedia_commons": "File:Herr_Suite_mural.jpg"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1489939983,
+      "tags": {
+        "artwork_type": "mural",
+        "name": "Jackson Ward Legacies",
+        "tourism": "artwork"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1516391064,
+      "tags": {
+        "dog": "unleashed",
+        "leisure": "park",
+        "name": "Dog Park",
+        "operator": "MAA Chase Gayton"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1517671817,
+      "tags": {
+        "heritage": "2",
+        "heritage:operator": "nrhp",
+        "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/76002187",
+        "heritage:website:vdhr": "https://www.dhr.virginia.gov/historic-registers/127-0237",
+        "historic": "district",
+        "name": "Jackson Ward Historic District",
+        "nrhp:criteria": "(A),(C)",
+        "nrhp:inscription_date": "1976-07-30",
+        "nrhp:nhl": "yes",
+        "ref:US-VA:vlr": "127-0237",
+        "ref:nrhp": "76002187;05001108;08000424",
+        "vlr:inscription_date": "1976-04-20",
+        "wikidata": "Q6117793",
+        "wikipedia": "en:Jackson Ward"
+      }
+    }
+  ]
+}

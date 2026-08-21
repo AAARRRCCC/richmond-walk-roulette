@@ -36,6 +36,9 @@ const MAX_ATTEMPTS = 3;
 
 const OUT = new URL("../data/osm/", import.meta.url);
 
+/** Where the hours family lands. Read by scripts/build-hours.mjs, never fetched. */
+const HOURS_FILE = "hours.json";
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
@@ -147,14 +150,64 @@ async function ask(ql) {
 const sortElements = (elements) =>
   [...elements].toSorted((a, b) => (a.type === b.type ? a.id - b.id : a.type.localeCompare(b.type)));
 
+/**
+ * The hours family, added by `opening-hours` (chunk 9).
+ *
+ * One batched element lookup over every `place.osm`, rather than a category
+ * sweep: the join is by identity, never by name or by proximity, so the only
+ * elements worth asking about are the ones the data file already names. That
+ * is also what keeps this query small - it grows with the number of identified
+ * places rather than with the city.
+ *
+ * Built from `PLACES` at run time, which is why it is a function while every
+ * other family is a constant.
+ */
+async function hoursQuery() {
+  const { createServer } = await import("vite");
+  const vite = await createServer({
+    server: { middlewareMode: true },
+    appType: "custom",
+    cacheDir: "node_modules/.vite-harvest-osm",
+    optimizeDeps: { noDiscovery: true, include: [] },
+  });
+  let places;
+  try {
+    places = (await vite.ssrLoadModule("/src/data/places.ts")).PLACES;
+  } finally {
+    await vite.close();
+  }
+
+  const byType = { node: [], way: [], relation: [] };
+  for (const place of places) {
+    if (place.osm === undefined) continue;
+    const [type, id] = place.osm.split("/");
+    if (byType[type] !== undefined) byType[type].push(id);
+  }
+  const clauses = Object.entries(byType)
+    .filter(([, ids]) => ids.length > 0)
+    .map(([type, ids]) => type + "(id:" + ids.join(",") + ");")
+    .join("");
+  const total = Object.values(byType).reduce((sum, ids) => sum + ids.length, 0);
+  if (total === 0) return null;
+  return {
+    file: HOURS_FILE,
+    total,
+    ql: "[out:json][timeout:180];(" + clauses + ");out tags;",
+  };
+}
+
 async function main() {
   await mkdir(OUT, { recursive: true });
   const queries = [];
   let copyright = "";
 
+  const hours = await hoursQuery();
+  if (hours !== null) console.log(`hours: asking about ${hours.total} identified elements`);
+
   const all = [
     ...CATEGORIES,
     ...GATE_FAMILIES.map((family) => ({ file: family.file, ql: gateQl(family) })),
+    ...(hours === null ? [] : [{ file: hours.file, ql: hours.ql }]),
   ];
 
   for (const [index, category] of all.entries()) {

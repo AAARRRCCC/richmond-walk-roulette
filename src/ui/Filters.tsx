@@ -16,6 +16,7 @@ export type FiltersProps = {
   edgeOnly: boolean;
   weatherAware: boolean;
   kind: PlaceKind;
+  hideClosed: boolean;
   /** False when the engine's graph has no elevation in it. */
   climbAvailable: boolean;
   onClimb: (climb: ClimbBand | "any") => void;
@@ -24,6 +25,7 @@ export type FiltersProps = {
   onToggleEdge: () => void;
   onToggleWeatherAware: () => void;
   onKind: (kind: PlaceKind) => void;
+  onToggleHideClosed: () => void;
 };
 
 export function Filters(props: FiltersProps) {
@@ -54,6 +56,15 @@ export function Filters(props: FiltersProps) {
         />
         {/* A third switch needs no CSS: `.switch-row` is a single-column flex
             column at every width, so it stacks. */}
+        <Switch
+          checked={props.hideClosed}
+          onChange={() => {
+            playThock(!props.hideClosed);
+            props.onToggleHideClosed();
+          }}
+          label="Skip closed places"
+          hint="Judged by when you'd arrive"
+        />
         <Switch
           checked={props.weatherAware}
           onChange={() => {

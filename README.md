@@ -301,13 +301,40 @@ For large features like parks and cemeteries, the point is a public entrance
 or a recognisable spot inside, not the middle of the polygon. That way a
 walking route ends somewhere a person can actually stand.
 
-A place carries a name, a terrain (flat or hilly), and any number of tags from
-a fixed six: river, park, museum, history, food, scenic. It carries no
-description. The name is the whole offer and the walk is the point.
+A place carries a name and any number of tags from a fixed six: river, park,
+museum, history, food, scenic. It carries no description and no terrain — the
+name is the whole offer, the walk is the point, and hilliness is a property of
+a route rather than of a dot. A second tier, `detour`, marks the things that
+are a reason to walk a particular way rather than somewhere to spend an
+afternoon.
 
-> One consequence is worth knowing. Several places are seasonal or weekly, such
-> as both markets, the Pump House and the Railroad Museum, and nothing on
-> screen says so. A spin can send you to a closed lot.
+## Hours, and what the app will not claim
+
+The app says whether a place is likely to be open **when you would get there** —
+at the arrival time the route already knows, not at now — and keeps closed
+places out of the spin by default.
+
+Coverage is thin and stated rather than hidden: **118 of 242 places**, of which
+25 come from OpenStreetMap's own `opening_hours` and 93 from a single category
+assumption. Everything else says nothing at all, which is the honest answer and
+is why `unknown` is never rendered as "open".
+
+The one assumption is Richmond's park ordinance — open at 5 a.m., closed at
+dusk — and it always says the word "assumed" on screen. It is one constant,
+`PARK_RULE` in `src/lib/hours.ts`.
+
+No opening-hours parser ships to the browser. `opening_hours` is 108 KB
+gzipped and LGPL-3.0-only; it is a devDependency that runs once, at build time,
+and bakes a 336-bit weekly mask per place. The runtime does one array index and
+one bit test.
+
+    npm run harvest:hours   # one batched Overpass lookup, by element id
+    npm run build:hours     # reads the committed harvest, writes src/data/hours.ts
+    npm run check:hours     # fails 60 days before the window runs out
+
+The masks cover a calendar window — currently 2026-01-01 to 2027-12-31 — and
+outside it every verdict degrades to `unknown` rather than quietly reading last
+year's Thanksgiving. Rebuild annually; `check:hours` is what remembers.
 
 Businesses are deliberately thin on the ground. A pass that tried to add
 several found one that had closed and two that had moved, all still listed in

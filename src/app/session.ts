@@ -54,6 +54,16 @@ export type Session = {
   /** "Get back before dark". Opt-in; never set by the app itself. */
   beforeDark: boolean;
   /**
+   * "Skip closed places". Defaults ON, unlike every other filter here.
+   *
+   * The default excludes rather than annotates because being sent forty minutes
+   * to a padlocked gate is the single worst thing this app can do to somebody,
+   * and a walker who wants the closed ones back can say so. `unknown` is never
+   * excluded - most of the list has no schedule in OSM and never will - so this
+   * only ever removes places something actually says are shut.
+   */
+  hideClosed: boolean;
+  /**
    * "Mind the weather". Gates every rule that changes the pool or the dial, and
    * never the conditions line - the forecast is stated whatever this says,
    * because the reader deciding to ignore the rain does not stop it raining.
@@ -126,6 +136,7 @@ export type Action =
   | { type: "clearVibes" }
   | { type: "toggleBeforeDark" }
   | { type: "toggleWeatherAware" }
+  | { type: "toggleHideClosed" }
   | { type: "timeCap"; cap: TimeCap | null }
   | { type: "clearFilters" }
   | { type: "spinStart" }
@@ -170,6 +181,7 @@ export const initialSession: Session = {
   kind: "any",
   beforeDark: false,
   weatherAware: true,
+  hideClosed: true,
   timeCap: null,
   vibes: [],
   pickedId: null,
@@ -292,6 +304,10 @@ export function reduce(state: Session, action: Action): Session {
      * an existing pick, and the card's "outside your current time budget"
      * warning is already the right answer for that.
      */
+    case "toggleHideClosed":
+      // No re-clamp and no re-frame: this changes which places are in the pool,
+      // never how far the reach goes.
+      return { ...state, hideClosed: !state.hideClosed };
     case "toggleWeatherAware": {
       const weatherAware = !state.weatherAware;
       const cap = effectiveCap({ ...state, weatherAware });

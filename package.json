@@ -13,8 +13,12 @@
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify.mjs",
     "harvest:osm": "node scripts/harvest-osm.mjs",
+    "harvest:hours": "node scripts/harvest-hours.mjs",
+    "build:hours": "node scripts/build-hours.mjs",
+    "check:hours": "node scripts/check-hours.mjs",
     "propose:places": "node scripts/propose-places.mjs",
     "apply:places": "node scripts/apply-places.mjs",
+    "backfill:osm": "node scripts/backfill-osm.mjs",
     "test": "node --test \"server/*.test.ts\" \"src/**/*.test.ts\""
   },
   "dependencies": {
@@ -37,6 +41,7 @@
     "eslint-plugin-react-hooks": "^7.1.0",
     "globals": "^16.5.0",
     "knip": "^6.32.2",
+    "opening_hours": "^3.14.0",
     "oxlint": "^1.79.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.0",

@@ -82,6 +82,16 @@ import { ConditionsLine } from "../ui/ConditionsLine";
 import { DaylightSwitch } from "../ui/DaylightSwitch";
 import { describeResult, walkClauses } from "./announce";
 import {
+  HOURS_COVERAGE,
+  evaluateHours,
+  hoursClock,
+  hoursFor,
+  isOpenEnough,
+  quantiseToSlot,
+} from "../lib/hours";
+import { solarEvents } from "../lib/solar";
+import { arrivalMs } from "./conditions";
+import {
   REASON_COPY,
   conditionsSignature,
   derivePool,
@@ -384,6 +394,23 @@ export function App() {
     weatherAware: state.weatherAware,
   });
 
+  /**
+   * When the pool judges you would get there.
+   *
+   * Quantised to the half hour, which is the entire mechanism keeping the
+   * candidate list still between slot boundaries: `conditions.atMs` advances
+   * every minute, and a pool that moved with it would churn `candidateKey` once
+   * a minute and fire the spin-abort effect for no reason a reader can see.
+   *
+   * The dial's outbound budget rather than a per-place route duration: routes
+   * arrive asynchronously, and a pool that depended on them would shrink and
+   * grow as they landed. The card judges the one walk you actually got, at the
+   * settled duration, and is allowed to disagree - see below.
+   */
+  const poolArrivalMs = quantiseToSlot(arrivalMs(conditions.atMs, outbound * 60));
+  const poolClock = hoursClock(poolArrivalMs);
+  const poolSun = solarEvents(poolArrivalMs, origin.lat, origin.lng);
+
   const floorOutbound = outboundFloorMinutes(state);
   const reach = cachedReach(origin, outbound, floorOutbound ?? 0);
 
@@ -482,7 +509,34 @@ export function App() {
           },
         ];
 
+  /**
+   * Shut when you would get there.
+   *
+   * The signature is the half-hour slot plus the switch, so it moves twice an
+   * hour rather than every minute - and the pool it feeds is what `candidateKey`
+   * is built from.
+   *
+   * `unknown` is never excluded. Most of the list has no schedule in OSM, so a
+   * rule that filtered on anything but a definite "closed" would silently delete
+   * most of the destinations.
+   */
+  const closedRule: readonly PoolRule[] = state.hideClosed
+    ? [
+        {
+          id: "closed",
+          reason: "closed",
+          active: true,
+          clearLabel: "Include closed places",
+          clear: () => dispatch({ type: "toggleHideClosed" }),
+          signature: `${poolClock.slot}|${poolClock.date}`,
+          excludes: (place) =>
+            !isOpenEnough(evaluateHours(hoursFor(place.id), poolClock, poolSun, HOURS_COVERAGE)),
+        },
+      ]
+    : [];
+
   const rules: readonly PoolRule[] = [
+    ...closedRule,
     ...kindRule,
     ...weatherPoolRules,
     ...(state.climb === "any"
@@ -951,6 +1005,31 @@ export function App() {
    * light, hours, handoff, meet. Empty until chunk 4 contributes the first one -
    * the block renders nothing at all rather than an empty box.
    */
+  /**
+   * The card's own verdict, and it is allowed to disagree with the pool.
+   *
+   * The pool judges at the dial's outbound budget, quantised to the half hour.
+   * This judges at the settled route duration, unquantised - a different and
+   * better number. So a place can survive "Skip closed places" and still land
+   * showing "Likely closed when you arrive", when the real walk is longer than
+   * the dial's budget or the arrival crosses a closing time inside the same
+   * slot.
+   *
+   * That is not a bug to hide. The filter is a coarse pre-sort over 242 places;
+   * the card is the honest answer about the one walk the reader actually got,
+   * and it must never be silenced to protect the filter's story.
+   */
+  const cardArrivalMs = arrivalMs(conditions.atMs, route?.durationSeconds ?? outbound * 60);
+  const pickedHours =
+    picked === null
+      ? null
+      : evaluateHours(
+          hoursFor(picked.id),
+          hoursClock(cardArrivalMs),
+          solarEvents(cardArrivalMs, origin.lat, origin.lng),
+          HOURS_COVERAGE,
+        );
+
   const resultLines: readonly ResultLine[] = [
     ...(weather.headline === null
       ? []
@@ -977,6 +1056,31 @@ export function App() {
           },
         ]
       : []),
+    // Suppressed when the pool already threw this place out for being shut:
+    // chunk 2 renders an amber "Shut when you would get there." warning row from
+    // `REASON_COPY`, and a neutral line saying the same thing underneath it is
+    // the card telling the reader twice. What is left for this line is the half
+    // the verdict cannot say - a closing time coming up, the park assumption,
+    // a quoted comment, or data past its window.
+    ...(pickedHours === null ||
+    pickedHours.note === null ||
+    (pickedVerdict !== null &&
+      !pickedVerdict.included &&
+      pickedVerdict.reasons.includes("closed"))
+      ? []
+      : [
+          {
+            key: "hours" as const,
+            text: pickedHours.note,
+            // An assumption or a caveat renders quieter than a fact. A verdict
+            // read straight off an OSM schedule is a fact; a category fallback
+            // and every unknown are not.
+            tier:
+              pickedHours.source === "category" || pickedHours.state === "unknown"
+                ? ("assumed" as const)
+                : ("fact" as const),
+          },
+        ]),
     {
       // Neither handoff carries our walk - both send two coordinates and let
       // the other app recompute with its own graph and its own pedestrian
@@ -1020,6 +1124,9 @@ export function App() {
           // card shows it as a row; this is the same sentence, lowercased into
           // the middle of one.
           walkFitsLight ? "" : "does not fit in the light left",
+          // The one sr-only line is the only screen-reader surface this card
+          // has, so a verdict that is invisible there is invisible.
+          pickedHours?.note ?? "",
           // The only path by which the forecast reaches a screen reader on a
           // result. Deliberately with a result rather than before one: the
           // pre-spin path is ConditionsLine's own paragraphs, which are
@@ -1140,7 +1247,15 @@ export function App() {
     // control beside it is worse than no count. The cause of a shrunken pool is
     // named in prose by ConditionsLine instead, which is always visible in the
     // panel rather than hidden behind the collapsed drawer.
-    rules.filter((rule) => rule.active && rule.reason !== "weather").length;
+    // Weather and hours are both deliberately uncounted, and for the same
+    // reason stated twice: this counts what **Clear filters** clears, and it
+    // clears neither. "Skip closed places" also defaults ON, so counting it
+    // would make the drawer read "Filters (1 active)" from first paint forever,
+    // and counting it only when OFF would announce a widened pool as a
+    // narrowing.
+    rules.filter(
+      (rule) => rule.active && rule.reason !== "weather" && rule.reason !== "closed",
+    ).length;
 
   return (
     <div className={`shell${picking ? " is-picking" : ""}`}>
@@ -1455,8 +1570,10 @@ export function App() {
             edgeOnly={state.edgeOnly}
             weatherAware={state.weatherAware}
             kind={state.kind}
+            hideClosed={state.hideClosed}
             onClimb={(climb) => dispatch({ type: "climb", climb })}
             onKind={(kind) => dispatch({ type: "kind", kind })}
+            onToggleHideClosed={() => dispatch({ type: "toggleHideClosed" })}
             onToggleVibe={(vibe) => dispatch({ type: "toggleVibe", vibe })}
             onToggleRoundTrip={() => dispatch({ type: "toggleRoundTrip" })}
             onToggleEdge={() => dispatch({ type: "toggleEdge" })}

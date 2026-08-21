@@ -91,12 +91,19 @@ test("no generated name is longer than the rail can hold", () => {
 });
 
 test("the hand-curated count is exactly what it claims", () => {
-  // The discriminator for "this row came out of the proposer". A count rather
-  // than a field because the obvious field does not survive: `opening-hours`
-  // backfills `osm` onto the hand rows, after which its presence means nothing.
+  // The discriminator for "this row came out of the proposer", and it is a
+  // COUNT rather than a field because the obvious field did not survive - which
+  // is not a prediction any more. Chunk 8 asserted the hand rows carry no
+  // `osm`; chunk 9 backfilled 42 of them, and this assertion is what caught it
+  // on the first run. The boundary is the number.
   assert.ok(PLACES.length >= HAND_CURATED_COUNT);
-  for (const place of PLACES.slice(0, HAND_CURATED_COUNT)) {
-    assert.equal(place.osm, undefined, `${place.id} is above the boundary but carries an osm id`);
+  assert.equal(HAND_CURATED_COUNT, 62);
+
+  // Every generated row still carries one, which is the half that stays true:
+  // the proposer resolved each from a concrete element and cannot emit a row
+  // without one.
+  for (const place of PLACES.slice(HAND_CURATED_COUNT)) {
+    assert.ok(place.osm !== undefined, `${place.id} is below the boundary with no osm id`);
   }
 });
 
