@@ -86,6 +86,10 @@
     {
       "label": "weather: the precipitation graph",
       "bytes": 103152
+    },
+    {
+      "label": "weather warns, never clamps",
+      "bytes": 103152
     }
   ]
 }

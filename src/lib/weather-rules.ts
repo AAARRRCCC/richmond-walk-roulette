@@ -350,15 +350,23 @@ export function deriveWeatherRules(
 /**
  * The second pass: the rule's sentence, once the budget is settled.
  *
- * `appliedBudget` is what the map is actually drawn at — the winner of every
- * cap in force, this module's and `daylight-budget`'s together. A rule whose
- * own cap was not the binding one still says "Trimmed to 20 min", which is true
- * and is what the reader is looking at, rather than advertising a 35 that never
- * happened.
+ * **It no longer says "Trimmed to N min", because nothing is trimmed.** Weather
+ * stopped moving the dial: a cap that falls as the rain approaches re-clamped
+ * the budget on every tick, so a reader dragging the slider up watched it
+ * thrown back, repeatedly, over a limit they never asked for. See
+ * `effectiveCap`.
+ *
+ * What replaces it is the same fact stated as a warning the reader can act on
+ * or ignore: how long the walk on the dial actually is against how long the
+ * weather leaves them. `appliedBudget` is what the map is drawn at, which is
+ * now simply the dial - it stays a parameter because the daylight cap can still
+ * move it, and a sentence naming a budget nobody is walking is the thing this
+ * function exists to avoid.
  */
 export function describeWeatherRule(rule: WeatherRule, appliedBudget: number | null): string {
-  return rule.cap !== null && appliedBudget !== null
-    ? `${rule.detail}. Trimmed to ${appliedBudget} min`
+  if (rule.cap === null || appliedBudget === null) return rule.detail;
+  return appliedBudget > rule.cap.minutes
+    ? `${rule.detail}. A ${appliedBudget} min walk will not be back before it`
     : rule.detail;
 }
 

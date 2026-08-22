@@ -192,7 +192,12 @@ test("a stale report re-ages its own onset", () => {
   // 40 minutes from the reading, twelve of which have passed: 28 from now, less
   // the margin is 23, quantised down to 20.
   assert.equal(rule.cap?.minutes, 20);
-  assert.match(describeWeatherRule(rule, 20), /Trimmed to 20 min$/);
+  // The cap is still computed - it is what the graph draws and what the
+  // warning compares against - but it no longer moves the dial, so the
+  // sentence warns instead of reporting a trim. A walk INSIDE the window says
+  // nothing extra; a walk that overruns it is told so.
+  assert.equal(describeWeatherRule(rule, 20), rule.detail);
+  assert.match(describeWeatherRule(rule, 45), /A 45 min walk will not be back before it$/);
 });
 
 test("dangerous heat steers toward shade, water and doors without capping", () => {
@@ -279,10 +284,13 @@ test("two caps take the binding one, and every reason names it", () => {
   const cap = mergeCaps(weatherCaps(verdict));
   assert.equal(cap?.minutes, 40 - STORM_MARGIN_MINUTES);
 
-  const sentences = verdict.rules.map((rule) => describeWeatherRule(rule, cap?.minutes ?? null));
+  // Every rule warns against the walk the reader is actually on, so a rule
+  // whose own cap was not the binding one still names the real overrun rather
+  // than advertising a window that never applied.
+  const sentences = verdict.rules.map((rule) => describeWeatherRule(rule, 60));
   assert.equal(sentences.length, 2);
   for (const sentence of sentences) {
-    assert.match(sentence, /Trimmed to 25 min$/, sentence);
+    assert.match(sentence, /A 60 min walk will not be back before it$/, sentence);
     assert.equal(sentence.includes("35"), false, `it must not advertise a 35 that never happened: ${sentence}`);
   }
 });
@@ -312,7 +320,7 @@ test("a cap that does not bind reports no cap at all", () => {
   assert.ok(flat);
   assert.equal(flat.cap, null);
   assert.equal(mergeCaps(weatherCaps(verdict)), null);
-  assert.equal(describeWeatherRule(flat, null).includes("Trimmed"), false);
+  assert.equal(describeWeatherRule(flat, null), flat.detail, "a rule with no cap warns about nothing");
 });
 
 test("the cap steps once every five minutes, not once a minute", () => {

@@ -79,12 +79,21 @@ const rainCap = (minutes: number): TimeCap => ({
   untilMs: Date.parse("2026-08-21T19:00:00Z"),
 });
 
-test("session: a weather cap answers to the weather switch, not the daylight one", () => {
-  // Two switches, two reasons, one cap field. A weather cap that respected
-  // `beforeDark` would clamp the dial for a mode the reader never turned on.
-  const raining = reduce({ ...initialSession, beforeDark: false }, { type: "timeCap", cap: rainCap(30) });
-  assert.equal(raining.budgetMinutes, 30);
-  assert.equal(dialMaximum(raining), 30);
+test("session: weather warns and never moves the dial", () => {
+  // REWRITTEN after a walker described the old behaviour as unusable, and they
+  // were right. The rain cap is derived from the onset time, so it falls as the
+  // rain approaches and re-clamped the budget on every tick: dragging the
+  // slider up threw it back a few seconds later, repeatedly, over a limit
+  // nobody asked for - `weatherAware` defaults ON.
+  //
+  // The forecast still says everything it knows. It just does not decide.
+  const raining = reduce(
+    { ...initialSession, beforeDark: false },
+    { type: "timeCap", cap: rainCap(30) },
+  );
+  assert.equal(raining.budgetMinutes, initialSession.budgetMinutes, "the dial is untouched");
+  assert.equal(dialMaximum(raining), MAX_MINUTES, "and the whole track stays live");
+  assert.deepEqual(raining.timeCap, rainCap(30), "while the cap itself is still known");
 
   const ignored = reduce(
     { ...initialSession, weatherAware: false, beforeDark: true },
@@ -94,24 +103,26 @@ test("session: a weather cap answers to the weather switch, not the daylight one
   assert.equal(ignored.budgetMinutes, initialSession.budgetMinutes);
 });
 
-test("session: turning the weather off gives the dial back", () => {
-  // The one-way clamp is the bug this asserts against. Without
-  // `requestedBudgetMinutes` the reducer lowers `budgetMinutes` when the rain
-  // moves in and never raises it again, so the button offering to undo the
-  // cause undoes nothing and the pool stays empty.
-  const capped = reduce(initialSession, { type: "timeCap", cap: rainCap(20) });
-  assert.equal(capped.budgetMinutes, 20);
+test("session: daylight still clamps, because that switch is a request", () => {
+  // The distinction the whole change turns on. "Get back before dark" is opt-in
+  // and its label is a promise: somebody asking to be held to a limit, and
+  // honouring it is doing what they said.
+  const dusk = reduce({ ...initialSession, beforeDark: true }, { type: "timeCap", cap: cap(30) });
+  assert.equal(dusk.budgetMinutes, 30);
+  assert.equal(dialMaximum(dusk), 30);
 
-  const freed = reduce(capped, { type: "toggleWeatherAware" });
-  assert.equal(freed.weatherAware, false);
-  assert.equal(freed.budgetMinutes, initialSession.budgetMinutes, "the dial comes back to 50");
+  // ...and only while it is asked for.
+  const off = reduce({ ...initialSession, beforeDark: false }, { type: "timeCap", cap: cap(30) });
+  assert.equal(off.budgetMinutes, initialSession.budgetMinutes);
 });
 
 test("session: the dial the reader set is the one that comes back, not the last clamp", () => {
-  const asked = reduce(initialSession, { type: "budget", minutes: 80 });
+  // Still true, and still the reason `requestedBudgetMinutes` exists - it is
+  // daylight that exercises it now.
+  const asked = reduce({ ...initialSession, beforeDark: true }, { type: "budget", minutes: 80 });
   assert.equal(asked.requestedBudgetMinutes, 80);
 
-  const capped = reduce(asked, { type: "timeCap", cap: rainCap(25) });
+  const capped = reduce(asked, { type: "timeCap", cap: cap(25) });
   assert.equal(capped.budgetMinutes, 25);
   assert.equal(capped.requestedBudgetMinutes, 80, "the request survives the clamp");
 

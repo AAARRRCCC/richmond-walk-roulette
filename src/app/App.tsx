@@ -555,8 +555,17 @@ export function App() {
    * looking at rather than advertising a number that never happened.
    */
   const cappedTo = dialMaximum(state);
-  const appliedBudget =
-    cappedTo < MAX_MINUTES && state.budgetMinutes >= cappedTo ? cappedTo : null;
+  /**
+   * The walk the reader is actually on.
+   *
+   * It used to be "the cap, when a cap was binding", because a weather rule's
+   * sentence reported a trim. Weather no longer trims, so the sentence warns
+   * instead - and what it has to warn ABOUT is the walk on the dial, not the
+   * window the rule would once have imposed. Daylight can still move the dial,
+   * and `budgetMinutes` is already the clamped value when it does, so this is
+   * the one number that is true either way.
+   */
+  const appliedBudget = state.budgetMinutes;
 
   const weatherPoolRules = toPoolRules(weather, {
     appliedBudget,
@@ -1743,10 +1752,11 @@ export function App() {
               appliedBudget={appliedBudget}
               keptCount={candidates.length}
               describe={describeWeatherRule}
-              // How long the walk on the dial actually takes, which is what the
-              // cap is a limit on - not the cap's own number, which is already
-              // that limit and would draw the line on top of itself.
-              capMinutes={cappedTo < MAX_MINUTES ? cappedTo : null}
+              // Where the walk on the dial ends, so the graph shows whether it
+              // finishes before the weather does. Not the cap: weather no
+              // longer caps, and daylight's cap is already folded into the
+              // budget by the time it gets here.
+              capMinutes={state.budgetMinutes}
             />
           )}
 

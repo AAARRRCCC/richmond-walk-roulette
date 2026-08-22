@@ -687,12 +687,28 @@ function effectiveCap(
   state: Pick<Session, "beforeDark" | "weatherAware" | "timeCap" | "roundTrip">,
 ): number | null {
   if (state.timeCap === null) return null;
-  // Gated by whichever switch owns the reason. App already declines to produce
-  // a cap for a switch that is off, so this is the second belt - and it is the
-  // one that makes turning a switch off atomic: without it the stale cap would
-  // keep clamping for one render, until the effect dispatched a null.
-  const enabled = state.timeCap.reason === "daylight" ? state.beforeDark : state.weatherAware;
-  if (!enabled) return null;
+
+  /**
+   * **Only daylight moves the dial. Weather warns and never clamps.**
+   *
+   * Both used to. The difference that decides it is which switch owns the
+   * reason: `beforeDark` is opt-in and its label is a promise - "Get back
+   * before dark" is somebody *asking* to be held to a limit, and honouring it
+   * is doing what they said. `weatherAware` defaults ON, so a rain cap took
+   * reach away from every walker who had never asked for it.
+   *
+   * And it took it away repeatedly. The cap is derived from the onset time, so
+   * it falls as the rain approaches; every tick re-clamped the budget, which
+   * meant a reader who dragged the slider up watched it thrown back a few
+   * seconds later, over and over, with no way to refuse. A limit you cannot
+   * argue with had better be one you asked for.
+   *
+   * The forecast still says everything it knew: the conditions line names the
+   * rain, the graph draws it, and a walk that will not finish before it gets a
+   * warning. What it no longer does is decide.
+   */
+  if (state.timeCap.reason !== "daylight") return null;
+  if (!state.beforeDark) return null;
   return state.timeCap.minutes < dialMinimum(state.roundTrip) ? null : state.timeCap.minutes;
 }
 
