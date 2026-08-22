@@ -1,6 +1,8 @@
 import type { WeatherReport } from "../lib/weather";
 import type { WeatherRule, WeatherVerdict } from "../lib/weather-rules";
 
+import { PrecipGraph } from "./PrecipGraph";
+
 export type ConditionsLineProps = {
   report: WeatherReport | null;
   /** True when the last attempt failed and nothing is in flight. */
@@ -16,6 +18,11 @@ export type ConditionsLineProps = {
   keptCount: number;
   /** The rule's sentence, once the budget is settled. */
   describe: (rule: WeatherRule, appliedBudget: number | null) => string;
+  /**
+   * Minutes from now the walk has to be finished by, or null when nothing is
+   * capping the dial. Drawn on the graph as the line to be back before.
+   */
+  capMinutes: number | null;
 };
 
 /**
@@ -63,6 +70,18 @@ export function ConditionsLine(props: ConditionsLineProps) {
         ) : (
           props.unavailable && <p className="conditions is-quiet">No forecast right now.</p>
         ))}
+
+      {/* The shape of what is coming, under the sentence that names it. A cap
+          note explains a limit; this is what shows the reader the weather that
+          caused it, which is the half that was missing when somebody lost half
+          their dial and went hunting for a bug elsewhere. */}
+      {props.report !== null && (
+        <PrecipGraph
+          hours={props.report.hours}
+          observedAtMs={props.report.observedAtMs}
+          capMinutes={props.capMinutes}
+        />
+      )}
 
       {/* Fires whether or not refreshes are currently failing. It is the line
           that keeps a cap derived from hours-old data honest. */}

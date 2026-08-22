@@ -1743,6 +1743,10 @@ export function App() {
               appliedBudget={appliedBudget}
               keptCount={candidates.length}
               describe={describeWeatherRule}
+              // How long the walk on the dial actually takes, which is what the
+              // cap is a limit on - not the cap's own number, which is already
+              // that limit and would draw the line on top of itself.
+              capMinutes={cappedTo < MAX_MINUTES ? cappedTo : null}
             />
           )}
 

@@ -1527,3 +1527,48 @@ code {
   display: grid;
   gap: 8px;
 }
+
+/* What the sky is going to do. Sibling of the elevation chart on purpose: same
+   amber, same faint fill, same one-bright-line treatment, so the two read as
+   the same kind of statement about two different things. */
+.precip {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.precip-chart {
+  width: 100%;
+  height: 44px;
+  display: block;
+  overflow: visible;
+}
+.precip-area {
+  fill: var(--accent);
+  opacity: 0.14;
+}
+.precip-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+/* Dashed, like the partner's contour, and for the same reason: it is a limit
+   somebody else set rather than a thing being measured. */
+.precip-cap {
+  stroke: var(--accent-soft);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+  opacity: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+.precip-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
