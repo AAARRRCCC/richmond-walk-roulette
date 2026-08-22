@@ -586,7 +586,7 @@ holds contours and knows nothing about places (§3.9).
 - [x] Chunk 8 — places-expansion — `0817b7b`, 84/85
 - [x] Chunk 9 — opening-hours — `26f90e3`, 78/81
 - [x] Chunk 10 — shareable-spins — `a3e3cec`, 65/74
-- [x] Chunk 11 — multiplayer-links + meet-in-the-middle, one landing — `PENDING`, 73/100
+- [x] Chunk 11 — multiplayer-links + meet-in-the-middle, one landing — `31861a2`, 73/100
 - [ ] `docs/plans/HUMAN-REVIEW.md` complete
 - [ ] The feel pass prepared
 
