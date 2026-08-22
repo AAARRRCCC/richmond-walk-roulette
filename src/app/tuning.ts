@@ -58,14 +58,14 @@ export type Tuning = {
 };
 
 export const TUNING_DEFAULTS: Tuning = {
-  spinDurationMs: 3000,
+  spinDurationMs: 2500,
   spinFirstFlipMs: 10,
-  spinLastFlipMs: 60,
-  spinEaseExponent: 0.5,
+  spinLastFlipMs: 80,
+  spinEaseExponent: 0.7,
   spinMaxHoldMs: 4000,
   spinSettleMs: 500,
   spinLaps: 2,
-  soundVolume: 0.5,
+  soundVolume: 1,
   soundEnabled: true,
   spinCircularOrder: true,
 };

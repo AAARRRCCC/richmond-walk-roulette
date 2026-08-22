@@ -35,6 +35,7 @@ const SLIDERS: { key: NumericTuningKey; label: string; hint: string; unit: strin
   { key: "spinLastFlipMs", label: "End interval", hint: "gap between the last flips", unit: "ms" },
   { key: "spinEaseExponent", label: "Slowdown", hint: "below 1 stays fast, then drops", unit: "" },
   { key: "spinSettleMs", label: "Settle", hint: "how long it rests on the winner", unit: "ms" },
+  { key: "spinLaps", label: "Laps", hint: "times round the pool before it lands", unit: "x" },
   { key: "spinMaxHoldMs", label: "Route grace", hint: "extra turning while a route loads", unit: "ms" },
   { key: "soundVolume", label: "Cue level", hint: "master volume for every sound", unit: "" },
 ];

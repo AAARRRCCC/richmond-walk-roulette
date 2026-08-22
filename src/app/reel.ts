@@ -61,6 +61,18 @@ export function orderAroundOrigin<T extends Point>(origin: Point, places: readon
     .map((entry) => entry.place);
 }
 
+/**
+ * One frame at 60fps.
+ *
+ * A flip scheduled faster than this happens *between* frames and is never
+ * drawn: the reel steps through a name the screen never shows. That was
+ * happening at the start of every throw - `spinFirstFlipMs` defaults to 10 -
+ * so the reel has always skipped names, independently of how far it travels.
+ * Flipping faster than the display cannot make the reel look faster; it can
+ * only make it look like it is missing things, which is what it was doing.
+ */
+const FRAME_MS = 17;
+
 /** Interval until the next flip at this point in the throw, in ms. */
 function flipInterval(elapsed: number, settings: Tuning): number {
   const progress = Math.min(1, elapsed / settings.spinDurationMs);
@@ -68,7 +80,10 @@ function flipInterval(elapsed: number, settings: Tuning): number {
   // progress, so a value below 1 holds the fast phase almost to the end and
   // then drops hard, and a value above 1 begins slowing immediately.
   const eased = 1 - Math.pow(1 - progress, settings.spinEaseExponent);
-  return settings.spinFirstFlipMs + (settings.spinLastFlipMs - settings.spinFirstFlipMs) * eased;
+  const raw =
+    settings.spinFirstFlipMs + (settings.spinLastFlipMs - settings.spinFirstFlipMs) * eased;
+  // Floored at a frame, so every flip the reel counts is a flip somebody sees.
+  return Math.max(FRAME_MS, raw);
 }
 
 /**
@@ -129,7 +144,12 @@ function waitingSlot(elapsed: number, settings: Tuning, winnerSlot: number, slot
   const waited = elapsed - settings.spinDurationMs;
   const steps = Math.floor(waited / settings.spinLastFlipMs);
   const step = stride(settings, slotCount);
-  return wrap(winnerSlot - step + steps * step, slotCount);
+  // Continues from where the throw left off - one stride PAST its final slot -
+  // rather than repeating it. `flipsRemaining` sits at 1 for the whole of the
+  // last flip's interval, so restarting at the same slot left the reel showing
+  // one name for up to two ticks at exactly the moment a reader is watching to
+  // see whether it has stopped. A wheel that pauses has decided.
+  return wrap(winnerSlot + steps * step, slotCount);
 }
 
 export type ReelFrame =
@@ -169,9 +189,16 @@ export function reelFrameAt(
   // to prevent.
   const step = stride(settings, slotCount);
   const distance = wrap(winnerSlot - stop.slot, slotCount);
-  const strides = Math.ceil(distance / step);
+  const strides = Math.max(1, Math.ceil(distance / step));
   const steps = Math.floor((elapsed - stop.elapsed) / settings.spinLastFlipMs);
-  if (steps < strides) return { kind: "flip", slot: wrap(stop.slot + steps * step, slotCount) };
+  // `steps + 1`, for the same reason the wait continues rather than repeats:
+  // the reel is already ON `stop.slot`, so drawing it again is a tick where
+  // nothing moves, and a wheel that pauses has decided. The last stride is not
+  // taken by arithmetic - it falls through to the rest below, which is the
+  // winner exactly, so a stride can never overshoot the answer.
+  if (steps + 1 < strides) {
+    return { kind: "flip", slot: wrap(stop.slot + (steps + 1) * step, slotCount) };
+  }
 
   const restingSince = stop.elapsed + strides * settings.spinLastFlipMs;
   if (elapsed - restingSince >= settings.spinSettleMs) return { kind: "land" };
