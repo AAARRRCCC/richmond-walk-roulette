@@ -47,6 +47,7 @@ const input = (over: Partial<ShareInput> = {}): ShareInput => ({
   meet: false,
   partner: null,
   mintedDay: null,
+  lockedMinutes: null,
   budgetMinutes: 34,
   floorMinutes: 10,
   dialMinimumMinutes: 10,
@@ -585,4 +586,41 @@ test("the URL-clearing comparison is stable across a meet arrival", () => {
   const invite = restore("m=1&ma=carytown&b=30&rt=1");
   const answered = reduce(invite, { type: "origin", origin: PRESET_ORIGINS[1]! });
   assert.notEqual(liveLinkQuery(answered, null), invite.shared?.linkQuery);
+});
+
+test("a lock-in travels with the link and only on a meet link", () => {
+  // The whole of "both settle on a number first", with no server: a commitment
+  // is one integer that rides a link somebody was already sending.
+  const locked = encodeShare(input({ meet: true, placeId: null, lockedMinutes: 40 }));
+  assert.match(locked, /(^|&)l=40(&|$)/);
+  assert.equal(decodeShare(locked).lockedMinutes, 40);
+
+  // A solo share has nobody to promise anything to.
+  assert.equal(encodeShare(input({ lockedMinutes: 40 })).includes("l="), false);
+  assert.equal(decodeShare("o=carytown&b=30&rt=1&l=40&p=shiplock").lockedMinutes, null);
+
+  // Range-checked like `b`, so a forged value cannot name an impossible budget.
+  assert.equal(decodeShare("m=1&ma=carytown&b=30&rt=1&l=9999").lockedMinutes, null);
+  assert.equal(decodeShare("m=1&ma=carytown&b=30&rt=1&l=abc").lockedMinutes, null);
+
+  // And it survives the round trip the cache key and og:url both rest on.
+  assert.equal(canonicalQuery(decodeShare(locked)), locked);
+});
+
+test("an arriving lock reaches the session, and an absent one is null", () => {
+  const arrived = restore("m=1&ma=carytown&b=30&rt=1&l=40");
+  assert.equal(arrived.meet?.partnerLockedMinutes, 40);
+  assert.equal(restore("m=1&ma=carytown&b=30&rt=1").meet?.partnerLockedMinutes, null);
+});
+
+test("meetLinks commits only when asked", () => {
+  const session = reduce(restore("m=1&ma=carytown&b=30&rt=1"), {
+    type: "origin",
+    origin: PRESET_ORIGINS[1]!,
+  });
+  const reporting = meetLinks(session, "https://walk.example", null, Date.now());
+  assert.equal(reporting.invite?.includes("l="), false, "sharing is not committing");
+
+  const committing = meetLinks(session, "https://walk.example", null, Date.now(), true);
+  assert.match(committing.invite ?? "", new RegExp(`l=${session.budgetMinutes}(&|$)`));
 });

@@ -1302,7 +1302,21 @@ export function App() {
   // the app already has one clock that ticks once a minute. Reading the real
   // clock here would be an impure render AND would make `d` unstable between
   // two renders in the same minute.
-  const links = meetLinks(state, window.location.origin, picked?.id ?? null, conditions.atMs);
+  /**
+   * Locking in is a fact about this session, not about the link, so it lives
+   * in React state rather than in `Session`: nothing the reducer does should
+   * silently un-commit somebody, and nothing persists it, because a commitment
+   * that outlived the tab would be a promise the other person could not see
+   * expire.
+   */
+  const [locked, setLocked] = useState(false);
+  const links = meetLinks(
+    state,
+    window.location.origin,
+    picked?.id ?? null,
+    conditions.atMs,
+    locked,
+  );
 
   /**
    * Clear the address bar the moment it stops describing the screen.
@@ -1331,6 +1345,11 @@ export function App() {
     }
     urlCleared.current = true;
   });
+
+  /** They committed to a budget and this device is showing a different one. */
+  const disagreeing =
+    state.meet?.partnerLockedMinutes != null &&
+    state.meet.partnerLockedMinutes !== state.budgetMinutes;
 
   const picking = state.pickingOrigin;
   const collapsed = railCollapsed && !wide;
@@ -1572,6 +1591,10 @@ export function App() {
               partnerFailure={state.partnerFailure}
               bothCount={candidates.length}
               budgetMinutes={state.budgetMinutes}
+              yourMinutes={state.budgetMinutes}
+              youLocked={locked}
+              onLockIn={() => setLocked(true)}
+              onMatchTheirs={(minutes) => dispatch({ type: "budget", minutes })}
               permissionHint={permissionHint}
               locating={locating}
               nowMs={conditions.atMs}
@@ -1736,6 +1759,10 @@ export function App() {
               // Spin joins drawing, warming and sharing in the list of things
               // that must not happen before the reader has a start of their own.
               !originChosen ||
+              // They named a number; this device has not agreed to it yet.
+              // Spinning now would draw from a pool the other person is not
+              // walking, which is the one thing a shared spin must not do.
+              disagreeing ||
               candidates.length === 0 ||
               drawable.length === 0 ||
               routesWarming ||
@@ -1745,7 +1772,9 @@ export function App() {
             }
           >
             <ShuffleIcon size={18} weight="bold" aria-hidden="true" />
-            {state.spinning
+            {disagreeing
+              ? `They said ${state.meet?.partnerLockedMinutes} min`
+              : state.spinning
               ? "Spinning"
               : status === "ready" && routesWarming
                 ? state.climb === "any"

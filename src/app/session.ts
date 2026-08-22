@@ -104,6 +104,15 @@ export type MeetArrival = {
    * does not fail silently even about its own mistakes.
    */
   readonly selfOutOfBounds: boolean;
+  /**
+   * The budget the other person committed to, or null if they had not.
+   *
+   * Read by the Spin gate: in a meeting where they have locked in, spinning
+   * waits until this device's dial agrees. It is the cheapest possible form of
+   * "both of you settle on a number first" - one integer, carried by a link
+   * that was already being sent, with no socket and no server holding a room.
+   */
+  readonly partnerLockedMinutes: number | null;
 };
 
 export type Session = {
@@ -832,6 +841,7 @@ export function applyShare(base: Session, link: ShareLink, places: readonly { id
             mintedDay: link.mintedDay,
             partnerOutOfBounds,
             selfOutOfBounds,
+            partnerLockedMinutes: link.lockedMinutes,
           },
     shared: {
       missingPlaceId: missing ? link.placeId : null,
@@ -863,6 +873,7 @@ export function shareInputFor(state: Session, placeId: string | null): ShareInpu
     meet: false,
     partner: null,
     mintedDay: null,
+    lockedMinutes: null,
     budgetMinutes: state.budgetMinutes,
     floorMinutes: state.floorMinutes,
     dialMinimumMinutes: dialMinimum(state.roundTrip),
@@ -939,14 +950,23 @@ export function meetLinks(
   siteOrigin: string,
   placeId: string | null,
   nowMs: number,
+  /** True to commit to this dial position rather than merely report it. */
+  locked = false,
 ) {
   if (!state.originChosen) return { invite: null, answer: null };
   const base = shareInputFor(state, null);
   const day = epochDay(nowMs);
+  const lockedMinutes = locked ? state.budgetMinutes : null;
   return {
     // `partner: null` is what enforces "`mb` is never a guess": an invite is
     // the first link in a chain, so there is nothing to echo.
-    invite: shareUrl(siteOrigin, { ...base, meet: true, partner: null, mintedDay: day }),
+    invite: shareUrl(siteOrigin, {
+      ...base,
+      meet: true,
+      partner: null,
+      mintedDay: day,
+      lockedMinutes,
+    }),
     answer:
       placeId === null
         ? null
@@ -956,6 +976,7 @@ export function meetLinks(
             partner: state.partner,
             placeId,
             mintedDay: day,
+            lockedMinutes,
           }),
   };
 }

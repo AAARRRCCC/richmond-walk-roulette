@@ -25,6 +25,12 @@ export type MeetPanelProps = {
   partnerFailure: Failure | null;
   /** How many places are inside both reaches right now. */
   bothCount: number;
+  /** This device's dial position, so the lock control can name what it commits to. */
+  yourMinutes: number;
+  /** True once this device has minted a link committing to `yourMinutes`. */
+  youLocked: boolean;
+  onLockIn: () => void;
+  onMatchTheirs: (minutes: number) => void;
   /** The dial's budget, which is the number the link asked for and the reader sees. */
   budgetMinutes: number;
   permissionHint: PermissionHint;
@@ -202,6 +208,50 @@ export function MeetPanel(props: MeetPanelProps) {
             </button>
           </div>
           {props.partnerCoarse && <p className="meet-hint">to about a block</p>}
+
+          {/* The lock-in. Deliberately NOT live sync: two dials moving on two
+              screens needs a socket, a room and a server holding both
+              sessions, which is the thing this feature refused. What the
+              mechanic actually wants is smaller - a number that travels with
+              the link and means "this is what I am walking", rather than "this
+              is what I happen to be looking at". */}
+          {props.meet?.partnerLockedMinutes != null && (
+            <p className="meet-hint">
+              They&rsquo;re locked in at <strong>{props.meet.partnerLockedMinutes} min</strong>.
+              {props.meet.partnerLockedMinutes !== props.yourMinutes && (
+                <>
+                  {" "}
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => {
+                      playTap(true);
+                      props.onMatchTheirs(props.meet?.partnerLockedMinutes ?? props.yourMinutes);
+                    }}
+                  >
+                    Match {props.meet.partnerLockedMinutes} min
+                  </button>
+                </>
+              )}
+            </p>
+          )}
+          {props.youLocked ? (
+            <p className="meet-hint">
+              You&rsquo;re locked in at <strong>{props.yourMinutes} min</strong>. Send them the
+              link again if you change it.
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="button"
+              onClick={() => {
+                playPress();
+                props.onLockIn();
+              }}
+            >
+              Lock in {props.yourMinutes} min
+            </button>
+          )}
           {/* One admission, said out loud rather than implied. There is no
               per-request speed parameter and adding one would put a costing
               knob on the one endpoint that costs real graph expansions — so

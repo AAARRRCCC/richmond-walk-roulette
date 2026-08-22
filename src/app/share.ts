@@ -136,6 +136,22 @@ export type ShareLink = {
   originB: SharedOrigin | null;
   /** The `d` key: days since the epoch when the link was minted, or null. */
   mintedDay: number | null;
+  /**
+   * The `l` key: the budget the sender committed to, or null.
+   *
+   * **The whole of "both lock in before you spin", and it needs no server.**
+   * Live two-way sync would mean a socket, a room and a service holding both
+   * sessions - the thing this feature refused on purpose. What the mechanic
+   * actually needs is far less: a number that travels with the link and says
+   * "this is what I am walking, not what I happen to be looking at". The
+   * recipient sees it, matches it or does not, and Spin waits until they agree.
+   *
+   * Distinct from `b` on purpose. `b` is the dial position the link was minted
+   * at, which every share has carried since chunk 10 and which means only "here
+   * is what I was looking at". This is a commitment, and the two are not the
+   * same claim.
+   */
+  lockedMinutes: number | null;
   origin: SharedOrigin | null;
   budgetMinutes: number | null;
   floorMinutes: number | null;
@@ -175,6 +191,8 @@ export type ShareInput = {
    * to go stale and keeps a date-free, cacheable key.
    */
   mintedDay: number | null;
+  /** The budget the sender is committing to, or null for "not locked in". */
+  lockedMinutes: number | null;
   budgetMinutes: number;
   floorMinutes: number;
   dialMinimumMinutes: number;
@@ -276,6 +294,9 @@ export function encodeShare(input: ShareInput): string {
   // something private was disclosed. A preset-to-preset invite discloses
   // nothing, has nothing to go stale, and keeps a date-free key the edge can
   // cache.
+  // Only on a meet link: a lock is a promise to another walker, and a solo
+  // share has nobody to make it to.
+  if (input.meet && input.lockedMinutes !== null) push("l", String(input.lockedMinutes));
   const carriesPin =
     input.meet &&
     input.mintedDay !== null &&
@@ -299,6 +320,7 @@ export function decodeShare(search: string): ShareLink {
     originA: null,
     originB: null,
     mintedDay: null,
+    lockedMinutes: null,
     origin: null,
     budgetMinutes: null,
     floorMinutes: null,
@@ -374,6 +396,9 @@ export function decodeShare(search: string): ShareLink {
     originA,
     originB,
     mintedDay,
+    // Range-checked exactly like `b`, so nothing downstream needs a clamp and a
+    // forged value cannot name a budget the dial could not hold.
+    lockedMinutes: meet ? minutes("l") : null,
     origin,
     budgetMinutes: minutes("b"),
     floorMinutes: minutes("f"),
@@ -435,6 +460,7 @@ export function canonicalQuery(link: ShareLink): string {
   if (link.kind !== null && link.kind !== "any") push("k", link.kind);
   if (link.vibes.length > 0) push("v", link.vibes.join("."));
   if (link.placeId !== null) push("p", link.placeId);
+  if (link.lockedMinutes !== null) push("l", String(link.lockedMinutes));
   if (link.mintedDay !== null) push("d", String(link.mintedDay));
 
   return params.join("&");
@@ -447,6 +473,7 @@ export function isEmptyLink(link: ShareLink): boolean {
     link.originA === null &&
     link.originB === null &&
     link.mintedDay === null &&
+    link.lockedMinutes === null &&
     link.origin === null &&
     link.budgetMinutes === null &&
     link.floorMinutes === null &&

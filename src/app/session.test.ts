@@ -195,6 +195,7 @@ test("dismissMeet drops the notices and keeps the meeting", () => {
       mintedDay: 20690,
       partnerOutOfBounds: false,
       selfOutOfBounds: false,
+      partnerLockedMinutes: null,
     },
   };
   const dismissed = reduce(meeting, { type: "dismissMeet" });
