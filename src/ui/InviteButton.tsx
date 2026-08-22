@@ -1,5 +1,4 @@
 import { UsersIcon } from "@phosphor-icons/react";
-import { describeInvite } from "../app/share";
 import { shareNote, useShareAction } from "./useShareAction";
 
 export type InviteButtonProps = {
@@ -48,17 +47,7 @@ export function InviteButton(props: InviteButtonProps) {
       <button
         type="button"
         className="button"
-        onClick={() =>
-          void share({
-            url,
-            title: "Both in reach",
-            text: describeInvite({
-              originName: props.originName,
-              minutes: props.minutes,
-              roundTrip: props.roundTrip,
-            }),
-          })
-        }
+        onClick={() => void share({ url })}
       >
         <UsersIcon size={16} weight="bold" aria-hidden="true" />
         Invite someone to meet

@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { playPress } from "../lib/sound";
 
-/** What the share note is saying, if anything. */
+/**
+ * What the share note is saying, if anything.
+ *
+ * `shared` is retained but no longer reachable: it belonged to the system share
+ * sheet, which this app no longer opens. Kept so a future decision to bring it
+ * back does not have to re-derive the state machine.
+ */
 export type ShareState = "idle" | "copied" | "shared" | "manual";
 
 /** How long "Link copied." stays up before the note goes quiet again. */
@@ -48,37 +54,26 @@ export function useShareAction() {
     fallbackRef.current?.select();
   }, [state]);
 
-  const share = async (args: {
-    url: string;
-    title: string;
-    text: string;
-  }): Promise<void> => {
+  const share = async (args: { url: string }): Promise<void> => {
     playPress();
     setLastUrl(args.url);
 
-    // A capability check, not a representation check: either this browser can
-    // hand a link to the system or it cannot, and the domain question is that
-    // rather than what shape the property happens to have.
-    if ("share" in navigator) {
-      try {
-        await navigator.share({ title: args.title, text: args.text, url: args.url });
-        setState("shared");
-        return;
-      } catch (cause) {
-        // A cancelled sheet is not a failure and must not fall through to the
-        // clipboard: the reader said no.
-        if (cause instanceof Error && cause.name === "AbortError") {
-          setState("idle");
-          return;
-        }
-      }
-    }
-
+    // **Straight to the clipboard. The system share sheet is deliberately not
+    // used**, even where the browser offers one.
+    //
+    // `navigator.share` was the first implementation and it was wrong for this
+    // app: it interrupts with a full-screen chooser, it takes a variable number
+    // of taps to reach the thing everyone actually wants, and its outcome is
+    // unknowable - a resolved promise means the sheet closed, not that anything
+    // was sent, which is why there was never an honest confirmation to show for
+    // it. Copying is one action with one certain result, and the reader pastes
+    // it wherever they were already going to paste it.
     try {
       await navigator.clipboard.writeText(args.url);
       setState("copied");
-      return;
     } catch {
+      // Clipboard access can be refused outright, and a button that silently
+      // does nothing is worse than one that hands you the text to copy.
       setState("manual");
     }
   };

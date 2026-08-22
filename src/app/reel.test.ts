@@ -215,3 +215,47 @@ test("compass order is stable, so the same pool always gives the same wheel", ()
     ["far", "near"],
   );
 });
+
+test("the reel goes round the pool, whatever size the pool is", () => {
+  // The bug this pins: the reel stepped ONE slot per flip, so a throw covered
+  // a few dozen names. At 62 places that was most of a lap and read as a spin;
+  // at 242 it was under a quarter and read as a list scrolling past. The
+  // distance travelled is now the fixed thing, not the number of names.
+  const POOL = 242;
+  const { drawn } = replay(0, SETTINGS, 100, POOL);
+
+  // Total travel, following the wrap rather than the raw slot numbers.
+  let travelled = 0;
+  for (let i = 1; i < drawn.length; i += 1) {
+    const from = drawn[i - 1]!.slot;
+    const to = drawn[i]!.slot;
+    travelled += (to - from + POOL) % POOL;
+  }
+  assert.ok(
+    travelled >= SETTINGS.spinLaps * POOL,
+    `travelled ${travelled} slots, wanted at least ${SETTINGS.spinLaps * POOL}`,
+  );
+  // And it still arrives exactly, which is what the stride's final snap is for.
+  assert.equal(drawn.at(-1)?.slot, 100);
+});
+
+test("a pool smaller than the flip count keeps a stride of one", () => {
+  // The old behaviour, preserved where it was right: with nine places a stride
+  // above one would skip most of them and the reel would read as a stutter.
+  //
+  // Asserted on total travel rather than on each step, because the loop samples
+  // at 60fps while the first flips are 10ms apart - so the DRAWN sequence
+  // legitimately skips names the reel passed through. That is true of this
+  // component before and after the stride and is not what this test is about.
+  const { drawn } = replay(0);
+  let travelled = 0;
+  for (let i = 1; i < drawn.length; i += 1) {
+    travelled += (drawn[i]!.slot - drawn[i - 1]!.slot + SLOTS) % SLOTS;
+  }
+  const flips = flipsRemaining(0, SETTINGS);
+  assert.ok(
+    travelled <= flips + 2,
+    `travelled ${travelled} over ${flips} flips - a stride crept in`,
+  );
+  assert.equal(drawn.at(-1)?.slot, WINNER);
+});

@@ -33,6 +33,18 @@ export type Tuning = {
    * one *before* the winner and the card reads as a jump rather than a stop.
    */
   spinSettleMs: number;
+  /**
+   * How many times the reel travels the whole pool before it lands.
+   *
+   * A wheel that does not come round is not a wheel. The reel steps one flip at
+   * a time and a throw is a few dozen flips, so at 62 places it happened to
+   * cover most of a lap and read correctly; at 242 it covered under a quarter
+   * and read as a list scrolling past. This makes the distance covered a
+   * decision rather than an accident of how many places are in the pool: the
+   * stride is derived per throw so that laps x pool is travelled whatever the
+   * pool's size.
+   */
+  spinLaps: number;
   /** Master cue level, 0 to 1. */
   soundVolume: number;
   soundEnabled: boolean;
@@ -52,6 +64,7 @@ export const TUNING_DEFAULTS: Tuning = {
   spinEaseExponent: 0.5,
   spinMaxHoldMs: 4000,
   spinSettleMs: 500,
+  spinLaps: 2,
   soundVolume: 0.5,
   soundEnabled: true,
   spinCircularOrder: true,
@@ -75,6 +88,9 @@ export const TUNING_RANGE = {
   // takes over, and a dwell under about a tenth of a second is a flicker
   // rather than a stop - which is the bug this setting exists to prevent.
   spinSettleMs: { min: 100, max: 1500, step: 20 },
+  // Two is a wheel. One reads as a list that stopped; past about four the
+  // names are a blur and the slowdown is the only thing carrying the throw.
+  spinLaps: { min: 1, max: 6, step: 1 },
   soundVolume: { min: 0, max: 1, step: 0.05 },
   // The switches carry an entry only so a key missing from Tuning stays a
   // compile error; nothing reads their bounds.

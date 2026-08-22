@@ -7,7 +7,6 @@ import {
 } from "@phosphor-icons/react";
 import { REASON_COPY, REASON_ORDER, type PlaceVerdict } from "../app/eligibility";
 import { appleDirectionsUrl, googleDirectionsUrl } from "../lib/handoff";
-import { describeMeetResult, describeShare } from "../app/share";
 import { shareNote, useShareAction } from "./useShareAction";
 import { describeBothBy, describeGap, type MeetSplit } from "../app/meet";
 import { playPress } from "../lib/sound";
@@ -121,17 +120,7 @@ export function ResultCard(props: ResultCardProps) {
   const split = props.split ?? null;
   const { state: shareState, lastUrl, fallbackRef, share } = useShareAction();
 
-  const onShare = (): Promise<void> =>
-    share({
-      url: props.shareUrl,
-      title: place.name,
-      text: describeShare({
-        placeName: place.name,
-        originName: props.originName,
-        walkMinutes: props.budgetMinutes,
-        roundTrip: props.roundTrip,
-      }),
-    });
+  const onShare = (): Promise<void> => share({ url: props.shareUrl });
 
   /**
    * The answer link: "here is where we both can get to, and where the spin
@@ -145,16 +134,7 @@ export function ResultCard(props: ResultCardProps) {
    * behind the panel's promise that a start never reaches the other person
    * unless this button is pressed.
    */
-  const onSendBack = (): Promise<void> =>
-    share({
-      url: props.answerUrl ?? "",
-      title: place.name,
-      text: describeMeetResult({
-        placeName: place.name,
-        minutes: props.budgetMinutes,
-        roundTrip: props.roundTrip,
-      }),
-    });
+  const onSendBack = (): Promise<void> => share({ url: props.answerUrl ?? "" });
   // A skeleton means "still coming". Once the attempts are spent it is a lie,
   // and the honest answer is a dash next to something to press.
   const pending = props.routeLoading && !props.routeFailed;

@@ -1,7 +1,7 @@
 {
   "$comment": "Gzipped bytes of the app's own JS, excluding the MapLibre chunk. `actual` is rewritten by each chunk's commit from a real build. `ceiling` was 102400 (100 KiB) for the whole v0.5 run and was raised once, at the end, to 104448 (102 KiB) when the weather feature was switched on by a human decision - the 100 KiB figure was set against a build with that feature disabled. It is never raised to make a build pass. See docs/plans/HUMAN-REVIEW.md section 1.",
   "ceiling": 104448,
-  "actual": 102651,
+  "actual": 102417,
   "history": [
     {
       "label": "baseline (v0.4, before the harness)",
@@ -70,6 +70,10 @@
     {
       "label": "weather switched on (human decision)",
       "bytes": 102651
+    },
+    {
+      "label": "feedback: clipboard share, rain odds, reel laps",
+      "bytes": 102417
     }
   ]
 }

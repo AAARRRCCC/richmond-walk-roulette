@@ -50,10 +50,30 @@ export const UV_SHELTER = 8;
  * inventing a hazard, and this codebase does not do that.
  */
 export const COLD_CAP_F = 10;
-/** Percent chance at which a slot counts as rain. */
+/** Percent chance at which a slot counts as rain on the strength of odds alone. */
 export const RAIN_CHANCE = 55;
-/** Inches in the hour at which a slot counts as rain whatever the chance says. */
-export const RAIN_INCHES = 0.01;
+/**
+ * Inches in the hour at which a slot counts as rain on the strength of amount.
+ *
+ * **Raised from 0.01, which was a trace and a mistake.** The two tests are
+ * OR'd, so at 0.01 any hour carrying a rounding error of precipitation capped
+ * the dial no matter how unlikely the forecast said it was - observed live at
+ * 0.189 in with a 40% chance, which is a forecast more likely to be wrong than
+ * right, shortening somebody's walk on the strength of it.
+ *
+ * 0.05 in/hr is light but unmistakable rain rather than a damp reading, and it
+ * still has to clear {@link RAIN_CHANCE_FLOOR} before it counts.
+ */
+export const RAIN_INCHES = 0.05;
+/**
+ * The odds an amount forecast must also clear before it may cap a walk.
+ *
+ * Capping is a strong action - it takes reach away from somebody who asked for
+ * it - so it should need a signal in both dimensions: enough rain to matter AND
+ * enough chance to believe. Below this the amount is reported in the conditions
+ * line, where it informs, and changes nothing about the dial.
+ */
+export const RAIN_CHANCE_FLOOR = 35;
 /** Minutes of headroom between the walk ending and the rain starting. */
 export const CAP_MARGIN_MINUTES = 5;
 /** More headroom for a storm than for rain: getting wet is not being outdoors in one. */
@@ -155,8 +175,13 @@ function capAt(
 
 /** Whether a slot is wet enough to walk out of. Null is unknown, never zero. */
 function isWet(slot: WeatherSlot): boolean {
+  // Likely on its own: the odds are past the point where a walker would take a
+  // coat, whatever the amount is forecast to be.
   if (slot.precipChance !== null && slot.precipChance >= RAIN_CHANCE) return true;
-  return slot.precipInches !== null && slot.precipInches >= RAIN_INCHES;
+  // Or enough rain to matter AND enough chance to believe. Both, not either -
+  // see RAIN_INCHES for the live case that proved OR was wrong.
+  if (slot.precipInches === null || slot.precipInches < RAIN_INCHES) return false;
+  return slot.precipChance === null || slot.precipChance >= RAIN_CHANCE_FLOOR;
 }
 
 /**

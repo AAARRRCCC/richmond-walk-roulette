@@ -88,12 +88,32 @@ export function flipsRemaining(elapsed: number, settings: Tuning): number {
 }
 
 /**
+ * How many slots one flip advances, so that the whole throw travels
+ * `spinLaps` times round the pool.
+ *
+ * **This is what makes the reel a wheel at any pool size.** A throw is a few
+ * dozen flips, which happened to be most of a lap at 62 places and is under a
+ * quarter at 242 - the same code reading as a spin in one case and as a list
+ * scrolling past in the other. Deriving the stride from the pool keeps the
+ * *travelled distance* fixed instead of the *number of names*.
+ *
+ * At least 1: a pool smaller than the flip count still steps one at a time,
+ * which is the old behaviour and the right one there.
+ */
+function stride(settings: Tuning, slotCount: number): number {
+  const flips = flipsRemaining(0, settings);
+  if (flips <= 0 || slotCount <= 0) return 1;
+  return Math.max(1, Math.ceil((settings.spinLaps * slotCount) / flips));
+}
+
+/**
  * The throw proper: positioned by how many flips are still owed, so each one
- * steps a single slot closer to the winner. Held one short of it, because the
- * winner is only ever arrived at deliberately, in the run-in below.
+ * steps one stride closer to the winner. Held one stride short of it, because
+ * the winner is only ever arrived at deliberately, in the run-in below.
  */
 function throwSlot(elapsed: number, settings: Tuning, winnerSlot: number, slotCount: number): number {
-  return wrap(winnerSlot - Math.max(1, flipsRemaining(elapsed, settings)), slotCount);
+  const step = stride(settings, slotCount);
+  return wrap(winnerSlot - Math.max(1, flipsRemaining(elapsed, settings)) * step, slotCount);
 }
 
 /**
@@ -108,7 +128,8 @@ function throwSlot(elapsed: number, settings: Tuning, winnerSlot: number, slotCo
 function waitingSlot(elapsed: number, settings: Tuning, winnerSlot: number, slotCount: number): number {
   const waited = elapsed - settings.spinDurationMs;
   const steps = Math.floor(waited / settings.spinLastFlipMs);
-  return wrap(winnerSlot - 1 + steps, slotCount);
+  const step = stride(settings, slotCount);
+  return wrap(winnerSlot - step + steps * step, slotCount);
 }
 
 export type ReelFrame =
@@ -140,12 +161,19 @@ export function reelFrameAt(
   }
 
   // The run-in: walk forward from wherever the reel was to the winner, one
-  // slot per final-cadence tick, so the winner is stepped onto in view.
+  // stride per final-cadence tick, so the winner is stepped onto in view.
+  //
+  // Counted in strides rather than slots, and the last one SNAPS to the winner
+  // rather than adding a stride: stepping blindly could overshoot and the reel
+  // would arrive on the wrong name, which is the one thing this run-in exists
+  // to prevent.
+  const step = stride(settings, slotCount);
   const distance = wrap(winnerSlot - stop.slot, slotCount);
+  const strides = Math.ceil(distance / step);
   const steps = Math.floor((elapsed - stop.elapsed) / settings.spinLastFlipMs);
-  if (steps < distance) return { kind: "flip", slot: wrap(stop.slot + steps, slotCount) };
+  if (steps < strides) return { kind: "flip", slot: wrap(stop.slot + steps * step, slotCount) };
 
-  const restingSince = stop.elapsed + distance * settings.spinLastFlipMs;
+  const restingSince = stop.elapsed + strides * settings.spinLastFlipMs;
   if (elapsed - restingSince >= settings.spinSettleMs) return { kind: "land" };
   return { kind: "rest", slot: winnerSlot };
 }

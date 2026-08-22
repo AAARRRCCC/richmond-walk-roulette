@@ -24,6 +24,7 @@ import {
   HEAT_SHELTER_F,
   MIN_SURVIVORS,
   RAIN_CHANCE,
+  RAIN_CHANCE_FLOOR,
   RAIN_INCHES,
   SHORT_WALK_MINUTES,
   STALE_MULTIPLE,
@@ -129,15 +130,36 @@ test("rain 40 minutes out on a 50-minute round trip caps at 35", () => {
   assert.equal(cap?.untilMs, NOW_MS + 40 * MINUTE);
 });
 
-test("measured precipitation counts as rain even when the chance does not", () => {
-  // The two-sided test the rain rule is written with. A model can report a low
-  // probability alongside a real quantity, and a rule reading only the chance
-  // would walk the reader out into it.
-  const verdict = deriveWeatherRules(
-    baseReport(withSlotAt(40, { precipChance: 10, precipInches: RAIN_INCHES })),
+test("measured precipitation counts as rain only when the chance is believable", () => {
+  // REWRITTEN, 2026-08-22, after the old contract shortened a real walk.
+  //
+  // This used to assert that any amount at or over the threshold counted as
+  // rain "even when the chance does not" - the two tests were OR'd. Live
+  // forecast: 0.189 in at a 40% chance, which capped the dial on an outcome
+  // more likely not to happen than to happen, and the walker had no idea why
+  // half their dial had gone. The amount path now has to clear the odds floor
+  // as well.
+  const believable = deriveWeatherRules(
+    baseReport(
+      withSlotAt(40, { precipChance: RAIN_CHANCE_FLOOR, precipInches: RAIN_INCHES }),
+    ),
     INPUTS,
   );
-  assert.deepEqual(ids(verdict), ["rain-window"]);
+  assert.deepEqual(ids(believable), ["rain-window"], "enough rain and enough chance");
+
+  const unlikely = deriveWeatherRules(
+    baseReport(
+      withSlotAt(40, { precipChance: RAIN_CHANCE_FLOOR - 1, precipInches: RAIN_INCHES * 4 }),
+    ),
+    INPUTS,
+  );
+  assert.deepEqual(ids(unlikely), [], "a lot of rain nobody expects caps nothing");
+
+  const trace = deriveWeatherRules(
+    baseReport(withSlotAt(40, { precipChance: 90, precipInches: RAIN_INCHES / 10 })),
+    INPUTS,
+  );
+  assert.deepEqual(ids(trace), ["rain-window"], "and high odds still stand on their own");
 
   // And the null case from the other side: unknown is not wet.
   const unknown = deriveWeatherRules(
