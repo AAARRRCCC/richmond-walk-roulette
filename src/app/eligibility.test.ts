@@ -10,6 +10,7 @@ import {
   suggestFix,
   summaryLine,
   type ExclusionReason,
+  type MeetContext,
   type PoolConditions,
   type PoolRule,
 } from "./eligibility.ts";
@@ -64,6 +65,7 @@ const shutRule = (ids: string[], extra: Partial<PoolRule> = {}): PoolRule => ({
 
 const conditionsOf = (extra: Partial<PoolConditions> = {}): PoolConditions => ({
   reach: reachOf({ minutes: 30, polygons: OUTER }),
+  partnerReach: null,
   floorPolygons: null,
   vibes: [],
   edgeOnly: false,
@@ -383,4 +385,181 @@ test("a deferred rule holds an unmeasured place out of the pool but inside the g
   // one covers that.
   assert.deepEqual(report.baseIncluded.map((p) => p.id), ["near", "mid", "edge"]);
   assert.equal(report.counts["wrong-terrain"], 1);
+});
+
+// ---------------------------------------------------------------------------
+// Step 1.5 — the other person, when they are the obstacle
+// ---------------------------------------------------------------------------
+
+const YOU = { lng: 0, lat: 0 };
+const THEM = { lng: 1, lat: 0 };
+
+/**
+ * Inside YOUR reach and outside theirs, which is the state step 1.5 exists for.
+ *
+ * A place outside BOTH reports `out-of-reach` as its primary reason, and the
+ * branch is gated on `out-of-their-reach` being primary — as it must be, or a
+ * place three miles from everybody would offer to widen the meeting.
+ *
+ * At 0.205 rather than 0.2 because `contains` has an explicit no-guarantee for
+ * a point sitting exactly on an edge, and 0.2 is exactly where their
+ * 80-minute square ends.
+ */
+const MEET_MID: Place = { id: "mid", name: "Midpoint", lng: 0.205, lat: 0, tags: ["park"] };
+
+/**
+ * Two ladders whose radii grow by m/100, centred whereever the caller says.
+ *
+ * Parameterised rather than closed over YOU/THEM: a reader keyed on a
+ * hard-coded longitude answers the same square for both sides the moment a test
+ * moves one of them, which silently turns "no overlap" into "total overlap".
+ */
+const ladders =
+  (you: { lng: number }, them: { lng: number }, scale = 100) =>
+  (origin: { lng: number }, minutes: number): MultiPolygon | null =>
+    origin.lng === you.lng
+      ? square(0, 0, minutes / scale)
+      : origin.lng === them.lng
+        ? square(1, 0, minutes / scale)
+        : null;
+
+const meetContext = (extra: Partial<MeetContext> = {}): MeetContext => ({
+  you: YOU,
+  them: THEM,
+  roundTrip: false,
+  floorMinutes: null,
+  warmed: 1,
+  partnerWarmed: 1,
+  contourAt: ladders(YOU, THEM),
+  ...extra,
+});
+
+/** Both warm, and nothing at all overlaps at the budget on screen. */
+const emptyOverlap = (): PoolConditions =>
+  conditionsOf({
+    reach: reachOf({ minutes: 30, polygons: square(0, 0, 0.3) }),
+    partnerReach: reachOf({ minutes: 30, polygons: square(1, 0, 0.3) }),
+  });
+
+test("suggestFix prefers a droppable cause over widening", () => {
+  // The reader's own chip is the thing they meant, so step 1 runs first and
+  // step 1.5 is reached only when it recovered nothing. Two places: one both
+  // of you can reach but the vibe chip excludes, and one only you can — so the
+  // pool is empty, `out-of-their-reach` is a live count, and dropping the chip
+  // still recovers something.
+  const shared: Place = { id: "shared", name: "Shared", lng: 0.5, lat: 0, tags: ["park"] };
+  const conditions: PoolConditions = {
+    ...conditionsOf({
+      reach: reachOf({ minutes: 30, polygons: square(0, 0, 1) }),
+      partnerReach: reachOf({ minutes: 30, polygons: square(1, 0, 0.7) }),
+    }),
+    vibes: ["food"],
+  };
+  const fix = suggestFix([shared, MEET_MID], conditions, new Map(), {
+    roundTrip: false,
+    meet: meetContext(),
+  });
+  assert.equal(fix.kind, "drop-rule");
+  assert.ok(fix.kind === "drop-rule");
+  assert.equal(fix.recovers, 1);
+});
+
+test("suggestFix returns widen-to-meet with a measured recovers", () => {
+  // Yours holds lng 0.205 from m = 21; theirs, centred at 1, only once
+  // 1 - m/100 < 0.205, i.e. from m = 80. Theirs is the binding side, which is
+  // the whole point of scanning both ladders rather than one.
+  const fix = suggestFix([MEET_MID], emptyOverlap(), new Map(), {
+    roundTrip: false,
+    meet: meetContext(),
+  });
+  assert.equal(fix.kind, "widen-to-meet");
+  assert.ok(fix.kind === "widen-to-meet");
+  assert.equal(fix.budgetMinutes, 80);
+  assert.equal(fix.nearest, "Midpoint");
+  assert.equal(fix.recovers, 1);
+  assert.equal(fix.hedged, false);
+});
+
+test("suggestFix returns meet-warming only while a warm-up is running", () => {
+  // The pair is the point: the first draft would have returned `meet-warming`
+  // for BOTH of these, and the second one is unrecoverable rather than
+  // temporary.
+  const warming = suggestFix([MEET_MID], emptyOverlap(), new Map(), {
+    roundTrip: false,
+    meet: meetContext({ partnerWarmed: 0.5 }),
+  });
+  assert.equal(warming.kind, "meet-warming");
+
+  // Warm, with a ladder full of holes: an answer with one word of hedging,
+  // never a permanent wait. Distinct origins so the memo cannot answer from
+  // the test above.
+  const holedYou = { lng: 2, lat: 2 };
+  const holedThem = { lng: 3, lat: 3 };
+  const base = ladders(holedYou, holedThem);
+  const holed = suggestFix([MEET_MID], emptyOverlap(), new Map(), {
+    roundTrip: false,
+    meet: meetContext({
+      you: holedYou,
+      them: holedThem,
+      contourAt: (origin, minutes) => (minutes % 2 === 0 ? null : base(origin, minutes)),
+    }),
+  });
+  assert.equal(holed.kind, "widen-to-meet", "an odd rung still answers");
+  assert.ok(holed.kind === "widen-to-meet");
+  assert.equal(holed.hedged, true, "and the rungs it could not read are disclosed");
+});
+
+test("suggestFix returns no-overlap when nothing overlaps under the dial's maximum", () => {
+  const farYou = { lng: 4, lat: 4 };
+  const farThem = { lng: 5, lat: 5 };
+  const fix = suggestFix([MEET_MID], emptyOverlap(), new Map(), {
+    roundTrip: false,
+    // Radii that never grow enough to hold anything shared, even at rung 100.
+    meet: meetContext({
+      you: farYou,
+      them: farThem,
+      contourAt: ladders(farYou, farThem, 5000),
+    }),
+  });
+  assert.equal(fix.kind, "no-overlap");
+  assert.ok(fix.kind === "no-overlap");
+  assert.equal(fix.hedged, false, "nothing was unmeasurable; there is simply no overlap");
+});
+
+test("suggestFix's proposed budget survives the floor", () => {
+  // The test that the notice and the pool answer the same question: every place
+  // counted in `recovers` is a place `derivePool` at that budget includes.
+  const floorYou = { lng: 6, lat: 6 };
+  const floorThem = { lng: 7, lat: 7 };
+  const floor = square(0, 0, 0.05);
+  const conditions: PoolConditions = { ...emptyOverlap(), floorPolygons: floor };
+  const fix = suggestFix([MEET_MID], conditions, new Map(), {
+    roundTrip: false,
+    meet: meetContext({
+      you: floorYou,
+      them: floorThem,
+      contourAt: ladders(floorYou, floorThem),
+      floorMinutes: 5,
+    }),
+  });
+  assert.ok(fix.kind === "widen-to-meet");
+
+  const atProposed = derivePool([MEET_MID], {
+    ...conditions,
+    reach: reachOf({ minutes: fix.budgetMinutes, polygons: square(0, 0, fix.budgetMinutes / 100) }),
+    partnerReach: reachOf({
+      minutes: fix.budgetMinutes,
+      polygons: square(1, 0, fix.budgetMinutes / 100),
+    }),
+  });
+  assert.equal(atProposed.included.length, fix.recovers);
+});
+
+test("no partner means none of this runs", () => {
+  // The ordinary case, asserted: with no meet context the new branch cannot be
+  // reached at all and the app is exactly the app it was.
+  const fix = suggestFix([MEET_MID], emptyOverlap(), new Map(), { roundTrip: false });
+  assert.notEqual(fix.kind, "widen-to-meet");
+  assert.notEqual(fix.kind, "no-overlap");
+  assert.notEqual(fix.kind, "meet-warming");
 });

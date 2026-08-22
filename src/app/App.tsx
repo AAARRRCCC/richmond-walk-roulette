@@ -25,6 +25,7 @@ import type { Json } from "../lib/json";
 import {
   MAX_MINUTES,
   NotConfiguredError,
+  cachedContour,
   cachedReach,
   fetchReach,
   hasSnapshot,
@@ -49,18 +50,15 @@ import {
   outboundFloorMinutes,
   outboundMinutes,
   reduce,
+  liveLinkQuery,
+  meetLinks,
+  shareInputFor,
   type Failure,
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
-import {
-  SHARE_PATH,
-  canonicalQuery,
-  decodeShare,
-  encodeShare,
-  shareUrl,
-  type ShareInput,
-} from "./share";
-import { PRESET_ORIGINS } from "../data/places";
+import { SHARE_PATH, decodeShare, shareUrl, type ShareInput } from "./share";
+import { describeMeetClause, meetSplit } from "./meet";
+import { PRESET_ORIGINS, type Origin } from "../data/places";
 import { formatClock, formatFeet, formatMinutes } from "../lib/format";
 import { describeGeolocationError, judgeFix, type PermissionHint } from "../lib/locate";
 import { useConditions } from "./useConditions";
@@ -113,6 +111,8 @@ import {
 } from "./eligibility";
 import { PoolList } from "../ui/PoolList";
 import { EmptyPoolNotice } from "../ui/EmptyPoolNotice";
+import { MeetPanel } from "../ui/MeetPanel";
+import { InviteButton } from "../ui/InviteButton";
 import { TuningPanel } from "../ui/TuningPanel";
 import { onSoundChange, playPress, playTap, setSoundOn, soundOn } from "../lib/sound";
 
@@ -346,24 +346,67 @@ export function App() {
   useEffect(() => onSoundChange(bumpSound), []);
   const sound = soundOn();
 
-  const { origin, failure } = state;
+  const { origin, failure, partner, originChosen } = state;
   const outbound = outboundMinutes(state);
+  const meetMode = partner !== null;
 
-  // Warm every contour the dial can reach — one batched engine query — so
-  // that moving the dial is a cache read rather than a request.
+  /**
+   * Warm every contour the dial can reach — one batched engine query — so that
+   * moving the dial is a cache read rather than a request.
+   *
+   * **Sequential in meet mode, yours first, from one effect**, and the `await`
+   * between the legs is the point. Yours is the one the map frames on and the
+   * one that puts something true on screen soonest; theirs then turns the
+   * overlap on. It also halves the peak burst against a limiter that charges
+   * per graph expansion rather than per request.
+   *
+   * Nothing at all runs while `originChosen` is false. That flag is the whole
+   * of the "opening an invite costs the recipient nothing" property: without
+   * it this effect would warm DEFAULT_ORIGIN, a house in the Fan the reader
+   * never chose.
+   *
+   * Their leg's failure goes to `partnerFailed` and never to `failed`, because
+   * `failure` is read by the on-demand fetch gate and by `status` — routing an
+   * error from the second leg there would blank the reader's own answer at any
+   * dial position of theirs that had not warmed.
+   */
   useEffect(() => {
     let cancelled = false;
-    prefetchLadder(origin, (progress) => {
-      if (cancelled) return;
-      dispatch({ type: "warmProgress", fraction: progress.done / progress.total });
-      bumpContours();
-    }).catch((cause: unknown) => {
+    const run = async (): Promise<void> => {
+      if (originChosen) {
+        await prefetchLadder(origin, (progress) => {
+          if (cancelled) return;
+          dispatch({ type: "warmProgress", fraction: progress.done / progress.total });
+          bumpContours();
+        });
+      }
+      // Gated on `originChosen` too, and this is the half that is easy to get
+      // wrong: warming THEIR ladder during an invite still costs the
+      // recipient's browser and IP a full 96-contour warm-up for a link they
+      // have not answered - which is exactly what "opening an invite costs
+      // nothing" promises it does not. `meet-in-the-middle` decision 8 asks the
+      // map to frame on the partner's contour alone in this state; that loses
+      // to `multiplayer-links` criterion 5, which is explicit, joint, and the
+      // one carrying the privacy argument. Nothing is drawn until the reader
+      // answers. See HUMAN-REVIEW 3.x.
+      if (cancelled || partner === null || !originChosen) return;
+      try {
+        await prefetchLadder(partner, (progress) => {
+          if (cancelled) return;
+          dispatch({ type: "partnerWarmProgress", fraction: progress.done / progress.total });
+          bumpContours();
+        });
+      } catch (cause: unknown) {
+        if (!cancelled) dispatch({ type: "partnerFailed", failure: describe(cause) });
+      }
+    };
+    void run().catch((cause: unknown) => {
       if (!cancelled) dispatch({ type: "failed", failure: describe(cause) });
     });
     return () => {
       cancelled = true;
     };
-  }, [origin]);
+  }, [origin, partner, originChosen]);
 
   // Read straight from the cache on every render. These are Map lookups plus a
   // point-in-polygon sweep over 62 places, which is cheaper than the
@@ -431,7 +474,21 @@ export function App() {
   const poolSun = solarEvents(poolArrivalMs, origin.lat, origin.lng);
 
   const floorOutbound = outboundFloorMinutes(state);
-  const reach = cachedReach(origin, outbound, floorOutbound ?? 0);
+  const reach = originChosen ? cachedReach(origin, outbound, floorOutbound ?? 0) : null;
+  /**
+   * Their reach at the same budget, and **deliberately with no floor.** This is
+   * the one line in this file whose obvious version is wrong.
+   *
+   * `cachedReach` subtracts the floor contour *around the origin it is given*,
+   * so passing `floorOutbound` here punches a hole around **the other person's
+   * house** — and every place near their start then fails the containment test
+   * and is reported as `out-of-their-reach`, "Outside the other person's
+   * reach.", about the places that are most emphatically in it. A floor is a
+   * preference about the reader's own walk ("make me go at least this far"). It
+   * is a fact about one walker and has no meaning applied to the other. Yours
+   * keeps its floor; theirs never has one.
+   */
+  const partnerReach = partner === null ? null : cachedReach(partner, outbound, 0);
 
   /**
    * The floor contour itself, so "too close" can be told apart from "too far".
@@ -586,6 +643,7 @@ export function App() {
 
   const poolConditions: PoolConditions = {
     reach,
+    partnerReach,
     floorPolygons,
     vibes: state.vibes,
     edgeOnly: state.edgeOnly,
@@ -784,6 +842,44 @@ export function App() {
    * The `drawable` guard is here, not only on the button, because Spin again in
    * the result card calls this directly.
    */
+  /**
+   * Their walk to the picked place, and **only** to the picked place.
+   *
+   * No partner route prefetch anywhere: their minutes are needed in exactly one
+   * spot, the result card, for the place that won. That is what keeps the felt
+   * cost from doubling and it resolves three hazards at once — `warmedNow` and
+   * `warmedWide` stay keyed on your origin because there is no second wave to
+   * guard, the route LRU is not asked to hold two origins' worth of the pool,
+   * and the Spin gate keeps its meaning and its timer.
+   *
+   * A failure here is swallowed into a dash on the card. Not into `failure` and
+   * not into `partnerFailure` either: a missing route to one destination is one
+   * unknown number, not a broken leg.
+   */
+  useEffect(() => {
+    if (partner === null || picked === null) return;
+    if (cachedRoute(partner, picked) !== undefined) return;
+    let cancelled = false;
+    fetchWalkingRoute(partner, picked)
+      .then(() => {
+        if (!cancelled) bumpRoutes();
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [partner, picked, state.routeAttempt]);
+
+  const partnerRoute = partner !== null && picked !== null ? cachedRoute(partner, picked) : null;
+  const split = meetMode
+    ? meetSplit({
+        yourSeconds: route?.durationSeconds ?? null,
+        theirSeconds: partnerRoute?.durationSeconds ?? null,
+        roundTrip: state.roundTrip,
+      })
+    : null;
+  const partnerName = partner?.name ?? "Their start";
+
   const spin = () => {
     if (candidates.length === 0 || drawable.length === 0 || routesWarming) return;
     playPress();
@@ -924,7 +1020,11 @@ export function App() {
   // A cached contour outranks a failure. One position that exhausted its
   // retries should not put the whole panel in an error state while the dial is
   // sitting on a position that is perfectly warm.
-  const status: ReachStatus = reach
+  const status: ReachStatus = !originChosen
+    ? // Renders nothing at all rather than a skeleton pair promising a
+      // measurement nobody asked for.
+      "idle"
+    : reach
     ? "ready"
     : failure
       ? failure.configured
@@ -1100,6 +1200,21 @@ export function App() {
                 : ("fact" as const),
           },
         ]),
+    ...(meetMode
+      ? [
+          {
+            // The pace, admitted rather than implied. `WALKING_SPEED_KMH` is
+            // pinned in the proxy and stamped into every snapshot; there is no
+            // per-request speed parameter and adding one would put a costing
+            // knob on the one endpoint that costs real graph expansions. So
+            // both walks are measured at the same pace and the app says so.
+            // `assumed`, because it is an assumption about two people.
+            key: "meet" as const,
+            text: "Both walks are measured at the same pace.",
+            tier: "assumed" as const,
+          },
+        ]
+      : []),
     {
       // Neither handoff carries our walk - both send two coordinates and let
       // the other app recompute with its own graph and its own pedestrian
@@ -1131,6 +1246,10 @@ export function App() {
             ? picked.name
             : `${DETOUR_LABELS[picked.detour]}: ${picked.name}`,
           ...walkClauses(route, routeFailed, state.roundTrip),
+          // Sits with the duration facts because it IS one: the two walks to
+          // the same place. Null outside a meet session, so the sentence grows
+          // by a clause only for a reader who has a second person in it.
+          split === null ? "" : (describeMeetClause(split, partnerName) ?? ""),
           withinBudget ? "" : "outside your current time budget",
           // The only path by which the chart's headline fact reaches a screen
           // reader, since the card is deliberately not a live region.
@@ -1163,25 +1282,27 @@ export function App() {
 
   // Rebuilt each render rather than memoised: it is read during TimeDial's
   // render, and App already re-renders whenever the contour cache changes.
-  const dialWarm = (minutes: number) =>
-    isWarm(origin, state.roundTrip ? Math.floor(minutes / 2) : minutes);
+  // A rung warm on one side only cannot answer the question the dial is asking.
+  const dialWarm = (minutes: number) => {
+    const outboundAt = state.roundTrip ? Math.floor(minutes / 2) : minutes;
+    return isWarm(origin, outboundAt) && (partner === null || isWarm(partner, outboundAt));
+  };
 
   /**
    * This spin, as a link would carry it. A plain expression like everything else
    * here: it is read once per render and never memoised.
    */
-  const shareInput: ShareInput = {
-    origin,
-    budgetMinutes: state.budgetMinutes,
-    floorMinutes: state.floorMinutes,
-    dialMinimumMinutes: dialMinimum(state.roundTrip),
-    roundTrip: state.roundTrip,
-    edgeOnly: state.edgeOnly,
-    climb: state.climb,
-    kind: state.kind,
-    vibes: state.vibes,
-    placeId: picked?.id ?? "",
-  };
+  const shareInput: ShareInput = shareInputFor(state, picked?.id ?? "");
+
+  /**
+   * The two links a meeting can mint, both null until the reader has chosen a
+   * start of their own — see `meetLinks` for why that gate is not optional.
+   */
+  // `conditions.atMs` rather than `Date.now()`: this runs during render, and
+  // the app already has one clock that ticks once a minute. Reading the real
+  // clock here would be an impure render AND would make `d` unstable between
+  // two renders in the same minute.
+  const links = meetLinks(state, window.location.origin, picked?.id ?? null, conditions.atMs);
 
   /**
    * Clear the address bar the moment it stops describing the screen.
@@ -1198,7 +1319,12 @@ export function App() {
   const urlCleared = useRef(false);
   useEffect(() => {
     if (urlCleared.current) return;
-    const live = canonicalQuery(decodeShare(encodeShare(shareInput)));
+    // Direction-aware: in a link being MINTED `ma` is the sender's own start,
+    // and in a link being READ it is the partner's. `liveLinkQuery` mirrors a
+    // meet session back into the shape it arrived in, without which this
+    // comparison would differ on every meet arrival and wipe the address bar on
+    // the first paint while it still described the screen.
+    const live = liveLinkQuery(state, picked?.id ?? null);
     if (state.shared !== null && live === state.shared.linkQuery) return;
     if (window.location.pathname === SHARE_PATH || window.location.search !== "") {
       window.history.replaceState(null, "", "/");
@@ -1264,7 +1390,25 @@ export function App() {
 
   const fix: PoolFix = emptyPool
     ? (weatherCapFix() ??
-      suggestFix(PLACES, poolConditions, cachedWalkMinutes(origin), { roundTrip: state.roundTrip }))
+      suggestFix(PLACES, poolConditions, cachedWalkMinutes(origin), {
+        roundTrip: state.roundTrip,
+        // The two ladders and the two warm-up scalars, passed in rather than
+        // read from a cache, so `suggestFix` stays as testable as the rest of
+        // the module. `cachedContour` PEEKS: a scan touches up to 192 rungs and
+        // must not promote or write a single LRU entry while doing it.
+        meet:
+          partner === null
+            ? null
+            : {
+                you: origin,
+                them: partner,
+                roundTrip: state.roundTrip,
+                floorMinutes: floorOutbound,
+                warmed: state.warmed,
+                partnerWarmed: state.partnerWarmed,
+                contourAt: cachedContour,
+              },
+      }))
     : NO_FIX;
 
   /**
@@ -1291,6 +1435,18 @@ export function App() {
         return;
       case "lower-floor":
         dispatch({ type: "floor", minutes: 0 });
+        return;
+      // The button moves the dial; it does not promise the place. `contains`
+      // has no on-edge guarantee and the overlap boundary is exactly where two
+      // generalised contours graze, so the app widens and shows the real state
+      // at the new budget rather than claiming the named place will be there.
+      case "widen-to-meet":
+        dispatch({ type: "budget", minutes: fix.budgetMinutes });
+        return;
+      case "no-overlap":
+        dispatch({ type: "leaveMeet" });
+        return;
+      case "meet-warming":
         return;
       case "none":
         dispatch({ type: "clearFilters" });
@@ -1331,6 +1487,10 @@ export function App() {
         route={route}
         pickingOrigin={picking}
         spinning={state.spinning}
+        partnerOrigin={partner}
+        partnerBand={partnerReach?.bands.at(-1)?.polygons ?? null}
+        partnerName={partnerName}
+        originVisible={originChosen}
         onPickPlace={(id) => dispatch({ type: "pickPlace", pickedId: id })}
         onMoveOrigin={moveOrigin}
       />
@@ -1398,6 +1558,29 @@ export function App() {
             permissionHint={permissionHint}
             onUseMyLocation={useMyLocation}
           />
+          {(state.partner !== null || state.meet !== null) && (
+            <MeetPanel
+              partner={partner}
+              partnerName={partnerName}
+              // Derived, never stored: a preset partner resolves to its own
+              // PRESET_ORIGINS entry and keeps its own id, so only a pin is
+              // "partner" - and a pin in a meet link is always coarse.
+              partnerCoarse={partner?.id === "partner"}
+              originChosen={originChosen}
+              meet={state.meet}
+              partnerWarmed={state.partnerWarmed}
+              partnerFailure={state.partnerFailure}
+              bothCount={candidates.length}
+              budgetMinutes={state.budgetMinutes}
+              permissionHint={permissionHint}
+              locating={locating}
+              nowMs={conditions.atMs}
+              onUseMyLocation={useMyLocation}
+              onPickOnMap={() => dispatch({ type: "beginPickOrigin" })}
+              onSelectPreset={(next: Origin) => dispatch({ type: "origin", origin: next })}
+              onLeaveMeet={() => dispatch({ type: "leaveMeet" })}
+            />
+          )}
           {state.locationNotice && (
             <div className="notice-stack" {...inertWhen(picking)}>
               <p
@@ -1462,7 +1645,11 @@ export function App() {
             outboundMinutes={outbound}
             roundTrip={state.roundTrip}
             isWarm={dialWarm}
-            warmedFraction={state.warmed}
+            warming={originChosen}
+            // Display only; no gate reads it. In meet mode both legs count,
+            // so the bar tracks the whole wait rather than jumping to full
+            // while the second half is still arriving.
+            warmedFraction={meetMode ? (state.warmed + state.partnerWarmed) / 2 : state.warmed}
             disabled={picking}
             onChange={(minutes) => dispatch({ type: "budget", minutes })}
             onFloorChange={(minutes) => dispatch({ type: "floor", minutes })}
@@ -1503,6 +1690,19 @@ export function App() {
               duskNote={status === "ready" ? describeDusk(conditions.light) : null}
               outerMinutes={outer?.minutes ?? outbound}
               commitKey={state.framingKey}
+              meet={
+                meetMode
+                  ? {
+                      bothCount: pool.included.length,
+                      outerMinutes: outbound,
+                      // False until their reach exists, which keeps the area
+                      // line and appends "their side still working": the pool
+                      // is one person's until then, and "you can both reach"
+                      // over a one-sided pool is a claim nothing checked.
+                      partnerWarm: partnerReach !== null,
+                    }
+                  : null
+              }
             />
           )}
 
@@ -1533,6 +1733,9 @@ export function App() {
             // reel exists to show a real walk per tick, so it waits for the
             // whole pool rather than turning through whichever routes are back.
             disabled={
+              // Spin joins drawing, warming and sharing in the list of things
+              // that must not happen before the reader has a start of their own.
+              !originChosen ||
               candidates.length === 0 ||
               drawable.length === 0 ||
               routesWarming ||
@@ -1550,6 +1753,16 @@ export function App() {
                   : `Measuring climb ${settledRoutes}/${basePool.length}`
                 : "Spin"}
           </button>
+
+          {status === "ready" && (
+            <InviteButton
+              url={links.invite}
+              originName={origin.id === "custom" || origin.id === "me" ? "a dropped pin" : origin.name}
+              minutes={state.budgetMinutes}
+              roundTrip={state.roundTrip}
+              pin={origin.id === "custom" || origin.id === "me"}
+            />
+          )}
 
           {state.shared !== null &&
             (state.shared.missingPlaceId !== null || state.shared.clampedFromMinutes !== null) && (
@@ -1636,6 +1849,9 @@ export function App() {
               originName={origin.name}
               budgetMinutes={state.budgetMinutes}
               sharedArrival={state.shared !== null}
+              split={split}
+              partnerName={partnerName}
+              answerUrl={meetMode ? links.answer : null}
               onSpinAgain={spin}
               onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
               onDismiss={() => {

@@ -344,6 +344,55 @@ card. The picture is the same for every share — runtime image rendering does n
 fit the Workers Free plan's 10 ms of CPU per request, and that is a decision
 rather than an oversight.
 
+## Both in reach
+
+Two people, two doors, one question: *where can we both walk to in half an hour?*
+
+Press **Invite someone to meet** and you get a link. The other person opens it, sees whose
+start they are being asked to meet and how precisely it was shared, sets their own start
+on their own device, and gets an answer. The pool stops being what you can reach and
+becomes what you can **both** reach; the card shows both walks; and if they want to send
+the result back, that is a second press and a second link.
+
+    /s?m=1&ma=carytown&b=30&rt=1
+
+It is not called "meet in the middle", which is the phrase every competitor uses and is a
+lie in this app's own terms. **There is no middle.** There is an overlap, and the midpoint
+of two people on opposite banks of the James is in the river — the same refusal as refusing
+the circle. Nothing here computes an intersection polygon or prints an overlap area: the
+two contours are drawn and where they cross the region simply looks denser, which is
+compositing rather than a measurement, and the app never names it. What it names instead is
+a count, because the thing two people want to know is how many options they have.
+
+**Most pairs share nothing at a normal budget, and that is the feature's opening move
+rather than its failure.** Measured over four real preset pairs: at 20 minutes all four
+share nothing, and at 30 minutes three of the four still do. So when the overlap is empty
+the app scans both cached ladders and says the smallest budget at which something *is*
+shared — *"At 42 minutes, Byrd Park comes into both your reaches"* — with a button that
+moves the dial there. When no such budget exists under the dial's widest, it says that
+plainly and offers to drop back to one person.
+
+**There is no room, no socket, no account, and no server that ever holds both coordinates
+at once.** Everything is in the link. That has a consequence the app states rather than
+hides: a link cannot be revoked, and one carrying a pin says so before you press —
+*"It does not expire and it cannot be taken back. Treat it like a text message, not a
+secret."* A preset start shares as an id and leaks no coordinate at all; a dropped pin
+shares at the same ~110 m as any other share. An invite older than two days shows its age
+and still opens, because refusing it would be theatre when the coordinate is in the URL
+either way.
+
+**Opening an invite costs the person who received it nothing.** Until they choose a start,
+nothing is drawn, nothing is measured, no request is made, and no link can be minted from
+their device — a link minted before they chose would name somebody else's front door as
+their own. Their coordinate never enters a URL and never reaches the other person unless
+they press *Send this back*.
+
+**Both walks are measured at the same pace**, and the card says so. There is one pinned
+walking speed in this app and no per-person one; two people who walk differently will find
+the app wrong for both of them by the same amount in opposite directions. That is an
+assumption, stated, rather than a fact implied — which is why no label anywhere in this
+feature says "their pace".
+
 ## Hours, and what the app will not claim
 
 The app says whether a place is likely to be open **when you would get there** —

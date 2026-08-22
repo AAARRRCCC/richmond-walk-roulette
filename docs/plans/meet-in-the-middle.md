@@ -1,6 +1,6 @@
 # Both in reach
 
-**Status:** spec — not implemented
+**Status:** implemented, chunk 11 (2026-08-22). See *Corrections after implementation*.
 **Slug:** `meet-in-the-middle`
 
 > The slug is the file name and the chunk name. **The feature is called "Both in reach" everywhere a
@@ -1634,3 +1634,51 @@ rests on a number nobody produced.
     layer can express two walkers. This spec's position is that the admission is enough, because the
     overlap is a blunt region and one pinned pace is a stated assumption rather than a hidden one — but
     it is a position, not a fact.
+
+## Corrections after implementation
+
+Landed 2026-08-22 as chunk 11b, together with `multiplayer-links`. Six.
+
+1. **The vocabulary is `multiplayer-links`', as this document already conceded.**
+   `partner: Origin | null`, `originChosen`, `leaveMeet`/`dismissMeet`, no
+   `Partner` type and no `coarse` field. Whether the partner arrived as a pin is
+   derived from `partner.id === "partner"`, which is what the panel's "to about
+   a block" hint reads.
+
+2. **`suggestFix` needed its arguments widened, and the spec does not say how.**
+   Step 1.5 is written as if `you`, `them`, `warmed`, `partnerWarmed` and
+   `cachedContour` were in scope; `eligibility.ts` is deliberately free of both
+   the reducer's vocabulary and the contour cache. They arrive as one optional
+   `MeetContext` on the existing `budget` parameter, so every existing call site
+   compiles unchanged and the module stays testable without a cache.
+
+3. **`meet-warming` needs no button, and `EmptyPoolNotice` assumed one.** Its
+   `label()` returned a string for every variant, so the warming state would
+   have rendered a control that does nothing. It now returns `string | null` and
+   the notice renders no button at all for that one state — which is the honest
+   shape: it is not an answer yet, so it is not a fix yet.
+
+4. **The sr-only map summary must be written in one `setSummary` call, guarded
+   on props.** Split across two branches with an early return in between, the
+   repo's `react-hooks/set-state-in-effect` rule fires. The guard now asks
+   whether *either* side has something to say — `if ((!reach || !outerBand) &&
+   !partnerBand) return;` — which is also the clearer statement of the rule.
+
+5. **The `ASSEMBLED_LIMIT` question in *Cost* is answered: neither option was
+   taken, because neither is needed yet.** That section demands the implementer
+   pick between raising the limit to `LADDER.length * 4` and measuring a full
+   scrub. The premise is that two origins share 192 entries — true — but the
+   scan that would have filled them does not touch that cache at all:
+   `cachedContour` peeks the *contour* LRU and stores nothing, and the only
+   assembled entries a meet session creates are the reader's dial positions plus
+   one partner reach per dial position. That is the same pressure a floor
+   already applies. **Recorded as unmeasured**, and the honest reason it was not
+   raised is that raising a limit to fix a problem nobody has measured is the
+   kind of change this plan asks to be justified rather than assumed.
+
+6. **Open question 3's instrumentation did not run.** The two-sided sweep's cost
+   at the 250-place cap and `cachedMeetMinimum`'s first uncached call are both
+   still **assumed, not measured**, exactly as this document warns against. The
+   engine's port forward to the host failed part-way through this chunk and
+   never recovered, so the browser measurement that needs a real pair of pins
+   could not be taken. HUMAN-REVIEW 5.13.

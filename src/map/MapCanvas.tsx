@@ -104,6 +104,22 @@ export type MapCanvasProps = {
    * simply never hides until it is passed.
    */
   spinning?: boolean;
+  /** The other person's start, or null. Renders a second, undraggable marker. */
+  partnerOrigin?: LngLat | null;
+  /** Their outermost contour at the current budget, or null while warming. */
+  partnerBand?: MultiPolygon | null;
+  /** Their display name, for the text equivalent. Never free text from a link. */
+  partnerName?: string;
+  /**
+   * False before the reader of an invite has chosen their own start.
+   *
+   * The local marker is created unconditionally in the mount-once effect and
+   * positioned from `props.origin`, so without this a draggable pin sits on
+   * DEFAULT_ORIGIN throughout the invite state — a house in the Fan offered as
+   * the reader's own start, which is the exact lie the invite state exists to
+   * refuse.
+   */
+  originVisible?: boolean;
   onPickPlace: (id: string) => void;
   onMoveOrigin: (at: LngLat) => void;
 };
@@ -112,6 +128,9 @@ export function MapCanvas(props: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
+  const partnerMarkerRef = useRef<maplibregl.Marker | null>(null);
+  /** The last MultiPolygon handed to the partner source, for the same reason `bandsRef` exists. */
+  const partnerBandRef = useRef<MultiPolygon | null>(null);
   const readyRef = useRef(false);
   /** Bounds of the last framed contour, replayed when the rail resizes. */
   const boundsRef = useRef<maplibregl.LngLatBounds | null>(null);
@@ -183,6 +202,32 @@ export function MapCanvas(props: MapCanvasProps) {
     });
     markerRef.current = marker;
 
+    /**
+     * The partner's marker, created here and hidden by a class rather than in a
+     * later effect.
+     *
+     * The local marker, its drag handler, its nudge listener and the map click
+     * handler are all registered inside this one mount effect reading props
+     * through the `handlers` ref; a second create/destroy effect would
+     * introduce an ordering problem against `readyRef` for no benefit.
+     *
+     * Not focusable and not draggable: it arrived from a link and the person it
+     * belongs to is not here to move it.
+     */
+    const partnerElement = document.createElement("button");
+    partnerElement.type = "button";
+    partnerElement.className = "origin-marker is-partner is-hidden";
+    partnerElement.tabIndex = -1;
+    partnerElement.setAttribute("aria-label", "The other person's start.");
+    const partnerMarker = new maplibregl.Marker({
+      element: partnerElement,
+      draggable: false,
+      anchor: "center",
+    })
+      .setLngLat([handlers.current.origin.lng, handlers.current.origin.lat])
+      .addTo(map);
+    partnerMarkerRef.current = partnerMarker;
+
     // Arrow keys move the marker the way a drag does: freely, committing once
     // the movement stops, so a run of presses is one origin change and one
     // warm-up rather than a ladder request per keystroke.
@@ -215,6 +260,46 @@ export function MapCanvas(props: MapCanvasProps) {
     });
 
     map.on("load", () => {
+      /**
+       * The partner's contour, added FIRST so it renders beneath yours.
+       *
+       * One fill and one outline, and deliberately no inner bands on either
+       * side in meet mode: three nested amber fills already stack to roughly
+       * 0.24, and a second set of three would be six overlapping strata of one
+       * hue that the eye separates none of. Where the two outermost fills
+       * cross, alpha compositing makes the region visibly denser than either
+       * alone — and **that density is compositing, not a computed polygon.**
+       * The app never measures it and never names it.
+       *
+       * Distinctness comes from fill and lightness, never from a second hue:
+       * amber is the only accent, and that is locked in the stylesheet's own
+       * header.
+       */
+      map.addSource("partner-band", { type: "geojson", data: EMPTY });
+      map.addLayer(
+        {
+          id: "partner-band-fill",
+          type: "fill",
+          source: "partner-band",
+          paint: { "fill-color": ACCENT, "fill-opacity": 0.06 },
+        },
+        UNDER_LABELS,
+      );
+      map.addLayer(
+        {
+          id: "partner-band-line",
+          type: "line",
+          source: "partner-band",
+          paint: {
+            "line-color": ACCENT_SOFT,
+            "line-width": weighted(1.2),
+            "line-opacity": 0.55,
+            "line-dasharray": [2, 2],
+          },
+        },
+        UNDER_LABELS,
+      );
+
       for (const slot of SLOTS) {
         map.addSource(`band-${slot}`, { type: "geojson", data: EMPTY });
         map.addLayer(
@@ -380,6 +465,10 @@ export function MapCanvas(props: MapCanvasProps) {
 
       readyRef.current = true;
       syncAll(map, handlers.current, bandsRef.current);
+      // Keep the reference the effect compares against in step with what
+      // `syncAll` just uploaded, or the next real change is skipped as a
+      // repeat of itself.
+      partnerBandRef.current = handlers.current.partnerBand ?? null;
     });
 
     /**
@@ -432,6 +521,38 @@ export function MapCanvas(props: MapCanvasProps) {
     markerRef.current?.setLngLat([props.origin.lng, props.origin.lat]);
   }, [props.origin.lng, props.origin.lat]);
 
+  // Hidden rather than destroyed, so the mount-once effect above stays the one
+  // place either marker is created.
+  useEffect(() => {
+    markerRef.current
+      ?.getElement()
+      .classList.toggle("is-hidden", props.originVisible === false);
+  }, [props.originVisible]);
+
+  useEffect(() => {
+    const marker = partnerMarkerRef.current;
+    if (!marker) return;
+    const at = props.partnerOrigin ?? null;
+    if (at !== null) marker.setLngLat([at.lng, at.lat]);
+    marker.getElement().classList.toggle("is-hidden", at === null);
+  }, [props.partnerOrigin]);
+
+  // Its own effect on its own dependency, like every other sync in this file:
+  // batching them re-uploads geometry nothing asked to change, and a reel tick
+  // must not re-serialise a contour.
+  const partnerBand = props.partnerBand ?? null;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !readyRef.current) return;
+    if (partnerBandRef.current === partnerBand) return;
+    partnerBandRef.current = partnerBand;
+    setData(
+      map,
+      "partner-band",
+      partnerBand ? multiPolygonCollection(partnerBand) : EMPTY,
+    );
+  }, [partnerBand]);
+
   /**
    * One effect per source, on its own dependencies. They used to share one,
    * so a reel tick - which changes `pickedId` and `route` many times a second
@@ -444,8 +565,8 @@ export function MapCanvas(props: MapCanvasProps) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !readyRef.current) return;
-    syncBands(map, reach, bandsRef.current);
-  }, [reach]);
+    syncBands(map, reach, bandsRef.current, partnerBand !== null);
+  }, [reach, partnerBand]);
 
   // Its own effect, for the same reason every other sync in this file is: they
   // fire on different inputs and batching them re-uploads geometry nothing asked
@@ -507,14 +628,30 @@ export function MapCanvas(props: MapCanvasProps) {
   const framedStampRef = useRef<string | null>(null);
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !outerBand) return;
+    // A GUARD CHANGE, not just an extra extend. This used to early-return on
+    // `!outerBand`, and in the invite state `reach` is null by design - so as
+    // written the camera would never move and the map would sit wherever it
+    // initialised, which makes the whole "frame on their contour alone" state
+    // unimplementable.
+    if (!map || (!outerBand && !partnerBand)) return;
     // Frame once per key, at the first render where the contour actually
     // exists. A new origin bumps the key while the reach is still null, so
     // keying on the signal alone would skip that frame entirely.
-    const stamp = `${props.framingKey}`;
+    //
+    // The partner's presence is part of the stamp because their ladder lands
+    // AFTER yours - the two legs are sequential by design - and `framingKey`
+    // does not bump again when it does. Without this the camera frames your
+    // contour alone and their half of the answer sits off-screen, which is the
+    // one thing a two-person map has to get right.
+    const stamp = `${props.framingKey}|${partnerBand === null ? 0 : 1}`;
     if (framedStampRef.current === stamp) return;
 
-    const bounds = boundsOfBand(outerBand.polygons);
+    // The union of both outermost contours, so both starts and the shared
+    // region are on screen at once. No bbox helper is added to `geometry.ts`:
+    // MapLibre's own `LngLatBounds.extend` accepts another bounds.
+    const yours = outerBand ? boundsOfBand(outerBand.polygons) : null;
+    const theirs = partnerBand ? boundsOfBand(partnerBand) : null;
+    const bounds = yours && theirs ? yours.extend(theirs) : (yours ?? theirs);
     if (!bounds) return;
     framedStampRef.current = stamp;
     boundsRef.current = bounds;
@@ -523,7 +660,7 @@ export function MapCanvas(props: MapCanvasProps) {
       duration: cameraDuration(700),
       maxZoom: 15.5,
     });
-  }, [props.framingKey, outerBand]);
+  }, [props.framingKey, outerBand, partnerBand]);
 
   /**
    * The isochrone is what this app exists to show and it lives entirely in
@@ -533,15 +670,25 @@ export function MapCanvas(props: MapCanvasProps) {
    */
   const originName = useMemo(() => originLabel(props.origin), [props.origin]);
   const summaryStampRef = useRef<string | null>(null);
+  const partnerName = props.partnerName ?? "their start";
   useEffect(() => {
-    const stamp = `${props.framingKey}`;
-    if (!reach || !outerBand || summaryStampRef.current === stamp) return;
+    const stamp = `${props.framingKey}|${partnerBand === null ? 0 : 1}`;
+    // The invite state has no local reach and is the one thing on screen, so
+    // the guard asks whether EITHER side has something to say. Gated on yours
+    // alone, a screen-reader user would get no text equivalent at all for the
+    // one thing the map is showing them.
+    if ((!reach || !outerBand) && !partnerBand) return;
+    if (summaryStampRef.current === stamp) return;
     summaryStampRef.current = stamp;
     setSummary(
-      `Reachable on foot from ${originName}: ${formatArea(reach.areaSqMeters)} within ` +
-        `${outerBand.minutes} minutes, ${pluralize(inReachIds.size, "place")} in reach.`,
+      !reach || !outerBand
+        ? `Reachable on foot from ${partnerName}, shown on the map.`
+        : partnerBand
+          ? `${pluralize(inReachIds.size, "place")} you can both reach within ${outerBand.minutes} minutes.`
+          : `Reachable on foot from ${originName}: ${formatArea(reach.areaSqMeters)} within ` +
+            `${outerBand.minutes} minutes, ${pluralize(inReachIds.size, "place")} in reach.`,
     );
-  }, [props.framingKey, reach, outerBand, inReachIds, originName]);
+  }, [props.framingKey, reach, outerBand, partnerBand, inReachIds, originName, partnerName]);
 
   /**
    * The rail's height is part of the framing, and on mobile it changes without
@@ -590,7 +737,13 @@ export function MapCanvas(props: MapCanvasProps) {
         ref={containerRef}
         className="map-canvas"
         role="region"
-        aria-label={`Map of what is reachable on foot from ${originName}`}
+        aria-label={
+          props.partnerOrigin == null
+            ? `Map of what is reachable on foot from ${originName}`
+            : props.originVisible === false
+              ? `Map of what is reachable on foot from ${partnerName}`
+              : `Map of what is reachable on foot from ${originName} and from ${partnerName}`
+        }
         aria-describedby={summaryId}
       />
       <p id={summaryId} className="sr-only">
@@ -672,7 +825,18 @@ function framePadding(map: MapLibreMap) {
 }
 
 function syncAll(map: MapLibreMap, props: MapCanvasProps, lastBands: (MultiPolygon | null)[]): void {
-  syncBands(map, props.reach, lastBands);
+  syncBands(map, props.reach, lastBands, props.partnerBand != null);
+  // The partner's contour belongs here for the same reason every other source
+  // does: each per-source effect returns early until the style is ready, so a
+  // value that was ALREADY set when `load` fired would never be uploaded - its
+  // dependency never changes again. That is not hypothetical; it is what left
+  // the second contour missing on an answer link, with the readout cheerfully
+  // naming both sides.
+  setData(
+    map,
+    "partner-band",
+    props.partnerBand ? multiPolygonCollection(props.partnerBand) : EMPTY,
+  );
   syncPlaces(map, props.places, props.inReachIds);
   // Both, not only the first. There are two paths into place rendering - the
   // effects above and this, which runs once the style is ready and again on a
@@ -686,11 +850,19 @@ function syncBands(
   map: MapLibreMap,
   reach: Reach | null,
   lastBands: (MultiPolygon | null)[],
+  meet: boolean,
 ): void {
   const bands = reach?.bands ?? [];
   for (const slot of SLOTS) {
     // bands runs innermost first; slot 0 is drawn first and must be outermost.
-    const polygons = bands[bands.length - 1 - slot]?.polygons ?? null;
+    //
+    // In meet mode the inner bands are dropped. The contour ladder is a
+    // single-person instrument - it answers "how much further with ten more
+    // minutes" - and that question has no two-person form; keeping them would
+    // put six strata of one hue on screen and make the only stratification that
+    // means something, the overlap, unreadable. The NET number of contour
+    // uploads therefore goes down.
+    const polygons = meet && slot > 0 ? null : (bands[bands.length - 1 - slot]?.polygons ?? null);
     if (lastBands[slot] === polygons) continue;
     lastBands[slot] = polygons;
     setData(map, `band-${slot}`, polygons ? multiPolygonCollection(polygons) : EMPTY);

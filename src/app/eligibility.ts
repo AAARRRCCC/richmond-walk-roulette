@@ -22,9 +22,10 @@
  * trap somebody falls into exactly once.
  */
 import type { Place, Vibe } from "../data/places.ts";
-import { contains, type MultiPolygon } from "../lib/geometry.ts";
+import { contains, type LngLat, type MultiPolygon } from "../lib/geometry.ts";
 import { MAX_MINUTES, type Reach } from "../lib/isochrone.ts";
 import { budgetStep, clampBudget } from "./session.ts";
+import { cachedMeetMinimum, partnerSignature } from "./meet.ts";
 
 /**
  * Every way a place can fail to make the pool. This union is the contract the
@@ -39,12 +40,11 @@ import { budgetStep, clampBudget } from "./session.ts";
  *
  * `hours-unknown` is absent for the same reason: `opening-hours` always keeps an
  * unknown and never filters on it, so the member would never be produced.
- * `out-of-their-reach` arrives with `meet-in-the-middle` in chunk 11, which is
- * the chunk that can produce it.
  */
 export type ExclusionReason =
   | "out-of-reach" // outside the outermost contour at this budget
   | "inside-floor" // closer than the range's lower end
+  | "out-of-their-reach" // outside the other person's outermost contour
   | "wrong-terrain" // the climb band, measured per route rather than tagged per place
   | "no-matching-vibe" // the vibe chips
   | "kind" // owned by places-expansion: the tier/kind chip
@@ -61,10 +61,18 @@ export type ExclusionReason =
  * the world. Nothing about the place or the clock changes whether it is three
  * miles away, so that is reported first; a vibe chip is the reader's own choice,
  * so it is reported before the weather, which is nobody's.
+ *
+ * `out-of-their-reach` sits third for exactly that reason: the other person's
+ * distance is geometry the walker cannot argue with either. This is also why it
+ * is evaluated inline rather than contributed as a `PoolRule` — a rule runs
+ * after the reader's own chips, so a place three miles from the other person
+ * that also happens to be hilly would report `wrong-terrain` as its primary
+ * reason, which is a nonsense sentence in a drawer heading.
  */
 export const REASON_ORDER: readonly ExclusionReason[] = [
   "out-of-reach",
   "inside-floor",
+  "out-of-their-reach",
   "wrong-terrain",
   "no-matching-vibe",
   "kind",
@@ -98,6 +106,11 @@ export const REASON_COPY = {
     clause: (n: number) => `${n} too close`,
     sentence: "Closer than the range's lower end.",
     heading: "Too close",
+  },
+  "out-of-their-reach": {
+    clause: (n: number) => `${n} out of their reach`,
+    sentence: "Outside the other person's reach.",
+    heading: "Only in your reach",
   },
   // Renamed in copy only when the climb filter replaced the terrain chip. One
   // control, one reason code, one clause - a second member would have made the
@@ -201,6 +214,20 @@ export type PoolConditions = {
    * cannot distinguish them. Null when there is no lower bound.
    */
   readonly floorPolygons: MultiPolygon | null;
+  /**
+   * The other person's reach at the same budget, or null when there is no
+   * partner OR their ladder has not warmed to this rung yet.
+   *
+   * **Null means the reason is not applied at all.** A reason with no data is
+   * inactive, never "excludes everything" — getting that backwards produces an
+   * empty pool with a confident-sounding explanation, which is the worst
+   * failure this file has. While it is null the pool is simply the reader's own
+   * reach and the readout says the other side is still working.
+   *
+   * A first-class sibling of `reach` rather than a `PoolRule`, for the ordering
+   * reason in `REASON_ORDER`'s note.
+   */
+  readonly partnerReach: Reach | null;
   readonly vibes: readonly Vibe[];
   readonly edgeOnly: boolean;
   readonly rules: readonly PoolRule[];
@@ -303,10 +330,55 @@ export type PoolFix =
       readonly cappedMinutes: number;
     }
   | { readonly kind: "lower-floor"; readonly recovers: number }
+  /**
+   * Nothing overlaps at this budget, but something does further out.
+   *
+   * **This branch carries a `recovers` count and `widen-budget` still may not.**
+   * That looks inconsistent and is not, and it is written down because a later
+   * reader will try to make them the same. `widen-budget` refuses a number
+   * because its only evidence is a cached route *duration* while pool
+   * membership is decided by polygon *containment*, and contour generalisation
+   * makes the two disagree at the margin. Here the evidence and the membership
+   * test are the same operation on the same polygons, so the count is measured
+   * rather than inferred.
+   */
+  | {
+      readonly kind: "widen-to-meet";
+      readonly budgetMinutes: number;
+      readonly nearest: string;
+      readonly recovers: number;
+      /** True when a rung below this one could not be measured; hedges the copy. */
+      readonly hedged: boolean;
+    }
+  | { readonly kind: "no-overlap"; readonly hedged: boolean }
+  /** A warm-up is still running. Never returned once both report done. */
+  | { readonly kind: "meet-warming" }
   | { readonly kind: "none" };
 
 /** Outbound walking minutes to each place from the current origin, from the route cache. */
 export type WalkMinutes = ReadonlyMap<string, number>;
+
+/**
+ * Everything `suggestFix` needs to answer "how much wider would both of you
+ * have to go".
+ *
+ * Passed in rather than read from a cache, so this module stays as testable as
+ * the rest of it: App supplies `cachedContour`, tests supply a fixture.
+ *
+ * `warmed` and `partnerWarmed` are the caller's facts and they are what
+ * distinguishes "not measured yet" from "the engine has no answer". Without
+ * them the scan cannot tell a ladder that is still arriving from one that has
+ * finished with holes in it, and the panel would wait forever on the second.
+ */
+export type MeetContext = {
+  readonly you: LngLat;
+  readonly them: LngLat;
+  readonly roundTrip: boolean;
+  readonly floorMinutes: number | null;
+  readonly warmed: number;
+  readonly partnerWarmed: number;
+  readonly contourAt: (origin: LngLat, outboundMinutes: number) => MultiPolygon | null;
+};
 
 const orderIndex = (reason: ExclusionReason): number => REASON_ORDER.indexOf(reason);
 
@@ -328,6 +400,7 @@ const byReducer = (): void => {};
 const emptyCounts = () => ({
   "out-of-reach": 0,
   "inside-floor": 0,
+  "out-of-their-reach": 0,
   "wrong-terrain": 0,
   "no-matching-vibe": 0,
   kind: 0,
@@ -365,6 +438,14 @@ export function explainPlace(place: Place, conditions: PoolConditions): PlaceVer
     } else {
       reasons.push("out-of-reach");
     }
+  }
+
+  // The other person, when there is one to test against. Inline with the rest
+  // of the geometry rather than as a rule, so it is reported before the
+  // reader's own chips - see REASON_ORDER.
+  const theirOuter = conditions.partnerReach?.bands.at(-1);
+  if (theirOuter !== undefined && !contains(theirOuter.polygons, place)) {
+    reasons.push("out-of-their-reach");
   }
 
   // The reader's own chips. Climb is not among them any more: it is measured
@@ -515,6 +596,7 @@ export function conditionsSignature(conditions: PoolConditions): string {
     conditions.vibes.join("+"),
     String(conditions.edgeOnly),
     conditions.floorPolygons === null ? "-" : "f",
+    partnerSignature(conditions.partnerReach),
     ...conditions.rules
       .filter((rule) => rule.active)
       .map((rule) => `${rule.id}${US}${rule.reason}${US}${rule.signature}`),
@@ -576,7 +658,7 @@ export function suggestFix(
   places: readonly Place[],
   conditions: PoolConditions,
   walkMinutes: WalkMinutes,
-  budget: { readonly roundTrip: boolean },
+  budget: { readonly roundTrip: boolean; readonly meet?: MeetContext | null },
 ): PoolFix {
   const candidates: { fix: PoolFix; recovers: number; order: number }[] = [];
 
@@ -625,6 +707,70 @@ export function suggestFix(
   }
 
   const report = derivePool(places, conditions);
+
+  /**
+   * Step 1.5: the other person, when they are the obstacle.
+   *
+   * Reached only after step 1 recovered nothing, because the reader's own chip
+   * is the thing they meant. **The empty overlap is the arrival state, not a
+   * failure state** — measured over four real preset pairs, at 20 minutes all
+   * four share nothing at all and at 30 three of the four still do — so this is
+   * the feature's opening move rather than its recovery path, and it carries a
+   * computed number rather than an apology.
+   */
+  const meet = budget.meet ?? null;
+  if (meet !== null && conditions.partnerReach !== null && report.counts["out-of-their-reach"] > 0) {
+    // A state that ENDS: `prefetchLadder` drives both scalars to 1 whether or
+    // not every rung landed, so this can never become a permanent spinner.
+    // Everything the scan itself cannot read becomes `unmeasuredRungs` and one
+    // word of hedging instead.
+    if (!(meet.warmed >= 1 && meet.partnerWarmed >= 1)) return { kind: "meet-warming" };
+
+    const found = cachedMeetMinimum({
+      you: meet.you,
+      them: meet.them,
+      places,
+      roundTrip: meet.roundTrip,
+      // The reader's OWN floor, applied to the reader's side only. Without it
+      // the notice could promise "at 42 minutes, Byrd Park comes into both your
+      // reaches" for a place that sits inside the floor hole and will still be
+      // excluded - as `inside-floor` - the moment the button moves the dial.
+      // The button's own face would be a lie about a state the app can already
+      // compute.
+      floorPolygons: conditions.floorPolygons,
+      floorMinutes: meet.floorMinutes,
+      contourAt: meet.contourAt,
+    });
+
+    if (found.kind === "found") {
+      const outbound = meet.roundTrip
+        ? Math.floor(found.budgetMinutes / 2)
+        : found.budgetMinutes;
+      const yours = meet.contourAt(meet.you, outbound);
+      const theirs = meet.contourAt(meet.them, outbound);
+      // Counted exactly the way the pool counts, so the number on the notice
+      // and the pool at that budget answer the same question.
+      const recovers =
+        yours === null || theirs === null
+          ? 0
+          : places.filter(
+              (place) =>
+                contains(yours, place) &&
+                contains(theirs, place) &&
+                !(conditions.floorPolygons !== null && contains(conditions.floorPolygons, place)),
+            ).length;
+      return {
+        kind: "widen-to-meet",
+        budgetMinutes: found.budgetMinutes,
+        nearest: found.placeName,
+        recovers,
+        hedged: found.unmeasuredBelow > 0,
+      };
+    }
+
+    return { kind: "no-overlap", hedged: found.unmeasuredRungs > 0 };
+  }
+
   if (report.counts["inside-floor"] > 0) {
     return { kind: "lower-floor", recovers: report.counts["inside-floor"] };
   }

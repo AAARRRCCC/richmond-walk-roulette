@@ -25,6 +25,14 @@ export type TimeDialProps = {
   roundTrip: boolean;
   /** Whether this dial position's contours are already cached. */
   isWarm: (minutes: number) => boolean;
+  /**
+   * False when nothing is being measured and nothing is going to be.
+   *
+   * The invite state: the reader has not chosen a start, so no ladder is
+   * warming, and a counter reading "loading reach 0%" would promise a
+   * measurement that is not coming. Silence is the honest state - not zero.
+   */
+  warming?: boolean;
   /** 0 to 1 across the warm-up, for the progress hairline under the track. */
   warmedFraction: number;
   /** Pin-drop mode owns the map; the dial goes with the rest of the rail. */
@@ -42,7 +50,7 @@ export function TimeDial(props: TimeDialProps) {
     { length: Math.floor(span / props.step) + 1 },
     (_, i) => props.minimum + i * props.step,
   );
-  const warming = props.warmedFraction < 1;
+  const warming = (props.warming ?? true) && props.warmedFraction < 1;
   const capped = props.maximum < MAX_MINUTES;
   const pct = (minutes: number): number => ((minutes - props.minimum) / span) * 100;
 
@@ -185,7 +193,9 @@ export function TimeDial(props: TimeDialProps) {
       <span className="sr-only" role="status">
         {warming
           ? `Loading reachable area, ${Math.round(props.warmedFraction * 4) * 25} percent`
-          : "Reachable area ready"}
+          : props.warming === false
+            ? ""
+            : "Reachable area ready"}
       </span>
     </div>
   );

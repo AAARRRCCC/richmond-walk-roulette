@@ -1,6 +1,6 @@
 # The invite link
 
-**Status:** spec — not implemented
+**Status:** implemented, chunk 11 (2026-08-22). See *Corrections after implementation*.
 **Slug:** `multiplayer-links`
 
 ## Depends on
@@ -1231,3 +1231,81 @@ Fixtures: `CARYTOWN = PRESET_ORIGINS.find(o => o.id === "carytown")!`,
 5. **Unmeasured:** the `HTMLRewriter` pass for an invite is the same work as for a solo share, so
    the 10 ms Free-plan CPU budget should be equally fine — *should*, because neither has been
    measured. `wrangler tail` reports CPU time; look at the first deploy.
+
+## Corrections after implementation
+
+Landed 2026-08-22 as chunk 11, together with `meet-in-the-middle`. Nine things
+this document got wrong, in the order they were hit.
+
+1. **`MEET_PIN_PRECISION` does not exist, and must not.** Decision 4 says "meet
+   links round a pin to three decimals, solo links keep five" and asks for a
+   second constant. Chunk 10 had already decided against five for the same
+   privacy reason and shipped `PIN_PRECISION = 3` — whose comment says, in
+   advance, that it is "the same precision `meet-in-the-middle` pins its own
+   meet point at, deliberately: one number for how precisely this app is
+   willing to publish a person's location." A second name for one number is
+   exactly the drift that comment exists to prevent, so there is one constant
+   and its doc records the measurement. GOAL's chunk 11 box asking that
+   `MEET_PIN_PRECISION` be 3 is satisfied in value and not in name; the report
+   says so rather than inventing an alias to tick it.
+
+2. **`meetShape` is `meetKind`.** The repo's own oxlint anti-slop plugin
+   refuses `shape` in a symbol name — "describes structure rather than
+   ownership" — and it fires on every occurrence. Renamed at the six call
+   sites. Nothing else about it changed.
+
+3. **The total key order is `… c, k, v, p …`, not `… c, v, k …`.** This
+   document writes `m, ma, mb, o, b, f, rt, e, c, v, k, p, d` and then insists,
+   correctly, that the solo subset must be byte-identical to chunk 10's. It is
+   not: chunk 10 emits `k` before `v`. **Test 34 caught this on its first run,
+   which is what it was written for**, and the fix was the one this document
+   prescribes — match chunk 10's bytes, never bump `SHARE_CACHE_VERSION`. The
+   literal in that test now reads
+   `/__share/v1?o=carytown&b=34&rt=1&e=1&c=easy&k=detour&v=river.park&p=shiplock`.
+
+4. **`describeInvite` dropped its own `originName` on the floor.** The copy
+   fixed in *Data and types* never interpolates the parameter, while the
+   `shareMeta` section requires the invite description to say "a dropped pin"
+   and criterion 22 requires it to be able to say "Carytown". The second is
+   right — an invite's premise is where the sender is starting from — so the
+   sentence now reads *"Somewhere we can both walk to in 30 min, out and back,
+   starting from Carytown. Open this and say where you're starting from."*
+   Caught by test 21, not by a type: an unused parameter is not an error.
+
+5. **`awaitingOrigin` is `originChosen`, with the sense inverted**, and
+   `Partner`/`coarse`/`clearPartner` do not exist. This document says so itself
+   in *Depends on* item 2 and calls the fix mechanical; it is recorded here
+   because the file still reads the other way in a dozen places and the next
+   person to open it should not have to re-derive which half won. README §2.9a
+   decides it, in this spec's favour.
+
+6. **`ShareInput` needed a fourth amendment, not three.** `placeId` widening to
+   `string | null` is named; `partner`, `meet` and `mintedDay` are named. What
+   is not named is that App's one construction site had to move: it is now
+   `shareInputFor(state, placeId)` in `session.ts`, with `liveLinkQuery` and
+   `meetLinks` beside it, because three things depend on the exact bytes — the
+   Share button, the address-bar comparison and the mint gate — and a copy of
+   the shape in `App.tsx` is a fourth that cannot be unit-tested.
+
+7. **The share flow had to be extracted before a second button could use it.**
+   This document says the answer link goes through "the existing
+   `shareable-spins` share flow verbatim", which was forty lines inlined in
+   `ResultCard`. Two share controls now exist (*Send this back* on the card,
+   *Invite someone to meet* in the panel), so the flow is
+   `src/ui/useShareAction.ts` and both call it. The hook also had to grow
+   `lastUrl`: with one state and two buttons, a manual fallback showing the
+   caller's "current" link hands the reader the wrong URL at exactly the moment
+   they must copy it by hand.
+
+8. **`Date.now()` cannot be called where the mint expressions live.** This
+   document's mint pseudocode reads `mintedDay: epochDay(Date.now())` in App's
+   render body, and the repo's `react-hooks/purity` rule refuses it — correctly,
+   since it also makes `d` differ between two renders in the same minute.
+   `meetLinks` takes `nowMs`, and App passes `conditions.atMs`, the one clock
+   that already ticks once a minute.
+
+9. **The Worker is unchanged, exactly as promised — read that twice.** It was
+   worth checking rather than assuming, and it held: `/s` gained zero lines, and
+   both meet branches live in `share-meta.ts` and `share.ts`, which it already
+   imported. `wrangler.toml`, `proxy.ts`, `vite-plugin.ts`, `public/_headers`
+   and `public/reach/` are all untouched.

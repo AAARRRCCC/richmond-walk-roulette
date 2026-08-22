@@ -975,6 +975,22 @@ of 62 — and `unknown` renders as nothing. So the honest reading of `opening-ho
 the market and museum cases loudly and leaves the majority of the list exactly as it is today. The
 README's confession is narrowed, not deleted.
 
+**Two people share one walking pace.** `WALKING_SPEED_KMH` is pinned in the proxy and stamped into
+every snapshot, and there is no per-request speed parameter — adding one would put a costing knob
+on the one endpoint that costs real graph expansions, on a rate-limited path, and invalidate all
+eleven baked ladders. So "both in reach" measures both walks at the same pace. One person walking
+at 5 km/h and another at 2.5 makes the app wrong for both of them by the same amount in opposite
+directions. The app admits this in a line on the card rather than implying otherwise, and no label
+in the feature says "their pace" — but an admission is not a fix, and this is the one place where
+what the app shows two people is a shared assumption rather than a measurement of either.
+
+**The two devices in a meeting can disagree at the margin.** A meet link publishes both starts at
+three decimals while the sender's own device keeps its start at five, up to ~70 m apart — wider
+than the ~25 m grid the engine cuts contours on. A place within about a minute of the overlap
+boundary can therefore be in one person's pool and not the other's. The *outcome* never depends on
+it, because the answer link carries the pick; the counts on the two screens can still differ, and
+that is stated rather than papered over.
+
 **Nothing knows about the pavement.** No streetlights, so a daylight-clamped walk is a lit one on
 average and not a safe one. No sidewalk quality, no kerb cuts, no crossings, no traffic. The app
 can tell you a walk is 112 feet of climb and cannot tell you it is 112 feet of climb along a road

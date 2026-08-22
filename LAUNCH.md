@@ -116,6 +116,23 @@ Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re
         error anywhere
       - `POST <deployed>/api/isochrone` still works, which is the check that
         `/api/*` was not dropped from `run_worker_first` when `/s` joined it
+- [ ] **The three meet-link checks, deployed, for the same reason.** Chunk 11
+      adds no Worker code at all, so what these prove is that the two pure
+      modules behave at the edge - not that anything new was wired.
+      - `curl -H 'Accept: text/html' '<deployed>/s?m=1&ma=carytown&b=30&rt=1' | grep og:`
+        answers **200** with an invite-shaped `og:title` naming **no place**
+        and **no coordinate** - the one link whose whole content is a question,
+        and the case `shareMeta` used to refuse outright by returning null
+      - the same URL with `ma=37.541,-77.436` answers 200, its
+        `og:description` says **"a dropped pin"**, and neither the title nor
+        the description carries a digit of the coordinate. `og:url` necessarily
+        does: that is the link the sender chose to send
+      - two GETs of that pin link both re-render (no `cf-cache-status: HIT`),
+        while two GETs of `?m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock` hit
+        the share cache on the second. Nearly every real meet link carries a
+        pin and is therefore never stored, which is accepted rather than fixed
+        by relaxing the rule - an unbounded key space is one a scraper mints
+        entries in
 - [ ] Read the emitted `og:url` from the first curl. If it carries a
       `workers.dev` or internal host rather than the public one, add a
       `SITE_ORIGIN` var and use it - deliberately not added speculatively

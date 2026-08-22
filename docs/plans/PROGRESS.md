@@ -1233,3 +1233,150 @@ never green on 11a alone, so it must never be committed alone. Preconditions:
 every other chunk landed, `npm run verify` green, and `share.ts` in place for
 it to grow `m`/`ma`/`mb`/`d` onto — with `PIN_PRECISION` already settled at the
 3 decimals that spec's `MEET_PIN_PRECISION` asks for.
+
+---
+
+## Chunk 11 — `multiplayer-links` + `meet-in-the-middle` — done
+
+The last chunk, and the only one that is not shippable in halves. Two people, two
+doors, one question: *where can we both walk to in half an hour?*
+
+    /s?m=1&ma=carytown&b=30&rt=1
+
+### One landing, and the plan was right about why
+
+11a alone adds `partner`, `originChosen`, `partnerWarmed` and `partnerFailure` to
+the session and nothing reads them — knip fails on the dead exports, and worse, a
+link would decode into a session the UI does not render, which is an invite that
+silently does nothing. Landed as one commit. The two specs' joint criteria (5, 6,
+6b, 13) were verified once, on the pair.
+
+### The two specs contradicted each other, and the browser is what found it
+
+`multiplayer-links` criterion 5 says opening an invite makes **zero** requests.
+`meet-in-the-middle` decision 8 says the map frames on the partner's contour
+alone in that same state — which needs their ladder warmed. Both cannot be true.
+
+I built the second and shipped the first only after opening an invite with the
+network panel open and watching Carytown's snapshot being fetched. For a **pin**
+partner — which is nearly every real meet link — that is 96 contours and up to 24
+upstream graph expansions charged to somebody who has been sent a link and has
+not answered it. A forwarded invite would charge a third party who had no part in
+the exchange at all.
+
+The criterion wins. The partner's leg is gated on `originChosen` beside the
+reader's own, so **nothing at all is warmed until they choose a start**. The cost
+is honest and stated: the recipient sees an empty map and a question, which is
+less than the sibling spec wanted and the only version that keeps the promise
+printed on the same screen. HUMAN-REVIEW 3.10.
+
+**Not one unit test changed behaviour across that fix.** They passed before and
+after, because what changed is which effect runs, not what any function returns.
+
+### Three more the browser caught and no test could
+
+1. **The panel said "15 minutes" for a 30-minute link** — handed outbound minutes
+   where the sentence speaks the dial's language.
+2. **The dial read "loading reach 0%" forever during an invite**, promising a
+   measurement that was never coming. `TimeDial` gained one optional `warming`
+   prop: silence is the honest state, not zero.
+3. **The partner's contour never reached the map on an answer link.** Every
+   per-source effect returns early until the style is ready, so a value already
+   set when `load` fired was never uploaded — its dependency never changes again.
+   `syncAll` exists for exactly this and had not been told about the new source.
+   The camera had the same lag: their ladder lands after yours by design and
+   `framingKey` does not bump again, so it framed your contour alone and left
+   half the answer off screen.
+
+### What the geometry does, and what it refuses
+
+`contains(yours) && contains(theirs)`, as a ninth `ExclusionReason` evaluated
+inline in the geometry section rather than as a `PoolRule` — a rule runs after the
+reader's chips, so a place three miles from the other person would report "wrong
+climb" as its primary reason. `REASON_ORDER` puts it third, after `inside-floor`.
+
+**No overlap polygon, no overlap area, no clipper.** `subtract()` is forbidden by
+name in `meet.ts`'s header and the comment says why: it appends an inner ring as a
+hole to whichever outer polygon contains its first vertex, which is sound for one
+origin's nested contours and meaningless for two that cross. The two fills simply
+composite, and the app never measures or names the denser region. **No dependency
+was added — the largest single cost decision in the chunk was refusing one.**
+
+### The empty overlap is the arrival state
+
+Measured over four preset pairs: at 20 minutes all four share nothing; at 30,
+three still do. So `widen-to-meet` is the opening move, not a recovery path. When
+the pool is empty and both warm-ups report done, `meetMinimum` scans both cached
+ladders ascending for the first rung where a place is inside both.
+
+Two things it does deliberately. It **skips a rung the engine has no answer for
+and counts it** — `prefetchLadder` is best effort per contour, so a null after a
+completed warm-up means *never*, not *later*, and the first draft's version would
+have said "Waiting on their side." forever over one dropped contour. And it
+compares against `MAX_MINUTES` **before** clamping, because `clampBudget` ends in
+`Math.min(MAX_MINUTES, …)` and a post-clamp check can never fire.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint`, `npm run build` | clean |
+| `npm test` | **418 passing**, 0 failing — +72, the largest jump of the run |
+| `verify-bundle` | **101,133 B** gz, **+5,458 B**; **1,267 B** under the ceiling |
+| `verify-places` | 242 places, worst snap 51 m |
+| `npm run verify` | **all 6 steps clean** |
+| `git diff wrangler.toml worker/ server/proxy.ts public/` | **empty** |
+
+The Worker gained **zero lines**, exactly as the spec promised. Every meet
+decision lives in the two pure modules it already imported.
+
+### Acceptance
+
+`docs/plans/acceptance/chunk-11.md`: **73 of 100**. Seven `[!]`, twenty `[ ]`, and
+the three that matter:
+
+- **The bundle.** +5,458 B against the two specs' combined 4,608 B allowance — 850 B
+  over, and both specs say the figure was never measured. The binding gate held
+  with 1,267 B of headroom. I checked whether the verbatim disclosure copy was
+  the cause by collapsing it and rebuilding: 0.2 KB. The rest is code.
+  HUMAN-REVIEW 6.4.
+- **`meetMinimum` was never timed**, which that spec's open question 3 says
+  explicitly must not ship. HUMAN-REVIEW 5.13.
+- **`MEET_PIN_PRECISION` does not exist and should not.** Chunk 10 shipped
+  `PIN_PRECISION = 3` first, for the same privacy reason, with a comment saying
+  in advance that this chunk would share it. Recorded as a fail rather than
+  ticked on a technicality.
+
+### Spec corrections
+
+Nine in `multiplayer-links.md`, six in `meet-in-the-middle.md`. The one that
+earned its test: **the total key order is `c, k, v`, not `c, v, k`** — that
+document insists, correctly, that the solo subset stay byte-identical to chunk
+10's, and then writes it the other way round. Test 34 caught it on its first run,
+which is precisely what it was written for, and the fix was the one prescribed:
+match chunk 10's bytes, never bump `SHARE_CACHE_VERSION`.
+
+Also: `meetShape` is `meetKind`, because the repo's own anti-slop rule refuses
+"shape" in a symbol name; and `describeInvite` was dropping its own `originName`
+on the floor while the `shareMeta` section required it to be used.
+
+### Deferred
+
+- HUMAN-REVIEW **2.10** — one pinned pace for two walkers. The last of the six
+  decisions this run was told were meant to be a person's.
+- HUMAN-REVIEW **3.10** — the specs' contradiction, decided.
+- HUMAN-REVIEW **5.13** — `meetMinimum` unmeasured.
+- HUMAN-REVIEW **5.14** — the states one desktop browser could not reach.
+- HUMAN-REVIEW **5.15** — one device, so no cross-device check.
+- HUMAN-REVIEW **5.16** — the engine's port forward, which cost the regression spin.
+- HUMAN-REVIEW **6.4** — the bundle overage.
+
+### Next
+
+**Nothing. Chunk 11 was the leaf of the plan and all twelve chunks are in.** What
+remains is GOAL's Step 6: `HUMAN-REVIEW.md` is written but wants a final read, and
+the feel pass has to be prepared — the cold-clone command, the TUNE panel, the
+walkthrough, the copy list, and documented ways to reach the three states that are
+hardest to reach on purpose. Two of those three are now easy to name: **no
+overlap** is the *default* for any preset pair at a round trip, and **dark** is
+whatever this machine's clock says. The empty pool still needs a recipe.

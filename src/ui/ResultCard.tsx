@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import {
   ArrowSquareOutIcon,
   ShareNetworkIcon,
@@ -8,7 +7,9 @@ import {
 } from "@phosphor-icons/react";
 import { REASON_COPY, REASON_ORDER, type PlaceVerdict } from "../app/eligibility";
 import { appleDirectionsUrl, googleDirectionsUrl } from "../lib/handoff";
-import { describeShare } from "../app/share";
+import { describeMeetResult, describeShare } from "../app/share";
+import { shareNote, useShareAction } from "./useShareAction";
+import { describeBothBy, describeGap, type MeetSplit } from "../app/meet";
 import { playPress } from "../lib/sound";
 import { elevationAvailable } from "../lib/route";
 import { ElevationProfile } from "./ElevationProfile";
@@ -73,6 +74,28 @@ export type ResultCardProps = {
   budgetMinutes: number;
   /** True while this session is still the one a link described. */
   sharedArrival: boolean;
+  /**
+   * Non-null in meet mode. The card renders `.result-split` instead of
+   * `.result-stats`: one row per side, then the meeting instant.
+   *
+   * Only **your** directions buttons render either way, which is what keeps
+   * `.result-actions` at the three-row grid already resolved between the
+   * handoff links and Share. A fourth row for a link that opens navigation from
+   * somebody else's house on your phone would be chrome pretending to be a
+   * feature.
+   */
+  split?: MeetSplit | null;
+  /** "Their start", or a preset's own name. Never free text from a link. */
+  partnerName?: string;
+  /**
+   * The link that sends this result back to the other person, or null when
+   * there is no meeting or no start of the reader's own yet.
+   *
+   * Null means no control at all, which is the mint gate rendered: a button
+   * that would send somebody else's front door out under the reader's name must
+   * not merely fail on press, it must not be there.
+   */
+  answerUrl?: string | null;
   // There is deliberately no `unavailableReason` prop. A shared destination
   // outside the recipient's pool must be SHOWN with the reason - never
   // substituted, which is the same lie as a reel omitting part of its pool -
@@ -82,12 +105,6 @@ export type ResultCardProps = {
   onRetryRoute: () => void;
   onDismiss: () => void;
 };
-
-/** What the share note is saying, if anything. */
-type ShareState = "idle" | "copied" | "shared" | "manual";
-
-/** How long "Link copied." stays up before the note goes quiet again. */
-const COPIED_MS = 4_000;
 
 /**
  * **The card element** is not a live region. The reel and the card sit inside
@@ -101,68 +118,43 @@ const COPIED_MS = 4_000;
  */
 export function ResultCard(props: ResultCardProps) {
   const { place, route } = props;
-  const [shareState, setShareState] = useState<ShareState>("idle");
-  const fallbackRef = useRef<HTMLInputElement>(null);
+  const split = props.split ?? null;
+  const { state: shareState, lastUrl, fallbackRef, share } = useShareAction();
 
-  useEffect(() => {
-    if (shareState !== "copied") return;
-    const timer = setTimeout(() => setShareState("idle"), COPIED_MS);
-    return () => clearTimeout(timer);
-  }, [shareState]);
-
-  useEffect(() => {
-    // Focus is being taken from the button the reader just pressed, which is the
-    // sort of thing that needs justifying where it happens: the whole point of
-    // this state is that they now have to copy the text themselves.
-    if (shareState !== "manual") return;
-    fallbackRef.current?.focus();
-    fallbackRef.current?.select();
-  }, [shareState]);
-
-  /**
-   * The cue answers the gesture, not the outcome.
-   *
-   * `playPress()` fires synchronously on the press, and nothing sounds on
-   * success or failure - a cue arriving a second later, after a share sheet
-   * closes, would be the only sound in this app not caused by a press. The
-   * written confirmation is the confirmation, which also means it still works
-   * with sound off.
-   */
-  const onShare = async (): Promise<void> => {
-    playPress();
-    const text = describeShare({
-      placeName: place.name,
-      originName: props.originName,
-      walkMinutes: props.budgetMinutes,
-      roundTrip: props.roundTrip,
+  const onShare = (): Promise<void> =>
+    share({
+      url: props.shareUrl,
+      title: place.name,
+      text: describeShare({
+        placeName: place.name,
+        originName: props.originName,
+        walkMinutes: props.budgetMinutes,
+        roundTrip: props.roundTrip,
+      }),
     });
 
-    // A capability check, not a representation check: either this browser can
-    // hand a link to the system or it cannot, and the domain question is that
-    // rather than what shape the property happens to have.
-    if ("share" in navigator) {
-      try {
-        await navigator.share({ title: place.name, text, url: props.shareUrl });
-        setShareState("shared");
-        return;
-      } catch (cause) {
-        // A cancelled sheet is not a failure and must not fall through to the
-        // clipboard: the reader said no.
-        if (cause instanceof Error && cause.name === "AbortError") {
-          setShareState("idle");
-          return;
-        }
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(props.shareUrl);
-      setShareState("copied");
-      return;
-    } catch {
-      setShareState("manual");
-    }
-  };
+  /**
+   * The answer link: "here is where we both can get to, and where the spin
+   * landed."
+   *
+   * It exists only in a meet session with a pick, it is produced only by this
+   * press, and it is handed straight to the share sheet. **It is never written
+   * to `location`** — that would put the reader's own coordinate in their
+   * browser history, in every screenshot and in every screen-share, for no
+   * benefit, since they already know where they are. That rule is the mechanism
+   * behind the panel's promise that a start never reaches the other person
+   * unless this button is pressed.
+   */
+  const onSendBack = (): Promise<void> =>
+    share({
+      url: props.answerUrl ?? "",
+      title: place.name,
+      text: describeMeetResult({
+        placeName: place.name,
+        minutes: props.budgetMinutes,
+        roundTrip: props.roundTrip,
+      }),
+    });
   // A skeleton means "still coming". Once the attempts are spent it is a lie,
   // and the honest answer is a dash next to something to press.
   const pending = props.routeLoading && !props.routeFailed;
@@ -204,6 +196,32 @@ export function ResultCard(props: ResultCardProps) {
 
       <h2 className="result-name">{place.name}</h2>
 
+      {split !== null ? (
+        /* Two rows and two adults. A place in the overlap can be 8 minutes for
+           one person and 29 for the other, and the app shows both numbers
+           rather than weighting the draw toward "balanced" places - that would
+           be its first non-uniform draw - or hiding the unbalanced ones behind
+           a toggle. The word "unfair" never appears: it is a claim about a
+           relationship the app cannot see. */
+        <div className="result-split">
+          <div className="result-split-row">
+            <span className="result-split-who">Your start</span>
+            <SplitValue
+              minutes={split.yourMinutes}
+              pending={pending}
+              meters={route === null ? null : route.distanceMeters * (props.roundTrip ? 2 : 1)}
+            />
+          </div>
+          <div className="result-split-row">
+            <span className="result-split-who">{props.partnerName ?? "Their start"}</span>
+            <SplitValue minutes={split.theirMinutes} pending={split.theirMinutes === null} meters={null} />
+          </div>
+          {describeBothBy(split) !== null && (
+            <p className="result-split-both">{describeBothBy(split)}</p>
+          )}
+          {describeGap(split) !== null && <p className="result-split-gap">{describeGap(split)}</p>}
+        </div>
+      ) : (
       <dl className="result-stats">
         <Stat
           label={props.roundTrip ? "Out and back" : "Walk time"}
@@ -230,6 +248,7 @@ export function ResultCard(props: ResultCardProps) {
           value={pending ? null : shown === null ? "-" : formatFeet(shown.ascentMeters)}
         />
       </dl>
+      )}
 
       {shown !== null && (
         <ElevationProfile
@@ -310,6 +329,12 @@ export function ResultCard(props: ResultCardProps) {
           <ShareNetworkIcon size={16} weight="bold" aria-hidden="true" />
           Share
         </button>
+        {props.answerUrl != null && (
+          <button type="button" className="button" onClick={() => void onSendBack()}>
+            <ShareNetworkIcon size={16} weight="bold" aria-hidden="true" />
+            Send this back
+          </button>
+        )}
         {/* Both, always, on every platform. Google documents that its URL
             falls back to the browser when the app is absent, and maps.apple.com
             is a universal link Apple's own app claims; sniffing the platform
@@ -347,22 +372,50 @@ export function ResultCard(props: ResultCardProps) {
           a completed share sheet gets NO text, because "Shared!" would be a
           claim about a sheet this app cannot see the result of. */}
       <p className="result-share-note" role="status">
-        {shareState === "copied"
-          ? "Link copied."
-          : shareState === "manual"
-            ? "Could not copy. Here is the link:"
-            : ""}
+        {shareNote(shareState) ?? ""}
       </p>
       {shareState === "manual" && (
         <input
           ref={fallbackRef}
           className="result-share-fallback"
           readOnly
-          value={props.shareUrl}
+          value={lastUrl}
           aria-label="Share link"
         />
       )}
     </section>
+  );
+}
+
+/**
+ * One side's numbers in the split.
+ *
+ * A pending number is a skeleton, exactly as `Stat` renders one, because the
+ * partner's route is fetched on demand for the picked place alone and can
+ * arrive a beat late — or never, in which case it settles to a dash and the
+ * "you'd both be there" line simply does not render. Your half of the card is
+ * complete and correct throughout either way.
+ */
+function SplitValue(props: {
+  minutes: number | null;
+  pending: boolean;
+  meters: number | null;
+}) {
+  return (
+    <>
+      <span className="result-split-value">
+        {props.pending ? (
+          <span className="skeleton" style={{ width: "3.2rem" }} />
+        ) : props.minutes === null ? (
+          "-"
+        ) : (
+          formatMinutes(props.minutes * 60)
+        )}
+      </span>
+      <span className="result-split-value">
+        {props.meters === null ? "" : formatMiles(props.meters)}
+      </span>
+    </>
   );
 }
 

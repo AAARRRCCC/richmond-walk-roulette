@@ -392,6 +392,7 @@ const SIX: Place[] = [
 
 const poolWith = (rules: PoolConditions["rules"]): PoolConditions => ({
   reach: REACH,
+  partnerReach: null,
   floorPolygons: null,
   vibes: [],
   edgeOnly: false,

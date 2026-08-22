@@ -520,6 +520,24 @@ export function cachedReach(
 }
 
 /**
+ * The raw cached contour for one origin at one minute, or null.
+ *
+ * A peek: it neither promotes an LRU entry nor writes one. `meetMinimum` reads
+ * up to 192 rungs across two origins in one pass and must not disturb either
+ * cache while doing it — the obvious alternative, `cachedReach`, inserts an
+ * assembled entry per read into an LRU that holds 192 total, so a single scan
+ * would evict the dial position currently on screen and the partner's reach,
+ * both of which would then re-assemble as new objects and re-upload every
+ * contour to MapLibre. A visible stutter, produced by a notice explaining why
+ * there is nothing to spin.
+ *
+ * @public - consumed by App, which hands it to `meetMinimum` as its reader.
+ */
+export function cachedContour(origin: LngLat, minutes: number): MultiPolygon | null {
+  return cache.peek(cacheKey(origin, minutes)) ?? null;
+}
+
+/**
  * True when every contour a budget needs is already cached, so the dial can
  * mark which positions are instant and which still have to be fetched.
  */

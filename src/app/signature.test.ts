@@ -53,6 +53,7 @@ const PLACES: Place[] = [
 
 const conditionsAt = (reach: Reach | null, rules: PoolRule[] = []): PoolConditions => ({
   reach,
+  partnerReach: null,
   floorPolygons: null,
   vibes: [],
   edgeOnly: false,
@@ -248,4 +249,53 @@ test("signature: every registered rule has a stable and a changing case", () => 
       `chunk ${entry.chunk}'s ${entry.id}: a changed signature must change the key. ${entry.why}`,
     );
   }
+});
+
+/**
+ * Chunk 11's contribution to this contract is **not** a `PoolRule`, so it has
+ * no `REGISTERED` entry.
+ *
+ * The other person is a first-class member of `PoolConditions` rather than a
+ * rule, because a rule is evaluated after the reader's own chips and a place
+ * three miles from the other person would then report "wrong climb" as its
+ * primary reason. The consequence for this file is that `partnerSignature`
+ * appears as a *term* in `conditionsSignature` rather than as a rule's string,
+ * and it needs the same three assertions anyway: stable across renders, moving
+ * when the verdicts could, and never moving otherwise.
+ */
+test("signature: a partner reach is stable across renders", () => {
+  const reach = reachAt(30);
+  const theirs = reachAt(30);
+  assert.equal(
+    conditionsSignature({ ...conditionsAt(reach), partnerReach: theirs }),
+    conditionsSignature({ ...conditionsAt(reach), partnerReach: theirs }),
+  );
+  // And the memo really returned the same object, not an equal one - which is
+  // the property that keeps `candidateKey` still and the spin-abort effect
+  // asleep.
+  const first = { ...conditionsAt(reach), partnerReach: theirs };
+  const second = { ...conditionsAt(reach), partnerReach: theirs };
+  assert.equal(poolReport(PLACES, first), poolReport(PLACES, second));
+});
+
+test("signature: a partner arriving changes the key exactly once", () => {
+  const reach = reachAt(30);
+  const alone = conditionsAt(reach);
+  const together = { ...alone, partnerReach: reachAt(30) };
+  assert.notEqual(conditionsSignature(alone), conditionsSignature(together));
+  // ...and then stops changing, which is the half that matters: a term derived
+  // from a fetch counter or a timestamp would look correct on the line above
+  // and churn forever on this one.
+  assert.equal(
+    conditionsSignature({ ...alone, partnerReach: reachAt(30) }),
+    conditionsSignature({ ...alone, partnerReach: reachAt(30) }),
+  );
+});
+
+test("signature: a partner's ladder warming into a new rung changes the key", () => {
+  const reach = reachAt(30);
+  assert.notEqual(
+    conditionsSignature({ ...conditionsAt(reach), partnerReach: reachAt(30) }),
+    conditionsSignature({ ...conditionsAt(reach), partnerReach: reachAt(45) }),
+  );
 });

@@ -4,7 +4,23 @@ import { DEFAULT_ORIGIN, type Origin, type PlaceKind, type Vibe } from "../data/
 import type { ClimbBand } from "../lib/elevation.ts";
 import type { TimeCap } from "./conditions.ts";
 import type { LocationNotice } from "../lib/locate.ts";
-import { canonicalQuery, isEmptyLink, type ShareLink } from "./share.ts";
+import {
+  canonicalQuery,
+  decodeShare,
+  encodeShare,
+  epochDay,
+  meetKind,
+  shareUrl,
+  isEmptyLink,
+  type ShareInput,
+  type ShareLink,
+  type SharedOrigin,
+} from "./share.ts";
+// The first `src/app/ -> src/lib/bounds` import, and it earns its place: a
+// forged `ma` has to be refused BEFORE it becomes an `Origin`, not after it
+// becomes a request. The proxy would 400 it anyway, but a client that refuses
+// first means a forged link cannot even generate the attempt.
+import { insideRichmond } from "../lib/bounds.ts";
 
 /**
  * What the user has chosen. Everything derived from it, the reachable area and
@@ -34,6 +50,60 @@ export type SharedArrival = {
    * arrival notices stay relevant until they are dismissed.
    */
   linkQuery: string;
+};
+
+/**
+ * A partner start that arrived as a coordinate rather than as a preset id.
+ *
+ * Deliberately a plain `Origin` so every existing per-origin path - the contour
+ * cache, `cachedReach`, `prefetchLadder`, `pointKey`, `snapshotName` - takes it
+ * unchanged, with no adapter anywhere.
+ *
+ * **Only for pins.** A preset `ma` resolves to its own `PRESET_ORIGINS` entry
+ * and keeps its own id and name - "Carytown", not "Their start" - which is both
+ * truthful and what the panel's chip renders. The "no free text from a link"
+ * invariant is enforced by this being the only constructor: `id` and `name` are
+ * literals that never come from the URL, so there is no code path from a query
+ * value to a rendered name.
+ *
+ * A consequence, and it is a trap: when `ma` and `mb` name the same preset,
+ * `Session.partner` and `Session.origin` are the SAME OBJECT. Nothing may
+ * distinguish the two sides by `origin.id`; the sides are `state.origin` and
+ * `state.partner`, and that is the only distinction that holds.
+ */
+export function partnerOrigin(at: LngLat): Origin {
+  return { id: "partner", name: "Their start", lat: at.lat, lng: at.lng };
+}
+
+/**
+ * How a meet link arrived. Null unless this session was opened from one.
+ *
+ * Separate from `shared` because the two expire at different moments: `shared`
+ * is dropped by the first action that changes which walk is on screen, while a
+ * meeting survives a spin - the other person is still there afterwards.
+ */
+export type MeetArrival = {
+  readonly kind: "invite" | "answer";
+  /** From `d`. Null when the link carried no pin, so nothing was disclosed to date. */
+  readonly mintedDay: number | null;
+  /**
+   * True when the link's partner coordinate (`ma`) was outside RICHMOND_BOUNDS.
+   * The partner is NOT set in that case: an invite from another city is a
+   * designed refusal, not an engine failure, and it gets a sentence naming
+   * Richmond rather than the generic engine notice.
+   */
+  readonly partnerOutOfBounds: boolean;
+  /**
+   * True when the link's echo of the READER's own start (`mb`) was out of
+   * bounds or unparseable, so it was dropped and `originChosen` stayed false.
+   *
+   * This can only happen if the sender's app mangled the echo, since `mb` is
+   * never anything but a value the reader themselves sent - which is exactly
+   * why it gets a line rather than silence. "The link came back with your own
+   * start broken; set it again" is true, short and actionable, and this app
+   * does not fail silently even about its own mistakes.
+   */
+  readonly selfOutOfBounds: boolean;
 };
 
 export type Session = {
@@ -148,6 +218,45 @@ export type Session = {
   framingKey: number;
   /** Non-null only on a session restored from a share link. */
   shared: SharedArrival | null;
+  /** Non-null only on a session opened from a meet link. */
+  meet: MeetArrival | null;
+  /**
+   * The other person's start, or null. Read-only on this device: it arrived
+   * from a link and the person it belongs to is not here.
+   */
+  partner: Origin | null;
+  /**
+   * False for exactly one state: a fresh invite before this reader has answered
+   * it.
+   *
+   * A flag rather than a nullable `origin`, which would make fourteen call
+   * sites and an exhaustive reducer argue about a case that lasts one screen.
+   * While it is false **nothing is drawn for the local side, no ladder is
+   * warmed, Spin is not pressable, and no link is mintable** - because
+   * `origin` is still DEFAULT_ORIGIN, a house in the Fan that has nothing to do
+   * with this reader, and answering a stranger's question from it is the same
+   * lie as the circle. The first `origin` action of any kind sets it true
+   * forever.
+   */
+  originChosen: boolean;
+  /**
+   * 0 to 1 across the PARTNER's contour warm-up.
+   *
+   * Deliberately not folded into `warmed`, which means "this device's own reach
+   * is ready": that scalar gates the on-demand `fetchReach` and shades the dial,
+   * and a second leg writing into it would make it mean neither thing. Two
+   * scalars, one meaning each.
+   */
+  partnerWarmed: number;
+  /**
+   * A failure on the PARTNER's leg only.
+   *
+   * Separate from `failure` because `failure` is read by the on-demand fetch
+   * gate and by `status`, which resolves to an error state whenever `reach` is
+   * null - so routing their engine error into it would blank YOUR answer at any
+   * dial position of yours that has not warmed yet.
+   */
+  partnerFailure: Failure | null;
 };
 
 export type Action =
@@ -177,7 +286,11 @@ export type Action =
   | { type: "failed"; failure: Failure }
   | { type: "locationNotice"; notice: LocationNotice | null }
   | { type: "frame" }
-  | { type: "dismissShared" };
+  | { type: "dismissShared" }
+  | { type: "dismissMeet" }
+  | { type: "leaveMeet" }
+  | { type: "partnerWarmProgress"; fraction: number }
+  | { type: "partnerFailed"; failure: Failure | null };
 
 /**
  * Defaults for a fresh session.
@@ -221,6 +334,11 @@ export const initialSession: Session = {
   locationNotice: null,
   framingKey: 0,
   shared: null,
+  meet: null,
+  partner: null,
+  originChosen: true,
+  partnerWarmed: 0,
+  partnerFailure: null,
 };
 
 export function reduce(state: Session, action: Action): Session {
@@ -242,6 +360,13 @@ export function reduce(state: Session, action: Action): Session {
         locationNotice: null,
         framingKey: state.framingKey + 1,
         shared: null,
+        // Choosing your own start is how you ANSWER an invite, so it must not
+        // clear the meeting: `partner` and `meet` both survive, and moving your
+        // own start later does not un-invite anybody either.
+        originChosen: true,
+        // The prefetch effect is about to re-run both legs, so a stale warning
+        // about their side would outlive the attempt it describes.
+        partnerFailure: null,
       };
     case "warmProgress":
       return { ...state, warmed: action.fraction };
@@ -308,7 +433,7 @@ export function reduce(state: Session, action: Action): Session {
     // `clearFilters` is a sledgehammer aimed at an unknown nail, and toggling
     // each vibe off one at a time is N dispatches and N renders.
     /**
-     * Flips the guard and re-clamps, the same shape as `toggleRoundTrip` and
+     * Flips the guard and re-clamps, the same kind as `toggleRoundTrip` and
      * for the same reason: the outbound contour can move with no dial commit to
      * piggyback on, so the map needs a re-frame of its own.
      */
@@ -326,7 +451,7 @@ export function reduce(state: Session, action: Action): Session {
       };
     }
     /**
-     * The same shape as `toggleBeforeDark`, and for the same reason: a weather
+     * The same kind as `toggleBeforeDark`, and for the same reason: a weather
      * cap can move the outbound contour with no dial commit to piggyback on.
      *
      * It must **not** clear `pickedId`. A weather rule can move the pool under
@@ -429,6 +554,40 @@ export function reduce(state: Session, action: Action): Session {
       };
     case "dismissShared":
       return state.shared === null ? state : { ...state, shared: null };
+    // Dismisses the NOTICES about the link, not the session the link created -
+    // the same kind as `dismissShared`, and the reason `partner` is untouched.
+    case "dismissMeet":
+      return state.meet === null ? state : { ...state, meet: null };
+    /**
+     * Drop the other person and go back to being one app.
+     *
+     * `meet` goes with them: a stale "this invite is 3 days old" line over a
+     * one-person session is noise about a link that no longer describes
+     * anything on screen.
+     *
+     * The pick is cleared too, and that is the half worth stating. The pool is
+     * about to change - it was the intersection and is about to be one reach -
+     * so a pick produced by the old pool is no longer a pick from this one, and
+     * a pick surviving a pool change is a bug chunk 2 spent a section on.
+     */
+    case "leaveMeet":
+      return {
+        ...state,
+        partner: null,
+        meet: null,
+        originChosen: true,
+        partnerWarmed: 0,
+        partnerFailure: null,
+        pickedId: null,
+        spinning: false,
+        spinAborted: false,
+        routeAttempt: 0,
+        framingKey: state.framingKey + 1,
+      };
+    case "partnerWarmProgress":
+      return { ...state, partnerWarmed: action.fraction };
+    case "partnerFailed":
+      return { ...state, partnerFailure: action.failure };
     case "routeAttempt":
       return { ...state, routeAttempt: action.attempt };
     case "beginPickOrigin":
@@ -577,10 +736,48 @@ export function applyShare(base: Session, link: ShareLink, places: readonly { id
   // `shared` stays null rather than becoming an empty arrival.
   if (isEmptyLink(link)) return base;
 
+  /**
+   * A link's origin as an `Origin`, or null when it named nothing usable.
+   *
+   * `pin` builds through the caller's constructor: the reader's own start is a
+   * `customOrigin` like any dropped pin, while the partner's is a
+   * `partnerOrigin` whose id and name are literals. A preset resolves to its
+   * own entry either way and keeps its own identity.
+   */
+  const resolve = (
+    at: SharedOrigin | null,
+    pin: (coords: LngLat) => Origin,
+  ): Origin | null => {
+    if (at === null) return null;
+    if (at.kind === "preset") return presets.find((preset) => preset.id === at.id) ?? null;
+    return pin({ lat: at.lat, lng: at.lng });
+  };
+
+  const kind = meetKind(link);
+
+  // ---- the meeting, when there is one -------------------------------------
+  // Everything below is written HERE, at the lazy initialiser, and never by a
+  // later dispatch: restoring a partner through a dispatch would frame the map
+  // twice, once on the default session and once on the shared one.
+  const partnerAt = kind === "none" ? null : resolve(link.originA, partnerOrigin);
+  const partnerOutOfBounds = partnerAt !== null && !insideRichmond(partnerAt);
+  const partner = partnerOutOfBounds ? null : partnerAt;
+
+  // `mb` is only ever an echo of a value the reader themselves sent, so a
+  // broken one means the sender's app mangled it. Named rather than swallowed.
+  const echoed = kind === "none" ? null : resolve(link.originB, customOrigin);
+  const selfOutOfBounds =
+    kind !== "none" &&
+    link.originB !== null &&
+    (echoed === null || !insideRichmond(echoed));
+  const mine = selfOutOfBounds ? null : echoed;
+
   // Bound to a local so the narrowing survives into the closure below.
   const from = link.origin;
   let origin = base.origin;
-  if (from !== null) {
+  if (kind !== "none") {
+    origin = mine ?? base.origin;
+  } else if (from !== null) {
     origin =
       from.kind === "preset"
         ? // An unknown preset falls back to the default rather than failing: the
@@ -620,6 +817,22 @@ export function applyShare(base: Session, link: ShareLink, places: readonly { id
     vibes: link.vibes.length > 0 ? [...link.vibes] : base.vibes,
     pickedId: found?.id ?? null,
     framingKey: base.framingKey + 1,
+    partner,
+    partnerWarmed: 0,
+    partnerFailure: null,
+    // The flag, not a null origin, is what gates. `origin` stays
+    // DEFAULT_ORIGIN throughout, so every path that reads it keeps working -
+    // it is simply never drawn, warmed or shared while this is false.
+    originChosen: kind === "none" || mine !== null,
+    meet:
+      kind === "none"
+        ? null
+        : {
+            kind: kind,
+            mintedDay: link.mintedDay,
+            partnerOutOfBounds,
+            selfOutOfBounds,
+          },
     shared: {
       missingPlaceId: missing ? link.placeId : null,
       clampedFromMinutes:
@@ -633,4 +846,116 @@ export function applyShare(base: Session, link: ShareLink, places: readonly { id
 
 export function customOrigin(at: LngLat): Origin {
   return { id: "custom", name: "Dropped pin", lat: at.lat, lng: at.lng };
+}
+
+/**
+ * This session as a link would carry it.
+ *
+ * Extracted from App so the three things that depend on the exact bytes - the
+ * Share button, the address-bar comparison and the mint gate - cannot drift
+ * from each other, and so all three are testable without a DOM.
+ *
+ * @public - consumed by App and by `share.test.ts`.
+ */
+export function shareInputFor(state: Session, placeId: string | null): ShareInput {
+  return {
+    origin: state.origin,
+    meet: false,
+    partner: null,
+    mintedDay: null,
+    budgetMinutes: state.budgetMinutes,
+    floorMinutes: state.floorMinutes,
+    dialMinimumMinutes: dialMinimum(state.roundTrip),
+    roundTrip: state.roundTrip,
+    edgeOnly: state.edgeOnly,
+    climb: state.climb,
+    kind: state.kind,
+    vibes: state.vibes,
+    placeId,
+  };
+}
+
+/**
+ * The canonical query the address bar *would* carry if it still described this
+ * screen.
+ *
+ * App compares this against `shared.linkQuery` to decide whether to clear the
+ * URL, and the meet branch is the one piece of that wiring with a real trap in
+ * it. **In a link being minted, `ma` is the sender's own start; in a link being
+ * read, `ma` is the partner.** So comparing a plain `shareInputFor` - whose
+ * origin is the reader's - against a link whose `ma` is the sender's is
+ * structurally guaranteed to differ on every single meet arrival, and the
+ * effect would wipe the address bar on the first paint while it still described
+ * the screen, losing the partner entirely on reload.
+ *
+ * So a meet session is mirrored back into the kind it arrived in: `ma` is the
+ * partner, `mb` is the reader's own echo. On an answer arrival that matches
+ * byte for byte on the first paint (both origins are already at
+ * `PIN_PRECISION`, and `toFixed` is idempotent). On an invite arrival `mb` is
+ * absent on both sides and it also matches - until the reader sets their own
+ * start, at which point `mb` appears, the strings diverge, and the URL clears.
+ * That is the correct moment: the screen now shows a walk the address bar does
+ * not describe.
+ *
+ * @public - consumed by App and by `share.test.ts`.
+ */
+export function liveLinkQuery(state: Session, placeId: string | null): string {
+  const base = shareInputFor(state, placeId);
+  const partner = state.partner;
+  const input: ShareInput =
+    partner === null
+      ? base
+      : {
+          ...base,
+          meet: true,
+          origin: partner,
+          partner: state.originChosen ? state.origin : null,
+          // The arrival's own date, never `Date.now()` - `d` read from the
+          // clock here would make the address bar clear itself at midnight.
+          mintedDay: state.meet?.mintedDay ?? null,
+        };
+  return canonicalQuery(decodeShare(encodeShare(input)));
+}
+
+/**
+ * The two links a meet session can mint, or null for each that must not exist
+ * yet.
+ *
+ * **Both are null while `originChosen` is false, and that gate is the point.**
+ * `shareInputFor`'s origin is `state.origin`, which is DEFAULT_ORIGIN until the
+ * reader answers. Without the gate, somebody who opens an invite and presses
+ * the invite button before setting a start mints a link naming *somebody else's
+ * front door as their own* - a fabricated premise handed to a third person
+ * under the reader's name. Sharing therefore joins drawing, warming and
+ * spinning in the list of things that must not happen while it is false.
+ *
+ * `answer` needs a pick as well: it is the link that says where the spin
+ * landed, and there is no such place yet.
+ *
+ * @public - consumed by App and by `share.test.ts`.
+ */
+export function meetLinks(
+  state: Session,
+  siteOrigin: string,
+  placeId: string | null,
+  nowMs: number,
+) {
+  if (!state.originChosen) return { invite: null, answer: null };
+  const base = shareInputFor(state, null);
+  const day = epochDay(nowMs);
+  return {
+    // `partner: null` is what enforces "`mb` is never a guess": an invite is
+    // the first link in a chain, so there is nothing to echo.
+    invite: shareUrl(siteOrigin, { ...base, meet: true, partner: null, mintedDay: day }),
+    answer:
+      placeId === null
+        ? null
+        : shareUrl(siteOrigin, {
+            ...base,
+            meet: true,
+            partner: state.partner,
+            placeId,
+            mintedDay: day,
+          }),
+  };
 }

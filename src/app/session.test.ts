@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { dialMaximum, initialSession, reduce, type Session } from "./session.ts";
 import { MAX_MINUTES } from "../lib/isochrone.ts";
+import { PRESET_ORIGINS } from "../data/places.ts";
 import type { TimeCap } from "./conditions.ts";
 
 const cap = (minutes: number): TimeCap => ({
@@ -132,4 +133,73 @@ test("session: toggleWeatherAware never clears the pick", () => {
   // "outside your current time budget" warning is already the right answer.
   const picked = reduce(initialSession, { type: "pickPlace", pickedId: "vmfa" });
   assert.equal(reduce(picked, { type: "toggleWeatherAware" }).pickedId, "vmfa");
+});
+
+// ---------------------------------------------------------------------------
+// The second person
+// ---------------------------------------------------------------------------
+
+test("partnerWarmProgress writes only partnerWarmed", () => {
+  // In particular it must not move `warmed`, which is the scalar the on-demand
+  // fetch gate reads and the dial shades with. Two scalars, one meaning each.
+  const warmed = reduce(initialSession, { type: "warmProgress", fraction: 1 });
+  const after = reduce(warmed, { type: "partnerWarmProgress", fraction: 0.5 });
+  assert.equal(after.partnerWarmed, 0.5);
+  assert.equal(after.warmed, 1);
+  assert.equal(after.failure, null);
+});
+
+test("partnerFailed writes only partnerFailure", () => {
+  // The assertion that a failure on their leg cannot blank your answer:
+  // `failure` is read by the on-demand fetch gate and by `status`, so routing
+  // their engine error there would put the whole panel in an error state.
+  const after = reduce(initialSession, {
+    type: "partnerFailed",
+    failure: { message: "no", configured: true },
+  });
+  assert.equal(after.partnerFailure?.message, "no");
+  assert.equal(after.failure, null);
+  // Null clears it, which is what a retry does.
+  assert.equal(reduce(after, { type: "partnerFailed", failure: null }).partnerFailure, null);
+});
+
+test("origin clears partnerFailure and preserves the partner", () => {
+  const meeting = reduce(
+    { ...initialSession, partner: PRESET_ORIGINS[1]! },
+    { type: "partnerFailed", failure: { message: "no", configured: true } },
+  );
+  const moved = reduce(meeting, { type: "origin", origin: PRESET_ORIGINS[2]! });
+  assert.equal(moved.originChosen, true);
+  assert.equal(moved.partnerFailure, null, "the prefetch is about to re-run both legs");
+  assert.ok(moved.partner !== null, "moving your own start does not un-invite anybody");
+});
+
+test("clearFilters preserves the partner", () => {
+  // `clearFilters` resets exactly what the drawer's count counts, and that
+  // count is the reader's choices about PLACES. A second person is not a
+  // filter.
+  const meeting = { ...initialSession, partner: PRESET_ORIGINS[1]!, vibes: ["park" as const] };
+  const cleared = reduce(meeting, { type: "clearFilters" });
+  assert.deepEqual(cleared.vibes, []);
+  assert.ok(cleared.partner !== null);
+});
+
+test("dismissMeet drops the notices and keeps the meeting", () => {
+  // The same shape as `dismissShared`: it dismisses what the app is SAYING
+  // about the link, not the session the link created.
+  const meeting = {
+    ...initialSession,
+    partner: PRESET_ORIGINS[1]!,
+    meet: {
+      kind: "invite" as const,
+      mintedDay: 20690,
+      partnerOutOfBounds: false,
+      selfOutOfBounds: false,
+    },
+  };
+  const dismissed = reduce(meeting, { type: "dismissMeet" });
+  assert.equal(dismissed.meet, null);
+  assert.ok(dismissed.partner !== null);
+  // A stray dispatch must not re-render the tree for nothing.
+  assert.equal(reduce(dismissed, { type: "dismissMeet" }), dismissed);
 });

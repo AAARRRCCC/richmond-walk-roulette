@@ -392,6 +392,40 @@ this decision is about people rather than about geometry.
 
 ---
 
+### 2.10 One pinned pace for two walkers, and the app says so out loud
+
+**The question.** `meet-in-the-middle` puts two people's walks on one card. They do not
+walk at the same speed. One person walks at 5 km/h and another at 2.5, and this app's
+answer is wrong for both of them by the same amount in opposite directions. Should the
+feature ship with a single admitted pace, or wait for a policy layer that can express two?
+
+**The branch taken: one pace, admitted in a `ResultLine` with `tier: "assumed"` reading
+"Both walks are measured at the same pace.", plus a line in the panel saying the same
+thing, plus a paragraph in README section 6.** No stat, no sentence and no label anywhere
+in this feature may say "their pace" — there is a test asserting it and a comment in
+`MeetPanel.tsx` saying why.
+
+**Why it is the conservative branch.** The alternative is a per-request speed parameter on
+`/api/isochrone`, which is the one endpoint that costs real graph expansions and is
+rate-limited per IP. That is a policy change and new abuse surface, on the endpoint least
+able to afford either, for a number the client is deliberately never shown. And the thing
+being computed is a blunt overlap region, not a promise about arrival: `WALKING_SPEED_KMH`
+is stamped into every snapshot and `seedFromSnapshot` rejects a file whose `speedKmh`
+disagrees, so a per-person pace would invalidate all eleven baked ladders as well.
+
+A stated assumption is not the same as a hidden one. What the app must never do is imply it
+has measured something it has not, and the admission is what keeps that true.
+
+**What reverses it.** `WALKING_SPEED_KMH` in `src/lib/speed.ts`, plus a `speedKmh` on the
+`/api/isochrone` payload, plus `SNAPSHOT_VERSION`, plus every snapshot. It is the most
+expensive reversal in this document and it is the reason the question is worth answering
+deliberately rather than by default.
+
+**What a person should decide.** Whether one admitted line is enough, or whether this
+feature should not ship until two walkers can be expressed. This run's position is that the
+admission is enough — but it is a position, not a fact, and `meet-in-the-middle` open
+question 10 says so in as many words.
+
 ## 3. Plan-level decisions
 
 Anywhere a spec turned out wrong in a way that changed sequencing, scope, or a shared contract.
@@ -562,6 +596,36 @@ What this changes: the acceptance box "the snapshot regeneration cost was measur
 nothing to measure, and the deadline pressure behind the walking-speed decision was imaginary. The
 decision was still worth making now — it was made on 673 measured routes rather than on a schedule —
 but nobody needs to treat it as a last chance.
+
+### 3.10 The two chunk-11 specs contradict each other about warming a partner's ladder, and the privacy criterion won
+
+`multiplayer-links` criterion 5 — **joint**, and verified once on the pair — says that
+opening an invite makes **zero** requests and draws no contour, and its decision 6 rests
+the whole "a forwarded invite costs the recipient nothing" argument on it.
+`meet-in-the-middle` decision 8 says that in the same state "the map frames on the
+partner's contour alone", which requires their ladder to have been warmed.
+
+Both cannot be true. **The criterion wins**, and the partner's leg is gated on
+`originChosen` alongside the reader's own.
+
+The reason is cost falling on the wrong person. A meet link almost always carries a pin, a
+pin has no baked snapshot, and warming one is 96 contours — up to 24 upstream graph
+expansions against a stock instance — charged to the browser and IP of somebody who has
+been sent a link and has not yet answered it. Doing that before they choose is exactly the
+"opening a link does work you did not ask for" the feature was designed to avoid, and it is
+worse for a forwarded invite, where the person paying never had any part in the exchange.
+
+**This was not caught by a test. It was caught by opening an invite with the network panel
+open** and seeing Carytown's snapshot being fetched. Every unit test passed both before and
+after the fix, because what changed is which effect runs, not what any function returns.
+
+The cost is the one this document should be honest about: during an invite the map shows
+nothing at all, not even the sender's reach, so the recipient sees an empty map and a
+question. That is less informative than the sibling spec wanted. It is also the only
+version that keeps the promise printed on the same screen.
+
+**What reverses it:** the `|| !originChosen` clause in App's prefetch effect. Reversing it
+re-enables the framing decision 8 describes and re-breaks criterion 5.
 
 ## 4. Unticked boxes
 
@@ -880,6 +944,73 @@ speculatively.
 
 All three are in `LAUNCH.md`.
 
+### 5.13 `meetMinimum` and the two-sided sweep were never timed
+
+`meet-in-the-middle` open question 3 is explicit that the withdrawn figures — 0.040 ms for
+the sweep, 12.8 ms for the scan — had no script behind them, and that the instrumentation
+"is now a requirement rather than a precaution" because the empty overlap is the *arrival*
+state rather than a rare one: the scan runs on essentially every meet arrival.
+
+It did not run. Two `performance.now()` brackets are needed — one around `derivePool` at
+the 250-place cap with a partner reach and every sibling rule active during a dial scrub,
+and one around `cachedMeetMinimum`'s first uncached call on a real pair of pins. Both need
+a browser with a live engine, and the engine's port forward to the host failed part-way
+through this chunk and did not recover.
+
+What is known without the number: the scan is linear over at most 96 rungs × 242 places,
+exits early, runs once per pair behind a memo, and reads `cachedContour`, which peeks and
+stores nothing. The design does not rest on the figure. The *sentence* claiming it is small
+should not be written until somebody has it.
+
+### 5.14 The states a single desktop browser could not reach
+
+Seen: the invite, the answer, both contours, both markers, the panel's four states, the
+empty-overlap notice, and the address bar clearing on the first change the reader makes.
+
+Not seen, and each for a stated reason:
+
+- **A two-row result card with two measured walks.** No preset pair on this machine has a
+  non-empty overlap at a round trip, which is itself the measured finding behind that
+  spec's decision 7 — a round trip halves the outbound rung, so the widest either walker
+  goes is 50 minutes and the presets are further apart than that. `widen-to-meet` was
+  therefore never on screen either, though both are asserted by tests.
+- **A phone width.** The panel is a multi-state block whose height changes between states,
+  and `meet-in-the-middle` open question 8 predicts that can re-frame the camera twice
+  while somebody is reading. Ten minutes with a 390 px viewport settles it.
+- **`line-dasharray` legibility** (open question 7), for the same reason.
+- **Five of the nine failure paths**: partner out of bounds, a mangled `mb`, their leg
+  failing, a stale invite, and a dropped contour. All are asserted; none was triggered.
+- **Keyboard-only operation and `prefers-reduced-motion`** for the new controls.
+
+### 5.15 One device, one browser
+
+An invite minted on one device and opened on another is a criterion in both GOAL and the
+spec, and it needs two devices. The link was minted, copied and opened in the same browser,
+which proves the format round-trips and proves nothing about two people.
+
+The related one — "two devices on the same link show counts that differ only where honest
+divergence is expected" — matters more than it looks, because README refused
+`meet-in-the-middle`'s amendment 8: the sender keeps its own start at five decimals while
+the recipient holds it at three, up to ~70 m apart, so the two devices genuinely can show
+different counts near the boundary. That divergence is documented in that spec's failure
+table as required copy. Nobody has watched it happen.
+
+### 5.16 The engine's port forward failed repeatedly, and it cost one regression check
+
+Valhalla ran correctly throughout — `docker inspect` reported it up with zero restarts and
+eight tiles loaded, and `curl` from inside WSL always answered. What kept failing was
+WSL2's localhost forwarding to the Windows host, which flapped between answering and
+`ECONNREFUSED`. The cause was found: WSL idles the whole distro out between commands and
+resumes it on the next one, taking the published port with it. Holding a process open in
+the distro fixed it, and `npm run verify` then passed all six steps.
+
+It cost the browser regression pass: a cold load was correct in every respect that does not
+need the engine — 47 places in reach, 37 to spin, the ordinary area readout, no meet panel,
+the partner marker hidden — but the route warm-up stalled at 20/37 and Spin never became
+pressable, so "spinning still works from a cold load" is recorded unrun rather than
+assumed. It is worth knowing for the feel pass that this machine needs a WSL process held
+open, or the engine will appear to be down when it is not.
+
 ## 6. Numbers
 
 Final measurements, replacing `docs/plans/README.md` §5's estimates.
@@ -939,6 +1070,13 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Tests after chunk 10 | 346 passing | |
 | Shared pin precision | 3 decimals, ~110 m | Chunk 10 - see 2.9 |
 | A typical share link | ~30 characters of query | `o=carytown&b=34&rt=1&p=shiplock` |
+| App JS after chunk 11 | 101,133 B (98.8 KiB) | +5,458 B; **1,267 B of headroom** - see 6.4 |
+| Tests after chunk 11 | 418 passing | +72, the largest jump of the run |
+| Meet pin precision | 3 decimals - the same constant as a solo share | Chunk 11 - see 2.9 |
+| Preset pairs sharing a pool at a round trip | **0 of 4** at the dial's widest | Chunk 11, and it is why `widen-to-meet` was never on screen |
+| `meetMinimum` cost | **unmeasured** | Chunk 11 - see 5.13 |
+| Two-sided sweep cost | **unmeasured** | Chunk 11 - see 5.13 |
+| New dependencies across the whole run | **zero** | No clipper was bought - see 6.4 |
 | `formatToParts` per 26-position scrub | 150 → **0** | Chunk 5 — see 6.3 |
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
@@ -1021,3 +1159,32 @@ rebuild; it predates it. It is exactly the silent failure the drift detector was
 it means the app has been drawing contours that disagree with its own engine by up to 14% of area.
 Chunk 1 regenerates all eleven and bumps `SNAPSHOT_VERSION`, which fixes it — but it is worth knowing
 that the fix was already owed before the plan asked for it.
+
+### 6.4 Chunk 11 spent 5,458 B against a combined allowance of 4,608 B
+
+`multiplayer-links` criterion 15 allows **1.5 KB** for the link half and
+`meet-in-the-middle` criterion 13 allows **3 KB** for the meeting: 4,608 B together. The
+pair spent **5,458 B**, which is 850 B over — about 18%.
+
+Both specs say, in their own cost sections, that the figures are estimates and that the
+estimate is not the gate. The binding gate is the ceiling, and it holds: **101,133 B
+against 102,400 B, with 1,267 B of headroom.** No gate was weakened and no budget was
+raised.
+
+Where it went, checked rather than guessed. The obvious suspect was the verbatim
+disclosure copy, which is several hundred characters of unique English that gzip cannot
+compress away. It was measured by collapsing both blocks to a placeholder and rebuilding:
+**0.2 KB**. The remaining 5.2 KB is code — `meet.ts`, the panel and its four states, the
+invite control, the shared share hook, the split on the card, two map layers and their
+effects, the pool clause, and the `suggestFix` branch. It is the third-largest chunk in the
+plan landing as one commit, and it is roughly the size that implies.
+
+**What this leaves for v0.6 is the more useful number: 1,267 B.** The next feature of any
+size does not fit. README section 5's own note is the honest framing — MapLibre is 277 KB
+gzipped beside it, so the app's own budget was always a discipline rather than a
+performance constraint, and the discipline held for eleven chunks.
+
+**No new dependency was added at any point in the run.** The largest single cost decision
+in chunk 11 was refusing a polygon clipper: 9-17 KB gzipped for a library with an open
+robustness bug that this repo's own snapshots would trigger, to draw a region that two
+outlines and a cluster of dots already communicate.
