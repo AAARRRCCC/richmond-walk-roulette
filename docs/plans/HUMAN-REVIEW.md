@@ -15,7 +15,53 @@ that reverses it.
 Every test changed, rule loosened, threshold raised, or budget widened, with the reason. Empty is the
 expected answer; a non-empty section is the first thing to read.
 
-_None._
+**One, and it happened after the run finished rather than during it.**
+
+### 1.1 The bundle ceiling went from 100 KiB to 102 KiB when weather was switched on
+
+**What changed.** `ceiling` in `scripts/bundle-budget.json`: `102400` → `104448`.
+
+**What it was.** 100 KiB, unchanged and unbreached across all twelve chunks of v0.5. Chunk 11 landed
+at 101,133 B with 1,267 B to spare, which was the tightest the run ever ran.
+
+**What forced it.** Section 2.4 shipped `WEATHER_ENABLED = false`, because an unattended run cannot
+know whether the app it is building carries advertising, and Open-Meteo's free tier is
+non-commercial only. A person answered that question on 2026-08-22 — Walk Roulette is free and
+ad-free — and the flag went to `true`. That made the client's whole weather tier *reachable*, where
+before it was a `false` constant that Rollup could tree-shake to nothing: **+1,518 B**, landing at
+102,651 B, or 251 B over.
+
+**Why the gate was wrong rather than the build.** The 100 KiB figure was set with the harness,
+before chunk 0, as "the number the plan actually spends against" — and README §5's estimate that
+produced it was written against a build with weather **disabled**. It was never a budget for the app
+that shipped; it was a budget for the app minus a feature that a licence question happened to be
+hiding. Holding a build to a ceiling drawn around a smaller app is not discipline, it is an
+accounting artefact.
+
+**Why 102 KiB and not more.** It is the smallest round increment that clears the current build with
+real headroom (1,797 B), and it keeps the gate able to fail informatively — which was the whole
+argument for the original number in §2.1. A larger raise would have bought comfort by removing the
+gate's ability to notice the next overspend.
+
+**What was tried first.** README §5 and §2.1 both name the same lever — the
+`@phosphor-icons/react` import surface — as the obvious place to win bytes back. **It was tried and
+it is wrong.** Rewriting all eleven icon imports as deep paths
+(`@phosphor-icons/react/dist/csr/X`) made the bundle **larger**, 101.5 KB against 100.2: the barrel
+was already tree-shaking, and per-icon modules defeat the chunking instead of helping it. Reverted.
+That claim should be treated as disproved wherever the documents repeat it.
+
+**A lever that was not spent, and is still there.** `Place.osm` costs ~1,288 B gzipped over 180 rows
+and **nothing reads it at runtime** — every consumer is a build-time script, and `src/data/hours.ts`
+says so in a comment. Dropping it from the shipped data is the obvious next 1.3 KB, and it was
+deliberately not done here: the overage was signed off, and stripping a data field is a change to
+what ships rather than a change to a number, so it wants its own commit and its own test run.
+
+**Who signed it off.** A person, explicitly, on 2026-08-22, after being shown the measurement and
+the alternative. That is the difference between this entry and the thing GOAL's non-negotiable 2
+forbids — the rule is against an agent quietly widening a budget to get green, and this was neither
+quiet nor an agent's call.
+
+**What reverses it.** The one number, back to `102400`, plus `WEATHER_ENABLED` back to `false`.
 
 ---
 
@@ -31,6 +77,8 @@ candidates that disagree: README line 91 claims 64 KB of app JavaScript, and `do
 §5 measures the checked-in build at 71.2 KB and predicts v0.5 lands "just under 100 KB".
 
 **The branch taken.** `ceiling: 102400` — 100 KiB — in `scripts/bundle-budget.json`.
+**Superseded after the run: it is now 104,448 (102 KiB). See section 1.1** — switching weather on
+made its client tier reachable and the original figure had been drawn around a build without it.
 
 **Why it is the conservative one.** 64 KB is not a budget in this repo, it is a stale claim: the tree
 was already 7 KB over it before v0.5 began, so a gate set there would be red on every commit from the
@@ -74,7 +122,17 @@ it, so there is nothing to unwind first.
 somebody does it, and criterion 6 — the insecure-context sentence, on screen — cannot be reached
 without it. The sentence itself is asserted by test 12.
 
-### 2.4 Open-Meteo's free tier is non-commercial only, so weather ships switched off
+### 2.4 Open-Meteo's free tier is non-commercial only, so weather shipped switched off
+
+> **ANSWERED, 2026-08-22.** *"Walk Roulette is free and ad free, we are clear for
+> open-meteo."* `WEATHER_ENABLED` is now `true` and `weather.test.ts` asserts it,
+> so turning it back off is as deliberate as turning it on was. No key, no
+> account, no paid tier, no second vendor. **If the app ever carries a
+> subscription or an advert, this goes back to false the same day** and the two
+> routes onward are at the end of this entry.
+>
+> The run could not make this call because it is a fact about the product, not
+> about the code, and no amount of reading the terms settles it.
 
 **The question.** `weather-filters` needs a forecast, and Open-Meteo is the source the spec chose:
 key-free, one request, every field this app reads. GOAL.md's chunk-7 checklist requires its current
@@ -185,6 +243,11 @@ literal in the repo.
 
 ### 2.6 A script cleared 180 places instead of a person, and here is what it refused
 
+> **ANSWERED, 2026-08-22.** *"The new places are fine, good refusal on ghost
+> bikes."* The 180 generated rows stand. They remain an append-only suffix in
+> their own file, so the whole batch is still one range-delete if that ever
+> changes.
+
 **The question.** `places-expansion` stops at a review page a human clears by
 hand: "a script that can write `src/data/places.ts` unattended is a script that
 can ship a marker standing in a highway median." Nobody is here. GOAL.md's
@@ -248,9 +311,37 @@ comment in `places.ts` to the closing bracket.
 **What else would have to change.** Nothing structural. `HAND_CURATED_COUNT`
 stays 62 whatever happens to the suffix, which is what it is for.
 
-### 2.7 Richmond parks open at 5 a.m. and close at dusk, and the plan's guess was wrong
+### 2.7 Richmond parks open at 5 a.m. and close at dusk — and as of 2026-08-22 that no longer removes anything
 
-**The question.** `opening-hours` applies one category assumption — a public
+> **ANSWERED, 2026-08-22.** *"Unless they actually gate the parks off, i don't
+> think anyone will care if it's 'after hours' — I sure as hell won't."*
+>
+> **The ordinance research below stands and the copy stays; what changed is that
+> it no longer excludes.** A category verdict now annotates and never removes:
+> `isOpenEnough` returns true for `source: "category"` even when the state is
+> `closed`, so a park after dusk is still in the pool and the card still says
+> *"City parks open at 5 am and close at dusk — assumed, not from OSM."*
+>
+> The reasoning is the distinction the code had already drawn and was not using.
+> An OSM `opening_hours` string is a fact somebody recorded about **one** place —
+> a museum that shuts at five is a museum you should not be sent to, and that
+> still excludes. The park rule is a regulation applied to a **category** of 93
+> places, none individually checked, and most Richmond parks have no gate to
+> close. Removing them after dusk was the app being confidently wrong about a
+> whole class of place on the strength of a rule nobody enforces — which is the
+> same failure as the circle, pointed at a schedule instead of a distance.
+>
+> This also fixes an asymmetry the run should have noticed: `hideClosed` defaults
+> **on**, so the blanket dusk rule was removing parks by default, every evening,
+> for every walker, without anyone having asked for it.
+>
+> **What reverses it:** the `source === "category"` clause in `isOpenEnough`
+> (`src/lib/hours.ts`), with a test either way. The ordinance constant,
+> `PARK_RULE`, is untouched and still correct — if a future dataset marks the
+> genuinely gated parks, they want a real `opening_hours` entry rather than the
+> category fallback, and they will exclude again automatically.
+
+**The question, as the run faced it.** `opening-hours` applies one category assumption — a public
 park with no OSM hours is assumed to close at dusk — and ships it with the word
 "assumed" doing a lot of work. Its own Open Question 1 says somebody must read
 the city code before that copy ships, because the numbers in the spec
@@ -351,6 +442,9 @@ seconds and names exactly what is still owed.
 checklist asks to be recorded.
 
 ### 2.9 A shared dropped pin is published at 110 metres, not at one
+
+> **ANSWERED, 2026-08-22.** *"Rounding the pin is fine."* `PIN_PRECISION` stays
+> at 3, for solo shares and meet links alike.
 
 **The question.** `shareable-spins`' own open question 2, and one GOAL.md names
 as a decision that was meant to be a person's: sharing a preset publishes an id,
@@ -1109,7 +1203,7 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Measurement | Value | When |
 | --- | --- | --- |
 | App JS, gzipped, excluding MapLibre | 71,205 B (69.5 KiB) | Harness baseline, v0.4 |
-| Ceiling | 102,400 B (100 KiB) | Set with the harness — see 2.1 |
+| Ceiling | 104,448 B (102 KiB) | 102,400 for the whole run; raised once at the end — see 1.1 |
 | Tests | 68 passing | Harness baseline |
 | Hand-curated places | 62 | Harness baseline, measured by import |
 | Preset origins | 11 | Harness baseline |
@@ -1161,7 +1255,10 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Tests after chunk 10 | 346 passing | |
 | Shared pin precision | 3 decimals, ~110 m | Chunk 10 - see 2.9 |
 | A typical share link | ~30 characters of query | `o=carytown&b=34&rt=1&p=shiplock` |
-| App JS after chunk 11 | 101,133 B (98.8 KiB) | +5,458 B; **1,267 B of headroom** - see 6.4 |
+| App JS after chunk 11 | 101,133 B (98.8 KiB) | +5,458 B; 1,267 B under the then-ceiling - see 6.4 |
+| App JS with weather on | **102,651 B (100.2 KiB)** | +1,518 B for the licence decision; 1,797 B under the raised ceiling - see 1.1 |
+| Deep icon imports, measured | **+1.3 KB - it makes it worse** | The lever README section 5 names is disproved - see 1.1 |
+| `Place.osm`, unread at runtime | ~1,288 B gzipped, still shipped | The next obvious saving - see 1.1 |
 | Tests after chunk 11 | 418 passing | +72, the largest jump of the run |
 | Meet pin precision | 3 decimals - the same constant as a solo share | Chunk 11 - see 2.9 |
 | Preset pairs sharing a pool at a round trip | **0 of 4** at the dial's widest | Chunk 11, and it is why `widen-to-meet` was never on screen |

@@ -274,3 +274,23 @@ test("only a definite closed keeps a place out of the pool", () => {
   assert.equal(isOpenEnough(of("unknown")), true, "unknown is always kept");
   assert.equal(isOpenEnough(of("closed")), false);
 });
+
+test("a category assumption annotates and never excludes", () => {
+  // The park ordinance is a regulation applied to 93 places, none of them
+  // individually checked, and most Richmond parks have no gate to close. An
+  // OSM schedule is a fact somebody recorded about ONE place. Only the second
+  // is allowed to keep somebody away. Decided by a person; HUMAN-REVIEW 2.7.
+  assert.equal(
+    isOpenEnough({ state: "closed", note: null, stale: false, source: "category" }),
+    true,
+    "a park after dusk is still in the pool",
+  );
+  assert.equal(
+    isOpenEnough({ state: "closed", note: null, stale: false, source: "osm" }),
+    false,
+    "a recorded schedule still excludes",
+  );
+  // No source at all behaves like a recorded one: forgiveness is opt-in, so a
+  // future entry that forgets to say what it is cannot quietly stop excluding.
+  assert.equal(isOpenEnough(verdictOf("closed")), false);
+});

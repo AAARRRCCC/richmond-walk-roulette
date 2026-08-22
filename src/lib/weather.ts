@@ -29,7 +29,7 @@ import { isFiniteNumber, isJsonArray, isJsonObject, isString, readJson, type Jso
  *
  * See `docs/plans/HUMAN-REVIEW.md` §2.4.
  */
-export const WEATHER_ENABLED = false;
+export const WEATHER_ENABLED = true;
 
 /** One slot of forecast, already in the units this app displays. */
 export type WeatherSlot = {

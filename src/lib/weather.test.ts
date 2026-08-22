@@ -72,12 +72,20 @@ test("a slot missing a required field is dropped, and the report survives", () =
   assert.deepEqual(report.hours, []);
 });
 
-test("this build does not call the forecast", () => {
-  // The licence gate, asserted rather than assumed. Open-Meteo's free tier is
-  // non-commercial only and this build takes the commercial case, so the flag
-  // ships false and `refreshWeather` is a no-op. Flipping it is the one edit
-  // that turns the whole feature on - see docs/plans/HUMAN-REVIEW.md 2.4.
-  assert.equal(WEATHER_ENABLED, false);
+test("this build calls the forecast, and the licence is why it may", () => {
+  // The licence gate, asserted rather than assumed - and it is a deliberate act
+  // in either direction, which is why it has a test rather than a default.
+  //
+  // Open-Meteo's free tier is non-commercial only. The run shipped this false
+  // because an unattended process cannot know whether the app it is building
+  // carries advertising. It does not: Walk Roulette is free and ad-free,
+  // confirmed by a person on 2026-08-22, which puts it inside "private or
+  // non-profit websites or apps that do not have subscriptions or advertising"
+  // - their own wording for the boundary. No key, no account, no paid tier.
+  //
+  // If this app ever carries a subscription or an advert, this flag goes back
+  // to false the same day, and HUMAN-REVIEW 2.4 names the two routes onward.
+  assert.equal(WEATHER_ENABLED, true);
 });
 
 test("a forecast landing mid-throw is stashed, not swapped", (t) => {

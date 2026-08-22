@@ -157,11 +157,14 @@ forwarding it, so switching vendors is one module. `WEATHER_URL` names the
 upstream and defaults to Open-Meteo.
 
 **Attribution and licence.** Weather data by Open-Meteo, CC-BY 4.0, credited on
-screen beside the reading. Their free API tier is sold as non-commercial use
-only, so this build assumes the commercial case and ships the client half
-switched off behind one constant — `WEATHER_ENABLED` in `src/lib/weather.ts`.
-With it off nothing is fetched and the panel says so. `docs/plans/HUMAN-REVIEW.md`
-§2.4 has the terms quoted and what flipping it costs.
+screen beside the reading. Their free API tier is sold as **non-commercial use
+only** — their boundary is "private or non-profit websites or apps that do not
+have subscriptions or advertising". Walk Roulette is free and ad-free, so it is
+inside that line and the feature is on. It is gated by one constant,
+`WEATHER_ENABLED` in `src/lib/weather.ts`, with a test asserting its value, so
+**if this app ever carries a subscription or an advert that constant goes back
+to false the same day.** `docs/plans/HUMAN-REVIEW.md` §2.4 has the terms quoted
+and the two paid routes onward.
 
 **Operationally, the thing to know:** an unreachable forecast degrades to a
 missing line and never blocks a spin — not the Spin button, not the route
@@ -407,6 +410,14 @@ is why `unknown` is never rendered as "open".
 The one assumption is Richmond's park ordinance — open at 5 a.m., closed at
 dusk — and it always says the word "assumed" on screen. It is one constant,
 `PARK_RULE` in `src/lib/hours.ts`.
+
+**That assumption annotates and never removes anything.** A recorded
+`opening_hours` string is a fact about one place, and a museum that shuts at
+five is a museum the app will not send you to. The park rule is a regulation
+applied to a category of 93 places, none individually checked, and most Richmond
+parks have no gate to close — so removing them after dusk would be the app being
+confidently wrong about a whole class of place on the strength of a rule nobody
+enforces. The card says the hours; the walker decides.
 
 No opening-hours parser ships to the browser. `opening_hours` is 108 KB
 gzipped and LGPL-3.0-only; it is a devDependency that runs once, at build time,

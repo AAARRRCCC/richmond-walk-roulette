@@ -423,12 +423,27 @@ export function quantiseToSlot(atMs: number): number {
 }
 
 /**
- * The pool's rule: keep it unless it is definitely shut.
+ * The pool's rule: keep it unless it is definitely shut, **and a category
+ * assumption does not count as definitely.**
+ *
+ * The distinction is the whole of it. An OSM `opening_hours` string is a fact
+ * somebody recorded about *this* place, so a museum that closed at five is a
+ * museum you should not be sent to. The park hours are an ordinance applied to
+ * a whole category - 93 places, none of them individually checked - and most
+ * Richmond parks have no gate to close. Excluding them after dusk was the app
+ * being confidently wrong about a class of place on the strength of a
+ * regulation nobody enforces.
+ *
+ * So a category verdict annotates and never excludes: the card still says "City
+ * parks open at 5 am and close at dusk - assumed, not from OSM", which is the
+ * true and useful half, and the walker decides. Decided by a person, 2026-08-22;
+ * HUMAN-REVIEW 2.7.
  *
  * @public - consumed by App and by `hours.test.ts`.
  */
 export function isOpenEnough(verdict: HoursVerdict): boolean {
-  return verdict.state !== "closed";
+  if (verdict.state !== "closed") return true;
+  return verdict.source === "category";
 }
 
 /** Every place the table knows anything about. @public - consumed by App. */

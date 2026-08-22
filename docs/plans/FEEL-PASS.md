@@ -209,15 +209,20 @@ sentence written to reassure people would have been the worst line in the produc
 
 > Forecast is switched off in this build.
 
+(That sentence is now unreachable in the default build — weather is on. It stays
+in the app for the case where somebody turns it back off.)
+
 ---
 
 ## 6. Ugly on purpose
 
 Called out in advance so they read as decisions rather than as things nobody noticed.
 
-- **Weather is switched off.** Not broken — the free tier of the data source is non-commercial
-  only, and the run took the conservative branch. One constant turns it on. `HUMAN-REVIEW.md` §2.4
-  is the decision, and it needs an answer from you: *is this app free and ad-free?*
+- ~~**Weather is switched off.**~~ **Answered 2026-08-22: the app is free and ad-free, so it is
+  inside Open-Meteo's non-commercial boundary and the forecast is on.** The thing to watch on the
+  walkthrough is that the conditions line now shows real numbers — and that on a mild dry day
+  *none of the weather rules will fire*, which is the correct and least interesting case.
+  `HUMAN-REVIEW.md` §2.4.
 - **The invite state shows an empty map.** No contours at all, not even the sender's. That is the
   cost of the promise printed on the same screen — nothing is measured until the recipient
   chooses. The sibling spec wanted the sender's reach drawn; the privacy criterion won. §3.10.
@@ -231,7 +236,7 @@ Called out in advance so they read as decisions rather than as things nobody not
   asymmetry in the app, and it is named in `docs/plans/README.md` §6.
 - **Most places have no opening hours** — 118 of 242, and `unknown` renders as nothing rather
   than as a guess.
-- **The bundle is 98.8 KB against a README that claims 64.** The claim was stale before v0.5
+- **The bundle is 100.2 KB against a README that claims 64.** The claim was stale before v0.5
   began. §2.1, and §6.4 for where chunk 11's share went.
 - **Both walkers share one pace.** Stated on the card rather than implied. §2.12 — and it is the
   most expensive decision in the document to reverse.
