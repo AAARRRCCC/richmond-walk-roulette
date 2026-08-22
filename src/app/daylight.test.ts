@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { CAP_GRID_MINUTES } from "../lib/weather-rules.ts";
 import assert from "node:assert/strict";
 import {
   capFromLight,
@@ -137,4 +138,42 @@ test("daylight: describeDusk is a bare clock phrase in both phases", () => {
 
   const night = daylight("night", { nextDawnMs: Date.parse("2026-06-22T09:18:00Z") });
   assert.equal(describeDusk(night), "dark until 5:18 am");
+});
+
+/** A day with a known amount of light left, and nothing else that matters. */
+const dusk = (minutesToDusk: number): Daylight => ({
+  phase: "day",
+  atMs: 0,
+  minutesToDusk,
+  minutesToSunset: minutesToDusk,
+  minutesToSunrise: null,
+  nextDawnMs: null,
+  events: {
+    day: "2026-08-22",
+    civilDuskMs: 0,
+    sunsetMs: 0,
+    sunriseMs: 0,
+    civilDawnMs: 0,
+    solarNoonMs: 0,
+  },
+});
+
+test("the daylight ceiling steps on the same five-minute grid the weather cap uses", () => {
+  // The ratchet this is written against: at a step of one, the cap fell a
+  // minute every minute, so the dead zone crept and the thumb was pulled with
+  // it under an idle hand. Quantised, it moves at most once every five.
+
+  const seen = new Set<number | null>();
+  for (let m = 60; m >= 40; m -= 1) {
+    seen.add(capFromLight(dusk(m), true, 10, CAP_GRID_MINUTES));
+  }
+  // Twenty-one consecutive minutes collapse to five distinct ceilings, not
+  // twenty-one.
+  assert.ok(seen.size <= 6, `the ceiling took ${seen.size} distinct values over 21 minutes`);
+
+  // And it is never generous: a cap must not promise light that is not there.
+  for (let m = 60; m >= 40; m -= 1) {
+    const capped = capFromLight(dusk(m), true, 10, CAP_GRID_MINUTES);
+    assert.ok(capped === null || capped <= m, `${capped} claimed against ${m} minutes of light`);
+  }
 });

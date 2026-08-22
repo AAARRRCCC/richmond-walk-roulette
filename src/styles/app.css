@@ -916,6 +916,16 @@ code {
   border-left: 1px dashed var(--line-strong);
   border-radius: 0 999px 999px 0;
   pointer-events: none;
+  /* The ceiling slides rather than jumping. It moves at most once every five
+     minutes and never while a hand is on the control, so this is the only
+     moment it is seen moving at all - and a dead zone that snaps into place
+     reads as a glitch rather than as the light running out. */
+  transition: left 420ms var(--ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dial-track.is-capped::after {
+    transition: none;
+  }
 }
 
 .dial-cap-note {

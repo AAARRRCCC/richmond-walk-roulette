@@ -41,6 +41,21 @@ export type TimeDialProps = {
   onFloorChange: (minutes: number) => void;
   /** Fires when a drag or keypress ends, so the map can re-frame exactly once. */
   onCommit: () => void;
+  /**
+   * True while a hand is on the control, false the moment it comes off.
+   *
+   * **The ceiling must not move while somebody is dragging toward it.** The cap
+   * is recomputed from the clock, so it used to fall mid-gesture, re-clamp the
+   * budget and yank the thumb backwards while the cursor was still where the
+   * reader had dragged it - they would then drag on from the new position and
+   * be yanked again. A control that argues with the hand on it is the worst
+   * thing a slider can do.
+   *
+   * App freezes the one clock on this, exactly as it already freezes it during
+   * a throw and for the same reason: a limit that moves under an interaction
+   * changes the answer to a question being asked right now.
+   */
+  onScrub: (active: boolean) => void;
 };
 
 export function TimeDial(props: TimeDialProps) {
@@ -72,11 +87,16 @@ export function TimeDial(props: TimeDialProps) {
    */
   const committed = useRef(`${props.floorMinutes}-${props.minutes}`);
   const commit = () => {
+    // Always released, even when the value did not change: the freeze is about
+    // the gesture, not about the outcome, and a press that moved nothing would
+    // otherwise leave the clock stopped for good.
+    props.onScrub(false);
     const now = `${props.floorMinutes}-${props.minutes}`;
     if (committed.current === now) return;
     committed.current = now;
     props.onCommit();
   };
+  const grab = () => props.onScrub(true);
 
   const hasFloor = props.floorMinutes > props.minimum;
   const asPercent = (value: number) => ((value - props.minimum) / span) * 100;
@@ -137,6 +157,8 @@ export function TimeDial(props: TimeDialProps) {
           // React maps onChange to `input`, which fires continuously during a
           // drag. These are the commit edges: the map re-frames on them so the
           // camera is not restarted on every pixel of the drag.
+          onPointerDown={grab}
+          onKeyDown={grab}
           onPointerUp={commit}
           onPointerCancel={commit}
           onKeyUp={commit}
@@ -166,6 +188,8 @@ export function TimeDial(props: TimeDialProps) {
             if (next !== props.floorMinutes) playDetent(next, props.minimum);
             props.onFloorChange(next);
           }}
+          onPointerDown={grab}
+          onKeyDown={grab}
           onPointerUp={commit}
           onPointerCancel={commit}
           onKeyUp={commit}

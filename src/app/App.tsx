@@ -81,6 +81,7 @@ import {
   weatherUnavailable,
 } from "../lib/weather";
 import {
+  CAP_GRID_MINUTES,
   describeWeatherRule,
   deriveWeatherRules,
   toPoolRules,
@@ -424,7 +425,13 @@ export function App() {
    * would move the cap, which moves the budget, which moves the reach, which
    * changes the pool the reel is already turning through.
    */
-  const conditions = useConditions(origin, state.spinning);
+  /**
+   * True while a hand is on the dial. Not in `Session`: it is a fact about a
+   * gesture in progress, nothing derives from it, and a reducer that knew about
+   * pointer state would be the wrong shape of thing entirely.
+   */
+  const [scrubbing, setScrubbing] = useState(false);
+  const conditions = useConditions(origin, state.spinning || scrubbing);
 
   /**
    * The forecast, read straight from module state like `reach` and `route`.
@@ -1091,7 +1098,18 @@ export function App() {
    * the deps the pending cap lands on the falling edge of the reel.
    */
   const lightCapMinutes = state.beforeDark
-    ? capFromLight(conditions.light, state.roundTrip, dialMinimum(state.roundTrip), budgetStep())
+    ? // CAP_GRID_MINUTES, not the dial's own step. At a step of one the ceiling
+      // fell a minute every minute - a control that fidgets under an idle hand,
+      // and the reason the clamp was described as jerking. `weather-rules`
+      // arrived at the same number for the same reason and says so at length;
+      // the cost is being at most four minutes more conservative about dusk,
+      // which is the safe direction to be wrong in.
+      capFromLight(
+        conditions.light,
+        state.roundTrip,
+        dialMinimum(state.roundTrip),
+        CAP_GRID_MINUTES,
+      )
     : null;
 
   const lightCap: TimeCap | null =
@@ -1685,6 +1703,7 @@ export function App() {
             disabled={picking}
             onChange={(minutes) => dispatch({ type: "budget", minutes })}
             onFloorChange={(minutes) => dispatch({ type: "floor", minutes })}
+            onScrub={setScrubbing}
             onCommit={() => dispatch({ type: "frame" })}
           />
 
