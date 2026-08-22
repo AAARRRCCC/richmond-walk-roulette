@@ -587,8 +587,8 @@ holds contours and knows nothing about places (§3.9).
 - [x] Chunk 9 — opening-hours — `26f90e3`, 78/81
 - [x] Chunk 10 — shareable-spins — `a3e3cec`, 65/74
 - [x] Chunk 11 — multiplayer-links + meet-in-the-middle, one landing — `31861a2`, 73/100
-- [ ] `docs/plans/HUMAN-REVIEW.md` complete
-- [ ] The feel pass prepared
+- [x] `docs/plans/HUMAN-REVIEW.md` complete — read end to end 2026-08-22; two missing decisions written (2.10, 2.11), chunk 11 added to section 4, section 6 reordered
+- [x] The feel pass prepared — `docs/plans/FEEL-PASS.md`
 
 ### `docs/plans/HUMAN-REVIEW.md`
 
@@ -620,16 +620,22 @@ The final pass is a person judging whether it *feels* right, which is the one th
 this document can do and the reason the word "feel" appears nowhere else in it. Leave the ground
 ready for it:
 
-- [ ] The app runs from a cold clone with one documented command
-- [ ] The TUNE panel still works, and every feel constant the run touched is adjustable in it live
-- [ ] A walkthrough exists: one ordered list of what to try, one line per feature, phone first
-- [ ] Each walkthrough step names what to look at, not just what to press
-- [ ] Every deliberately ugly compromise is called out in advance, so it reads as a decision rather
+- [x] The app runs from a cold clone with one documented command
+      - `npm install && npm run dev`. No `.env` step to start; `.env.example` is what points it at an engine, and the app says so plainly when there is none
+- [!] The TUNE panel still works, and every feel constant the run touched is adjustable in it live
+      - the panel works and bakes. **It covers the reel and sound only.** Six feel constants the run touched are not in it - the two climb thresholds, the profile's minimum range, the meet gap, the two accuracy bounds and the pin precision - and each needs an edit and a reload. Listed in FEEL-PASS section 4
+- [x] A walkthrough exists: one ordered list of what to try, one line per feature, phone first
+      - thirteen steps, FEEL-PASS section 2
+- [x] Each walkthrough step names what to look at, not just what to press
+- [x] Every deliberately ugly compromise is called out in advance, so it reads as a decision rather
       than as something nobody noticed
-- [ ] Every piece of user-facing copy written during the run is collected in one list, because copy is
+      - eight of them, FEEL-PASS section 6
+- [x] Every piece of user-facing copy written during the run is collected in one list, because copy is
       judged by reading it together rather than by meeting it one screen at a time
-- [ ] The three states that are hardest to reach on purpose — empty pool, dark, no overlap — have a
+      - FEEL-PASS section 5
+- [x] The three states that are hardest to reach on purpose — empty pool, dark, no overlap — have a
       documented way to reach them, so the pass can see them without waiting for nightfall
+      - FEEL-PASS section 3. "No overlap" turned out to be the default rather than the hard one
 
 ### What "done" means for v0.5
 

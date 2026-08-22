@@ -1362,7 +1362,7 @@ on the floor while the `shareMeta` section required it to be used.
 
 ### Deferred
 
-- HUMAN-REVIEW **2.10** — one pinned pace for two walkers. The last of the six
+- HUMAN-REVIEW **2.12** — one pinned pace for two walkers. The last of the six
   decisions this run was told were meant to be a person's.
 - HUMAN-REVIEW **3.10** — the specs' contradiction, decided.
 - HUMAN-REVIEW **5.13** — `meetMinimum` unmeasured.

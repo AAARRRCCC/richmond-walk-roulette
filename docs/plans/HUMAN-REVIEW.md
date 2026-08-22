@@ -392,7 +392,69 @@ this decision is about people rather than about geometry.
 
 ---
 
-### 2.10 One pinned pace for two walkers, and the app says so out loud
+### 2.10 The two climb thresholds are 12 m/km and 25 m total, and both are judgements
+
+**The question.** The Hilly / Easy filter has to draw a line somewhere. GOAL names this as one of the
+six decisions meant to be a person's, and the reason is that no measurement can settle it: "easy" is
+a claim about legs, not about geometry.
+
+**The branch taken.** Two constants in `src/lib/elevation.ts`:
+
+- `CLIMB_EASY_MAX_M_PER_KM = 12` — the *rate* at or under which a walk is easy.
+- `CLIMB_HILLY_MIN_M = 25` — total ascent at or above which a walk is hilly **however far it ran**,
+  which is what stops a long flat-ish walk accumulating its way into "easy" by being long.
+
+A walk is easy when it clears both: under 25 m of total ascent, and under 12 m per km.
+
+**Why they are the conservative branch.** They are deliberately *inclusive* of "easy" at the margin.
+The failure that matters is telling somebody a walk is easy when it is not — they set out and meet a
+hill — and the reverse costs them only a place they might have enjoyed. 12 m/km is roughly a 1.2%
+average grade, which is a ramp rather than a climb; 25 m is about eight storeys, at which point most
+people would call the walk hilly whatever the arithmetic says. The constants' own comment concedes
+the point in as many words: *"a judgement about this city; it should be tuned by walking, not by
+argument."*
+
+**What reverses them.** The two constants, and nothing else — `classifyClimb` is their only reader,
+and the profile chart names the rate on screen so a reader can see what the filter is deciding on.
+**They are not in the TUNE panel**, which holds only the reel and sound settings, so changing them
+means an edit and a reload rather than a slider. That is a gap and it is named in `FEEL-PASS.md`.
+
+**What a person should decide.** Walk two routes this app calls "easy" and one it calls "hilly", and
+see whether the words match the legs. Shockoe → Libby Hill is the reference hilly walk; anything
+along the canal is the reference flat one. If "easy" feels too generous, `CLIMB_HILLY_MIN_M` is the
+one to lower first — it is the absolute bound, so it moves the marginal cases without touching how
+long walks are judged.
+
+### 2.11 A location fix is refused above 250 m of accuracy, and caveated above 100 m
+
+**The question.** The browser hands over a coordinate and a 95% error radius. How bad is too bad?
+
+**The branch taken.** Two constants in `src/lib/locate.ts`: `MAX_ACCURACY_METERS = 250` refuses the
+fix outright with a stated reason, and `CAVEAT_ACCURACY_METERS = 100` accepts it but says so on
+screen.
+
+**Why it is the conservative branch, and the arithmetic behind the number.** A five-minute walk is
+about 300 m at the pace this app pins. A fix that could be anywhere inside a 250 m radius therefore
+cannot support a five-minute contour — the error circle swallows the innermost band whole, and every
+number the app then prints about that band is fiction dressed as measurement. Refusing is the honest
+act, and it is the same argument as refusing to draw a circle: the app does not tell you a
+comfortable thing it cannot measure. The constant's own comment says it plainly — *"a judgement
+about what this app claims, not about GPS."*
+
+The 100 m caveat exists because there is a wide band where a fix is usable for a thirty-minute walk
+and visibly wrong for a five-minute one, and saying so is cheaper than either refusing it or
+pretending it is exact.
+
+**What reverses them.** The two constants. `judgeFix` is their only reader and it is pure, so the
+whole accept/reject/caveat decision is one function with tests.
+
+**What a person should decide.** This one genuinely needs a phone outdoors, and it is the reason
+section 5's list includes it: desktop Wi-Fi geolocation on this machine returns accuracies that do
+not resemble what a phone with GPS returns. If real phone fixes routinely land between 100 m and
+250 m, the caveat will fire constantly and become noise; if they land under 20 m, both constants are
+academic and could tighten.
+
+### 2.12 One pinned pace for two walkers, and the app says so out loud
 
 **The question.** `meet-in-the-middle` puts two people's walks on one card. They do not
 walk at the same speed. One person walks at 5 km/h and another at 2.5, and this app's
@@ -631,6 +693,35 @@ re-enables the framing decision 8 describes and re-breaks criterion 5.
 
 Every `[ ]` and every `[!]` left standing, by chunk, with what stopped it. Blocked and skipped chunks
 go here.
+
+**Chunk 11 — twenty-seven boxes, the worst tally of the run, and the reasons are stated.** 73 of 100.
+
+This is the biggest chunk in the plan landing as one commit, and it is graded against *both* specs'
+criteria plus GOAL's own list, so the denominator is larger than any other chunk's. The open boxes
+fall into five groups:
+
+- [!] *`MEET_PIN_PRECISION` is 3.* The value is 3 and it is the measured one, but the constant is
+  `PIN_PRECISION` and there is deliberately no second name for it — chunk 10 shipped it first, for
+  the same privacy reason, with a comment saying in advance that this chunk would share it. Recorded
+  as a fail rather than ticked on a technicality. See `multiplayer-links` correction 1.
+- [!] *Four bundle-delta criteria* — `multiplayer-links` 15 and `meet-in-the-middle` 13 and 16, which
+  are two measurements counted twice across the two specs. Section 6.4.
+- [!] *`meetMinimum` was timed.* It was not. Section 5.13, and that spec's own open question 3 says
+  explicitly it must not ship untimed.
+- [!] *Every failure path was triggered and seen.* Four of nine were. The other five — partner out of
+  bounds, a mangled `mb`, their leg failing, a stale invite, a dropped contour — are asserted by
+  tests and were never put on screen. Section 5.14.
+- [ ] *Three that need a deployment* (invite unfurl, pin unfurl, edge-cache behaviour), section 5.12;
+  *two that need a second device*, section 5.15; *three the engine's port forward cut short*
+  (spinning from a cold load, spinning on a pin, the dial scrubbing without a request), section 5.16;
+  and *twelve that need a phone, a stubbed failure, or a preset pair with a non-empty overlap at a
+  round trip*, section 5.14.
+
+That last one deserves naming rather than burying: **no preset pair on this machine shares a pool at
+a round trip**, which is itself the measured finding behind that spec's decision 7. A round trip
+halves the outbound rung, so the widest either walker goes is 50 minutes and the presets are further
+apart than that. The consequence is that the two-row result card with two *measured* walks, and the
+`widen-to-meet` notice, were both asserted by tests and never seen on screen.
 
 **Chunk 10 — nine boxes, and three of them need a deployment.** 65 of 74.
 
@@ -1081,6 +1172,42 @@ Final measurements, replacing `docs/plans/README.md` §5's estimates.
 | Snapshot drift, worst area delta | **14.16%** at 25 min | Harness baseline — see below |
 | Snapshot drift, membership flips | **35** across 55 rungs sampled | Harness baseline |
 
+### 6.1 Every walking time in the app changed, and nothing on screen says so
+
+The rebuild's loudest measured effect, caught by `verify-engine`'s fixture on the first run after it.
+The same fixed route — Grace Street to Main Street Station, 1.047 km, not a metre different — went
+from 1025.7 s to 963.5 s. That is 3.68 km/h to 3.91 km/h against a walking speed the proxy pins at
+3.69 and calls a product decision.
+
+It is not a bug. Pedestrian costing's `use_hills` defaults to 0.5, and over a graph that now carries
+grades the engine rightly makes a downhill walk quicker. But it means the pinned 3.69 km/h is now a
+*flat-ground* pace that the terrain modulates, where before it was the pace, full stop — and
+`server/proxy.ts`'s comment on `WALKING_SPEED_KMH` still describes the older, simpler thing.
+
+**Nothing was changed in response.** Two reasons: the plan does not ask for it, and the new behaviour
+is more honest than the old one — a walk downhill *is* quicker.
+
+**Settled at chunk 8 — see section 2.5.** The worry this note raises turns out to be backwards. Over
+673 routes from all 11 presets to all 62 places the mean effective pace is **3.606 km/h**, 2.3%
+*slower* than the pin: the fixture above is a descent, and averaged over every direction the uphill
+penalty slightly outweighs the downhill bonus. The pin stays at 3.69, erring on the under-promising
+side by an amount smaller than the difference between two people's walking. This note's closing
+claim was also wrong twice over: the constant was in three files, not one, and it now really is in
+one (`src/lib/speed.ts`).
+
+**Chunk 0's measured bundle delta is +0.1 KB against an estimate of +0.9 KB, and the estimate is not
+wrong — it is early.** Nothing imports `solar.ts`, `daylight.ts` or `conditions.ts` yet, so the
+bundler drops them entirely. Those bytes arrive in chunk 5, when the switch and the cap start reading
+them, and README section 5's chunk-0 row should be read as chunk 5's row until then.
+
+**The snapshots in `public/reach/` are already stale, before chunk 1 touches anything.** The first run
+of `verify-drift.mjs` measured 14.16% worst-case area drift and 35 place-membership flips against the
+live engine, on a tileset built the day before the run began. This is not caused by the v0.5 graph
+rebuild; it predates it. It is exactly the silent failure the drift detector was written to find, and
+it means the app has been drawing contours that disagree with its own engine by up to 14% of area.
+Chunk 1 regenerates all eleven and bumps `SNAPSHOT_VERSION`, which fixes it — but it is worth knowing
+that the fix was already owed before the plan asked for it.
+
 ### 6.2 Chunk 2 spent 2.8 KB against an estimate of 1.6 KB
 
 Not a problem yet, and worth watching. Chunks 0, 1 and 2 have spent 3,439 B against estimates
@@ -1123,42 +1250,6 @@ scrubbing the dial not call `Intl.DateTimeFormat.formatToParts` per frame. Instr
 does run once a minute — but `describeDusk` and `describeDeadline` each call `formatClock`, and three
 call sites render them on every frame. Both are now cached on the `Daylight` identity, the same
 `WeakMap` trick `smooth.ts` uses on contours. Measured after: **0**.
-
-### 6.1 Every walking time in the app changed, and nothing on screen says so
-
-The rebuild's loudest measured effect, caught by `verify-engine`'s fixture on the first run after it.
-The same fixed route — Grace Street to Main Street Station, 1.047 km, not a metre different — went
-from 1025.7 s to 963.5 s. That is 3.68 km/h to 3.91 km/h against a walking speed the proxy pins at
-3.69 and calls a product decision.
-
-It is not a bug. Pedestrian costing's `use_hills` defaults to 0.5, and over a graph that now carries
-grades the engine rightly makes a downhill walk quicker. But it means the pinned 3.69 km/h is now a
-*flat-ground* pace that the terrain modulates, where before it was the pace, full stop — and
-`server/proxy.ts`'s comment on `WALKING_SPEED_KMH` still describes the older, simpler thing.
-
-**Nothing was changed in response.** Two reasons: the plan does not ask for it, and the new behaviour
-is more honest than the old one — a walk downhill *is* quicker.
-
-**Settled at chunk 8 — see section 2.5.** The worry this note raises turns out to be backwards. Over
-673 routes from all 11 presets to all 62 places the mean effective pace is **3.606 km/h**, 2.3%
-*slower* than the pin: the fixture above is a descent, and averaged over every direction the uphill
-penalty slightly outweighs the downhill bonus. The pin stays at 3.69, erring on the under-promising
-side by an amount smaller than the difference between two people's walking. This note's closing
-claim was also wrong twice over: the constant was in three files, not one, and it now really is in
-one (`src/lib/speed.ts`).
-
-**Chunk 0's measured bundle delta is +0.1 KB against an estimate of +0.9 KB, and the estimate is not
-wrong — it is early.** Nothing imports `solar.ts`, `daylight.ts` or `conditions.ts` yet, so the
-bundler drops them entirely. Those bytes arrive in chunk 5, when the switch and the cap start reading
-them, and README section 5's chunk-0 row should be read as chunk 5's row until then.
-
-**The snapshots in `public/reach/` are already stale, before chunk 1 touches anything.** The first run
-of `verify-drift.mjs` measured 14.16% worst-case area drift and 35 place-membership flips against the
-live engine, on a tileset built the day before the run began. This is not caused by the v0.5 graph
-rebuild; it predates it. It is exactly the silent failure the drift detector was written to find, and
-it means the app has been drawing contours that disagree with its own engine by up to 14% of area.
-Chunk 1 regenerates all eleven and bumps `SNAPSHOT_VERSION`, which fixes it — but it is worth knowing
-that the fix was already owed before the plan asked for it.
 
 ### 6.4 Chunk 11 spent 5,458 B against a combined allowance of 4,608 B
 
