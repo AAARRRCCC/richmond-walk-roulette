@@ -38,3 +38,6 @@ valhalla/backups
 dev.log
 dev-lan.log
 dev-lan.err.log
+
+# Agent worktrees — scratch checkouts, never part of the repo
+.claude/worktrees/
