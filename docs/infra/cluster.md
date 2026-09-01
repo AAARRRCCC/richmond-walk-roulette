@@ -1,8 +1,11 @@
 # The k3s cluster
 
-Inventory taken 2026-08-28 from the dev machine (`kubectl` v1.37.0; Helm v4.2.4 at
+Inventory taken 2026-08-28 from the dev machine, with corrections from the cluster-ops
+session on 2026-09-01 marked **(corrected 2026-09-01)**.
+
+Tooling on the dev machine: `kubectl` v1.37.0; Helm v4.2.4 at
 `%LOCALAPPDATA%\Microsoft\WinGet\Packages\Helm.Helm_Microsoft.Winget.Source_8wekyb3d8bbwe\windows-amd64\helm.exe`,
-not on PATH). Facts, not plans; re-verify anything load-bearing before acting on it.
+not on PATH. Facts, not plans; re-verify anything load-bearing before acting on it.
 
 ## Cluster
 
@@ -23,17 +26,30 @@ not on PATH). Facts, not plans; re-verify anything load-bearing before acting on
 - **cert-manager v1.21.1** (`cert-manager` namespace, Helm).
 - One `ClusterIssuer`: **`letsencrypt-dns`** — ACME production, **DNS-01 via Cloudflare** (token in secret `cloudflare-api-token`).
 - One `Certificate`: **`wildcard-plvr`** in `kube-system` → secret `wildcard-plvr-tls`, covering `*.plvr.net`.
-- traefik's default `TLSStore` points at `wildcard-plvr-tls`, so **any `*.plvr.net` ingress gets valid TLS with zero per-app cert work** — `walk.plvr.net` is already covered.
+- traefik's default `TLSStore` points at `wildcard-plvr-tls`, so an ingress that names no
+  `secretName` still gets valid TLS.
+- **(corrected 2026-09-01)** This is *not* a licence to reference `wildcard-plvr-tls` from
+  another namespace. That Secret lives in `kube-system`; a copy elsewhere goes stale the
+  moment the wildcard renews and then silently serves an expired cert. An app issues its
+  **own** `Certificate` against `letsencrypt-dns` — DNS-01, so it issues for a LAN-only
+  hostname with no inbound HTTP path. See `cluster-sec/k8s/pixmobile/tls.yaml`.
 
 ## DNS is split-horizon
 
 - **LAN**: the router (192.168.8.1) resolves `plvr.net` and `*.plvr.net` to **192.168.8.200** (traefik). This is why `valhalla.plvr.net` works from home.
-- **Public**: only `plvr.net` exists (Cloudflare-proxied, reached via the `cloudflared` tunnel in the `matrix` namespace). **`valhalla.plvr.net` and the other subdomains have no public DNS records** — they are LAN-only today.
+- **Public**: `plvr.net` and `chat.plvr.net` (Cloudflare-proxied, reached via the
+  `cloudflared` tunnel). Other subdomains have no public DNS records — they are LAN-only.
+  **(corrected 2026-09-01)** `twobot.plvr.net` was retired, and tunnel routing is **in git**
+  (`k8s/cloudflared/config.yaml` plus `cloudflare/dns.json`, applied with
+  `cloudflare/apply.sh`), not in the Cloudflare dashboard.
 - Consequence: putting `walk.plvr.net` on the public internet needs an exposure decision (Cloudflare Tunnel like Matrix, port-forward + public A record, or similar). Nothing existing does this yet except the Matrix tunnel.
 
 ## Valhalla
 
-- Namespace `valhalla`, deployed by **raw manifest via `kubectl apply`** (no Helm release).
+- Namespace `valhalla`. **(corrected 2026-09-01)** Now Argo-managed from `cluster-sec` like
+  everything else — the "hand-applied, no Helm release" reading below is stale. As of
+  2026-09-01 there are **no hand-applied workloads left**: 11 Argo Applications, all
+  Synced/Healthy, the `matrix` namespace adopted that day.
 - Image `ghcr.io/valhalla/valhalla-scripted:3.8.3`, 1 replica, `Recreate` strategy, `server_threads=4`, elevation build on, admins/timezones off, custom default-speeds config off.
 - Tiles live on PVC **`valhalla-data`** (2 Gi, Longhorn) mounted at `/custom_files`.
 - ClusterIP service on 8002, Ingress `valhalla.plvr.net`. Live check: `https://valhalla.plvr.net/status` returns v3.8.3, tileset last modified 2026-08-21.
@@ -47,7 +63,11 @@ not on PATH). Facts, not plans; re-verify anything load-bearing before acting on
 ## Image registry
 
 - **There is no in-cluster registry**, and **no `dockerconfigjson` pull secrets exist anywhere** — every workload pulls public images (ghcr.io, docker.io, quay.io).
-- Getting a custom-built image onto the cluster (registry choice, or `k3s ctr` import) is an open decision, not an existing capability.
+- **(corrected 2026-09-01)** No longer open: images are built by each app's own CI for
+  linux/amd64, pushed to `ghcr.io` under a 12-char commit SHA, and deployed by a
+  hand-edited tag bump in `cluster-sec`. A private package needs a SOPS-encrypted
+  `dockerconfigjson` and `imagePullSecrets` (see `k8s/pixmobile/`); a public one needs
+  neither. There is still no in-cluster registry and no `k3s ctr` import path.
 
 ## Everything else running
 
@@ -55,8 +75,26 @@ not on PATH). Facts, not plans; re-verify anything load-bearing before acting on
 |---|---|---|---|
 | `portainer` | Portainer CE | 2.45.0 | Helm; UI at `portainer.plvr.net` |
 | `uptime-kuma` | Uptime Kuma | 2.5.0 | Helm; monitoring UI at `uptime.plvr.net` |
-| `matrix` | tuwunel + element-web + cloudflared | latest tags | Raw manifests; `plvr.net` (tuwunel), `chat.plvr.net` (Element), `twobot.plvr.net`; public via Cloudflare Tunnel (token-managed, routes live in the CF dashboard, not the cluster) |
+| `matrix` | tuwunel + element-web + cloudflared | latest tags | `plvr.net` (tuwunel), `chat.plvr.net` (Element); public via Cloudflare Tunnel. **(corrected 2026-09-01)** Argo-managed since 2026-09-01; `twobot.plvr.net` retired; tunnel routes live in git, not the CF dashboard |
 | `longhorn-system` | Longhorn UI | 1.12.1 | `longhorn.plvr.net` |
 | `default` | `hello` nginx test deploy | — | leftover smoke test, NodePort 30219 |
 
 No Prometheus/Grafana, no sealed-secrets/SOPS, no GitOps operator (Argo/Flux), no CI runners in-cluster.
+
+## Two traps documented by cluster-ops (2026-09-01)
+
+- A file referenced by a `kustomization.yaml` but **not committed** breaks the whole
+  Application, not the file: `kustomize build` fails outright and Argo reports a
+  `ComparisonError` condition with nothing applied — *not* `OutOfSync`, which is where you
+  would go looking. Check `git ls-files k8s/<app>` against the directory listing first.
+- Omitting a field that a CRD defaults server-side causes permanent `OutOfSync`. State
+  defaults explicitly.
+- traefik reads `router.*` annotations from the **Ingress** and `service.*` from the
+  **Service**, and silently ignores a misplaced one. `router.middlewares` is therefore
+  per-Ingress, never per path: two path groups needing different middleware need two
+  Ingress objects on the same host.
+- There is no git webhook on `cluster-sec` yet, so a push takes up to ~3 minutes to be
+  noticed. Do not conclude manifests are broken in the first two minutes.
+
+`cluster-sec/docs/deploying-an-app.md` is canonical; read it end to end before writing
+manifests.
