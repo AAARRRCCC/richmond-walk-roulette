@@ -67,7 +67,15 @@ const THEIRS_DIFFERENT: Side = {
   vibes: ["river", "park", "food"],
 };
 
-const THEIR_NAME = "Dana";
+/**
+ * There are no names in this app and there never will be: joining is a link,
+ * there are no accounts, and nothing takes free text. So the other side is
+ * named by WHERE THEY START, exactly as `App` already derives it -
+ * `partner?.name ?? "Their start"`, a preset's own name or nothing.
+ */
+const PRESET_START = "Maymont";
+const PIN_START = "Their start";
+
 const AWAY_MINUTES = 14;
 const ROOM_LEFT = "11h 40m";
 const BOTH_COUNT = 14;
@@ -78,6 +86,8 @@ type PanelProps = {
   presence: Presence;
   them: Side;
   you: Side;
+  /** Their start, which is the only name the other side has. */
+  startName: string;
 };
 
 /** Their values are only worth showing when there is a them. */
@@ -87,12 +97,22 @@ const hasState = (presence: Presence) => presence !== "waiting" && presence !== 
 const staleness = (presence: Presence) =>
   presence === "here" ? "" : presence === "reconnecting" ? " is-dim" : " is-stale";
 
+/** Short form, for a line that already has a subject. */
 const presenceWord = (presence: Presence) => {
   if (presence === "here") return "here";
   if (presence === "reconnecting") return "reconnecting...";
   if (presence === "away") return `last seen ${AWAY_MINUTES} min ago`;
   if (presence === "waiting") return "not joined yet";
   return "room closed";
+};
+
+/** Full sentence. "They", never a name: nobody in this app has one. */
+const presenceLine = (presence: Presence) => {
+  if (presence === "here") return "They're here.";
+  if (presence === "reconnecting") return "Reconnecting to them...";
+  if (presence === "away") return `Last seen ${AWAY_MINUTES} minutes ago.`;
+  if (presence === "waiting") return "They haven't opened the link yet.";
+  return "This room has closed.";
 };
 
 function TheirFilters(props: { them: Side }) {
@@ -127,9 +147,19 @@ function MirrorRail(props: PanelProps) {
         <p className="field-label">Their side</p>
         <span className={`pp-dot is-${presence}`} aria-hidden="true" />
       </div>
-      <p className="pp-name">
-        {THEIR_NAME} <span className="pp-presence">{presenceWord(presence)}</span>
-      </p>
+      {/* Their START, in the chip `MeetPanel` already uses for it, because a
+          start is the only thing the other side can be called. Presence is a
+          separate sentence about the person rather than a word hung off a
+          place: "Maymont here" says a park is here. */}
+      {/* Only once there is a them: nobody has a start before they join, and
+          the room's whole privacy argument is that opening the link costs the
+          joiner nothing until they set one. */}
+      {hasState(presence) && (
+        <p className="pp-name">
+          <span className="meet-chip">{props.startName}</span>
+        </p>
+      )}
+      <p className="meet-hint">{presenceLine(presence)}</p>
 
       {presence === "closed" ? (
         <>
@@ -142,10 +172,7 @@ function MirrorRail(props: PanelProps) {
         </>
       ) : presence === "waiting" ? (
         <>
-          <p className="meet-hint">
-            You have sent the link and nobody has opened it. Nothing of theirs shows until they
-            do.
-          </p>
+          <p className="meet-hint">Nothing of theirs shows until they do.</p>
           <p className="pp-ghost-value">&mdash; min</p>
           <p className="meet-hint">Room closes in {ROOM_LEFT}.</p>
         </>
@@ -240,7 +267,7 @@ function AgreementLedger(props: PanelProps) {
     <div className={`pp-ledger${staleness(presence)}`}>
       <div className="pp-ledger-line">
         <span className={`pp-dot is-${presence}`} aria-hidden="true" />
-        <span className="pp-ledger-who">{THEIR_NAME}</span>
+        <span className="pp-ledger-who">{props.startName}</span>
         {presence === "closed" ? (
           <span className="pp-ledger-note">room closed &mdash; start a new one</span>
         ) : presence === "waiting" ? (
@@ -306,7 +333,7 @@ function MapCallout(props: PanelProps) {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
       >
-        <span className="pp-callout-name">{THEIR_NAME}</span>
+        <span className="pp-callout-name">{props.startName}</span>
         {presence === "closed" ? (
           <span className="pp-callout-note">room closed</span>
         ) : presence === "waiting" ? (
@@ -345,6 +372,9 @@ export function PartnerPanelPrototype() {
   const [variant, setVariant] = useState(REQUESTED ?? "A");
   const [presence, setPresence] = useState<Presence>("here");
   const [differ, setDiffer] = useState(true);
+  // A preset start has a name of its own; a dropped pin has none, and gets the
+  // app's existing fallback. Both cases have to look right.
+  const [preset, setPreset] = useState(true);
 
   const go = useCallback((step: number) => {
     setVariant((current) => {
@@ -384,7 +414,12 @@ export function PartnerPanelPrototype() {
   if (REQUESTED === null) return null;
 
   const them = differ ? THEIRS_DIFFERENT : THEIRS_SAME;
-  const shown = { presence, them, you: YOURS };
+  const shown = {
+    presence,
+    them,
+    you: YOURS,
+    startName: preset ? PRESET_START : PIN_START,
+  };
   const current = VARIANTS.find((entry) => entry.key === variant) ?? VARIANTS[0];
 
   return (
@@ -423,6 +458,13 @@ export function PartnerPanelPrototype() {
             onClick={() => setDiffer((value) => !value)}
           >
             {differ ? "disagreeing" : "agreeing"}
+          </button>
+          <button
+            type="button"
+            className={preset ? "is-on" : ""}
+            onClick={() => setPreset((value) => !value)}
+          >
+            {preset ? "preset start" : "dropped pin"}
           </button>
         </div>
       </div>
