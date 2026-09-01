@@ -12,6 +12,12 @@ _Avoid_: session (taken by `Session`, the solo app state), lobby, channel
 A meet link that carries only the room id — no origins, no settings. The room, not the URL, is where meet state lives.
 _Avoid_: invite link (the retired ping-pong shape that carried `ma`/`mb`)
 
+**Room id**:
+The token that names a room, and the whole of what it takes to join one: knowing
+it is the only credential there is. So it is minted unguessable rather than
+memorable — the link is meant to be sent, not recited.
+_Avoid_: room code, room name (both invite being short enough to guess)
+
 **Relay**:
 The server's whole role in a room: it orders and forwards messages and never computes a pool or picks a winner.
 _Avoid_: authority, game server
