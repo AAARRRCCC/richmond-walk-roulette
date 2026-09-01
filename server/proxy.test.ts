@@ -696,7 +696,11 @@ test("locateCacheKey rounds to four decimals and is null on bad input", () => {
   const a = locateCacheKey({ point: { latitude: 37.53368, longitude: -77.43121 } });
   const b = locateCacheKey({ point: { latitude: 37.53372, longitude: -77.43124 } });
   assert.equal(a, b);
-  assert.match(String(a), /^\/api\/locate\/v1-3\.69\/37\.5337,-77\.4312$/);
+  // The pace is part of the key, and read from the constant rather than
+  // restated: a locate answer is only true for the speed it was asked at, and a
+  // test carrying its own literal would keep passing through the one change it
+  // exists to notice.
+  assert.equal(String(a), `/api/locate/v1-${WALKING_SPEED_KMH}/37.5388,-77.4312`);
 
   // Two hundred metres apart is a different anchor and a different key.
   const far = locateCacheKey({ point: { latitude: 37.5355, longitude: -77.43121 } });

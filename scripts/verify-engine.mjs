@@ -81,21 +81,26 @@ const WIDE_CONTOURS = 8;
  * costing change, a speed change, or a graph built from a different extract all
  * show up here as a loud failure on a route nobody edits.
  *
- * **Re-taken 2026-08-21 after the elevation rebuild** (tileset 1787337146,
- * Valhalla 3.8.3). The previous fixture, against the same route on an
- * elevation-less graph, was 1.048 km in 1025.7 s - 3.68 km/h. The rebuild moved
- * it to 963.5 s, 3.91 km/h, on a route whose length did not change by a metre.
- * That is not an error: pedestrian costing's `use_hills` defaults to 0.5, and
- * over a graph that now carries grades this particular walk is downhill (51 m to
- * 44 m), so the engine rightly makes it quicker. Every ETA in the app moved with
- * it. The fixture catching this on the first run after the rebuild is the whole
- * reason it exists.
+ * **Re-taken 2026-08-31 against the cluster engine** (valhalla.plvr.net,
+ * tileset 1787337146, Valhalla 3.8.3) when the pin moved 3.69 -> 4.5 km/h:
+ * 1.049 km in 791.0 s. The route did not change; the number we ask the engine
+ * for did, and a fixture taken at the old pace would now fail for the one
+ * reason that is not a regression. The length moving 1.047 -> 1.049 km is
+ * re-snapping noise, well inside the tolerance.
+ *
+ * Before that, **2026-08-21 after the elevation rebuild**: 1.047 km in 963.5 s,
+ * 3.91 km/h against a pinned 3.69, where an elevation-less graph had given
+ * 1.048 km in 1025.7 s. That was not an error either — pedestrian costing's
+ * `use_hills` defaults to 0.5, and over a graph carrying grades this walk is
+ * downhill (51 m to 44 m), so the engine rightly made it quicker. The fixture
+ * catching that on the first run after the rebuild is the whole reason it
+ * exists.
  */
 const SPEED_FIXTURE = {
   from: { lat: 37.5407, lon: -77.436 },
   to: { lat: 37.5345, lon: -77.431 },
-  expectedKm: 1.047,
-  expectedSeconds: 963.5,
+  expectedKm: 1.049,
+  expectedSeconds: 791.0,
   /** Wide enough to absorb a rebuild that re-snaps an endpoint by a house-width. */
   tolerance: 0.02,
 };

@@ -12,6 +12,11 @@
 // is rebuilt, and because answering it by hand once is how a number becomes
 // folklore.
 //
+// The pin has since moved to 4.5 km/h (docs/adr/0002), which is also the limit
+// of what this script can tell you: it measures the engine against whatever
+// speed.ts currently asks for, so it catches the engine drifting from the pin
+// and never the pin drifting from a walker. Only a real walk does that.
+//
 //   npm run dev                       # not needed; this talks to the engine
 //   node scripts/measure-pace.mjs [--url http://127.0.0.1:8002]
 import { readFileSync } from "node:fs";

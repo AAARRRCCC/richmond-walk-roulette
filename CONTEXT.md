@@ -29,3 +29,14 @@ _Avoid_: user id, account (there are no accounts)
 
 **Publishing vs sharing into a room**:
 Publishing a location means writing it where strangers and crawlers can read it (a URL); it is rounded to 3 decimals (~110 m). Sharing into a room is a consented act between two walkers over the socket and carries full precision. The joiner's origin is never sent without their explicit act.
+
+**Pin**:
+The single walking speed the server applies to every isochrone and every route, so the contour drawn on the map and the minutes printed on a card are answers to the same question. One pin for everybody, including both members of a room.
+_Avoid_: the user's pace, walking preference (there is no per-walker speed)
+
+**Reach snapshot**:
+A precomputed file holding a preset origin's whole dial ladder, stamped with the pin it was cut at. A snapshot cut at a different pin is a different definition of "25 minutes" and is refused rather than served.
+_Avoid_: cache (the runtime contour cache is a separate thing), preset
+
+**Recut**:
+Regenerating every reach snapshot against a live engine after the pin, the ladder, or the tileset moves. Always paired with a `SNAPSHOT_VERSION` bump, because the files are cached for a year under their names.

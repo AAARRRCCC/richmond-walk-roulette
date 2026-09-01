@@ -47,15 +47,16 @@ const TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * was about 700 bytes; it now also carries a whole-metre elevation sample every
  * 30 m, and Richmond elevations are two or three digits, so each sample costs
  * 3-4 bytes of JSON including its comma and the wrapper keys about 30. A
- * 25-minute leg at 3.69 km/h is ~1,540 m, so ~52 samples: about +240 bytes. The
- * 100-minute ceiling is ~6,150 m, so ~206 samples: about +850 bytes. Entries run
- * ~940 bytes typical and ~1,550 worst case.
+ * 25-minute leg at the pinned 4.5 km/h is ~1,875 m, so ~63 samples: about +280
+ * bytes. The 100-minute ceiling is ~7,500 m, so ~250 samples: about +1,030
+ * bytes. Entries run ~980 bytes typical and ~1,730 worst case.
  *
- * 600 of those is ~560 KB, which is exactly the budget this store already kept,
- * and an implausible store of nothing but 100-minute walks still lands under
- * 1 MB - far inside the 5 MB localStorage usually allows. Halving to 400 would
+ * 600 of those is ~575 KB, close enough to the budget this store already kept,
+ * and an implausible store of nothing but 100-minute walks lands just over 1 MB
+ * - still far inside the 5 MB localStorage usually allows. Halving to 400 would
  * have thrown away six origins of warm cache to buy headroom the arithmetic
- * does not need.
+ * does not need. (These figures move with the pin: raising it lengthens every
+ * leg, and the samples are one per 30 m of it.)
  */
 const MAX_ENTRIES = 600;
 

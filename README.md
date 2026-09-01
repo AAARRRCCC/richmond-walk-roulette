@@ -10,14 +10,14 @@ This app asks the [Valhalla](https://github.com/valhalla/valhalla) routing
 engine for the area you can really reach, and draws it as nested time
 contours.
 
-The gap is worth measuring rather than asserting. At the 3.69 km/h this app
-pins, a 25 minute circle covers 2.87 sq mi. Here is what you can actually
+The gap is worth measuring rather than asserting. At the 4.5 km/h this app
+pins, a 25 minute circle covers 4.26 sq mi. Here is what you can actually
 reach:
 
 | From | 25 min | A circle claims | Overstated by |
 | --- | --- | --- | --- |
-| Monroe Park | 2.03 sq mi | 2.87 sq mi | 1.42× |
-| downtown, by the river | 1.48 sq mi | 2.87 sq mi | 1.94× |
+| Monroe Park | 2.93 sq mi | 4.26 sq mi | 1.46× |
+| downtown, by the river | 2.24 sq mi | 4.26 sq mi | 1.91× |
 
 The closer you start to the water, the more a circle lies to you. That is the
 whole argument for the app.
@@ -85,13 +85,13 @@ throw earns a run of them.
 Nothing per request. The engine is open source and the data is OpenStreetMap.
 You pay for whatever box runs it (`valhalla/README.md`).
 
-The walking speed is pinned server-side at 3.69 km/h. That is the pace at
-which Valhalla's 25 minute area from Monroe Park matched the Google Isochrones
-the app used to ship with, so the cutover kept the assumed pace. It did not
-keep the contour shapes: the two engines differ on edge access, penalties and
-origin snapping, and `LAUNCH.md` records where. Changing the speed is a
-product decision. It rescales every figure above and makes every precomputed
-snapshot wrong.
+The walking speed is pinned server-side at 4.5 km/h, roughly an average
+walker's pace. It replaced a 3.69 that had been calibrated to make Valhalla's
+25 minute area from Monroe Park match the Google Isochrones the app used to
+ship with — a pin fitted to a contour rather than to anybody walking, and one
+that a real walk found slow by about a quarter. `docs/adr/0002` records the
+walk and the choice. Changing the speed is a product decision. It rescales
+every figure above and makes every precomputed snapshot wrong.
 
 ## Stack
 

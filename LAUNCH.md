@@ -75,9 +75,11 @@ pace. Summary here; the history has the full text.
 - **A known Valhalla wobble.** It was over-generous once: Battery Park inside
   45 minutes where routing says 47. Two origins in one city is not a survey.
   Spot-check contours against `/api/route` times when something looks off.
-- The 3.69 km/h pinned in `server/proxy.ts` is what made the areas comparable.
-  Changing it is a product decision that rescales every figure in the README
-  and invalidates every snapshot in `public/reach/`.
+- The 3.69 km/h pinned at the time of this comparison is what made the areas
+  comparable. That pin has since moved to 4.5 (`docs/adr/0002`), which rescales
+  the areas quoted here without changing which engine drew which shape. The pin
+  lives in `src/lib/speed.ts`; changing it is a product decision that rescales
+  every figure in the README and invalidates every snapshot in `public/reach/`.
 
 ## Verify against the live engine
 
