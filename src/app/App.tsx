@@ -115,6 +115,7 @@ import { EmptyPoolNotice } from "../ui/EmptyPoolNotice";
 import { MeetPanel } from "../ui/MeetPanel";
 import { InviteButton } from "../ui/InviteButton";
 import { TuningPanel } from "../ui/TuningPanel";
+import { PartnerPanelPrototype } from "../ui/prototype/PartnerPanelPrototype";
 import { onSoundChange, playPress, playTap, setSoundOn, soundOn } from "../lib/sound";
 
 /**
@@ -1985,6 +1986,12 @@ export function App() {
           {announcement}
         </p>
       </div>
+
+      {/* PROTOTYPE, issue #15. A child of `.shell` rather than of `.rail`, so
+          its variants position against the whole screen. Renders nothing
+          without `?variant=` in the URL, and leaves the bundle in production
+          with the rest of the dev-only mounts. */}
+      {import.meta.env.DEV && <PartnerPanelPrototype />}
     </div>
   );
 }
