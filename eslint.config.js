@@ -11,6 +11,11 @@ export default tseslint.config(
       "docs/history",
       // Vendored lint plugin: third-party source, not this project's to lint.
       "tools/oxlint/anti-slop",
+      // Agent worktrees: scratch checkouts of this same repo. .gitignore keeps
+      // them out of the tree, which ESLint does not read, so without this it
+      // walks a second copy of the project and fails on files no tsconfig
+      // covers.
+      ".claude/worktrees",
     ],
   },
   js.configs.recommended,
