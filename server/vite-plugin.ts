@@ -2,6 +2,8 @@ import type { Plugin } from "vite";
 import { handleApiRequest, type ProxyEnv } from "./proxy";
 import { bakeTuning, type BakeResult } from "./bake-tuning.ts";
 import { parseJson } from "../src/lib/json.ts";
+import { attachRelay } from "./relay.ts";
+import { createRooms } from "./rooms.ts";
 
 /**
  * The one route here that is not a proxy. It writes to a source file, so it
@@ -32,6 +34,15 @@ export function apiProxy(env: ProxyEnv): Plugin {
   return {
     name: "walk-roulette-api-proxy",
     configureServer(server) {
+      // The room relay rides the dev server's own HTTP listener, beside
+      // Vite's HMR socket, so a room works under `npm run dev` unproxied.
+      if (server.httpServer) {
+        attachRelay(server.httpServer, {
+          rooms: createRooms(),
+          charge: () => Promise.resolve(true),
+          otherPaths: "ignore",
+        });
+      }
       server.middlewares.use((req, res, next) => {
         if (!req.url?.startsWith("/api/")) return next();
 

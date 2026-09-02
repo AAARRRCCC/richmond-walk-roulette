@@ -23,7 +23,14 @@ The server's whole role in a room: it orders and forwards messages and never com
 _Avoid_: authority, game server
 
 **Lock gate**:
-Spin stays disabled until both members have locked in their budget. The room's one rule about who may spin.
+Spin stays disabled until both members have locked in their budget. The room's one rule about who may spin. Budgets may differ; each side's reach is drawn at its own budget.
+
+**Mirror rail**:
+The read-only panel on the map's far side holding the other member's whole side in the reader's own order: start, presence, minutes, filters. Presence reads as data staleness (here, reconnecting, away, waiting, closed), never as prose about a person.
+_Avoid_: partner panel, their card
+
+**Consent**:
+The explicit act by which a member shares their start into a room: pressing *Share my start* as a joiner, or starting the room as the opener. Before it, nothing of that side is sent; after it, the start is remembered for that room only so a reload rejoins as the same walker.
 
 **Settle**:
 The moment an input stops moving — the hand comes off the dial, a toggle lands. Room sync sends settled values only, never in-flight motion.

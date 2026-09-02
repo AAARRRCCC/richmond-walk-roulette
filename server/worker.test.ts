@@ -687,176 +687,56 @@ test("a SharedArrival carries what the notices and the URL rule each need", () =
 });
 
 // ---------------------------------------------------------------------------
-// Meet links
+// Room pointers
 // ---------------------------------------------------------------------------
 
 const SITE = "https://walk.example";
 
-test("an invite unfurls as a question", () => {
-  // The one case the old rule refused outright, by returning null for a link
-  // naming no place. An invite's whole content IS the question, and a generic
-  // card in the thread would mean the recipient taps blind.
-  const meta = shareMeta("?m=1&ma=carytown&b=30&rt=1", SITE);
+test("a room pointer unfurls as a question that names nobody", () => {
+  const meta = shareMeta("?r=8xk2m4p9", SITE);
   assert.ok(meta !== null);
-  assert.match(meta.title, /both/i);
-  assert.match(meta.title, /30 min/);
+  assert.match(meta.title, /both walk to/);
+  assert.equal(/\d+\.\d+/.test(meta.title + meta.description), false, "no coordinate anywhere");
+  assert.equal(meta.url, `${SITE}/s?r=8XK2M4P9`, "canonical is the case-folded id");
+  assert.equal(meta.image, `${SITE}/og.png`);
 });
 
-test("an invite from a pin never leaks a coordinate or a neighbourhood", () => {
-  const meta = shareMeta("?m=1&ma=37.541,-77.436&b=30&rt=1", SITE);
-  assert.ok(meta !== null);
-  for (const text of [meta.title, meta.description]) {
-    assert.equal(/37\.5|-77\.4/.test(text), false, text);
-  }
-  assert.match(meta.description, /a dropped pin/);
-  // No preset name guessed from a coordinate, either.
-  assert.equal(/Carytown|Manchester|Scott/.test(meta.description), false);
+test("a malformed room pointer has no preview", () => {
+  assert.equal(shareMeta("?r=nope", SITE), null);
 });
 
-test("an invite title does not name the sender's neighbourhood", () => {
-  // A solo share says "from Carytown" because the origin is the walk's
-  // premise. An invite is about a PERSON, and a message-app preview is
-  // rendered by a third-party crawler and cached on its servers - so the
-  // title names no origin at all. The description may, because naming a
-  // landmark is what the sender chose by picking one.
-  const meta = shareMeta("?m=1&ma=carytown&b=30&rt=1", SITE);
-  assert.ok(meta !== null);
-  assert.equal(meta.title.includes("Carytown"), false);
-  assert.match(meta.description, /Carytown|both/);
+test("a room pointer is never cached", () => {
+  // Minted per room and rendered from constants: nothing to amortise, and
+  // an id space a scraper could otherwise fill.
+  assert.equal(shareCacheKey("?r=8XK2M4P9"), null);
 });
 
-test("an answer names the place and says inside, not a walk", () => {
-  const meta = shareMeta("?m=1&ma=37.512,-77.402&mb=carytown&b=30&rt=1&p=shiplock", SITE);
-  assert.ok(meta !== null);
-  assert.match(meta.title, /Great Shiplock Park/);
-  assert.match(meta.title, /inside 30 min/);
-  assert.equal(meta.title.includes("a 30 min walk"), false);
+test("the retired meet keys unfurl as nothing", () => {
+  assert.equal(shareMeta("?m=1&ma=carytown&b=30&rt=1", SITE), null);
+  assert.equal(shareCacheKey("?m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock"), null);
 });
 
-test("an answer with an unknown place has no preview", () => {
-  // Same rule as a solo link: the site's own generic card, rather than an
-  // invented one.
-  assert.equal(shareMeta("?m=1&ma=carytown&mb=home&b=30&rt=1&p=nowhere", SITE), null);
-});
-
-test("a meet link with any pin is never cached", () => {
-  // Coordinates are an unbounded key space and a scraper minting entries in it
-  // is the reason this rule exists.
-  assert.equal(shareCacheKey("?m=1&ma=37.541,-77.436&b=30&rt=1&p=shiplock"), null);
-  assert.equal(shareCacheKey("?m=1&ma=carytown&mb=37.512,-77.402&b=30&rt=1&p=shiplock"), null);
-  assert.equal(shareCacheKey("?m=1&ma=37.5,-77.4&mb=37.6,-77.5&b=30&rt=1&p=shiplock"), null);
-});
-
-test("a preset-to-preset meet link is cached", () => {
-  // And these are exactly the ones that repeat.
-  const key = shareCacheKey("?m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock");
-  assert.ok(key !== null);
-  assert.match(key, /^\/__share\/v1\?/);
-});
-
-test("an invite and an answer between the same two starts are different documents", () => {
-  const invite = shareCacheKey("?m=1&ma=carytown&mb=home&b=30&rt=1");
-  const answer = shareCacheKey("?m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock");
-  assert.notEqual(invite, answer);
-  assert.notEqual(
-    shareMeta("?m=1&ma=carytown&mb=home&b=30&rt=1", SITE)?.url,
-    shareMeta("?m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock", SITE)?.url,
-  );
-});
-
-test("a meet cache key and a solo cache key cannot collide", () => {
-  assert.notEqual(
-    shareCacheKey("?o=carytown&b=30&rt=1&p=shiplock"),
-    shareCacheKey("?m=1&ma=carytown&b=30&rt=1&p=shiplock"),
-  );
-});
-
-test("og:url carries the canonical coarse coordinate", () => {
-  const meta = shareMeta("?m=1&ma=37.54070,-77.43600&b=30&rt=1", SITE);
-  assert.ok(meta !== null);
-  assert.match(meta.url, /ma=37\.541%2C-77\.436/);
-  assert.equal(meta.url.includes("37.54070"), false);
-});
-
-test("this chunk does not re-key a single warm solo entry", () => {
-  // Asserted against a LITERAL, and the same literal is the reason
-  // SHARE_CACHE_VERSION can stay "v1". If this fails, the fix is to match the
-  // bytes chunk 10 already emits - never to bump the version, which would
-  // silently re-key every warm entry at deploy.
-  assert.equal(
-    shareCacheKey("?o=carytown&b=34&rt=1&e=1&c=easy&v=park.river&k=detour&p=shiplock"),
-    "/__share/v1?o=carytown&b=34&rt=1&e=1&c=easy&k=detour&v=river.park&p=shiplock",
-  );
-});
-
-/**
- * `/s` for the two meet shapes.
- *
- * The Worker gains **zero** lines for this feature: `/s` already fetches `/`,
- * rewrites the head and caches by `shareCacheKey`, and every meet-specific
- * decision lives inside the two pure modules it already imports. These tests
- * exist to prove exactly that — that the branch behaves, not that it was
- * rewritten.
- */
-test("an invite never touches the engine", (t) => {
+test("a room pointer never touches the engine", (t) => {
   stubHtmlRewriter(t);
   stubEdgeCache(t);
-  const fetches = stubFetch(t, () => new Error("the engine must not be called for an invite"));
+  const fetches = stubFetch(t, () => new Error("the engine must not be called for a room link"));
   const invited = assetEnv({ API_RATE_LIMIT: limiter().binding });
 
-  return handleWorkerRequest(shareGet("?m=1&ma=carytown&b=30&rt=1"), invited.env, CTX).then(
-    async (response) => {
-      assert.equal(response.status, 200);
-      assert.equal(fetches.length, 0);
-      assert.match(await response.text(), /both/i);
-    },
-  );
+  return handleWorkerRequest(shareGet("?r=8XK2M4P9"), invited.env, CTX).then(async (response) => {
+    assert.equal(response.status, 200);
+    assert.equal(fetches.length, 0);
+    assert.match(await response.text(), /both/i);
+  });
 });
 
-test("an invite with a pin is rendered and not stored", async (t) => {
+test("a room pointer is rendered and not stored", async (t) => {
   stubHtmlRewriter(t);
   const caches = stubEdgeCache(t);
-  const pin = "?m=1&ma=37.541,-77.436&b=30&rt=1";
-
   const first = assetEnv();
-  await handleWorkerRequest(shareGet(pin), first.env, CTX);
+  await handleWorkerRequest(shareGet("?r=8XK2M4P9"), first.env, CTX);
   const second = assetEnv();
-  await handleWorkerRequest(shareGet(pin), second.env, CTX);
-
+  await handleWorkerRequest(shareGet("?r=8XK2M4P9"), second.env, CTX);
   assert.equal(cacheEntries(caches, SHARE_CACHE).size, 0);
   assert.deepEqual(first.asked, ["/"]);
-  assert.deepEqual(second.asked, ["/"], "rendered fresh every time, by design");
-});
-
-test("a preset-to-preset meet link is served from the edge on the second GET", async (t) => {
-  stubHtmlRewriter(t);
-  const caches = stubEdgeCache(t);
-  const both = "?m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock";
-
-  const first = assetEnv();
-  await handleWorkerRequest(shareGet(both), first.env, CTX);
-  const second = assetEnv();
-  const response = await handleWorkerRequest(shareGet(both), second.env, CTX);
-
-  assert.equal(response.status, 200);
-  assert.deepEqual(second.asked, [], "the document was not fetched again");
-  assert.equal(cacheEntries(caches, SHARE_CACHE).size, 1);
-  assert.equal(cacheEntries(caches, ISOCHRONE_CACHE).size, 0);
-});
-
-test("the asset fetched for a meet link is always `/`", async (t) => {
-  stubHtmlRewriter(t);
-  stubEdgeCache(t);
-  for (const search of [
-    "?m=1&ma=carytown&b=30&rt=1",
-    "?m=1&ma=37.541,-77.436&b=30&rt=1",
-    "?m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock",
-  ]) {
-    const one = assetEnv();
-    const asked = one.asked;
-    await handleWorkerRequest(shareGet(search), one.env, CTX);
-    // Never `/s` (which `not_found_handling: "none"` answers with a 404) and
-    // never `/index.html` (which `html_handling` answers with a 307).
-    assert.deepEqual(asked, ["/"], search);
-  }
+  assert.deepEqual(second.asked, ["/"]);
 });

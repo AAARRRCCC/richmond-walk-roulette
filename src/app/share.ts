@@ -7,19 +7,18 @@
  * session — and so it never needs a version byte or a migration. It survives
  * hand-editing and reads honestly in a log line.
  *
- * **This is chunk 10 and last for a reason.** Every earlier chunk changed what a
- * session *is*: `climb` replaced `terrain`, `kind` appeared, the condition
- * switches appeared. A format frozen before those landed is a format that needs
- * a migration the day after it ships, which is the whole thing this shape exists
- * to avoid.
+ * Two shapes share the path. A **spin** link carries a walk (`o`, `b`, `rt`,
+ * `p` and the filters). A **room pointer** carries `r` and nothing else: the
+ * room, not the URL, is where meet state lives (CONTEXT.md, `docs/adr/0001`).
  *
- * Pure, and imported by the Worker as well as the app, so it knows nothing about
- * the DOM and reaches for no runtime module beyond `places.ts` (for the vibe
- * ordering) and `format.ts` (for the one shared sentence).
+ * Pure, and imported by the server as well as the app, so it knows nothing
+ * about the DOM and reaches for no runtime module beyond `places.ts` (for the
+ * vibe ordering), `format.ts` (for the one shared sentence) and `room-id.ts`.
  */
 import { VIBES, type Origin, type PlaceKind, type Vibe } from "../data/places.ts";
 import type { ClimbBand } from "../lib/elevation.ts";
 import { formatMinutes } from "../lib/format.ts";
+import { normaliseRoomId } from "./room-id.ts";
 
 /** Where a share link sends the recipient. */
 export const SHARE_PATH = "/s";
@@ -27,9 +26,9 @@ export const SHARE_PATH = "/s";
 /**
  * The dial's widest range, duplicated here on purpose.
  *
- * `share.ts` is imported by the Worker, and importing `../lib/isochrone` for two
- * numbers would drag the whole contour cache and its fetch plumbing into a
- * Worker that only wants to write a sentence. A test asserts these equal
+ * `share.ts` is imported by the server, and importing `../lib/isochrone` for
+ * two numbers would drag the whole contour cache and its fetch plumbing into a
+ * process that only wants to write a sentence. A test asserts these equal
  * `MIN_MINUTES` and `MAX_MINUTES`, and fails the moment the dial changes shape.
  */
 export const SHARE_BUDGET_MIN = 5;
@@ -37,7 +36,7 @@ export const SHARE_BUDGET_MAX = 100;
 
 /**
  * Longest query string that will be parsed at all. Past this the link is treated
- * as absent: a decoder is not a place to spend unbounded work, and the Worker's
+ * as absent: a decoder is not a place to spend unbounded work, and the server's
  * share cache is keyed off what this returns.
  */
 export const SHARE_QUERY_MAX = 512;
@@ -57,16 +56,9 @@ export const SHARE_QUERY_MAX = 512;
  * — the card shows the destination anyway and says why it is not in the pool —
  * so the failure mode is a sentence rather than a substitution.
  *
- * **This is also `multiplayer-links`' `MEET_PIN_PRECISION`, and there is
- * deliberately only one constant for the two.** That spec names a second one
- * and says solo links keep five decimals; chunk 10 had already decided against
- * five for the same reason, so a second name would have been two names for one
- * number - exactly the drift this comment exists to prevent. One number for
- * "how precisely this app is willing to publish a person's location", and it is
- * measured rather than chosen: at two decimals (~1.2 km) a sixteen-place shared
- * pool can flip entirely between the two devices, and at three the disagreement
- * is confined to a handful of genuinely marginal places. The method and the
- * table are in `multiplayer-links` open question 2.
+ * This governs what a URL **publishes**. A room shares origins over the socket
+ * at full precision, by the publishing / sharing-into-a-room distinction in
+ * CONTEXT.md, and never through this constant.
  *
  * The rounding happens HERE, in the encoder, and nothing downstream re-expands
  * it: `pointKey` rounds to 5 decimals and is the identity behind the contour
@@ -74,31 +66,8 @@ export const SHARE_QUERY_MAX = 512;
  * that point would quietly warm a second ladder ~70 m from the one the reader
  * believes they are looking at. `toFixed` is idempotent, which is what keeps
  * `canonicalQuery(decodeShare(encodeShare(x))) === encodeShare(x)` true.
- *
- * See docs/plans/HUMAN-REVIEW.md 2.9.
  */
 export const PIN_PRECISION = 3;
-
-/**
- * How old an invite gets before the panel says so. **It still works.**
- *
- * Refusing to open a stale invite would be theatre: the coordinate is in the
- * URL either way, and a reader with the link can read it in a text editor
- * forever. What the app can honestly do is name the age and let the reader
- * judge whether a two-day-old starting point still describes where somebody is.
- */
-export const INVITE_STALE_DAYS = 2;
-
-/**
- * Days since the Unix epoch, in UTC. The `d` key's whole value space.
- *
- * A date rather than a deadline, and the distinction is the whole of decision
- * 5: an `expires` timestamp checked on the client would be *advisory* expiry,
- * which looks like a guarantee and is not one. A date claims only what it is.
- */
-export function epochDay(atMs: number): number {
-  return Math.floor(atMs / 86_400_000);
-}
 
 /** An origin as a link can carry it: a preset id, or a dropped pin. */
 export type SharedOrigin =
@@ -108,50 +77,15 @@ export type SharedOrigin =
 /** Everything a link says, before any of it is checked against the data. */
 export type ShareLink = {
   /**
-   * The `m` key. True only for the literal `"1"`; any other value is false.
+   * The `r` key: a room pointer, validated to the relay's own shape so nothing
+   * downstream can try to join garbage. When it is set every other field is
+   * at its empty value — a room link carries no origin and no settings.
    *
-   * A meet link carries **no `o` at all**, and that is a correctness decision
-   * rather than a style one. The forward-compatibility rule this whole format
-   * rests on is that unknown keys are ignored and absent keys fall back to the
-   * initial session - so a meet key that *changed the meaning of an existing
-   * key* would break it silently and dangerously. An older build (or a stale
-   * cached bundle) opening `?m=1&o=37.541,-77.436` would ignore `m`, read `o`
-   * as **the reader's own origin**, and answer a stranger's question from a
-   * stranger's front door with no notice at all. That is the exact failure this
-   * app exists to argue against, so the two origins live under two new keys an
-   * older build ignores entirely.
+   * The retired ping-pong keys (`m`, `ma`, `mb`, `l`, `d`) are not read at
+   * all and decode as a cold start, which is the degradation `docs/adr/0001`
+   * accepts for the handful of such links in the wild.
    */
-  meet: boolean;
-  /** The sender's start, from `ma`. Null on a solo link. */
-  originA: SharedOrigin | null;
-  /**
-   * The other person's start, from `mb`.
-   *
-   * **Only ever an echo, never a guess.** It is a value copied verbatim out of
-   * the link the sender was themselves reading, which is the mechanical form of
-   * the rule that the recipient's here-and-now does not belong in the sender's
-   * link: nothing about a reader ever enters a link except that reader's own
-   * act of sending one back.
-   */
-  originB: SharedOrigin | null;
-  /** The `d` key: days since the epoch when the link was minted, or null. */
-  mintedDay: number | null;
-  /**
-   * The `l` key: the budget the sender committed to, or null.
-   *
-   * **The whole of "both lock in before you spin", and it needs no server.**
-   * Live two-way sync would mean a socket, a room and a service holding both
-   * sessions - the thing this feature refused on purpose. What the mechanic
-   * actually needs is far less: a number that travels with the link and says
-   * "this is what I am walking, not what I happen to be looking at". The
-   * recipient sees it, matches it or does not, and Spin waits until they agree.
-   *
-   * Distinct from `b` on purpose. `b` is the dial position the link was minted
-   * at, which every share has carried since chunk 10 and which means only "here
-   * is what I was looking at". This is a commitment, and the two are not the
-   * same claim.
-   */
-  lockedMinutes: number | null;
+  room: string | null;
   origin: SharedOrigin | null;
   budgetMinutes: number | null;
   floorMinutes: number | null;
@@ -165,34 +99,9 @@ export type ShareLink = {
 
 /** What a link is built from. Exactly the fields `Session` can express. */
 export type ShareInput = {
-  /** The sender's own start. Written as `o` when `meet` is false, `ma` when true. */
   origin: Origin;
-  /** True to mint a meet link. */
-  meet: boolean;
-  /**
-   * The other person's start, written as `mb`. Null on every solo link and on
-   * every invite.
-   *
-   * It must be null unless it came out of a decoded link. The encoder cannot
-   * tell - it is handed an `Origin` like any other - so the invariant is held
-   * where it can be: App builds this only from `Session.partner`, and
-   * `meetLinks`' invite expression passes null explicitly.
-   */
-  partner: Origin | null;
-  /**
-   * Null only for an **invite**, which names no destination because there is
-   * not one yet. A solo link and an answer link both always write `p`.
-   */
+  /** Null for a link that names no destination yet. A spin's link always writes `p`. */
   placeId: string | null;
-  /**
-   * `epochDay(Date.now())` at mint time, or null. Written only for a meet link
-   * that actually carries a pin - that is, exactly when something private was
-   * disclosed and staleness is worth naming. A preset-only invite has nothing
-   * to go stale and keeps a date-free, cacheable key.
-   */
-  mintedDay: number | null;
-  /** The budget the sender is committing to, or null for "not locked in". */
-  lockedMinutes: number | null;
   budgetMinutes: number;
   floorMinutes: number;
   dialMinimumMinutes: number;
@@ -209,40 +118,25 @@ export type ShareInput = {
  * A `Set<string>.has(x)` proves nothing to the type system, so every caller had
  * to follow it with a cast. A type guard proves it once, here, at the boundary
  * where the string arrives - which is the whole rule the anti-slop plugin is
- * enforcing.
+ * enforcing. Exported because a room's setup frames arrive as strings too.
  */
-const isClimb = (value: string): value is ClimbBand | "any" =>
+export const isClimb = (value: string): value is ClimbBand | "any" =>
   value === "easy" || value === "hilly" || value === "any";
 
-const isKind = (value: string): value is PlaceKind =>
+export const isKind = (value: string): value is PlaceKind =>
   value === "any" || value === "destination" || value === "detour";
-
-/**
- * Which of the three shapes a link is.
- *
- * Exported because three consumers - App's initialiser, `shareMeta` and
- * `shareCacheKey` - each need to branch on it, and `link.meet` alone does not
- * say *which* of the two meet shapes it is. An `m` with no `ma` is not a
- * meeting: a link naming a second person and not a first is not a shape this
- * app mints, so it decodes as a plain cold start rather than as half a meeting.
- */
-export function meetKind(link: ShareLink): "none" | "invite" | "answer" {
-  if (!link.meet || link.originA === null) return "none";
-  return link.placeId === null ? "invite" : "answer";
-}
 
 /**
  * A preset id, or a coordinate at the given precision.
  *
- * Lifted out of the encoder so the two call sites cannot drift on which
- * precision they write. Today they pass the same number - see `PIN_PRECISION` -
- * and the parameter is what keeps that a decision rather than a coincidence.
+ * Lifted out of the encoder so a second call site cannot drift on which
+ * precision it writes; the parameter is what keeps `PIN_PRECISION` a decision
+ * rather than a coincidence.
  */
 const pinOrId = (origin: Origin, precision: number): string =>
   origin.id === "custom" || origin.id === "me" || origin.id === "partner"
     ? `${origin.lat.toFixed(precision)},${origin.lng.toFixed(precision)}`
     : origin.id;
-
 
 /**
  * The link for a spin.
@@ -257,10 +151,8 @@ const pinOrId = (origin: Origin, precision: number): string =>
  * that was sent: a link that switched off somebody's daylight guard would be a
  * trap, and one that switched it on would be a lie about what the sender did.
  *
- * A **meet** link writes `m`, `ma` and optionally `mb` in place of `o`, and `d`
- * after everything else. It never throws on a shape it was not meant to be
- * handed - this is a pure encoder, and a throwing branch would fork that
- * discipline for an invariant the one call site holds trivially.
+ * It never writes `r`: a room pointer is minted by `roomUrl`, and a link is
+ * one shape or the other.
  */
 export function encodeShare(input: ShareInput): string {
   const params: string[] = [];
@@ -268,14 +160,7 @@ export function encodeShare(input: ShareInput): string {
     params.push(`${key}=${encodeURIComponent(value)}`);
   };
 
-  const partner = input.partner;
-  if (input.meet) {
-    push("m", "1");
-    push("ma", pinOrId(input.origin, PIN_PRECISION));
-    if (partner !== null) push("mb", pinOrId(partner, PIN_PRECISION));
-  } else {
-    push("o", pinOrId(input.origin, PIN_PRECISION));
-  }
+  push("o", pinOrId(input.origin, PIN_PRECISION));
   push("b", String(input.budgetMinutes));
   if (input.floorMinutes > input.dialMinimumMinutes) push("f", String(input.floorMinutes));
   push("rt", input.roundTrip ? "1" : "0");
@@ -284,25 +169,12 @@ export function encodeShare(input: ShareInput): string {
   if (input.kind !== "any") push("k", input.kind);
 
   // Written in VIBES order rather than in toggle order, so the same selection
-  // always produces the same link and therefore the same edge cache key. The
-  // only normalisation the encoder does.
+  // always produces the same link and therefore the same cache key. The only
+  // normalisation the encoder does.
   const vibes = VIBES.filter((vibe) => input.vibes.includes(vibe.id)).map((vibe) => vibe.id);
   if (vibes.length > 0) push("v", vibes.join("."));
 
   if (input.placeId !== null) push("p", input.placeId);
-  // Only when a pin was actually written, because that is exactly when
-  // something private was disclosed. A preset-to-preset invite discloses
-  // nothing, has nothing to go stale, and keeps a date-free key the edge can
-  // cache.
-  // Only on a meet link: a lock is a promise to another walker, and a solo
-  // share has nobody to make it to.
-  if (input.meet && input.lockedMinutes !== null) push("l", String(input.lockedMinutes));
-  const carriesPin =
-    input.meet &&
-    input.mintedDay !== null &&
-    (pinOrId(input.origin, PIN_PRECISION).includes(",") ||
-      (partner !== null && pinOrId(partner, PIN_PRECISION).includes(",")));
-  if (carriesPin) push("d", String(input.mintedDay));
   return params.join("&");
 }
 
@@ -310,17 +182,13 @@ export function encodeShare(input: ShareInput): string {
  * Everything a query string says. Never throws, on any input.
  *
  * Knows nothing about `PLACES` or `PRESET_ORIGINS` — that is what keeps it
- * usable from the Worker and from a test with no DOM. The one thing it does
+ * usable from the server and from a test with no DOM. The one thing it does
  * check is that `b` and `f` are integers the dial could actually hold, so every
  * consumer sees a budget that is real and nothing downstream needs a clamp.
  */
 export function decodeShare(search: string): ShareLink {
   const empty: ShareLink = {
-    meet: false,
-    originA: null,
-    originB: null,
-    mintedDay: null,
-    lockedMinutes: null,
+    room: null,
     origin: null,
     budgetMinutes: null,
     floorMinutes: null,
@@ -334,6 +202,13 @@ export function decodeShare(search: string): ShareLink {
   if (search.length > SHARE_QUERY_MAX) return empty;
 
   const query = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+
+  // A room pointer is the whole link. Anything beside it is ignored rather
+  // than merged: the room holds the setup, and a link that tried to carry
+  // both would be two grammars in one string. A malformed id is an empty
+  // link, so a mangled pointer cold-starts instead of half-joining.
+  const rawRoom = query.get("r");
+  if (rawRoom !== null) return { ...empty, room: normaliseRoomId(rawRoom) };
 
   const minutes = (key: string): number | null => {
     const raw = query.get(key);
@@ -363,25 +238,6 @@ export function decodeShare(search: string): ShareLink {
     return { kind: "preset", id: raw };
   };
 
-  const meet = query.get("m") === "1";
-  const originA = meet ? sharedOrigin("ma") : null;
-  // Ignored when `ma` is absent: a link naming a second person and not a first
-  // is not a shape this app mints, and reading it would invent a meeting out of
-  // half a link.
-  const originB = meet && originA !== null ? sharedOrigin("mb") : null;
-  // Forced to null on a meet link. One link, one grammar - and it is what makes
-  // the old-build degradation in `ShareLink.meet`'s note a cold start rather
-  // than a stranger's front door.
-  const origin = meet ? null : sharedOrigin("o");
-
-  const rawDay = query.get("d");
-  const day = rawDay === null ? Number.NaN : Number.parseInt(rawDay, 10);
-  // Bounded because it reaches `Number` arithmetic and a rendered notice. The
-  // ceiling is about the year 2243, which is far enough past any link anyone
-  // will send and near enough to catch a garbage integer.
-  const mintedDay =
-    Number.isInteger(day) && day >= 0 && day < 100_000 ? day : null;
-
   const rawClimb = query.get("c");
   const rawKind = query.get("k");
   const rawPlace = query.get("p");
@@ -392,14 +248,8 @@ export function decodeShare(search: string): ShareLink {
   const asked = new Set((query.get("v") ?? "").split("."));
 
   return {
-    meet,
-    originA,
-    originB,
-    mintedDay,
-    // Range-checked exactly like `b`, so nothing downstream needs a clamp and a
-    // forged value cannot name a budget the dial could not hold.
-    lockedMinutes: meet ? minutes("l") : null,
-    origin,
+    room: null,
+    origin: sharedOrigin("o"),
     budgetMinutes: minutes("b"),
     floorMinutes: minutes("f"),
     roundTrip: flag("rt"),
@@ -424,34 +274,32 @@ export function decodeShare(search: string): ShareLink {
  * one cache entry.
  */
 export function canonicalQuery(link: ShareLink): string {
+  // A room pointer canonicalises to itself: the id is already case-folded and
+  // nothing else in the link is read.
+  if (link.room !== null) return `r=${link.room}`;
+
   const params: string[] = [];
   const push = (key: string, value: string): void => {
     params.push(`${key}=${encodeURIComponent(value)}`);
   };
-  const shared = (key: string, at: SharedOrigin | null): void => {
-    if (at === null) return;
-    // Re-rounded rather than copied, so a hand-edited five-decimal coordinate
-    // cannot be smuggled through the canonical URL a crawler stores. Canonical
-    // is allowed to differ from requested - the vibe ordering already relies on
-    // that - and here it is the difference that matters.
+
+  // Re-rounded rather than copied, so a hand-edited five-decimal coordinate
+  // cannot be smuggled through the canonical URL a crawler stores. Canonical
+  // is allowed to differ from requested - the vibe ordering already relies on
+  // that - and here it is the difference that matters.
+  const at = link.origin;
+  if (at !== null) {
     push(
-      key,
+      "o",
       at.kind === "preset"
         ? at.id
         : `${at.lat.toFixed(PIN_PRECISION)},${at.lng.toFixed(PIN_PRECISION)}`,
     );
-  };
+  }
 
   // The key order is fixed and TOTAL, because this string is simultaneously
-  // `og:url` and the edge cache key: two orderings of one invite must not
+  // `og:url` and the share cache key: two orderings of one link must not
   // become two documents, and a key left out of it would be erased from both.
-  // The solo subset - o, b, f, rt, e, c, v, k, p - is byte-identical to what
-  // the encoder wrote before meet links existed, which is what lets
-  // SHARE_CACHE_VERSION stay "v1" rather than re-keying every warm entry.
-  if (link.meet) push("m", "1");
-  shared("ma", link.originA);
-  shared("mb", link.originB);
-  shared("o", link.origin);
   if (link.budgetMinutes !== null) push("b", String(link.budgetMinutes));
   if (link.floorMinutes !== null) push("f", String(link.floorMinutes));
   if (link.roundTrip !== null) push("rt", link.roundTrip ? "1" : "0");
@@ -460,8 +308,6 @@ export function canonicalQuery(link: ShareLink): string {
   if (link.kind !== null && link.kind !== "any") push("k", link.kind);
   if (link.vibes.length > 0) push("v", link.vibes.join("."));
   if (link.placeId !== null) push("p", link.placeId);
-  if (link.lockedMinutes !== null) push("l", String(link.lockedMinutes));
-  if (link.mintedDay !== null) push("d", String(link.mintedDay));
 
   return params.join("&");
 }
@@ -469,11 +315,7 @@ export function canonicalQuery(link: ShareLink): string {
 /** True when the link carries nothing this build understands. */
 export function isEmptyLink(link: ShareLink): boolean {
   return (
-    !link.meet &&
-    link.originA === null &&
-    link.originB === null &&
-    link.mintedDay === null &&
-    link.lockedMinutes === null &&
+    link.room === null &&
     link.origin === null &&
     link.budgetMinutes === null &&
     link.floorMinutes === null &&
@@ -491,10 +333,15 @@ export function shareUrl(siteOrigin: string, input: ShareInput): string {
   return `${siteOrigin}${SHARE_PATH}?${encodeShare(input)}`;
 }
 
+/** The room pointer: the only thing a meet link carries. */
+export function roomUrl(siteOrigin: string, roomId: string): string {
+  return `${siteOrigin}${SHARE_PATH}?r=${roomId}`;
+}
+
 /**
  * The one sentence that describes a spin, written once and used twice: by
- * `navigator.share`'s `text` in the browser and by `og:description` in the
- * Worker.
+ * the share button's copy in the browser and by `og:description` on the
+ * server.
  *
  * Two copies of this sentence would drift, and the drift would only ever be
  * visible to the recipient — the one person who cannot compare them.
@@ -514,36 +361,15 @@ export function describeShare(args: {
 }
 
 /**
- * The sentence for an invite, used twice: `navigator.share`'s `text` and
- * `og:description`.
+ * The title and sentence for a room link's unfurl.
  *
- * Never contains a coordinate, and `originName` is a preset's name or the
- * literal "a dropped pin" - never a neighbourhood guessed from a number. A
- * message-app preview is rendered by a third-party crawler and cached on its
- * servers, so anything in here is a disclosure the sender did not separately
- * agree to.
- *
- * `minutes` is the BUDGET the link carries, never a measured route - the same
- * discipline `describeShare` already applies, and for the same reason: the
- * Worker has never seen a route.
+ * They say nothing about either person: a room link carries no origin and no
+ * settings, so there is nothing to disclose and nothing to name. A message-app
+ * preview is rendered by a third-party crawler and cached on its servers, and
+ * having nothing to leak into it is the whole point of the room shape.
  */
-export function describeInvite(args: {
-  originName: string;
-  minutes: number;
-  roundTrip: boolean;
-}): string {
-  const walk = formatMinutes(args.minutes * 60);
-  const trip = args.roundTrip ? ", out and back" : "";
-  return `Somewhere we can both walk to in ${walk}${trip}, starting from ${args.originName}. Open this and say where you're starting from.`;
-}
+export const ROOM_LINK_TITLE = "Somewhere we can both walk to";
 
-/** The sentence for an answer link. Also coordinate-free. */
-export function describeMeetResult(args: {
-  placeName: string;
-  minutes: number;
-  roundTrip: boolean;
-}): string {
-  const walk = formatMinutes(args.minutes * 60);
-  const trip = args.roundTrip ? " on foot" : "";
-  return `${args.placeName} — inside ${walk}${trip} from both our starts.`;
+export function describeRoom(): string {
+  return "Open this and say where you're starting from. The room stays open for 12 hours.";
 }

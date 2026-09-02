@@ -351,13 +351,18 @@ rather than an oversight.
 
 Two people, two doors, one question: *where can we both walk to in half an hour?*
 
-Press **Invite someone to meet** and you get a link. The other person opens it, sees whose
-start they are being asked to meet and how precisely it was shared, sets their own start
-on their own device, and gets an answer. The pool stops being what you can reach and
-becomes what you can **both** reach; the card shows both walks; and if they want to send
-the result back, that is a second press and a second link.
+Press **Invite someone to meet** and you get a link to a **room**. The other person opens
+it, chooses their own start on their own device, and shares it into the room. From then on
+both screens show the same thing from opposite sides: your setup on your rail, theirs on a
+read-only mirror rail, and one spin that lands on the same place on both.
 
-    /s?m=1&ma=carytown&b=30&rt=1
+    /s?r=8XK2M4P9
+
+The link carries the room id and nothing else. Starts, budgets and filters travel over a
+WebSocket relay inside the app's own server (`server/rooms.ts`), which orders and forwards
+messages and never computes a pool or picks a winner. A room lives twelve hours in server
+memory, then reads "room closed"; a third device opening the link is told the room already
+has two walkers. See `docs/adr/0001` for why the earlier link-only shape was retired.
 
 It is not called "meet in the middle", which is the phrase every competitor uses and is a
 lie in this app's own terms. **There is no middle.** There is an overlap, and the midpoint
@@ -368,33 +373,25 @@ compositing rather than a measurement, and the app never names it. What it names
 a count, because the thing two people want to know is how many options they have.
 
 **Most pairs share nothing at a normal budget, and that is the feature's opening move
-rather than its failure.** Measured over four real preset pairs: at 20 minutes all four
-share nothing, and at 30 minutes three of the four still do. So when the overlap is empty
-the app scans both cached ladders and says the smallest budget at which something *is*
-shared — *"At 42 minutes, Byrd Park comes into both your reaches"* — with a button that
-moves the dial there. When no such budget exists under the dial's widest, it says that
-plainly and offers to drop back to one person.
+rather than its failure.** When the overlap is empty the app scans both cached ladders and
+says the smallest budget at which something *is* shared — *"At 42 minutes, Byrd Park comes
+into both your reaches"* — with a button that moves the dial there.
 
-**There is no room, no socket, no account, and no server that ever holds both coordinates
-at once.** Everything is in the link. That has a consequence the app states rather than
-hides: a link cannot be revoked, and one carrying a pin says so before you press —
-*"It does not expire and it cannot be taken back. Treat it like a text message, not a
-secret."* A preset start shares as an id and leaks no coordinate at all; a dropped pin
-shares at the same ~110 m as any other share. An invite older than two days shows its age
-and still opens, because refusing it would be theatre when the coordinate is in the URL
-either way.
+**Opening a room link costs the person who received it nothing.** Until they choose a start
+nothing is drawn, nothing is measured and nothing is sent. Their start reaches the other
+person only when they press *Share my start*, at full precision, over the socket, to that
+one room — never into a URL. A reload rejoins the same room as the same walker.
 
-**Opening an invite costs the person who received it nothing.** Until they choose a start,
-nothing is drawn, nothing is measured, no request is made, and no link can be minted from
-their device — a link minted before they chose would name somebody else's front door as
-their own. Their coordinate never enters a URL and never reaches the other person unless
-they press *Send this back*.
+**One spin, both screens.** The side that presses Spin draws the winner up front and sends
+its id before its reel turns; the other side's reel runs to the same place one hop behind.
+The relay serialises: if both press at once, the first spin wins and the second is dropped.
+Spin stays disabled until both sides have locked in a budget, and the mirror rail offers
+*Match N min* when the budgets differ.
 
 **Both walks are measured at the same pace**, and the card says so. There is one pinned
 walking speed in this app and no per-person one; two people who walk differently will find
 the app wrong for both of them by the same amount in opposite directions. That is an
-assumption, stated, rather than a fact implied — which is why no label anywhere in this
-feature says "their pace".
+assumption, stated, rather than a fact implied.
 
 ## Hours, and what the app will not claim
 

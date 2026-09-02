@@ -3,6 +3,7 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useReducer,
   useRef,
   useState,
@@ -23,8 +24,8 @@ import { ConditionsLine } from "../ui/ConditionsLine";
 import { DaylightSwitch } from "../ui/DaylightSwitch";
 import { PoolList } from "../ui/PoolList";
 import { EmptyPoolNotice } from "../ui/EmptyPoolNotice";
-import { MeetPanel } from "../ui/MeetPanel";
-import { InviteButton } from "../ui/InviteButton";
+import { RoomPanel } from "../ui/RoomPanel";
+import { PartnerRail } from "../ui/PartnerRail";
 import { TuningPanel } from "../ui/TuningPanel";
 import {
   DETOUR_LABELS,
@@ -34,7 +35,12 @@ import {
   type Origin,
   type Place,
 } from "../data/places";
-import { contains, metersBetween, pointKey, type LngLat } from "../lib/geometry";
+import {
+  contains,
+  metersBetween,
+  pointKey,
+  type LngLat,
+} from "../lib/geometry";
 import {
   MAX_MINUTES,
   NotConfiguredError,
@@ -77,7 +83,13 @@ import {
   quantiseToSlot,
 } from "../lib/hours";
 import { solarEvents } from "../lib/solar";
-import { onSoundChange, playPress, playTap, setSoundOn, soundOn } from "../lib/sound";
+import {
+  onSoundChange,
+  playPress,
+  playTap,
+  setSoundOn,
+  soundOn,
+} from "../lib/sound";
 import {
   applyShare,
   budgetStep,
@@ -86,7 +98,6 @@ import {
   dialMinimum,
   initialSession,
   liveLinkQuery,
-  meetLinks,
   outboundFloorMinutes,
   outboundMinutes,
   reduce,
@@ -94,8 +105,28 @@ import {
   type Failure,
 } from "./session";
 import { randomIndex, useSpin } from "./useSpin";
-import { SHARE_PATH, decodeShare, shareUrl, type ShareInput } from "./share";
+import {
+  SHARE_PATH,
+  decodeShare,
+  roomUrl,
+  shareUrl,
+  type ShareInput,
+} from "./share";
 import { describeMeetClause, meetSplit } from "./meet";
+import {
+  deviceToken,
+  forgetSelf,
+  recallSelf,
+  rememberSelf,
+  settleFrame,
+  setupFrame,
+  spinFrame,
+  wireOrigin,
+  type PeerFrame,
+  type SideSetup,
+} from "./room";
+import { mintDeviceToken, mintRoomId } from "./room-id";
+import { useRoom } from "./useRoom";
 import { useConditions } from "./useConditions";
 import { useLocate } from "./useLocate";
 import {
@@ -136,12 +167,26 @@ const ROUTE_WARM_GRACE_MS = 12_000;
 const WIDE_PREFETCH_LIMIT = 90;
 
 /** React 18 has no boolean `inert`; present-means-on. Takes the dimmed rail out of the tab order. */
-const inertWhen = (on: boolean): Record<string, string> => (on ? { inert: "" } : {});
+const inertWhen = (on: boolean): Record<string, string> =>
+  on ? { inert: "" } : {};
 
 /** A standalone REASON_COPY sentence folded into the middle of a longer one. */
-const asClause = (sentence: string): string => sentence.replace(/\.$/, "").toLowerCase();
+const asClause = (sentence: string): string =>
+  sentence.replace(/\.$/, "").toLowerCase();
 
 const NO_FIX: PoolFix = { kind: "none" };
+
+const randomBytes = (length: number): Uint8Array =>
+  crypto.getRandomValues(new Uint8Array(length));
+
+/** `localStorage`, or null where the browser refuses it. */
+function keyStore(): Storage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
 
 function cachedWalkMinutes(origin: LngLat): Map<string, number> {
   const minutes = new Map<string, number>();
@@ -154,13 +199,24 @@ function cachedWalkMinutes(origin: LngLat): Map<string, number> {
 
 const describe = (cause: unknown): Failure => ({
   configured: !(cause instanceof NotConfiguredError),
-  message: cause instanceof Error ? cause.message : "Could not load the reachable area.",
+  message:
+    cause instanceof Error
+      ? cause.message
+      : "Could not load the reachable area.",
 });
 
 export function App() {
   // Restored in the initialiser so the first frame is already the shared walk.
+  const [arrival] = useState(() => {
+    const link = decodeShare(window.location.search);
+    const restored =
+      link.room === null
+        ? null
+        : recallSelf(keyStore(), link.room, customOrigin);
+    return { link, restored };
+  });
   const [state, dispatch] = useReducer(reduce, initialSession, (base) =>
-    applyShare(base, decodeShare(window.location.search), PLACES, PRESET_ORIGINS),
+    applyShare(base, arrival.link, PLACES, PRESET_ORIGINS, arrival.restored),
   );
   const [wide, setWide] = useState(() => window.matchMedia(WIDE).matches);
   const [filtersOpen, setFiltersOpen] = useState(wide);
@@ -197,6 +253,35 @@ export function App() {
   const outbound = outboundMinutes(state);
   const meetMode = partner !== null;
 
+  // ---- the room ----------------------------------------------------------
+  const roomId = state.room;
+  const token = useMemo(
+    () => deviceToken(keyStore(), () => mintDeviceToken(randomBytes)),
+    [],
+  );
+  /** True once this device shared its start into the room; the opener consents by starting one. */
+  const [consented, setConsented] = useState(arrival.restored !== null);
+  /** The budget this side locked in, or null. Locked means it still equals the dial. */
+  const [lockedMinutes, setLockedMinutes] = useState<number | null>(null);
+  const locked = lockedMinutes === state.budgetMinutes;
+  // Filled every render so the socket callback sees the current spin machinery.
+  const peerRef = useRef<(frame: PeerFrame) => void>(() => {});
+  const { state: room, send } = useRoom({
+    room: roomId,
+    token,
+    onPeer: useCallback((frame: PeerFrame) => peerRef.current(frame), []),
+  });
+  const theirs = room.partner;
+
+  useEffect(() => {
+    if (roomId === null) return;
+    dispatch({ type: "partner", origin: theirs?.origin ?? null });
+  }, [roomId, theirs?.origin]);
+
+  useEffect(() => {
+    if (roomId !== null && consented) rememberSelf(keyStore(), roomId, origin);
+  }, [roomId, consented, origin]);
+
   // Warm every contour the dial can reach. Sequential in meet mode, yours
   // first. Nothing runs before `originChosen`: opening an invite must cost
   // the recipient nothing. Their leg's failure goes to `partnerFailed` so it
@@ -207,7 +292,10 @@ export function App() {
       if (originChosen) {
         await prefetchLadder(origin, (progress) => {
           if (cancelled) return;
-          dispatch({ type: "warmProgress", fraction: progress.done / progress.total });
+          dispatch({
+            type: "warmProgress",
+            fraction: progress.done / progress.total,
+          });
           bumpContours();
         });
       }
@@ -215,11 +303,15 @@ export function App() {
       try {
         await prefetchLadder(partner, (progress) => {
           if (cancelled) return;
-          dispatch({ type: "partnerWarmProgress", fraction: progress.done / progress.total });
+          dispatch({
+            type: "partnerWarmProgress",
+            fraction: progress.done / progress.total,
+          });
           bumpContours();
         });
       } catch (cause: unknown) {
-        if (!cancelled) dispatch({ type: "partnerFailed", failure: describe(cause) });
+        if (!cancelled)
+          dispatch({ type: "partnerFailed", failure: describe(cause) });
       }
     };
     void run().catch((cause: unknown) => {
@@ -252,15 +344,25 @@ export function App() {
   });
 
   // Arrival quantised to the half hour, so the pool does not churn every minute.
-  const poolArrivalMs = quantiseToSlot(arrivalMs(conditions.atMs, outbound * 60));
+  const poolArrivalMs = quantiseToSlot(
+    arrivalMs(conditions.atMs, outbound * 60),
+  );
   const poolClock = hoursClock(poolArrivalMs);
   const poolSun = solarEvents(poolArrivalMs, origin.lat, origin.lng);
 
   const floorOutbound = outboundFloorMinutes(state);
-  const reach = originChosen ? cachedReach(origin, outbound, floorOutbound ?? 0) : null;
-  // No floor on theirs: `cachedReach` punches the floor around the origin it
-  // is given, which would hole the partner's own neighbourhood.
-  const partnerReach = partner === null ? null : cachedReach(partner, outbound, 0);
+  const reach = originChosen
+    ? cachedReach(origin, outbound, floorOutbound ?? 0)
+    : null;
+  // Their reach at THEIR budget, and no floor: a floor is about the reader's own walk.
+  const partnerOutbound =
+    theirs === null
+      ? outbound
+      : theirs.roundTrip
+        ? Math.floor(theirs.budgetMinutes / 2)
+        : theirs.budgetMinutes;
+  const partnerReach =
+    partner === null ? null : cachedReach(partner, partnerOutbound, 0);
   const floorPolygons =
     floorOutbound === null
       ? null
@@ -269,11 +371,14 @@ export function App() {
   // `undefined`: not settled. `"unmeasurable"`: settled with no usable profile.
   const climbOf = (place: Place): ClimbBand | "unmeasurable" | undefined => {
     const cached = cachedRoute(origin, place);
-    if (cached === undefined) return routeSettledFailed(origin, place) ? "unmeasurable" : undefined;
+    if (cached === undefined)
+      return routeSettledFailed(origin, place) ? "unmeasurable" : undefined;
     if (cached === null || cached.profile === null) return "unmeasurable";
     return classifyClimb(cached.profile.ascentMeters, cached.distanceMeters);
   };
-  const climbSettled = PLACES.filter((place) => climbOf(place) !== undefined).length;
+  const climbSettled = PLACES.filter(
+    (place) => climbOf(place) !== undefined,
+  ).length;
 
   const cappedTo = dialMaximum(state);
   const appliedBudget = state.budgetMinutes;
@@ -298,7 +403,14 @@ export function App() {
             signature: `${poolClock.slot}|${poolClock.date}`,
             // `unknown` is never excluded; most places carry no schedule.
             excludes: (place: Place) =>
-              !isOpenEnough(evaluateHours(hoursFor(place.id), poolClock, poolSun, HOURS_COVERAGE)),
+              !isOpenEnough(
+                evaluateHours(
+                  hoursFor(place.id),
+                  poolClock,
+                  poolSun,
+                  HOURS_COVERAGE,
+                ),
+              ),
           } satisfies PoolRule,
         ]
       : []),
@@ -375,7 +487,11 @@ export function App() {
     if (candidateKey === "" || warmedNow.current === key) return;
     warmedNow.current = key;
     const wanted = new Set(candidateKey.split(","));
-    void prefetchRoutes(origin, PLACES.filter((place) => wanted.has(place.id)), bumpRoutes);
+    void prefetchRoutes(
+      origin,
+      PLACES.filter((place) => wanted.has(place.id)),
+      bumpRoutes,
+    );
   }, [candidateKey, origin]);
 
   // Then widen to the nearest places inside the 100-minute contour, capped for
@@ -388,7 +504,9 @@ export function App() {
     warmedWide.current = key;
     const outermost = cachedReach(origin, MAX_MINUTES)?.bands.at(-1);
     if (!outermost) return;
-    const reachable = PLACES.filter((place) => contains(outermost.polygons, place))
+    const reachable = PLACES.filter((place) =>
+      contains(outermost.polygons, place),
+    )
       .map((place) => ({ place, meters: metersBetween(origin, place) }))
       .toSorted((a, b) => a.meters - b.meters)
       .slice(0, WIDE_PREFETCH_LIMIT)
@@ -404,7 +522,9 @@ export function App() {
   // so the denominator does not tick down as measurements land.
   const basePool = pool.baseIncluded;
   const settledRoutes = basePool.filter(
-    (place) => cachedRoute(origin, place) !== undefined || routeSettledFailed(origin, place),
+    (place) =>
+      cachedRoute(origin, place) !== undefined ||
+      routeSettledFailed(origin, place),
   ).length;
   const routesPending = basePool.length > 0 && settledRoutes < basePool.length;
 
@@ -412,17 +532,34 @@ export function App() {
   const poolKey = `${pointKey(origin)}|${pool.baseKey}`;
   const [graceOverFor, setGraceOverFor] = useState<string | null>(null);
   useEffect(() => {
-    const timer = window.setTimeout(() => setGraceOverFor(poolKey), ROUTE_WARM_GRACE_MS);
+    const timer = window.setTimeout(
+      () => setGraceOverFor(poolKey),
+      ROUTE_WARM_GRACE_MS,
+    );
     return () => window.clearTimeout(timer);
   }, [poolKey]);
   const warmGraceOver = graceOverFor === poolKey;
 
   // With a climb filter on there is no grace: the pool depends on the measurement.
-  const routesWarming = routesPending && (state.climb !== "any" || !warmGraceOver);
+  const routesWarming =
+    routesPending && (state.climb !== "any" || !warmGraceOver);
   const reelIsShort = routesPending && warmGraceOver;
 
-  const { showing, run: runSpin, cancel: cancelSpin } = useSpin(
-    useCallback((place: Place) => dispatch({ type: "spinEnd", pickedId: place.id }), []),
+  /** Who drew the reel now turning: this side, the other, or nobody. */
+  const spinnerRef = useRef<"me" | "them" | null>(null);
+  const {
+    showing,
+    run: runSpin,
+    cancel: cancelSpin,
+  } = useSpin(
+    useCallback(
+      (place: Place) => {
+        if (spinnerRef.current === "me") send(settleFrame(false));
+        spinnerRef.current = null;
+        dispatch({ type: "spinEnd", pickedId: place.id });
+      },
+      [send],
+    ),
   );
 
   const active = state.spinning ? showing : picked;
@@ -431,7 +568,8 @@ export function App() {
   const routeLoading = active !== null && activeRoute === undefined;
 
   const pickedId = picked?.id ?? null;
-  const pickedRouteMissing = picked !== null && cachedRoute(origin, picked) === undefined;
+  const pickedRouteMissing =
+    picked !== null && cachedRoute(origin, picked) === undefined;
   const attempt = state.routeAttempt;
   const routeFailed = pickedRouteMissing && attempt >= ROUTE_ATTEMPTS;
 
@@ -472,7 +610,8 @@ export function App() {
     };
   }, [partner, picked, state.routeAttempt]);
 
-  const partnerRoute = partner !== null && picked !== null ? cachedRoute(partner, picked) : null;
+  const partnerRoute =
+    partner !== null && picked !== null ? cachedRoute(partner, picked) : null;
   const split = meetMode
     ? meetSplit({
         yourSeconds: route?.durationSeconds ?? null,
@@ -482,10 +621,8 @@ export function App() {
     : null;
   const partnerName = partner?.name ?? "Their start";
 
-  const spin = () => {
-    if (candidates.length === 0 || drawable.length === 0 || routesWarming) return;
-    playPress();
-    const winner = candidates[randomIndex(candidates.length)]!;
+  const startReel = (winner: Place, by: "me" | "them") => {
+    spinnerRef.current = by;
     const ready = fetchWalkingRoute(origin, winner).then((winnerRoute) => {
       bumpRoutes();
       return winnerRoute;
@@ -494,16 +631,55 @@ export function App() {
     runSpin(winner, drawable, ready, origin);
   };
 
+  /** The lock gate (CONTEXT.md): with a partner's start in the room, both sides lock in before a spin. */
+  const lockGate = roomId !== null && consented && partner !== null;
+  const bothLocked = locked && (theirs?.locked ?? false);
+
+  const spin = () => {
+    if (candidates.length === 0 || drawable.length === 0 || routesWarming)
+      return;
+    if (lockGate && !bothLocked) return;
+    playPress();
+    // Drawn up front and sent before the reel turns, so both screens land on it (#9).
+    const winner = candidates[randomIndex(candidates.length)]!;
+    if (roomId !== null) send(spinFrame(winner.id));
+    startReel(winner, "me");
+  };
+
+  useEffect(() => {
+    peerRef.current = (frame) => {
+      if (frame.t === "spin") {
+        const winner = PLACES.find((place) => place.id === frame.winnerId);
+        if (winner === undefined) return;
+        // Theirs was relayed, so theirs won; a reel of ours already turning follows it.
+        if (state.spinning) cancelSpin();
+        startReel(winner, "them");
+        return;
+      }
+      if (
+        frame.t === "settle" &&
+        frame.aborted &&
+        spinnerRef.current === "them"
+      ) {
+        spinnerRef.current = null;
+        cancelSpin();
+        dispatch({ type: "spinCancel" });
+      }
+    };
+  });
+
   // Abort a spin whose pool changed underneath it.
   const lastKeyRef = useRef(candidateKey);
   useEffect(() => {
     if (lastKeyRef.current === candidateKey) return;
     lastKeyRef.current = candidateKey;
     if (state.spinning) {
+      if (spinnerRef.current === "me") send(settleFrame(true));
+      spinnerRef.current = null;
       cancelSpin();
       dispatch({ type: "spinCancel" });
     }
-  }, [candidateKey, state.spinning, cancelSpin]);
+  }, [candidateKey, state.spinning, cancelSpin, send]);
 
   // Layout effect: a frame callback queued before the commit must not land a stale winner.
   useLayoutEffect(() => {
@@ -525,8 +701,14 @@ export function App() {
     permissionHint,
   } = useLocate({
     notice: state.locationNotice,
-    onOrigin: useCallback((next: Origin) => dispatch({ type: "origin", origin: next }), []),
-    onNotice: useCallback((notice) => dispatch({ type: "locationNotice", notice }), []),
+    onOrigin: useCallback(
+      (next: Origin) => dispatch({ type: "origin", origin: next }),
+      [],
+    ),
+    onNotice: useCallback(
+      (notice) => dispatch({ type: "locationNotice", notice }),
+      [],
+    ),
   });
 
   const moveOrigin = useCallback((at: LngLat) => {
@@ -553,7 +735,11 @@ export function App() {
   const walkMinutesNow =
     route === null
       ? null
-      : Math.ceil((state.roundTrip ? route.durationSeconds * 2 : route.durationSeconds) / 60);
+      : Math.ceil(
+          (state.roundTrip
+            ? route.durationSeconds * 2
+            : route.durationSeconds) / 60,
+        );
   const walkFitsLight =
     picked === null || routePending || walkMinutesNow === null
       ? true
@@ -561,7 +747,12 @@ export function App() {
 
   // On the CAP_GRID, not the dial step, so the ceiling does not fall a minute every minute.
   const lightCapMinutes = state.beforeDark
-    ? capFromLight(conditions.light, state.roundTrip, dialMinimum(state.roundTrip), CAP_GRID_MINUTES)
+    ? capFromLight(
+        conditions.light,
+        state.roundTrip,
+        dialMinimum(state.roundTrip),
+        CAP_GRID_MINUTES,
+      )
     : null;
   const lightCap: TimeCap | null =
     lightCapMinutes === null || conditions.light.events.civilDuskMs === null
@@ -571,7 +762,10 @@ export function App() {
           reason: "daylight",
           untilMs: conditions.light.events.civilDuskMs,
         };
-  const timeCap = mergeCaps([lightCap, ...(state.weatherAware ? weatherCaps(weather) : [])]);
+  const timeCap = mergeCaps([
+    lightCap,
+    ...(state.weatherAware ? weatherCaps(weather) : []),
+  ]);
 
   // Not during a throw: a moved cap changes the pool under the reel.
   useEffect(() => {
@@ -581,7 +775,10 @@ export function App() {
   }, [timeCap?.minutes, timeCap?.reason, timeCap?.untilMs, state.spinning]);
 
   // A scrub belongs to the pick it was made on.
-  const [hover, setHover] = useState<{ pickedId: string | null; meters: number | null }>({
+  const [hover, setHover] = useState<{
+    pickedId: string | null;
+    meters: number | null;
+  }>({
     pickedId: null,
     meters: null,
   });
@@ -591,7 +788,10 @@ export function App() {
 
   // The card judges hours at the settled route duration, unquantised, and is
   // allowed to disagree with the pool's half-hour pre-sort.
-  const cardArrivalMs = arrivalMs(conditions.atMs, route?.durationSeconds ?? outbound * 60);
+  const cardArrivalMs = arrivalMs(
+    conditions.atMs,
+    route?.durationSeconds ?? outbound * 60,
+  );
   const pickedHours =
     picked === null
       ? null
@@ -602,12 +802,20 @@ export function App() {
           HOURS_COVERAGE,
         );
   const closedByPool =
-    pickedVerdict !== null && !pickedVerdict.included && pickedVerdict.reasons.includes("closed");
+    pickedVerdict !== null &&
+    !pickedVerdict.included &&
+    pickedVerdict.reasons.includes("closed");
 
   const resultLines: readonly ResultLine[] = [
     ...(weather.headline === null
       ? []
-      : [{ key: "conditions" as const, text: weather.headline, tier: "fact" as const }]),
+      : [
+          {
+            key: "conditions" as const,
+            text: weather.headline,
+            tier: "fact" as const,
+          },
+        ]),
     ...(route !== null && !routePending
       ? [
           {
@@ -625,7 +833,8 @@ export function App() {
             key: "hours" as const,
             text: pickedHours.note,
             tier:
-              pickedHours.source === "category" || pickedHours.state === "unknown"
+              pickedHours.source === "category" ||
+              pickedHours.state === "unknown"
                 ? ("assumed" as const)
                 : ("fact" as const),
           },
@@ -667,38 +876,74 @@ export function App() {
           walkFitsLight ? "" : "does not fit in the light left",
           pickedHours?.note ?? "",
           weather.headline ?? "",
-          pickedVerdict === null || pickedVerdict.included || pickedVerdict.reasons[0] === undefined
+          pickedVerdict === null ||
+          pickedVerdict.included ||
+          pickedVerdict.reasons[0] === undefined
             ? ""
             : `not in the pool: ${asClause(REASON_COPY[pickedVerdict.reasons[0]].sentence)}`,
         ]);
 
   const dialWarm = (minutes: number) => {
     const outboundAt = state.roundTrip ? Math.floor(minutes / 2) : minutes;
-    return isWarm(origin, outboundAt) && (partner === null || isWarm(partner, outboundAt));
+    return (
+      isWarm(origin, outboundAt) &&
+      (partner === null || isWarm(partner, partnerOutbound))
+    );
   };
 
   const shareInput: ShareInput = shareInputFor(state, picked?.id ?? "");
 
-  // Locking in is a fact about this session, not the link, so it is not in Session.
-  const [locked, setLocked] = useState(false);
-  const links = meetLinks(state, window.location.origin, picked?.id ?? null, conditions.atMs, locked);
-
-  // Clear the address bar once it stops describing the screen. Compared
-  // against the link's own fields, not `shared`, which survives dial changes.
-  const urlCleared = useRef(false);
+  // This side's settled setup, re-sent on every settle and every (re)join.
+  // Not while scrubbing: the room hears settled values only.
+  const mySetup: SideSetup = {
+    origin: consented ? wireOrigin(origin) : null,
+    budgetMinutes: state.budgetMinutes,
+    roundTrip: state.roundTrip,
+    floorMinutes: state.floorMinutes,
+    edgeOnly: state.edgeOnly,
+    climb: state.climb,
+    kind: state.kind,
+    vibes: state.vibes,
+    weatherAware: state.weatherAware,
+    locked,
+  };
+  const setupText = setupFrame(mySetup);
+  // Also when they arrive: the relay forwards to a partner who is there, not to one who will be.
   useEffect(() => {
-    if (urlCleared.current) return;
-    const live = liveLinkQuery(state, picked?.id ?? null);
-    if (state.shared !== null && live === state.shared.linkQuery) return;
-    if (window.location.pathname === SHARE_PATH || window.location.search !== "") {
-      window.history.replaceState(null, "", "/");
+    if (roomId === null || room.status !== "open" || scrubbing) return;
+    send(setupText);
+  }, [roomId, room.status, room.joins, room.peerConnected, scrubbing, setupText, send]);
+
+  // The address bar names the room while there is one, and otherwise clears
+  // once it stops describing the screen.
+  useEffect(() => {
+    const here = window.location.pathname + window.location.search;
+    if (roomId !== null) {
+      const want = `${SHARE_PATH}?r=${roomId}`;
+      if (here !== want) window.history.replaceState(null, "", want);
+      return;
     }
-    urlCleared.current = true;
+    if (
+      state.shared !== null &&
+      liveLinkQuery(state, picked?.id ?? null) === state.shared.linkQuery
+    )
+      return;
+    if (here !== "/") window.history.replaceState(null, "", "/");
   });
 
-  const disagreeing =
-    state.meet?.partnerLockedMinutes != null &&
-    state.meet.partnerLockedMinutes !== state.budgetMinutes;
+  const leaveRoom = (): void => {
+    if (roomId !== null) forgetSelf(keyStore(), roomId);
+    setConsented(false);
+    setLockedMinutes(null);
+    dispatch({ type: "leaveMeet" });
+  };
+  const startRoom = (): void => {
+    const id = mintRoomId(randomBytes);
+    rememberSelf(keyStore(), id, origin);
+    setConsented(true);
+    setLockedMinutes(null);
+    dispatch({ type: "enterRoom", room: id });
+  };
 
   const picking = state.pickingOrigin;
   const collapsed = railCollapsed && !wide;
@@ -709,7 +954,8 @@ export function App() {
   // requested budget with the weather rules dropped and count survivors.
   const weatherCapFix = (): PoolFix | null => {
     if (!state.weatherAware || appliedBudget === null) return null;
-    if (state.timeCap === null || state.timeCap.reason === "daylight") return null;
+    if (state.timeCap === null || state.timeCap.reason === "daylight")
+      return null;
     const asked = state.requestedBudgetMinutes;
     const uncapped = cachedReach(
       origin,
@@ -756,7 +1002,8 @@ export function App() {
     switch (fix.kind) {
       case "drop-rule":
         if (fix.reason === "no-matching-vibe") dispatch({ type: "clearVibes" });
-        else if (fix.reason === "not-far-edge") dispatch({ type: "toggleEdge" });
+        else if (fix.reason === "not-far-edge")
+          dispatch({ type: "toggleEdge" });
         else fix.clear();
         return;
       case "drop-cap":
@@ -770,7 +1017,7 @@ export function App() {
         dispatch({ type: "floor", minutes: 0 });
         return;
       case "no-overlap":
-        dispatch({ type: "leaveMeet" });
+        leaveRoom();
         return;
       case "meet-warming":
         return;
@@ -784,10 +1031,10 @@ export function App() {
   const activeFilters =
     state.vibes.length +
     (state.edgeOnly ? 1 : 0) +
-    rules.filter((rule) => rule.active && rule.reason !== "weather" && rule.reason !== "closed")
-      .length;
-
-  const isPin = origin.id === "custom" || origin.id === "me";
+    rules.filter(
+      (rule) =>
+        rule.active && rule.reason !== "weather" && rule.reason !== "closed",
+    ).length;
 
   return (
     <div className={`shell${picking ? " is-picking" : ""}`}>
@@ -848,7 +1095,9 @@ export function App() {
                   size={16}
                   weight="bold"
                   aria-hidden="true"
-                  style={collapsed ? { transform: "rotate(180deg)" } : undefined}
+                  style={
+                    collapsed ? { transform: "rotate(180deg)" } : undefined
+                  }
                 />
               </button>
             )}
@@ -866,36 +1115,39 @@ export function App() {
             permissionHint={permissionHint}
             onUseMyLocation={useMyLocation}
           />
-          {(state.partner !== null || state.meet !== null) && (
-            <MeetPanel
-              partner={partner}
-              partnerName={partnerName}
-              // A pin in a meet link is always coarse; a preset keeps its own id.
-              partnerCoarse={partner?.id === "partner"}
+          {roomId !== null && (
+            <RoomPanel
+              room={room}
+              roomUrl={roomUrl(window.location.origin, roomId)}
+              origin={origin}
               originChosen={originChosen}
-              meet={state.meet}
-              partnerWarmed={state.partnerWarmed}
+              consented={consented}
               partnerFailure={state.partnerFailure}
-              bothCount={candidates.length}
-              budgetMinutes={state.budgetMinutes}
-              yourMinutes={state.budgetMinutes}
-              youLocked={locked}
-              onLockIn={() => setLocked(true)}
-              onMatchTheirs={(minutes) => dispatch({ type: "budget", minutes })}
               permissionHint={permissionHint}
               locating={locating}
-              nowMs={conditions.atMs}
+              onStartRoom={startRoom}
+              onShareStart={() => setConsented(true)}
               onUseMyLocation={useMyLocation}
               onPickOnMap={() => dispatch({ type: "beginPickOrigin" })}
-              onSelectPreset={(next: Origin) => dispatch({ type: "origin", origin: next })}
-              onLeaveMeet={() => dispatch({ type: "leaveMeet" })}
+              onSelectPreset={(next: Origin) =>
+                dispatch({ type: "origin", origin: next })
+              }
+              onLeave={leaveRoom}
+              onNewRoom={() => {
+                leaveRoom();
+                startRoom();
+              }}
             />
           )}
           {state.locationNotice && (
             <div className="notice-stack" {...inertWhen(picking)}>
               <p
                 id={locationNoticeId}
-                className={state.locationNotice.tone === "warn" ? "notice is-warn" : "notice"}
+                className={
+                  state.locationNotice.tone === "warn"
+                    ? "notice is-warn"
+                    : "notice"
+                }
                 role={state.locationNotice.tone === "warn" ? "alert" : "status"}
               >
                 {state.locationNotice.message}
@@ -909,7 +1161,10 @@ export function App() {
                   onClick={() => {
                     playTap(true);
                     if (state.locationNotice?.suggest) {
-                      dispatch({ type: "origin", origin: state.locationNotice.suggest });
+                      dispatch({
+                        type: "origin",
+                        origin: state.locationNotice.suggest,
+                      });
                     }
                   }}
                 >
@@ -925,7 +1180,8 @@ export function App() {
             status !== "error" &&
             status !== "not-configured" && (
               <p className="notice" {...inertWhen(picking)}>
-                Measuring the reachable area from your spot. The dial fills in as it arrives.
+                Measuring the reachable area from your spot. The dial fills in
+                as it arrives.
               </p>
             )}
 
@@ -934,13 +1190,19 @@ export function App() {
             floorMinutes={state.floorMinutes}
             minimum={dialMinimum(state.roundTrip)}
             maximum={cappedTo}
-            capNote={cappedTo < MAX_MINUTES ? capNote(state.timeCap, cappedTo, conditions.light) : undefined}
+            capNote={
+              cappedTo < MAX_MINUTES
+                ? capNote(state.timeCap, cappedTo, conditions.light)
+                : undefined
+            }
             step={budgetStep()}
             outboundMinutes={outbound}
             roundTrip={state.roundTrip}
             isWarm={dialWarm}
             warming={originChosen}
-            warmedFraction={meetMode ? (state.warmed + state.partnerWarmed) / 2 : state.warmed}
+            warmedFraction={
+              meetMode ? (state.warmed + state.partnerWarmed) / 2 : state.warmed
+            }
             disabled={picking}
             onChange={(minutes) => dispatch({ type: "budget", minutes })}
             onFloorChange={(minutes) => dispatch({ type: "floor", minutes })}
@@ -961,12 +1223,15 @@ export function App() {
               {import.meta.env.DEV ? (
                 <p>
                   Contours and routes come from a Valhalla instance. Set{" "}
-                  <code>VALHALLA_URL</code> in <code>.env.local</code>, then restart the dev
-                  server. See <code>valhalla/README.md</code>. The server said:{" "}
-                  {failure?.message}
+                  <code>VALHALLA_URL</code> in <code>.env.local</code>, then
+                  restart the dev server. See <code>valhalla/README.md</code>.
+                  The server said: {failure?.message}
                 </p>
               ) : (
-                <p>Reachable areas and routes are unavailable right now. Try again shortly.</p>
+                <p>
+                  Reachable areas and routes are unavailable right now. Try
+                  again shortly.
+                </p>
               )}
             </div>
           ) : status === "error" ? (
@@ -979,7 +1244,9 @@ export function App() {
               areaSqMeters={reach?.areaSqMeters ?? 0}
               pool={pool}
               filterKey={conditionsSignature(poolConditions)}
-              duskNote={status === "ready" ? describeDusk(conditions.light) : null}
+              duskNote={
+                status === "ready" ? describeDusk(conditions.light) : null
+              }
               outerMinutes={outer?.minutes ?? outbound}
               commitKey={state.framingKey}
               meet={
@@ -1008,6 +1275,29 @@ export function App() {
             />
           )}
 
+          {lockGate && (
+            <div className="lock-row" {...inertWhen(picking)}>
+              {locked ? (
+                <p className="meet-hint" role="status">
+                  Locked in at <strong>{state.budgetMinutes} min</strong>.
+                  {theirs?.locked ? "" : " Waiting for them to lock in."}
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  className="button"
+                  disabled={picking || status !== "ready"}
+                  onClick={() => {
+                    playPress();
+                    setLockedMinutes(state.budgetMinutes);
+                  }}
+                >
+                  Lock in {state.budgetMinutes} min
+                </button>
+              )}
+            </div>
+          )}
+
           <button
             type="button"
             ref={spinRef}
@@ -1016,7 +1306,7 @@ export function App() {
             aria-describedby={emptyPool ? emptyNoticeId : undefined}
             disabled={
               !originChosen ||
-              disagreeing ||
+              (lockGate && !bothLocked) ||
               candidates.length === 0 ||
               drawable.length === 0 ||
               routesWarming ||
@@ -1026,8 +1316,10 @@ export function App() {
             }
           >
             <ShuffleIcon size={18} weight="bold" aria-hidden="true" />
-            {disagreeing
-              ? `They said ${state.meet?.partnerLockedMinutes} min`
+            {lockGate && !bothLocked
+              ? locked
+                ? "Waiting for them"
+                : "Lock in first"
               : state.spinning
                 ? "Spinning"
                 : status === "ready" && routesWarming
@@ -1037,29 +1329,41 @@ export function App() {
                   : "Spin"}
           </button>
 
-          {status === "ready" && (
-            <InviteButton
-              url={links.invite}
-              originName={isPin ? "a dropped pin" : origin.name}
-              minutes={state.budgetMinutes}
-              roundTrip={state.roundTrip}
-              pin={isPin}
+          {status === "ready" && roomId === null && (
+            <RoomPanel
+              room={null}
+              roomUrl={null}
+              origin={origin}
+              originChosen={originChosen}
+              consented={false}
+              partnerFailure={null}
+              permissionHint={permissionHint}
+              locating={locating}
+              onStartRoom={startRoom}
+              onShareStart={() => {}}
+              onUseMyLocation={useMyLocation}
+              onPickOnMap={() => {}}
+              onSelectPreset={() => {}}
+              onLeave={() => {}}
+              onNewRoom={() => {}}
             />
           )}
 
           {state.shared !== null &&
-            (state.shared.missingPlaceId !== null || state.shared.clampedFromMinutes !== null) && (
+            (state.shared.missingPlaceId !== null ||
+              state.shared.clampedFromMinutes !== null) && (
               <div className="notice-stack" {...inertWhen(picking)}>
                 {state.shared.missingPlaceId !== null && (
                   <p className="notice is-warn">
-                    The place this link points to is no longer on the map. Everything else about
-                    the walk is set up. Spin for somewhere new.
+                    The place this link points to is no longer on the map.
+                    Everything else about the walk is set up. Spin for somewhere
+                    new.
                   </p>
                 )}
                 {state.shared.clampedFromMinutes !== null && (
                   <p className="notice">
-                    This link asked for {state.shared.clampedFromMinutes} minutes; the closest the
-                    dial goes is {state.budgetMinutes}.
+                    This link asked for {state.shared.clampedFromMinutes}{" "}
+                    minutes; the closest the dial goes is {state.budgetMinutes}.
                   </p>
                 )}
                 <button
@@ -1077,8 +1381,8 @@ export function App() {
 
           {reelIsShort && !emptyPool && (
             <div className="notice" {...inertWhen(picking)} role="status">
-              {drawable.length} of {basePool.length} routes are ready. The reel turns through
-              those; the rest are still coming from the engine.
+              {drawable.length} of {basePool.length} routes are ready. The reel
+              turns through those; the rest are still coming from the engine.
             </div>
           )}
 
@@ -1124,9 +1428,10 @@ export function App() {
               sharedArrival={state.shared !== null}
               split={split}
               partnerName={partnerName}
-              answerUrl={meetMode ? links.answer : null}
               onSpinAgain={spin}
-              onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
+              onRetryRoute={() =>
+                dispatch({ type: "routeAttempt", attempt: 0 })
+              }
               onDismiss={() => {
                 // The pressed button is inside the card this unmounts; move focus first.
                 spinRef.current?.focus();
@@ -1142,7 +1447,11 @@ export function App() {
           onToggle={(event) => setFiltersOpen(event.currentTarget.open)}
           {...inertWhen(picking)}
         >
-          <summary>{activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}</summary>
+          <summary>
+            {activeFilters > 0
+              ? `Filters (${activeFilters} active)`
+              : "Filters"}
+          </summary>
           <Filters
             climb={state.climb}
             climbAvailable={elevationAvailable() !== false}
@@ -1158,7 +1467,9 @@ export function App() {
             onToggleVibe={(vibe) => dispatch({ type: "toggleVibe", vibe })}
             onToggleRoundTrip={() => dispatch({ type: "toggleRoundTrip" })}
             onToggleEdge={() => dispatch({ type: "toggleEdge" })}
-            onToggleWeatherAware={() => dispatch({ type: "toggleWeatherAware" })}
+            onToggleWeatherAware={() =>
+              dispatch({ type: "toggleWeatherAware" })
+            }
           />
         </details>
 
@@ -1180,12 +1491,31 @@ export function App() {
           {announcement}
         </p>
       </div>
+
+      {roomId !== null && (
+        <PartnerRail
+          room={room}
+          partnerName={partnerName}
+          yourMinutes={state.budgetMinutes}
+          bothCount={candidates.length}
+          nowMs={conditions.atMs}
+          onMatch={(minutes) => dispatch({ type: "budget", minutes })}
+          onNewRoom={() => {
+            leaveRoom();
+            startRoom();
+          }}
+        />
+      )}
     </div>
   );
 }
 
 /** The dial's cap note, naming the condition that is clamping it. */
-function capNote(cap: TimeCap | null, minutes: number, light: Daylight): string {
+function capNote(
+  cap: TimeCap | null,
+  minutes: number,
+  light: Daylight,
+): string {
   if (cap === null) return `Limit ${minutes} min`;
   switch (cap.reason) {
     case "daylight":

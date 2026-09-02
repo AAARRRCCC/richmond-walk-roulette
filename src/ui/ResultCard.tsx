@@ -58,8 +58,6 @@ export type ResultCardProps = {
   /** Non-null in meet mode: the card renders one row per side instead of stats. */
   split: MeetSplit | null;
   partnerName: string;
-  /** The link that sends this result back, or null when there is no meeting or no start yet. */
-  answerUrl: string | null;
   onSpinAgain: () => void;
   onRetryRoute: () => void;
   onDismiss: () => void;
@@ -71,8 +69,6 @@ export function ResultCard(props: ResultCardProps) {
   const { state: shareState, lastUrl, fallbackRef, share } = useShareAction();
 
   const onShare = (): Promise<void> => share({ url: props.shareUrl });
-  // The answer link is never written to `location`: it carries the reader's own coordinate.
-  const onSendBack = (): Promise<void> => share({ url: props.answerUrl ?? "" });
   const pending = props.routeLoading && !props.routeFailed;
   // Always the outbound leg, even on a round trip.
   const shown = route?.profile ?? null;
@@ -213,12 +209,6 @@ export function ResultCard(props: ResultCardProps) {
           <ShareNetworkIcon size={16} weight="bold" aria-hidden="true" />
           Share
         </button>
-        {props.answerUrl !== null && (
-          <button type="button" className="button" onClick={() => void onSendBack()}>
-            <ShareNetworkIcon size={16} weight="bold" aria-hidden="true" />
-            Send this back
-          </button>
-        )}
         {/* Both links on every platform; each falls back to the browser when the app is absent. */}
         <a
           className="button"

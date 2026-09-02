@@ -1199,6 +1199,109 @@ code {
   display: grid;
   gap: 8px;
 }
+.lock-row {
+  display: grid;
+  gap: 6px;
+}
+
+/* ------------------------------------------------------------- mirror rail */
+
+.mirror {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 5;
+  width: 320px;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: opacity 200ms var(--ease);
+}
+.mirror.is-dim {
+  opacity: 0.72;
+}
+.mirror.is-stale {
+  opacity: 0.55;
+}
+.mirror-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mirror-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+.mirror-dot.is-here {
+  background: #6fd08c;
+  box-shadow: 0 0 0 4px rgba(111, 208, 140, 0.16);
+}
+.mirror-dot.is-reconnecting {
+  background: var(--accent);
+  animation: mirror-pulse 1.2s infinite;
+}
+.mirror-dot.is-waiting {
+  background: transparent;
+  border: 1px dashed var(--line-strong);
+}
+.mirror-dot.is-closed {
+  background: #6b3b3b;
+}
+@keyframes mirror-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+.mirror-name {
+  margin: 0;
+}
+.mirror-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.mirror-value,
+.mirror-ghost {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.mirror-ghost {
+  color: var(--ink-3);
+  opacity: 0.4;
+}
+.mirror-unit {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+.mirror-lock {
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.chip.is-theirs {
+  cursor: default;
+  border-color: var(--accent-line);
+  color: var(--accent-soft);
+  background: var(--accent-wash);
+}
 
 /* -------------------------------------------------------------- dev tuning */
 
@@ -1349,6 +1452,15 @@ code {
   .icon-button {
     width: 40px;
     height: 40px;
+  }
+  /* Their side becomes a top sheet; the reader's own rail stays at the bottom. */
+  .mirror {
+    top: calc(8px + env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: 42dvh;
+    overflow-y: auto;
   }
 }
 

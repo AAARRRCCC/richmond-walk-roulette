@@ -13,11 +13,10 @@ import { MAX_MINUTES, MIN_MINUTES } from "../lib/isochrone.ts";
 import { PLACES, PRESET_ORIGINS } from "../data/places.ts";
 import {
   applyShare,
+  customOrigin,
   dialMinimum,
   initialSession,
   liveLinkQuery,
-  meetLinks,
-  partnerOrigin,
   reduce,
 } from "./session.ts";
 import {
@@ -27,13 +26,11 @@ import {
   SHARE_QUERY_MAX,
   canonicalQuery,
   decodeShare,
-  describeInvite,
-  describeMeetResult,
-  epochDay,
-  meetKind,
+  describeRoom,
   describeShare,
   encodeShare,
   isEmptyLink,
+  roomUrl,
   shareUrl,
   type ShareInput,
   type SharedOrigin,
@@ -44,10 +41,6 @@ const HOME = PRESET_ORIGINS[0];
 
 const input = (over: Partial<ShareInput> = {}): ShareInput => ({
   origin: CARYTOWN ?? HOME!,
-  meet: false,
-  partner: null,
-  mintedDay: null,
-  lockedMinutes: null,
   budgetMinutes: 34,
   floorMinutes: 10,
   dialMinimumMinutes: 10,
@@ -306,143 +299,49 @@ test("a SharedOrigin is one of exactly two things", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Meet links
+// Room pointers
 // ---------------------------------------------------------------------------
 
-const PIN_A = { id: "custom", name: "Dropped pin", lat: 37.5407012, lng: -77.4360987 };
-const PIN_B = partnerOrigin({ lat: 37.512, lng: -77.402 });
-
-test("a meet link never carries `o`", () => {
-  // The test that protects the old-build degradation. A meet key that changed
-  // the meaning of an existing key would let a stale bundle read `o` as the
-  // READER's own origin and answer a stranger's question from a stranger's
-  // front door, with no notice at all.
-  const link = encodeShare(input({ meet: true, origin: PIN_A, placeId: null }));
-  assert.match(link, /(^|&)m=1(&|$)/);
-  assert.match(link, /(^|&)ma=/);
-  assert.equal(/(^|&)o=/.test(link), false);
+test("a room pointer carries the id and nothing else", () => {
+  const link = decodeShare("?r=8xk2m4p9");
+  assert.equal(link.room, "8XK2M4P9", "case-folded to the relay's shape");
+  assert.equal(link.origin, null);
+  assert.equal(link.budgetMinutes, null);
+  assert.equal(isEmptyLink(link), false);
+  assert.equal(canonicalQuery(link), "r=8XK2M4P9");
+  assert.equal(roomUrl("https://walk.example", "8XK2M4P9"), "https://walk.example/s?r=8XK2M4P9");
 });
 
-test("an older build reads a meet link as a cold start", () => {
-  const query = encodeShare(input({ meet: true, origin: PIN_A, placeId: null }));
-  const decoded = decodeShare(query);
-  assert.equal(decoded.origin, null, "there is no `o` for an old build to misread");
-  // An old decoder ignores m/ma/mb entirely, which is this shape:
-  const asOldBuild = { ...decoded, meet: false, originA: null, originB: null };
-  const session = applyShare(initialSession, asOldBuild, PLACES, PRESET_ORIGINS);
-  assert.equal(session.origin.id, initialSession.origin.id);
+test("a room pointer ignores anything beside the id", () => {
+  // One link, one grammar: the room holds the setup.
+  const link = decodeShare("?r=8XK2M4P9&o=carytown&b=30&p=shiplock");
+  assert.equal(link.room, "8XK2M4P9");
+  assert.equal(link.origin, null);
+  assert.equal(link.placeId, null);
+});
+
+test("a malformed room id is an empty link", () => {
+  for (const raw of ["", "abc", "8XK2M4P", "8XK2M4PI", "8XK2M4P9X", "8XK2-4P9"]) {
+    const link = decodeShare(`?r=${raw}`);
+    assert.equal(link.room, null, raw);
+    assert.ok(isEmptyLink(link), raw);
+  }
+});
+
+test("the retired ping-pong keys decode as a cold start", () => {
+  // docs/adr/0001: roughly two such links exist in the wild.
+  const link = decodeShare("?m=1&ma=37.541,-77.436&mb=carytown&b=30&rt=1&l=40&d=20690");
+  assert.equal(link.origin, null, "`ma` is never read as anybody's origin");
+  const session = applyShare(initialSession, link, PLACES, PRESET_ORIGINS);
   assert.equal(session.partner, null);
+  assert.equal(session.room, null);
+  assert.equal(session.origin.id, initialSession.origin.id);
+  assert.equal(session.budgetMinutes, 30, "the walk's own keys still restore");
 });
 
-test("a meet pin is written at three decimals", () => {
-  const link = encodeShare(input({ meet: true, origin: PIN_A, placeId: null }));
-  assert.match(link, /ma=37\.541%2C-77\.436/);
-});
-
-test("a preset in a meet link is still an id", () => {
-  const link = encodeShare(input({ meet: true, placeId: null }));
-  assert.match(link, /ma=carytown/);
-  assert.equal(/\d+\.\d+/.test(link), false, "no coordinate anywhere in the query");
-});
-
-test("canonicalQuery is idempotent under coarsening", () => {
-  // chunk 10's round-trip identity, extended to the shapes that round.
-  const cases: ShareInput[] = [
-    input({ meet: true, origin: PIN_A, placeId: null, mintedDay: 20690 }),
-    input({ meet: true, origin: PIN_A, partner: PIN_B, mintedDay: 20690 }),
-    input({ meet: true, partner: PRESET_ORIGINS[0]! }),
-    input({ meet: true, placeId: null }),
-  ];
-  for (const one of cases) {
-    const encoded = encodeShare(one);
-    assert.equal(canonicalQuery(decodeShare(encoded)), encoded, encoded);
-  }
-});
-
-test("a hand-edited five-decimal meet pin canonicalises to three", () => {
-  // Canonical is allowed to differ from requested, and here that is the point:
-  // a five-decimal coordinate cannot be smuggled through the URL a crawler
-  // stores.
-  const canonical = canonicalQuery(decodeShare("?m=1&ma=37.54070,-77.43600&b=30&rt=1"));
-  assert.match(canonical, /ma=37\.541%2C-77\.436/);
-  assert.equal(canonical.includes("37.54070"), false);
-});
-
-test("key order is fixed", () => {
-  const ordered = "m=1&ma=carytown&mb=home&b=30&rt=1&e=1&c=easy&v=park&k=detour&p=shiplock&d=20690";
-  const shuffled = "p=shiplock&k=detour&b=30&d=20690&ma=carytown&v=park&m=1&rt=1&mb=home&c=easy&e=1";
-  assert.equal(canonicalQuery(decodeShare(ordered)), canonicalQuery(decodeShare(shuffled)));
-});
-
-test("meetKind distinguishes the three shapes", () => {
-  assert.equal(meetKind(decodeShare("o=carytown&b=30&rt=1&p=shiplock")), "none");
-  assert.equal(meetKind(decodeShare("m=1&ma=carytown&b=30&rt=1")), "invite");
-  assert.equal(meetKind(decodeShare("m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock")), "answer");
-  // An `m` with no `ma` is not a meeting: a link naming a second person and
-  // not a first is not a shape this app mints.
-  assert.equal(meetKind(decodeShare("m=1&b=30")), "none");
-});
-
-test("an invite carries no `mb` and no `p`", () => {
-  // The encoder writes whatever `partner` it is given and does not throw: it is
-  // a pure encoder, and a throwing branch would fork that discipline for an
-  // invariant the one call site holds trivially. `meetLinks` is what holds it.
-  const link = encodeShare(input({ meet: true, partner: null, placeId: null }));
-  assert.match(link, /m=1/);
-  assert.match(link, /ma=/);
-  assert.equal(/(^|&)mb=/.test(link), false);
-  assert.equal(/(^|&)p=/.test(link), false);
-});
-
-test("`d` is written only when a pin is present", () => {
-  assert.match(
-    encodeShare(input({ meet: true, origin: PIN_A, placeId: null, mintedDay: 20690 })),
-    /d=20690/,
-  );
-  // A preset-to-preset invite discloses nothing, has nothing to go stale, and
-  // keeps a date-free key the edge can cache.
-  assert.equal(
-    encodeShare(input({ meet: true, placeId: null, mintedDay: 20690 })).includes("d="),
-    false,
-  );
-});
-
-test("`d` out of range decodes to null", () => {
-  for (const raw of ["-1", "abc", "999999999", ""]) {
-    assert.equal(decodeShare(`m=1&ma=carytown&b=30&rt=1&d=${raw}`).mintedDay, null, raw);
-  }
-  assert.equal(decodeShare("m=1&ma=carytown&b=30&rt=1&d=20690").mintedDay, 20690);
-});
-
-test("neither describe function contains a coordinate", () => {
-  const invite = describeInvite({ originName: "a dropped pin", minutes: 30, roundTrip: true });
-  const answer = describeMeetResult({
-    placeName: "Great Shiplock Park",
-    minutes: 30,
-    roundTrip: true,
-  });
-  for (const text of [invite, answer]) {
-    assert.equal(/37\.|-77\./.test(text), false, text);
-  }
-});
-
-test("a meet link is comfortably inside the query cap", () => {
-  const full = encodeShare(
-    input({
-      meet: true,
-      origin: PIN_A,
-      partner: PIN_B,
-      floorMinutes: 20,
-      edgeOnly: true,
-      climb: "hilly",
-      kind: "detour",
-      vibes: ["river", "park", "food"],
-      placeId: "shiplock",
-      mintedDay: 20690,
-    }),
-  );
-  assert.ok(full.length < 300, `${full.length} characters: ${full}`);
-  assert.equal(SHARE_QUERY_MAX, 512, "and the cap is unchanged");
+test("the room description names nobody and carries no coordinate", () => {
+  assert.equal(/37\.|-77\./.test(describeRoom()), false);
+  assert.match(describeRoom(), /12 hours/);
 });
 
 test("the tier survives canonicalisation", () => {
@@ -459,168 +358,80 @@ test("the tier survives canonicalisation", () => {
 
 // --------------------------------------------------------------- restoring
 
-test("an out-of-bounds partner is refused without a request", () => {
-  // Manhattan. The proxy would have 400'd it, but the client refuses first so
-  // a forged link cannot even generate the attempt.
-  const session = restore("m=1&ma=40.712,-74.006&b=30&rt=1");
+test("a room pointer restores the room and nothing else", () => {
+  // Opening the link costs the reader nothing until they choose a start.
+  const session = applyShare(initialSession, decodeShare("?r=8XK2M4P9"), PLACES, PRESET_ORIGINS);
+  assert.equal(session.room, "8XK2M4P9");
+  assert.equal(session.originChosen, false);
   assert.equal(session.partner, null);
-  assert.equal(session.meet?.partnerOutOfBounds, true);
-  assert.equal(session.originChosen, false);
+  assert.equal(session.shared, null);
+  assert.equal(session.budgetMinutes, initialSession.budgetMinutes);
 });
 
-test("a mangled `mb` is named, not swallowed", () => {
-  const session = restore("m=1&ma=carytown&mb=40.712,-74.006&b=30&rt=1");
-  assert.equal(session.originChosen, false);
-  assert.equal(session.meet?.selfOutOfBounds, true);
-  assert.equal(session.origin, initialSession.origin);
-});
-
-test("an invite leaves the local origin unchosen", () => {
-  // The flag, not a null origin, is what gates: `origin` stays DEFAULT_ORIGIN
-  // so every path that reads it keeps working, and nothing draws it.
-  const session = restore("m=1&ma=carytown&b=30&rt=1");
-  assert.equal(session.originChosen, false);
-  assert.equal(session.origin, initialSession.origin);
-  assert.equal(session.meet?.kind, "invite");
-  assert.equal(session.partner?.id, "carytown");
-});
-
-test("an answer restores both starts and the pick", () => {
-  const session = restore("m=1&ma=37.512,-77.402&mb=carytown&b=30&rt=1&p=shiplock");
-  assert.equal(session.partner?.id, "partner");
-  assert.equal(session.partner?.name, "Their start");
-  assert.equal(session.origin.id, "carytown");
+test("a remembered start makes a reload the same walker back again", () => {
+  const mine = customOrigin({ lat: 37.541, lng: -77.436 });
+  const session = applyShare(initialSession, decodeShare("?r=8XK2M4P9"), PLACES, PRESET_ORIGINS, mine);
   assert.equal(session.originChosen, true);
-  assert.equal(session.pickedId, "shiplock");
-  assert.equal(session.meet?.kind, "answer");
+  assert.equal(session.origin, mine);
 });
 
-test("a preset partner keeps its own identity", () => {
-  const session = restore("m=1&ma=carytown&b=30&rt=1");
-  assert.equal(session.partner?.id, "carytown");
-  assert.equal(session.partner?.name, "Carytown", "not 'Their start'");
+test("`origin` does not leave the room", () => {
+  const arrived = applyShare(initialSession, decodeShare("?r=8XK2M4P9"), PLACES, PRESET_ORIGINS);
+  const chosen = reduce(arrived, { type: "origin", origin: PRESET_ORIGINS[1]! });
+  assert.equal(chosen.room, "8XK2M4P9");
+  assert.equal(chosen.originChosen, true);
 });
 
-test("`origin` does not clear the meeting", () => {
-  // Choosing your own start is how you ANSWER an invite, so it must not clear
-  // either the partner or the link's provenance.
-  const invite = restore("m=1&ma=carytown&b=30&rt=1");
-  const answered = reduce(invite, { type: "origin", origin: PRESET_ORIGINS[1]! });
-  assert.equal(answered.originChosen, true);
-  assert.ok(answered.partner !== null);
-  assert.ok(answered.meet !== null);
+test("`partner` moves only when their start moves", () => {
+  const inRoom = reduce(initialSession, { type: "enterRoom", room: "8XK2M4P9" });
+  const theirs = PRESET_ORIGINS[3]!;
+  const met = reduce(inRoom, { type: "partner", origin: theirs });
+  assert.equal(met.partner, theirs);
+  assert.ok(met.framingKey > inRoom.framingKey, "their contour re-frames the map");
+  assert.equal(reduce(met, { type: "partner", origin: { ...theirs } }), met, "same place, same state");
+  const gone = reduce(met, { type: "partner", origin: null });
+  assert.equal(gone.partner, null);
 });
 
 test("`leaveMeet` returns a single-person session", () => {
-  const meeting = reduce(restore("m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock"), {
-    type: "partnerWarmProgress",
-    fraction: 1,
+  const inRoom = reduce(reduce(initialSession, { type: "enterRoom", room: "8XK2M4P9" }), {
+    type: "partner",
+    origin: PRESET_ORIGINS[3]!,
   });
+  const meeting = reduce(inRoom, { type: "partnerWarmProgress", fraction: 0.5 });
   const alone = reduce(meeting, { type: "leaveMeet" });
+  assert.equal(alone.room, null);
   assert.equal(alone.partner, null);
-  assert.equal(alone.meet, null);
   assert.equal(alone.originChosen, true);
   assert.equal(alone.partnerWarmed, 0);
   assert.equal(alone.partnerFailure, null);
-  // The pool is about to change, so the pick it produced is no longer a pick
-  // from this pool.
   assert.equal(alone.pickedId, null);
   assert.ok(alone.framingKey > meeting.framingKey);
 });
 
-test("a spin does not dismiss the meeting", () => {
-  // Unlike `shared`: the other person is still there after a spin.
-  const meeting = restore("m=1&ma=carytown&mb=home&b=30&rt=1&p=shiplock");
+test("a spin does not leave the room", () => {
+  const meeting = reduce(reduce(initialSession, { type: "enterRoom", room: "8XK2M4P9" }), {
+    type: "partner",
+    origin: PRESET_ORIGINS[3]!,
+  });
   for (const action of [
     { type: "spinStart" } as const,
-    { type: "spinEnd", pickedId: "capitol" } as const,
-    { type: "pickPlace", pickedId: "capitol" } as const,
+    { type: "spinEnd", pickedId: "shiplock" } as const,
+    { type: "pickPlace", pickedId: "shiplock" } as const,
+    { type: "clearPick" } as const,
+    { type: "budget", minutes: 40 } as const,
+    { type: "clearFilters" } as const,
   ]) {
     const after = reduce(meeting, action);
-    assert.ok(after.meet !== null, action.type);
+    assert.equal(after.room, "8XK2M4P9", action.type);
     assert.ok(after.partner !== null, action.type);
-    assert.equal(after.shared, null, action.type);
   }
 });
 
-test("a stale invite still opens", () => {
-  const days = epochDay(Date.now()) - 3;
-  const session = restore(`m=1&ma=37.541,-77.436&b=30&rt=1&d=${days}`);
-  assert.equal(session.meet?.mintedDay, days);
-  assert.ok(session.partner !== null, "and is in every other respect a working invite");
-});
-
-// ----------------------------------------------------------------- minting
-
-test("App never mints a link with a start the reader did not choose", () => {
-  const invite = restore("m=1&ma=carytown&b=30&rt=1");
-  const locked = meetLinks(invite, "https://walk.example", null, Date.now());
-  assert.deepEqual(locked, { invite: null, answer: null });
-
-  const answered = reduce(invite, { type: "origin", origin: PRESET_ORIGINS[1]! });
-  const open = meetLinks(answered, "https://walk.example", null, Date.now());
-  assert.notEqual(open.invite, null, "a chosen start can mint an invite");
-  assert.equal(open.answer, null, "no pick, no answer link");
-  // "mb is never a guess": an invite is the first link in a chain, so there is
-  // nothing to echo.
-  assert.equal(open.invite?.includes("mb="), false);
-
-  const picked = meetLinks(answered, "https://walk.example", "shiplock", Date.now());
-  assert.match(picked.answer ?? "", /mb=/);
-  assert.match(picked.answer ?? "", /p=shiplock/);
-});
-
-test("the URL-clearing comparison is stable across a meet arrival", () => {
-  // The test that stops the address bar wiping itself on the first paint.
-  for (const query of [
-    "m=1&ma=carytown&b=30&rt=1",
-    "m=1&ma=37.512,-77.402&mb=carytown&b=30&rt=1&p=shiplock",
-  ]) {
-    const session = restore(query);
-    assert.equal(liveLinkQuery(session, session.pickedId), session.shared?.linkQuery, query);
-  }
-
-  // ...and it stops matching at the correct moment: the reader setting their
-  // own start makes `mb` appear, and the screen now shows a walk the address
-  // bar does not describe.
-  const invite = restore("m=1&ma=carytown&b=30&rt=1");
-  const answered = reduce(invite, { type: "origin", origin: PRESET_ORIGINS[1]! });
-  assert.notEqual(liveLinkQuery(answered, null), invite.shared?.linkQuery);
-});
-
-test("a lock-in travels with the link and only on a meet link", () => {
-  // The whole of "both settle on a number first", with no server: a commitment
-  // is one integer that rides a link somebody was already sending.
-  const locked = encodeShare(input({ meet: true, placeId: null, lockedMinutes: 40 }));
-  assert.match(locked, /(^|&)l=40(&|$)/);
-  assert.equal(decodeShare(locked).lockedMinutes, 40);
-
-  // A solo share has nobody to promise anything to.
-  assert.equal(encodeShare(input({ lockedMinutes: 40 })).includes("l="), false);
-  assert.equal(decodeShare("o=carytown&b=30&rt=1&l=40&p=shiplock").lockedMinutes, null);
-
-  // Range-checked like `b`, so a forged value cannot name an impossible budget.
-  assert.equal(decodeShare("m=1&ma=carytown&b=30&rt=1&l=9999").lockedMinutes, null);
-  assert.equal(decodeShare("m=1&ma=carytown&b=30&rt=1&l=abc").lockedMinutes, null);
-
-  // And it survives the round trip the cache key and og:url both rest on.
-  assert.equal(canonicalQuery(decodeShare(locked)), locked);
-});
-
-test("an arriving lock reaches the session, and an absent one is null", () => {
-  const arrived = restore("m=1&ma=carytown&b=30&rt=1&l=40");
-  assert.equal(arrived.meet?.partnerLockedMinutes, 40);
-  assert.equal(restore("m=1&ma=carytown&b=30&rt=1").meet?.partnerLockedMinutes, null);
-});
-
-test("meetLinks commits only when asked", () => {
-  const session = reduce(restore("m=1&ma=carytown&b=30&rt=1"), {
-    type: "origin",
-    origin: PRESET_ORIGINS[1]!,
-  });
-  const reporting = meetLinks(session, "https://walk.example", null, Date.now());
-  assert.equal(reporting.invite?.includes("l="), false, "sharing is not committing");
-
-  const committing = meetLinks(session, "https://walk.example", null, Date.now(), true);
-  assert.match(committing.invite ?? "", new RegExp(`l=${session.budgetMinutes}(&|$)`));
+test("liveLinkQuery matches the arrival on the first paint", () => {
+  const query = "o=carytown&b=30&rt=1&p=shiplock";
+  const session = applyShare(initialSession, decodeShare(query), PLACES, PRESET_ORIGINS);
+  assert.equal(liveLinkQuery(session, session.pickedId), session.shared?.linkQuery);
+  const moved = reduce(session, { type: "budget", minutes: 40 });
+  assert.notEqual(liveLinkQuery(moved, moved.pickedId), moved.shared?.linkQuery);
 });

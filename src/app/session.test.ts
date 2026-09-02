@@ -194,24 +194,3 @@ test("clearFilters preserves the partner", () => {
   assert.deepEqual(cleared.vibes, []);
   assert.ok(cleared.partner !== null);
 });
-
-test("dismissMeet drops the notices and keeps the meeting", () => {
-  // The same shape as `dismissShared`: it dismisses what the app is SAYING
-  // about the link, not the session the link created.
-  const meeting = {
-    ...initialSession,
-    partner: PRESET_ORIGINS[1]!,
-    meet: {
-      kind: "invite" as const,
-      mintedDay: 20690,
-      partnerOutOfBounds: false,
-      selfOutOfBounds: false,
-      partnerLockedMinutes: null,
-    },
-  };
-  const dismissed = reduce(meeting, { type: "dismissMeet" });
-  assert.equal(dismissed.meet, null);
-  assert.ok(dismissed.partner !== null);
-  // A stray dispatch must not re-render the tree for nothing.
-  assert.equal(reduce(dismissed, { type: "dismissMeet" }), dismissed);
-});
