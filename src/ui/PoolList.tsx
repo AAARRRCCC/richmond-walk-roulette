@@ -14,23 +14,10 @@ export type PoolListProps = {
   onPick: (id: string) => void;
 };
 
-/**
- * How many of a group to show before an expander.
- *
- * A cap with no way past it would be a completeness feature that hides things,
- * which is the failure this whole chunk exists to stop. An uncapped list would
- * put 250 tab stops behind one `<summary>` once `places-expansion` lands.
- */
+/** Rows shown per excluded group before an expander. */
 const GROUP_CAP = 12;
 
-/**
- * The "All places" drawer: what is in the pool, then everything that is not,
- * grouped by the reason it was dropped.
- *
- * Every row is the same button the map's dimmed dots are — it dispatches the
- * same pick and lands on the same explained card. There is no second selection
- * and no second highlight.
- */
+// Every row dispatches the same pick as a map dot and lands on the same card.
 export function PoolList(props: PoolListProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<ExclusionReason>>(new Set());
 
@@ -107,9 +94,6 @@ export function PoolList(props: PoolListProps) {
       })}
 
       {props.pool.withdrawn.length > 0 && (
-        /* The one place a withdrawal is visible. A rule that set itself aside
-           rather than emptying the pool did something on the reader's behalf,
-           and doing that silently is the same failure as filtering silently. */
         <p className="pool-withdrawn">
           Set aside: {props.pool.withdrawn.length === 1 ? "one rule" : `${props.pool.withdrawn.length} rules`} left
           too few places to spin.

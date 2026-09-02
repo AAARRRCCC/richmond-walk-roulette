@@ -1,47 +1,37 @@
 /*
  * Walk Roulette, Richmond.
  *
- * Design read: a single-purpose consumer map tool for people who already live
- * here. The map is the product, so it runs full bleed and everything else is a
- * quiet instrument panel floating over it.
- *
- * Locked decisions, applied everywhere:
- *   Theme    dark only. There is no light mode; a night cartographic palette is
- *            the whole point of the isochrone bloom reading as heat.
- *   Accent   amber #ffb043, and nothing else. Warnings borrow it too.
- *   Radius   surfaces 16px, controls 10px, chips and switches full pill.
- *   Type     Geist for text, Geist Mono for every number.
- *   Motion   transitions only, 160-260ms, transform and opacity. The one real
- *            animation is the spin reel, which communicates randomising.
+ * Dark only: the contour bloom reads as heat against a night basemap.
+ * One accent, amber. Geist for text, Geist Mono for numbers and microlabels.
+ * Type scale: 11 / 12 / 13 / 14 / 16 / 22 / 26 / 44.
  */
 
 :root {
   --bg: #0b1014;
-  --surface: rgba(16, 23, 30, 0.86);
-  --surface-solid: #101720;
-  --raise: #16202a;
-  --line: rgba(255, 255, 255, 0.09);
+  --surface: rgba(14, 20, 27, 0.94);
+  --surface-solid: #0e141b;
+  --raise: #172130;
+  --raise-hover: #1d2938;
+  --line: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.16);
 
-  --ink: #e9eef3;
-  --ink-2: #93a6b5;
-  /* Every small label in the app is this colour, and none of them are large
-     text, so it has to clear 4.5:1 on the darkest surface it lands on. It
-     measures 6.2:1 on --bg, 5.8:1 on --surface, 5.3:1 on --raise. The
-     previous #647a8a was 4.3, 4.0 and 3.7 — under AA everywhere, including on
-     the drawer summary, which is a control. */
-  --ink-3: #8195a4;
+  --ink: #eaeff4;
+  --ink-2: #a3b3c1;
+  --ink-3: #7f92a2;
 
   --accent: #ffb043;
+  --accent-hover: #ffbf63;
   --accent-soft: #ffd7a0;
   --accent-ink: #150d02;
-  --accent-wash: rgba(255, 176, 67, 0.12);
+  --accent-wash: rgba(255, 176, 67, 0.1);
+  --accent-line: rgba(255, 176, 67, 0.35);
 
-  --r-surface: 16px;
-  --r-control: 10px;
+  --rail-w: 400px;
+  --pad: 20px;
+  --r: 8px;
+  --r-pill: 999px;
 
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
-
   --font: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --mono: "Geist Mono Variable", ui-monospace, monospace;
 }
@@ -61,7 +51,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
@@ -74,6 +64,10 @@ select {
   color: inherit;
 }
 
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -82,10 +76,10 @@ select {
 
 code {
   font-family: var(--mono);
-  font-size: 0.86em;
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.07);
-  padding: 0.1em 0.36em;
-  border-radius: 5px;
 }
 
 .sr-only {
@@ -99,11 +93,7 @@ code {
   white-space: nowrap;
   border: 0;
 }
-
-/* Text-only content is safe to leave clipped, but a focusable child is not:
-   clipping it to a 1px box takes the focus ring with it, so a keyboard user
-   lands somewhere invisible with no way to tell what they are on. Anything
-   that takes focus in here comes back on screen. */
+/* A focusable child must come back on screen or its focus ring is clipped away. */
 .sr-only:focus,
 .sr-only:focus-within {
   position: static;
@@ -115,12 +105,26 @@ code {
   white-space: normal;
 }
 
-/* ---------------------------------------------------------------- shell */
+.skeleton {
+  display: inline-block;
+  height: 0.85em;
+  vertical-align: middle;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--raise), #223040, var(--raise));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ------------------------------------------------------------------ shell */
 
 .shell {
   position: fixed;
   inset: 0;
-  min-height: 100dvh;
 }
 
 .map-shell,
@@ -129,44 +133,8 @@ code {
   inset: 0;
 }
 
-/*
- * Credit for the reachable area. The contours are computed by Valhalla from
- * OpenStreetMap data, and OSM's ODbL asks derived works to credit the
- * contributors. The basemap has its own attribution control; this credit is
- * for the reachable area specifically, so it sits above that control and the
- * two read as separate claims, because they are. Nothing here is a brand
- * requirement: the type is the app's own.
- */
-.reach-attribution {
-  position: absolute;
-  right: 8px;
-  bottom: 26px;
-  z-index: 2;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  border-radius: 5px;
-  background: rgba(11, 16, 20, 0.82);
-  pointer-events: none;
-}
-
-.reach-source {
-  font-size: 11px;
-  color: var(--ink-3);
-}
-
-.reach-brand {
-  font-size: 12px;
-  /* Two credits on one line, over a map: wrapping would turn a footnote into
-     a block. */
-  white-space: nowrap;
-  color: var(--ink);
-}
-
 .shell.is-picking .rail {
-  opacity: 0.55;
+  opacity: 0.5;
   pointer-events: none;
 }
 .shell.is-picking .origin,
@@ -174,139 +142,301 @@ code {
   pointer-events: auto;
 }
 
-/* ----------------------------------------------------------------- rail */
+/* Map chrome: credits and the tile-outage notice. */
+.reach-attribution,
+.map-notice {
+  position: absolute;
+  z-index: 2;
+  margin: 0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(11, 16, 20, 0.82);
+  font-size: 11px;
+  pointer-events: none;
+}
+.reach-attribution {
+  right: 8px;
+  bottom: 26px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+.reach-source {
+  color: var(--ink-3);
+}
+.reach-brand {
+  color: var(--ink-2);
+}
+.map-notice {
+  left: calc(var(--rail-w) + 12px);
+  bottom: 8px;
+  max-width: 17rem;
+  padding: 5px 9px;
+  color: var(--ink-2);
+}
+
+.origin-marker {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid var(--accent);
+  box-shadow: 0 0 0 6px rgba(255, 176, 67, 0.18), 0 3px 12px rgba(0, 0, 0, 0.7);
+  cursor: grab;
+}
+.origin-marker:active {
+  cursor: grabbing;
+}
+.origin-marker.is-partner {
+  background: transparent;
+  border-color: var(--accent-soft);
+  box-shadow: none;
+  cursor: default;
+}
+.origin-marker.is-hidden {
+  display: none;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--surface-solid) !important;
+  border: 1px solid var(--line-strong) !important;
+  border-radius: var(--r) !important;
+  box-shadow: none !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top-color: var(--line) !important;
+}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1) brightness(0.85);
+}
+.maplibregl-ctrl-attrib {
+  background: rgba(11, 16, 20, 0.8) !important;
+  color: var(--ink-3) !important;
+  font-size: 11px !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--ink-2) !important;
+}
+.maplibregl-ctrl-attrib-button {
+  filter: invert(1) brightness(0.8);
+}
+
+/* ------------------------------------------------------------------- rail */
 
 .rail {
   position: absolute;
-  top: 18px;
-  left: 18px;
-  bottom: 18px;
-  width: 384px;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--rail-w);
   display: flex;
   flex-direction: column;
-  gap: 12px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   transition: opacity 200ms var(--ease);
 }
-
-/* Collapsed sheet. The brand row is the only thing that stays, which makes it
-   the handle: the control that folded the panel away is the one still on
-   screen to bring it back. Everything else leaves the layout rather than
-   scrolling out of view, so the map underneath is genuinely free — the shape
-   is the whole argument, and the sheet was covering most of it. */
-.rail.is-collapsed {
-  overflow: hidden;
-}
-/* Named rather than "everything but the brand", so whatever the toggle itself
-   is cannot hide itself. */
-.rail.is-collapsed > .panel,
-.rail.is-collapsed > .spin-slot,
-.rail.is-collapsed > .drawer {
-  display: none;
-}
-
-.brand {
-  position: relative;
-  /* Bounds the scrim below: without a stacking context, z-index -1 escapes to
-     the root and the pseudo-element paints behind the map instead. */
-  isolation: isolate;
-  padding: 2px 4px 0;
-  /* A row, so the collapse control sits at the end of the title line rather
-     than starting a second one. */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-/* The brand floats directly on the map, so a basemap label can land behind it.
-   A soft radial scrim keeps it legible without drawing a panel edge.
-
-   It may bleed left, above and below, but never right: the rail is a scroll
-   container, so anything crossing its right edge turns overflow-x into a
-   horizontal scrollbar under the entire sidebar. The gradient is anchored at
-   0% and has faded out well before that edge, so it costs nothing. */
-.brand::before {
-  content: "";
-  position: absolute;
-  inset: -16px 0 -12px -22px;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(
-    118% 100% at 0% 45%,
-    rgba(11, 16, 20, 0.95) 0%,
-    rgba(11, 16, 20, 0.82) 45%,
-    rgba(11, 16, 20, 0) 100%
-  );
-}
-
-.brand h1 {
-  margin: 0;
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-}
-
-.brand-place {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.panel,
-.result,
-.drawer {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-surface);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
-}
-
-.panel {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
 @media (prefers-reduced-transparency: reduce) {
-  .panel,
-  .result,
-  .drawer,
-  .origin-menu {
+  .rail {
     background: var(--surface-solid);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
 }
 
+/* Each direct child is a section. Hairlines between, no cards. */
+.rail > * + * {
+  border-top: 1px solid var(--line);
+}
+.rail > .sr-only,
+.rail > .spin-slot:empty {
+  display: none;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px var(--pad) 14px;
+}
+.brand h1 {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.brand-place {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.brand-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+.rail-toggle svg {
+  transition: transform 160ms ease;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: var(--pad);
+}
+
 .field-label {
   display: block;
+  margin: 0;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
 
-/* --------------------------------------------------------------- origin */
+/* ----------------------------------------------------------------- buttons */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  background: var(--raise);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 140ms var(--ease), border-color 140ms var(--ease);
+}
+.button:hover:not(:disabled) {
+  background: var(--raise-hover);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.button.is-primary,
+.button.is-spin {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.button.is-primary:hover:not(:disabled),
+.button.is-spin:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.button.is-spin {
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.button:disabled {
+  background: var(--raise);
+  border-color: var(--line);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+
+.link-button {
+  padding: 4px 2px;
+  margin: -4px -2px;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ----------------------------------------------------------------- notices */
+
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  color: var(--ink-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+.notice.is-warn {
+  border-color: var(--accent-line);
+  background: var(--accent-wash);
+  color: var(--accent-soft);
+}
+.notice.is-setup {
+  display: block;
+}
+.notice.is-setup strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+.notice.is-setup p {
+  margin: 0;
+}
+.notice-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* ------------------------------------------------------------------ origin */
 
 .origin {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 
 .origin-chip {
@@ -314,13 +444,14 @@ code {
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 9px 12px;
+  min-height: 40px;
+  padding: 0 12px;
   background: var(--raise);
   border: 1px solid var(--line);
-  border-radius: var(--r-control);
+  border-radius: var(--r);
   cursor: pointer;
   text-align: left;
-  transition: border-color 160ms var(--ease), background 160ms var(--ease);
+  transition: border-color 140ms var(--ease);
 }
 .origin-chip:hover {
   border-color: var(--line-strong);
@@ -347,13 +478,13 @@ code {
   top: calc(100% + 6px);
   left: 0;
   right: 0;
+  max-height: 340px;
+  overflow-y: auto;
   padding: 6px;
   background: var(--surface-solid);
   border: 1px solid var(--line-strong);
-  border-radius: var(--r-control);
+  border-radius: var(--r);
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.6);
-  max-height: 340px;
-  overflow-y: auto;
 }
 
 .origin-action,
@@ -363,19 +494,12 @@ code {
   gap: 9px;
   width: 100%;
   padding: 8px 10px;
-  background: none;
   border: 0;
-  border-radius: 7px;
-  cursor: pointer;
-  text-align: left;
+  border-radius: 6px;
+  background: none;
   font-size: 14px;
-}
-
-/* Dimmer, and only dimmer. A third grey to distinguish "filtered" from "out of
-   reach" would be the one this design refuses: reasons live in text, and the
-   heading above each group is already carrying that information. */
-.origin-option.is-excluded {
-  color: var(--ink-3);
+  text-align: left;
+  cursor: pointer;
 }
 .origin-action:hover:not(:disabled),
 .origin-option:hover {
@@ -391,48 +515,45 @@ code {
 .origin-option[aria-current="true"] {
   color: var(--accent);
 }
-
+.origin-option.is-excluded {
+  color: var(--ink-3);
+}
 .origin-divider {
   height: 1px;
-  background: var(--line);
   margin: 6px 4px;
+  background: var(--line);
 }
-
 .origin-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-
 .origin-hint {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--accent);
 }
 
-/* ----------------------------------------------------------------- dial */
+/* -------------------------------------------------------------------- dial */
 
 .dial-head {
   display: flex;
   align-items: baseline;
-  gap: 7px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
-
 .dial-value {
   font-family: var(--mono);
-  font-size: 46px;
+  font-size: 44px;
   font-weight: 500;
-  line-height: 0.95;
+  line-height: 1;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
-
 .dial-unit {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--ink-2);
 }
-
 .dial-caption {
   margin-left: auto;
   font-size: 12px;
@@ -440,18 +561,15 @@ code {
   text-align: right;
 }
 
-/* The marks box is inset by half the thumb width so a tick at N% sits under
-   the thumb centre when the value is N% of the range. */
+/* The marks box is inset by half the thumb width so tick N% sits under the thumb centre. */
 .dial-track {
   position: relative;
   height: 34px;
 }
-
 .dial-marks {
   position: absolute;
   inset: 4px 8px 12px;
 }
-
 .dial-tick {
   position: absolute;
   bottom: 0;
@@ -459,19 +577,14 @@ code {
   height: 6px;
   background: var(--line-strong);
   transform: translateX(-0.5px);
-  transition: background 120ms linear, height 120ms var(--ease);
+  opacity: 0.35;
+  transition: background 120ms linear, height 120ms var(--ease), opacity 200ms linear;
 }
 .dial-tick.is-mid {
   height: 10px;
 }
 .dial-tick.is-major {
   height: 15px;
-}
-/* Ticks start dim and light up as their contours arrive, so the warm-up is
-   something you watch fill in rather than a spinner over the whole panel.
-   A dim tick still works; it just costs a request instead of a cache read. */
-.dial-tick {
-  opacity: 0.35;
 }
 .dial-tick.is-warm {
   opacity: 1;
@@ -480,13 +593,6 @@ code {
   background: var(--accent);
 }
 .dial-tick.is-reached.is-warm {
-  opacity: 0.85;
-}
-
-.dial-warming {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--accent);
   opacity: 0.85;
 }
 
@@ -499,10 +605,7 @@ code {
   appearance: none;
   -webkit-appearance: none;
   cursor: ew-resize;
-  /* The dial lives inside a scroll container on mobile. Without this, a thumb
-     scrub that wanders a few degrees off horizontal is handed to the sheet
-     and the drag is abandoned mid-gesture, on the one control the app is
-     built around. */
+  /* Inside a scroll container on mobile; without this a slightly diagonal scrub is stolen by the sheet. */
   touch-action: pan-x;
   -webkit-tap-highlight-color: transparent;
 }
@@ -520,52 +623,49 @@ code {
   height: 34px;
   border: 0;
   border-radius: 3px;
-  background:
-    linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
+  background: linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
 }
 .dial-input::-moz-range-thumb {
   width: 16px;
   height: 34px;
   border: 0;
   border-radius: 3px;
-  background:
-    linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
+  background: linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
 }
 
-/* Two range inputs share one track. The lower one is painted last so its
-   thumb sits on top and can always be grabbed - including when it is parked
-   at the minimum, where the upper input's track would otherwise swallow the
-   press. It is transparent to the pointer everywhere except that thumb, so
-   the upper dial keeps its whole track: a click on the rail still jumps the
-   budget the way it always did. */
+/* The floor input is painted last so its thumb is always grabbable, and is
+   transparent to the pointer everywhere except that thumb. */
 .dial-input.is-floor {
   pointer-events: none;
 }
 .dial-input.is-floor::-webkit-slider-thumb {
   pointer-events: auto;
+  background: linear-gradient(var(--ink-3), var(--ink-3)) center / 3px 100% no-repeat;
 }
 .dial-input.is-floor::-moz-range-thumb {
   pointer-events: auto;
-}
-
-/* Parked at the minimum the lower thumb is a hint, not a value: it says the
-   range has a near end you can drag in. Once moved it reads as the accent,
-   like the thumb it now pairs with. */
-.dial-input.is-floor::-webkit-slider-thumb {
-  background:
-    linear-gradient(var(--ink-3), var(--ink-3)) center / 3px 100% no-repeat;
-}
-.dial-input.is-floor::-moz-range-thumb {
-  background:
-    linear-gradient(var(--ink-3), var(--ink-3)) center / 3px 100% no-repeat;
+  background: linear-gradient(var(--ink-3), var(--ink-3)) center / 3px 100% no-repeat;
 }
 .dial-track.has-floor .dial-input.is-floor::-webkit-slider-thumb {
-  background:
-    linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
+  background: linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
 }
 .dial-track.has-floor .dial-input.is-floor::-moz-range-thumb {
-  background:
-    linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
+  background: linear-gradient(var(--accent), var(--accent)) center / 3px 100% no-repeat;
+}
+
+/* Dead zone from the cap to the end of the track. */
+.dial-track.is-capped::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--cap-percent);
+  right: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 1px dashed var(--line-strong);
+  border-radius: 0 var(--r-pill) var(--r-pill) 0;
+  pointer-events: none;
+  transition: left 420ms var(--ease);
 }
 
 .dial-scale {
@@ -573,27 +673,52 @@ code {
   justify-content: space-between;
   padding: 0 8px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ink-3);
 }
+.dial-warming {
+  color: var(--accent);
+}
+.dial-cap-note {
+  margin: 4px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
 
-/* -------------------------------------------------------------- readout */
+.guard-row {
+  display: block;
+}
 
-.readout {
+/* ----------------------------------------------------------------- readout */
+
+.readout,
+.pool-summary {
   margin: 0;
-  font-size: 13px;
-  color: var(--ink-2);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 4px 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.readout {
   min-height: 20px;
 }
-.readout strong {
-  color: var(--ink);
-  font-weight: 500;
+.readout strong,
+.pool-summary strong {
   font-family: var(--mono);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.pool-summary {
+  margin-top: -10px;
+  color: var(--ink-3);
+}
+.pool-summary strong {
+  color: var(--ink-2);
 }
 .readout-sep {
   width: 3px;
@@ -604,246 +729,127 @@ code {
 .readout.is-loading {
   gap: 10px;
 }
-
-/*
- * A different sentence about a different number from the .readout above it:
- * that one says what geometry allows, this says what the filters left. Each
- * number is named once and the two lines compose.
- */
-.pool-summary {
-  margin: 0;
-  font-size: 12.5px;
-  color: var(--ink-3);
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-}
-.pool-summary strong {
-  color: var(--ink-2);
-  font-weight: 500;
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-}
-
-/* A rule that set itself aside rather than emptying the pool. Doing that
-   silently would be the same failure as filtering silently. */
 .pool-withdrawn {
   margin: 8px 0 0;
   font-size: 12px;
   color: var(--ink-3);
 }
 
-.skeleton {
-  display: inline-block;
-  height: 0.85em;
-  vertical-align: middle;
-  border-radius: 4px;
-  background: linear-gradient(90deg, var(--raise), #1e2a36, var(--raise));
-  background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
-}
+/* -------------------------------------------------------------- conditions */
 
-@keyframes shimmer {
-  to {
-    background-position: -200% 0;
-  }
-}
-
-/* -------------------------------------------------------------- buttons */
-
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-control);
-  background: var(--raise);
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: transform 120ms var(--ease), background 160ms var(--ease),
-    border-color 160ms var(--ease);
-}
-.button:hover:not(:disabled) {
-  background: #1c2733;
-  border-color: rgba(255, 255, 255, 0.24);
-}
-.button:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.button.is-primary,
-.button.is-spin {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-ink);
-}
-.button.is-primary:hover:not(:disabled),
-.button.is-spin:hover:not(:disabled) {
-  background: #ffc063;
-  border-color: #ffc063;
-}
-
-.button.is-spin {
-  width: 100%;
-  padding: 13px 16px;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-/* Dimmed amber still reads as a filled, tappable button. A disabled control
-   has to lose the accent entirely. */
-.button:disabled {
-  background: var(--raise);
-  border-color: var(--line);
-  color: var(--ink-3);
-  cursor: not-allowed;
-}
-
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  color: var(--ink-3);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.icon-button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--ink);
-}
-
-/* The two controls that belong to the rail itself rather than to any panel in
-   it: mute, and the collapse handle on mobile. A row so they sit at the end of
-   the title line, and shrink-proof so the h1 gives up space first. */
-.brand-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex: 0 0 auto;
-}
-/* The caret is turned in JSX rather than swapped for a second glyph. The
-   transition is the cue that it is the same control in two states, and it is
-   dropped with everything else under prefers-reduced-motion. */
-.rail-toggle svg {
-  transition: transform 160ms ease;
-}
-
-.link-button {
-  /* Padding grows the hit area, the negative margin gives the space back to
-     the layout, so "Clear filters" keeps its place on the baseline and stops
-     being an 18px-tall target. */
-  padding: 4px 2px;
-  margin: -4px -2px;
-  border: 0;
-  background: none;
-  color: var(--accent);
-  font-size: inherit;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
-/* -------------------------------------------------------------- notices */
-
-.notice {
+.conditions {
+  display: block;
   margin: 0;
-  padding: 11px 13px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-control);
-  background: rgba(255, 255, 255, 0.03);
   font-size: 13px;
-  line-height: 1.5;
   color: var(--ink-2);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px;
 }
-.notice.is-warn {
-  border-color: rgba(255, 176, 67, 0.4);
-  background: var(--accent-wash);
-  color: var(--accent-soft);
+.conditions.is-quiet {
+  font-size: 12px;
+  color: var(--ink-3);
 }
-.notice.is-setup {
-  display: block;
+.conditions-credit {
+  margin-left: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
-.notice.is-setup strong {
-  display: block;
-  color: var(--ink);
-  margin-bottom: 5px;
+.conditions-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
-.notice.is-setup p {
+
+.precip {
   margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.precip-chart {
+  display: block;
+  width: 100%;
+  height: 44px;
+  overflow: visible;
+}
+.precip-area {
+  fill: var(--accent);
+  opacity: 0.14;
+}
+.precip-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.precip-cap {
+  stroke: var(--accent-soft);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+  opacity: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+.precip-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
-/* ---------------------------------------------------------- spin + result */
+/* ------------------------------------------------------------ spin + result */
 
-.spin-slot:empty {
-  display: none;
+.spin-slot {
+  padding: var(--pad);
 }
 
 .spin-reel {
   margin: 0;
   padding: 16px;
   border: 1px solid var(--accent);
-  border-radius: var(--r-surface);
+  border-radius: var(--r);
   background: var(--accent-wash);
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .spin-name {
+  min-height: 1.4em;
   font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--accent-soft);
-  /* Reserve the line so rapid name swaps do not resize the panel. */
-  min-height: 1.4em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .result {
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  animation: rise 260ms var(--ease);
+  gap: 12px;
+  animation: rise 240ms var(--ease);
 }
-
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
 }
-
 .result-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-
 .result-name {
   margin: 0;
-  font-size: 25px;
+  font-size: 26px;
   font-weight: 600;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
   line-height: 1.15;
 }
 
@@ -851,29 +857,59 @@ code {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin: 4px 0 2px;
+  margin: 0;
   padding-top: 12px;
   border-top: 1px solid var(--line);
 }
 .stat dt {
   font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.14em;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
 .stat dd {
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   font-family: var(--mono);
   font-size: 16px;
   font-variant-numeric: tabular-nums;
 }
 
-/*
- * The shared line block: everything four features want to say about tonight,
- * in one place, in one voice. It sits after the stats and before the warnings
- * because a warning is louder than a note and reading order should match.
- */
+.result-split {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.result-split-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+.result-split-who {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.result-split-value {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.result-split-both,
+.result-split-gap {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.result-split-gap {
+  color: var(--ink-3);
+}
+
 .result-lines {
   display: flex;
   flex-direction: column;
@@ -881,88 +917,49 @@ code {
 }
 .result-line {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--ink-2);
 }
-/* An assumption, not a fact - hours nobody published, a pace nobody measured. */
 .result-line.is-assumed {
   color: var(--ink-3);
 }
-
 .result-warning {
   margin: 0;
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--accent);
 }
 
-/*
- * The dead zone: from the cap to a hundred.
- *
- * Drawn rather than cut, which is the whole decision - a shorter slider would
- * hide what the light is costing, and this shows it. A flat fill, not a blur,
- * so `prefers-reduced-transparency` has nothing to turn off.
- */
-.dial-track.is-capped::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--cap-percent);
-  right: 0;
-  background: rgba(255, 255, 255, 0.05);
-  border-left: 1px dashed var(--line-strong);
-  border-radius: 0 999px 999px 0;
-  pointer-events: none;
-  /* The ceiling slides rather than jumping. It moves at most once every five
-     minutes and never while a hand is on the control, so this is the only
-     moment it is seen moving at all - and a dead zone that snaps into place
-     reads as a glitch rather than as the light running out. */
-  transition: left 420ms var(--ease);
+.result-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
-@media (prefers-reduced-motion: reduce) {
-  .dial-track.is-capped::after {
-    transition: none;
-  }
+.result-share-note {
+  margin: 0;
+  min-height: 1em;
+  font-size: 13px;
+  color: var(--ink-2);
 }
-
-.dial-cap-note {
-  margin: 4px 0 0;
+.result-share-fallback {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--raise);
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--accent-soft);
-  font-variant-numeric: tabular-nums;
+  font-size: 12px;
 }
 
-/*
- * A sentence and, sometimes, the way out of it. The button sits outside the
- * live region above it, so an assertive announcement carries the explanation
- * and the reader reaches the offer by the ordinary Tab.
- */
-.notice-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-/* The switch vocabulary supplies the rest. */
-.guard-row {
-  display: block;
-  padding-top: 2px;
-}
-
-/* ------------------------------------------------ elevation profile */
+/* ------------------------------------------------------ elevation profile */
 
 .profile {
   display: grid;
   gap: 8px;
-  margin: 2px 0;
+  margin: 0;
 }
-/* Positioned, so the transparent scrubber can sit over the SVG. */
 .profile-figure {
   position: relative;
 }
@@ -977,17 +974,11 @@ code {
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0;
   margin: 0;
+  opacity: 0;
   cursor: col-resize;
 }
-/*
- * The global :focus-visible ring lands on an opacity:0 input and is therefore
- * invisible, which would leave the scrubber keyboard-focusable with no focus
- * indicator at all. `:has()` rather than `:focus-within` so a pointer click on
- * the figure does not paint a ring - the same problem `.switch input` already
- * solves the same way further down this file.
- */
+/* The scrubber is opacity 0, so the ring goes on the figure instead. */
 .profile-figure:has(.profile-scrub:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -996,10 +987,10 @@ code {
 .profile-cursor {
   stroke: var(--accent-soft);
 }
-/* Which leg the figure is showing, when that is not the leg the stats count. */
-.profile-note {
+.profile-note,
+.profile-empty {
   margin: 0;
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--ink-3);
 }
 .profile-readout {
@@ -1012,80 +1003,51 @@ code {
   color: var(--ink-3);
 }
 .profile-readout b {
-  color: var(--ink-2);
   font-weight: 500;
-}
-.profile-empty {
-  margin: 0;
-  color: var(--ink-3);
-}
-
-.result-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 2px;
-}
-/* Two rows of two: what to do next on top - spin, or send it - and the two
-   handoffs below. Spin again no longer spans, because Share earns the cell
-   beside it more than the empty space did. */
-
-.result-share-note {
-  margin: 0;
-  font-size: 12.5px;
   color: var(--ink-2);
-  min-height: 1em;
 }
 
-/* Shown only when the clipboard refused, so the reader can select it by hand. */
-.result-share-fallback {
-  width: 100%;
-  background: var(--raise);
-  border: 1px solid var(--line);
-  border-radius: var(--r-control);
-  padding: 8px 10px;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--ink);
-}
+/* ----------------------------------------------------------------- drawers */
 
-/* -------------------------------------------------------------- filters */
-
-.drawer {
-  padding: 4px 16px;
-}
 .drawer > summary {
-  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px var(--pad);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--ink-2);
   cursor: pointer;
   list-style: none;
 }
 .drawer > summary::-webkit-details-marker {
   display: none;
 }
+.drawer > summary:hover {
+  color: var(--ink);
+}
 .drawer > summary::after {
   content: "+";
-  float: right;
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1;
+  color: var(--ink-3);
 }
 .drawer[open] > summary::after {
-  content: "-";
+  content: "\2212";
+}
+.drawer > :not(summary) {
+  padding: 0 var(--pad) var(--pad);
 }
 
 .filters {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-bottom: 16px;
+  gap: 18px;
 }
-
 .switch-row {
   display: flex;
   flex-direction: column;
@@ -1100,20 +1062,20 @@ code {
 }
 .switch input {
   position: absolute;
-  opacity: 0;
   width: 0;
   height: 0;
+  opacity: 0;
 }
 .switch-track {
-  flex: none;
   position: relative;
+  flex: none;
   width: 34px;
   height: 20px;
   margin-top: 1px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: var(--raise);
   border: 1px solid var(--line-strong);
-  transition: background 160ms var(--ease), border-color 160ms var(--ease);
+  transition: background 140ms var(--ease), border-color 140ms var(--ease);
 }
 .switch-thumb {
   position: absolute;
@@ -1123,7 +1085,7 @@ code {
   height: 12px;
   border-radius: 50%;
   background: var(--ink-3);
-  transition: transform 180ms var(--ease), background 160ms var(--ease);
+  transition: transform 180ms var(--ease), background 140ms var(--ease);
 }
 .switch input:checked + .switch-track {
   background: var(--accent);
@@ -1137,16 +1099,19 @@ code {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+.switch input:disabled + .switch-track {
+  opacity: 0.5;
+}
 .switch-text {
   display: flex;
   flex-direction: column;
 }
 .switch-label {
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 500;
 }
 .switch-hint {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--ink-3);
 }
 
@@ -1162,20 +1127,17 @@ code {
   padding: 0;
   margin-bottom: 8px;
 }
-
 .chip {
-  padding: 5px 12px;
+  padding: 6px 12px;
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: none;
   color: var(--ink-2);
-  font-size: 12.5px;
+  font-size: 13px;
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 140ms var(--ease), border-color 140ms var(--ease),
-    background 140ms var(--ease);
+  transition: color 140ms var(--ease), border-color 140ms var(--ease), background 140ms var(--ease);
 }
-.chip:hover {
+.chip:hover:not(:disabled) {
   color: var(--ink);
   border-color: rgba(255, 255, 255, 0.3);
 }
@@ -1185,72 +1147,147 @@ code {
   color: var(--accent-ink);
   font-weight: 500;
 }
+.chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 
-/* ------------------------------------------------------------ map chrome */
+.pool-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pool-list .field-label + .origin-list {
+  margin-bottom: 8px;
+}
 
-.origin-marker {
-  width: 18px;
+/* -------------------------------------------------------------------- meet */
+
+.meet {
+  display: grid;
+  gap: 8px;
+}
+.meet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.meet-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--raise);
+  font-size: 13px;
+  cursor: default;
+}
+.meet-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.meet-actions,
+.meet-presets {
+  display: grid;
+  gap: 6px;
+}
+.invite {
+  display: grid;
+  gap: 8px;
+}
+
+/* -------------------------------------------------------------- dev tuning */
+
+.tuner-tab {
+  align-self: flex-start;
+  margin: 12px var(--pad);
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: none;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.tuner-tab:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.tuner {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: var(--pad);
+}
+.tuner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tuner-switch {
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--line);
+}
+.tuner-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.tuner-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.tuner-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.tuner-hint,
+.tuner-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.tuner-row input[type="range"] {
+  width: 100%;
   height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  border: 4px solid var(--accent);
-  box-shadow: 0 0 0 6px rgba(255, 176, 67, 0.18), 0 3px 12px rgba(0, 0, 0, 0.7);
-  cursor: grab;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: ew-resize;
 }
-.origin-marker:active {
-  cursor: grabbing;
+.tuner-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
-
-.maplibregl-ctrl-group {
-  background: var(--surface-solid) !important;
-  border: 1px solid var(--line) !important;
-  border-radius: var(--r-control) !important;
-  box-shadow: none !important;
+.tuner-actions .button {
+  min-height: 34px;
+  font-size: 13px;
 }
-.maplibregl-ctrl-group button + button {
-  border-top-color: var(--line) !important;
-}
-.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
-  filter: invert(1) brightness(0.85);
-}
-.maplibregl-ctrl-attrib {
-  background: rgba(11, 16, 20, 0.8) !important;
-  color: var(--ink-3) !important;
-  font-size: 10.5px !important;
-}
-.maplibregl-ctrl-attrib a {
-  color: var(--ink-2) !important;
-}
-.maplibregl-ctrl-attrib-button {
-  filter: invert(1) brightness(0.8);
+.tuner-actions .button.is-bake {
+  grid-column: 1 / -1;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
-/* ------------------------------------------------------------- responsive */
-
-/* The bottom sheet covers the map's bottom-right corner, so the attribution
-   moves to the free space at the top — past the status bar and the notch,
-   because the page paints into the cutouts and an attribution behind a
-   Dynamic Island is an obscured attribution, which is the thing moving it was
-   avoiding. Pinch zoom makes the zoom buttons redundant on touch, and
-   dropping them clears the corner. */
-@media (max-width: 899px) {
-  .maplibregl-ctrl-bottom-right {
-    top: calc(10px + env(safe-area-inset-top));
-    bottom: auto;
-  }
-
-  /* The bottom sheet covers the map's lower half, and attribution must never
-     be obscured, so it moves up under MapLibre's own credit. */
-  .reach-attribution {
-    top: calc(38px + env(safe-area-inset-top));
-    bottom: auto;
-  }
-  .maplibregl-ctrl-top-right .maplibregl-ctrl-group {
-    display: none;
-  }
-}
+/* -------------------------------------------------------------- responsive */
 
 @media (max-width: 899px) {
+  :root {
+    --pad: 16px;
+  }
+
+  /* Bottom sheet. The brand row is the handle; collapsed, it is all that stays. */
   .rail {
     top: auto;
     left: 0;
@@ -1258,43 +1295,57 @@ code {
     bottom: 0;
     width: auto;
     max-height: 72dvh;
-    /* Landscape on a notched phone is still this layout, and a flat 12px puts
-       the origin chip under the notch. */
-    padding: 0 max(12px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom))
-      max(12px, env(safe-area-inset-left));
-    gap: 10px;
-    background: linear-gradient(to bottom, transparent, rgba(11, 16, 20, 0.75) 34px);
+    padding-bottom: env(safe-area-inset-bottom);
+    border-right: 0;
+    border-top: 1px solid var(--line-strong);
+    border-radius: 14px 14px 0 0;
   }
-
+  .rail.is-collapsed {
+    overflow: hidden;
+  }
+  .rail.is-collapsed > .panel,
+  .rail.is-collapsed > .spin-slot,
+  .rail.is-collapsed > .drawer,
+  .rail.is-collapsed > .tuner,
+  .rail.is-collapsed > .tuner-tab {
+    display: none;
+  }
   .brand {
-    padding-top: 10px;
+    padding: 12px max(var(--pad), env(safe-area-inset-right)) 10px
+      max(var(--pad), env(safe-area-inset-left));
   }
 
-  /*
-   * The two handoff links stack, unconditionally rather than as a contingency.
-   * `.button` sets `white-space: nowrap`, so "Google Maps" cannot wrap to
-   * relieve pressure: at 320px each grid cell would get about 128px for a label
-   * plus a 16px icon plus its own padding, and the text would be clipped.
-   */
+  /* The sheet covers the bottom corners, so map credits move to the top. */
+  .maplibregl-ctrl-bottom-right {
+    top: calc(10px + env(safe-area-inset-top));
+    bottom: auto;
+  }
+  .reach-attribution {
+    top: calc(38px + env(safe-area-inset-top));
+    bottom: auto;
+  }
+  .map-notice {
+    left: 8px;
+    top: calc(64px + env(safe-area-inset-top));
+    bottom: auto;
+  }
+  .maplibregl-ctrl-top-right .maplibregl-ctrl-group {
+    display: none;
+  }
+
   .result-actions {
     grid-template-columns: 1fr;
   }
-
   .dial-value {
     font-size: 38px;
   }
-
-  /* Thumb targets. Desktop keeps its density; here the chips are what a thumb
-     reaches for and a mis-tap silently changes the candidate pool. Both land
-     at about 41px, matching the origin chip rather than inventing a number. */
+  /* Thumb targets. */
   .chips {
     gap: 8px;
   }
-
   .chip {
     padding: 10px 14px;
   }
-
   .icon-button {
     width: 40px;
     height: 40px;
@@ -1309,276 +1360,4 @@ code {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-
-/* ------------------------------------------------------------ dev tuning */
-
-/* Stripped from production with the component that uses it; kept here rather
-   than inline so it can borrow the panel vocabulary above. */
-.tuner-tab {
-  align-self: flex-start;
-  padding: 4px 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: var(--ink-3);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.tuner-tab:hover {
-  color: var(--ink);
-  border-color: var(--line-strong);
-}
-
-.tuner {
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-  padding: 14px 16px 15px;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-surface);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
-}
-
-.tuner-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.tuner-switch {
-  padding-bottom: 3px;
-  border-bottom: 1px solid var(--line);
-}
-
-.tuner-row {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.tuner-label {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  font-size: 13px;
-}
-
-.tuner-value {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: var(--accent);
-}
-
-.tuner-hint {
-  font-size: 11px;
-  color: var(--ink-3);
-}
-
-.tuner-row input[type="range"] {
-  width: 100%;
-  height: 18px;
-  margin: 0;
-  accent-color: var(--accent);
-  cursor: ew-resize;
-}
-
-.tuner-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.tuner-actions .button {
-  padding: 7px 10px;
-  font-size: 13px;
-}
-/* The one control here that leaves the browser and changes the repo, so it
-   spans the row rather than sitting in a pair with something reversible. */
-.tuner-actions .button.is-bake {
-  grid-column: 1 / -1;
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.tuner-note {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.45;
-  color: var(--ink-3);
-}
-
-/* The conditions line: what the weather is, and what the app did about it.
-   Sits in `.panel`'s own 15px column gap; no new token, no new hue, and
-   nothing here animates. Rule lines borrow `.notice.is-warn`, which is already
-   the text-only warn paragraph `state.locationNotice` uses - `.result-warning`
-   is the icon-plus-text layout and it lives on the card. */
-.conditions {
-  display: block;
-  font-size: 13px;
-  color: var(--ink-2);
-  line-height: 1.45;
-}
-
-.conditions.is-quiet {
-  color: var(--ink-3);
-  font-size: 12.5px;
-}
-
-.conditions-credit {
-  margin-left: 8px;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-/* CC-BY 4.0 asks for credit, so the link is part of the data rather than
-   decoration on it: it inherits the credit's colour and keeps an underline at
-   every size. */
-.conditions-credit a {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-/* Both in reach — the second person.
-   No new tokens, no new hue, no new radius, no keyframes. Distinctness comes
-   from fill and lightness: amber is the only accent, and that is locked at the
-   top of this file. */
-.origin-marker.is-partner {
-  background: transparent;
-  border-color: var(--accent-soft);
-  box-shadow: none;
-  cursor: default;
-}
-.origin-marker.is-hidden {
-  display: none;
-}
-.meet {
-  display: grid;
-  gap: 8px;
-}
-.meet-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-/* `.origin-chip`'s metrics, with none of its interactivity: the partner
-   arrived from a link and the person it belongs to is not here to change it. */
-.meet-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-control);
-  background: var(--raise);
-  font-size: 13px;
-  color: var(--ink);
-  cursor: default;
-}
-.meet-hint {
-  margin: 0;
-  font-size: 12px;
-  color: var(--ink-3);
-}
-.meet-actions,
-.meet-presets {
-  display: grid;
-  gap: 6px;
-}
-/* Two rows, one per side. The grid is fixed so a pending number's skeleton
-   does not move the column its measured neighbour lands in. */
-.result-split {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-}
-.result-split-row {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 4px 10px;
-  align-items: baseline;
-}
-.result-split-who {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.result-split-value {
-  font-variant-numeric: tabular-nums;
-  font-size: 14px;
-  color: var(--ink);
-}
-.result-split-both {
-  margin: 0;
-  font-size: 12.5px;
-  color: var(--ink-2);
-}
-.result-split-gap {
-  margin: 0;
-  font-size: 12.5px;
-  color: var(--ink-3);
-}
-.invite {
-  display: grid;
-  gap: 8px;
-}
-
-/* What the sky is going to do. Sibling of the elevation chart on purpose: same
-   amber, same faint fill, same one-bright-line treatment, so the two read as
-   the same kind of statement about two different things. */
-.precip {
-  margin: 0;
-  display: grid;
-  gap: 4px;
-}
-.precip-chart {
-  width: 100%;
-  height: 44px;
-  display: block;
-  overflow: visible;
-}
-.precip-area {
-  fill: var(--accent);
-  opacity: 0.14;
-}
-.precip-line {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.5;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-}
-/* Dashed, like the partner's contour, and for the same reason: it is a limit
-   somebody else set rather than a thing being measured. */
-.precip-cap {
-  stroke: var(--accent-soft);
-  stroke-width: 1.2;
-  stroke-dasharray: 3 3;
-  opacity: 0.75;
-  vector-effect: non-scaling-stroke;
-}
-.precip-caption {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
 }

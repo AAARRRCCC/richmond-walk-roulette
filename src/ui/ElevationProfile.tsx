@@ -13,47 +13,30 @@ import { playTap } from "../lib/sound";
 import type { ElevationProfile as Profile } from "../lib/route";
 
 export type ElevationProfileProps = {
-  /** The outbound leg, always — including on a round trip. */
+  /** The outbound leg, always, including on a round trip. */
   profile: Profile;
-  /** Only to say so on the figure; the profile itself does not change. */
   roundTrip: boolean;
   hoverMeters: number | null;
   onHover: (meters: number | null) => void;
 };
 
-/** User units. The element is width 100%; the viewBox is what keeps the maths whole. */
+/** viewBox units; the element is width 100%. */
 const W = 300;
 const H = 76;
 
-/**
- * The walk's shape, drawn from the route the map is already showing.
- *
- * There is no "flat" branch anywhere in here, and that is deliberate: a profile
- * whose real range is under 20 m is drawn inside a 20 m window, so its trace
- * sits near the vertical middle and wanders by a few pixels. It reads as flat
- * because it is flat. The floor on the range is the whole mechanism.
- *
- * Input is one `<input type="range">` laid transparently over the chart, which
- * buys pointer drag, touch drag, arrow keys and Home/End for nothing, and gets
- * a real focus ring from the `:has()` rule in the stylesheet — the global one
- * lands on an `opacity: 0` input and is invisible.
- */
+// No "flat" branch: a profile under PROFILE_MIN_RANGE_M is drawn inside that
+// window and reads as flat because it is. The scrubber is a transparent
+// range input over the SVG; its focus ring comes from the `:has()` rule in CSS.
 export function ElevationProfile(props: ElevationProfileProps) {
   const gradientId = useId();
-  // Two result cards in one document must not share a <defs> id.
   const scrubbing = useRef(false);
 
   const { profile } = props;
   const samples = resample(profile.samples, CHART_MAX_POINTS);
   const points = profilePoints(samples, W, H, PROFILE_MIN_RANGE_M);
 
-  /**
-   * The profile's own span, never the trip summary's length.
-   *
-   * They are two measurements of the same walk and they disagree by a few
-   * metres, so using the summary would let the slider's last step index past the
-   * end of `samples`.
-   */
+  // The profile's own span, not the trip summary's: they differ by metres and
+  // the slider must not index past the samples.
   const spanMeters = Math.max(1, (profile.samples.length - 1) * profile.intervalMeters);
 
   const hover = props.hoverMeters;
@@ -139,8 +122,7 @@ export function ElevationProfile(props: ElevationProfileProps) {
           aria-label="Scrub the elevation profile"
           aria-valuetext={`${formatMiles(hoverAt ?? 0)} in, ${formatFeet(elevationAt(profile, hoverAt ?? 0))}`}
           onPointerDown={() => {
-            // One cue when a scrub begins, and nothing per sample: a continuous
-            // drag with a cue per step is a zip, not a control.
+            // One cue per scrub, not per sample.
             if (!scrubbing.current) playTap(true);
             scrubbing.current = true;
           }}
@@ -160,9 +142,6 @@ export function ElevationProfile(props: ElevationProfileProps) {
         />
       </div>
       {props.roundTrip && (
-        /* The two stats above this are doubled and this figure is not, so it
-           says which it is rather than letting the reader work it out from a
-           distance that does not match. */
         <p className="profile-note">The way out. You come back the same way.</p>
       )}
       <figcaption className="profile-readout">

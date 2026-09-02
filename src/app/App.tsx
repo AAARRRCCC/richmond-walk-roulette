@@ -19,9 +19,22 @@ import { OriginPicker } from "../ui/OriginPicker";
 import { Filters } from "../ui/Filters";
 import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
 import { ResultCard, type ResultLine } from "../ui/ResultCard";
-import { DETOUR_LABELS, PLACES, matchesKind, type Place } from "../data/places";
+import { ConditionsLine } from "../ui/ConditionsLine";
+import { DaylightSwitch } from "../ui/DaylightSwitch";
+import { PoolList } from "../ui/PoolList";
+import { EmptyPoolNotice } from "../ui/EmptyPoolNotice";
+import { MeetPanel } from "../ui/MeetPanel";
+import { InviteButton } from "../ui/InviteButton";
+import { TuningPanel } from "../ui/TuningPanel";
+import {
+  DETOUR_LABELS,
+  PLACES,
+  PRESET_ORIGINS,
+  matchesKind,
+  type Origin,
+  type Place,
+} from "../data/places";
 import { contains, metersBetween, pointKey, type LngLat } from "../lib/geometry";
-import type { Json } from "../lib/json";
 import {
   MAX_MINUTES,
   NotConfiguredError,
@@ -40,42 +53,10 @@ import {
   prefetchRoutes,
   routeFailed as routeSettledFailed,
 } from "../lib/route";
-import {
-  applyShare,
-  budgetStep,
-  customOrigin,
-  dialMaximum,
-  dialMinimum,
-  initialSession,
-  outboundFloorMinutes,
-  outboundMinutes,
-  reduce,
-  liveLinkQuery,
-  meetLinks,
-  shareInputFor,
-  type Failure,
-} from "./session";
-import { randomIndex, useSpin } from "./useSpin";
-import { SHARE_PATH, decodeShare, shareUrl, type ShareInput } from "./share";
-import { describeMeetClause, meetSplit } from "./meet";
-import { PRESET_ORIGINS, type Origin } from "../data/places";
 import { formatClock, formatFeet, formatMinutes } from "../lib/format";
-import { describeGeolocationError, judgeFix, type PermissionHint } from "../lib/locate";
-import { useConditions } from "./useConditions";
-import {
-  capFromLight,
-  describeDeadline,
-  describeDusk,
-  describeLight,
-  fitsInLight,
-  type Daylight,
-} from "./daylight";
-import { clockOffsetMs, mergeCaps, setClockOffset, type TimeCap } from "./conditions";
 import {
   WEATHER_ENABLED,
-  applyReport,
   cachedWeather,
-  readReport,
   holdWeather,
   refreshWeather,
   weatherUnavailable,
@@ -87,9 +68,6 @@ import {
   toPoolRules,
   weatherCaps,
 } from "../lib/weather-rules";
-import { ConditionsLine } from "../ui/ConditionsLine";
-import { DaylightSwitch } from "../ui/DaylightSwitch";
-import { describeResult, walkClauses } from "./announce";
 import {
   HOURS_COVERAGE,
   evaluateHours,
@@ -99,7 +77,37 @@ import {
   quantiseToSlot,
 } from "../lib/hours";
 import { solarEvents } from "../lib/solar";
-import { arrivalMs } from "./conditions";
+import { onSoundChange, playPress, playTap, setSoundOn, soundOn } from "../lib/sound";
+import {
+  applyShare,
+  budgetStep,
+  customOrigin,
+  dialMaximum,
+  dialMinimum,
+  initialSession,
+  liveLinkQuery,
+  meetLinks,
+  outboundFloorMinutes,
+  outboundMinutes,
+  reduce,
+  shareInputFor,
+  type Failure,
+} from "./session";
+import { randomIndex, useSpin } from "./useSpin";
+import { SHARE_PATH, decodeShare, shareUrl, type ShareInput } from "./share";
+import { describeMeetClause, meetSplit } from "./meet";
+import { useConditions } from "./useConditions";
+import { useLocate } from "./useLocate";
+import {
+  capFromLight,
+  describeDeadline,
+  describeDusk,
+  describeLight,
+  fitsInLight,
+  type Daylight,
+} from "./daylight";
+import { arrivalMs, mergeCaps, type TimeCap } from "./conditions";
+import { describeResult, walkClauses } from "./announce";
 import {
   REASON_COPY,
   conditionsSignature,
@@ -110,144 +118,31 @@ import {
   type PoolFix,
   type PoolRule,
 } from "./eligibility";
-import { PoolList } from "../ui/PoolList";
-import { EmptyPoolNotice } from "../ui/EmptyPoolNotice";
-import { MeetPanel } from "../ui/MeetPanel";
-import { InviteButton } from "../ui/InviteButton";
-import { TuningPanel } from "../ui/TuningPanel";
-import { onSoundChange, playPress, playTap, setSoundOn, soundOn } from "../lib/sound";
+import { installDevHooks, setDevRepaint } from "./dev";
 
-/**
- * Whether the maintainer instructions are worth showing at all. A stranger
- * meeting an engine outage cannot set an environment variable, and the
- * server's own message names the engine's address, so neither belongs on a
- * deployed page. Compile-time, so the unused branch is stripped and
- * `vite dev --host` from a phone still shows the dev instructions.
- */
-const isDevServer = import.meta.env.DEV;
-
-/**
- * A way to reach dusk and after-dark on purpose, in dev only.
- *
- * Three of this app's states are hard to see deliberately - the dial's dead
- * zone, the after-dark statement, and the fit warning - because reaching them
- * means waiting until evening. `setClockOffset` is already the seam
- * `weather-filters` will use to correct a wrong device clock; this exposes it in
- * dev so the same seam can move the clock forward on demand:
- *
- *   __walkRoulette.clockOffset(4 * 60 * 60 * 1000)   // four hours later
- *   __walkRoulette.clockOffset(0)                     // back to the device
- *
- * Never in a production bundle: the assignment is inside an `import.meta.env.DEV`
- * branch, which Vite folds to `false` and drops entirely.
- */
-/**
- * How the dev hooks below tell React that module state moved. Assigned once by
- * the mounted App; a no-op before that, which is when nothing is on screen to
- * repaint anyway.
- */
-let devRepaint: () => void = () => {};
-
-type DevGlobal = typeof globalThis & {
-  walkRouletteDev?: {
-    clockOffset: (ms: number) => void;
-    readOffset: () => number;
-    weather: (wire: Json) => boolean;
-  };
-};
-
-if (import.meta.env.DEV) {
-  // SAFETY: one debug function attached to the global in a dev-only branch.
-  // The named type above widens `globalThis` by exactly this one optional
-  // property rather than erasing it; nothing is read back from here.
-  (globalThis as DevGlobal).walkRouletteDev = {
-    clockOffset: setClockOffset,
-    readOffset: clockOffsetMs,
-    /**
-     * Push a forecast in by hand, in the wire shape `/api/weather` answers.
-     *
-     * Rain forty minutes out, a heat index in the NWS Danger band and a UV of
-     * nine are the three states this feature exists for, and none of them can
-     * be waited for: two need a season and the third needs a storm. It goes
-     * through `readReport` rather than around it, so what lands on screen has
-     * crossed the same boundary a real forecast crosses.
-     */
-    weather: (wire) => {
-      const parsed = readReport(wire);
-      if (parsed === null) return false;
-      applyReport(parsed);
-      devRepaint();
-      return true;
-    },
-  };
-}
+if (import.meta.env.DEV) installDevHooks();
 
 /** Where the rail stops being a bottom sheet. Must match the stylesheet. */
 const WIDE = "(min-width: 900px)";
 
-/**
- * How many times a picked route may be asked for before the card says so, and
- * how long the first wait is. `fetchWalkingRoute` deliberately does not cache a
- * transient failure, so nothing about the app's state changes when one happens
- * and the effect that asked would otherwise never ask again.
- */
+/** Route requests for a picked place before the card gives up, and the first backoff. */
 const ROUTE_ATTEMPTS = 3;
 const ROUTE_BACKOFF_MS = 900;
 
-/**
- * How long Spin waits for the whole pool before it opens on a partial one.
- *
- * Waiting is the right default - a reel that turns through a subset is a reel
- * misreporting the pool - but waiting forever is worse. A throttled engine
- * answers routes minutes apart, and against one the strict gate never opens
- * at all, which reads as the app being broken rather than the engine being
- * busy. So the wait is bounded, and when it runs out the app says plainly
- * that the reel is short rather than quietly turning through what it has.
- */
+/** How long Spin waits for the whole pool's routes before opening on a partial reel. */
 const ROUTE_WARM_GRACE_MS = 12_000;
 
-/**
- * How many destinations the wide prefetch wave will warm per origin change.
- *
- * 90 sits under `route.ts`'s `CACHE_LIMIT` of 200 with room for the near wave
- * and a spin's worth of misses. It is a cap on cost rather than on correctness:
- * the spin still draws its winner from the full candidate list, and a place past
- * the cap loads its route when it is picked.
- */
+/** Destinations the wide route prefetch warms per origin. Under route.ts's cache limit of 200. */
 const WIDE_PREFETCH_LIMIT = 90;
 
-
-/**
- * `inert`, written by hand. React 18 has no boolean handling for the attribute
- * and its types do not know it at all, so the present-means-on empty string is
- * spread in instead of passed as a prop. This is what takes the dimmed rail
- * out of the tab order during a pin drop; opacity and `pointer-events: none`
- * left every control in it focusable and silently dead.
- */
+/** React 18 has no boolean `inert`; present-means-on. Takes the dimmed rail out of the tab order. */
 const inertWhen = (on: boolean): Record<string, string> => (on ? { inert: "" } : {});
 
-/**
- * A standalone sentence, folded into the middle of a longer one.
- *
- * `REASON_COPY` sentences are written to be read on their own - the card shows
- * them as rows - so they carry a capital and a full stop. `describeResult`
- * joins its clauses and terminates the whole thing, so passing one in whole
- * produced "further than your budget walks.." on screen readers.
- */
-const asClause = (sentence: string): string =>
-  sentence.replace(/\.$/, "").toLowerCase();
+/** A standalone REASON_COPY sentence folded into the middle of a longer one. */
+const asClause = (sentence: string): string => sentence.replace(/\.$/, "").toLowerCase();
 
-/** One object, so a healthy pool does not allocate a fix it will never read. */
 const NO_FIX: PoolFix = { kind: "none" };
 
-/**
- * Outbound walking minutes to every place, from the route cache.
- *
- * Over all of PLACES, deliberately, and not folded into the sweep that computes
- * `drawable` and `settledRoutes`: those run over the *included* pool, which is
- * empty at exactly the moment `suggestFix` needs this. One pass of Map lookups,
- * at the one moment nothing else is happening.
- */
 function cachedWalkMinutes(origin: LngLat): Map<string, number> {
   const minutes = new Map<string, number>();
   for (const place of PLACES) {
@@ -263,44 +158,10 @@ const describe = (cause: unknown): Failure => ({
 });
 
 export function App() {
-  /**
-   * A share link is restored in the lazy initialiser, not in a mount effect.
-   *
-   * An effect would paint the default session first and then jump to the shared
-   * one, so the map would frame twice and the card would appear a beat late.
-   * This way the first frame is already the shared walk.
-   */
+  // Restored in the initialiser so the first frame is already the shared walk.
   const [state, dispatch] = useReducer(reduce, initialSession, (base) =>
     applyShare(base, decodeShare(window.location.search), PLACES, PRESET_ORIGINS),
   );
-  const [locating, setLocating] = useState(false);
-
-  /**
-   * What the Permissions API says, if it says anything.
-   *
-   * A hint, never a gate: Safari reports "prompt" where other browsers report
-   * nothing at all, and a browser without the API leaves this "unknown". The
-   * only thing it changes is the button's label and one early return.
-   */
-  const [permissionHint, setPermissionHint] = useState<PermissionHint>("unknown");
-
-  useEffect(() => {
-    let status: PermissionStatus | null = null;
-    const onChange = (): void => {
-      if (status !== null) setPermissionHint(status.state);
-    };
-    navigator.permissions
-      ?.query({ name: "geolocation" })
-      .then((result) => {
-        status = result;
-        setPermissionHint(result.state);
-        result.addEventListener("change", onChange);
-      })
-      // A rejection or a missing API leaves the hint "unknown", which is the
-      // state that changes nothing.
-      .catch(() => {});
-    return () => status?.removeEventListener("change", onChange);
-  }, []);
   const [wide, setWide] = useState(() => window.matchMedia(WIDE).matches);
   const [filtersOpen, setFiltersOpen] = useState(wide);
   const [railCollapsed, setRailCollapsed] = useState(false);
@@ -308,12 +169,6 @@ export function App() {
   const locationNoticeId = useId();
   const spinRef = useRef<HTMLButtonElement>(null);
 
-  /**
-   * The sheet breakpoint, watched rather than sampled once at mount. Rotating
-   * a tablet across it used to leave the drawer at the other layout's default
-   * and the sheet's collapse control on a rail that is no longer a sheet, so
-   * the drawer's default moves with it.
-   */
   useEffect(() => {
     const query = window.matchMedia(WIDE);
     const onChange = (event: MediaQueryListEvent) => {
@@ -321,28 +176,19 @@ export function App() {
       setFiltersOpen(event.matches);
     };
     query.addEventListener("change", onChange);
-    return () => {
-      query.removeEventListener("change", onChange);
-    };
+    return () => query.removeEventListener("change", onChange);
   }, []);
 
-  /**
-   * The contour and route caches are mutable module state, so these counters
-   * are how a completed fetch reaches React. They are separate on purpose: a
-   * route landing must not invalidate the reach, or every finished route would
-   * rebuild the candidate list and kick off another round of route warming.
-   */
+  // The contour, route and weather caches are module state; these counters are
+  // how a landed fetch reaches React. Separate so a route landing does not
+  // rebuild the reach and restart route warming.
   const [, bumpContours] = useReducer((n: number) => n + 1, 0);
   const [, bumpRoutes] = useReducer((n: number) => n + 1, 0);
-  // Its own counter, for the same reason those two are separate: a landed
-  // forecast must not invalidate the reach or restart route warming.
   const [, bumpWeather] = useReducer((n: number) => n + 1, 0);
   useEffect(() => {
-    if (import.meta.env.DEV) devRepaint = bumpWeather;
+    if (import.meta.env.DEV) setDevRepaint(bumpWeather);
   }, []);
 
-  // The mute is stored, not React state, because the sound engine reads it
-  // outside render. This is how a change reaches the icon.
   const [, bumpSound] = useReducer((n: number) => n + 1, 0);
   useEffect(() => onSoundChange(bumpSound), []);
   const sound = soundOn();
@@ -351,26 +197,10 @@ export function App() {
   const outbound = outboundMinutes(state);
   const meetMode = partner !== null;
 
-  /**
-   * Warm every contour the dial can reach — one batched engine query — so that
-   * moving the dial is a cache read rather than a request.
-   *
-   * **Sequential in meet mode, yours first, from one effect**, and the `await`
-   * between the legs is the point. Yours is the one the map frames on and the
-   * one that puts something true on screen soonest; theirs then turns the
-   * overlap on. It also halves the peak burst against a limiter that charges
-   * per graph expansion rather than per request.
-   *
-   * Nothing at all runs while `originChosen` is false. That flag is the whole
-   * of the "opening an invite costs the recipient nothing" property: without
-   * it this effect would warm DEFAULT_ORIGIN, a house in the Fan the reader
-   * never chose.
-   *
-   * Their leg's failure goes to `partnerFailed` and never to `failed`, because
-   * `failure` is read by the on-demand fetch gate and by `status` — routing an
-   * error from the second leg there would blank the reader's own answer at any
-   * dial position of theirs that had not warmed.
-   */
+  // Warm every contour the dial can reach. Sequential in meet mode, yours
+  // first. Nothing runs before `originChosen`: opening an invite must cost
+  // the recipient nothing. Their leg's failure goes to `partnerFailed` so it
+  // cannot blank the reader's own answer.
   useEffect(() => {
     let cancelled = false;
     const run = async (): Promise<void> => {
@@ -381,15 +211,6 @@ export function App() {
           bumpContours();
         });
       }
-      // Gated on `originChosen` too, and this is the half that is easy to get
-      // wrong: warming THEIR ladder during an invite still costs the
-      // recipient's browser and IP a full 96-contour warm-up for a link they
-      // have not answered - which is exactly what "opening an invite costs
-      // nothing" promises it does not. `meet-in-the-middle` decision 8 asks the
-      // map to frame on the partner's contour alone in this state; that loses
-      // to `multiplayer-links` criterion 5, which is explicit, joint, and the
-      // one carrying the privacy argument. Nothing is drawn until the reader
-      // answers. See HUMAN-REVIEW 3.x.
       if (cancelled || partner === null || !originChosen) return;
       try {
         await prefetchLadder(partner, (progress) => {
@@ -409,169 +230,52 @@ export function App() {
     };
   }, [origin, partner, originChosen]);
 
-  // Read straight from the cache on every render. These are Map lookups plus a
-  // point-in-polygon sweep over 62 places, which is cheaper than the
-  // bookkeeping memoising them would need against an external cache. The
-  // whole ladder is prefetched, so during a scrub this is a hit on every
-  // frame and the contour and the readout track the dial exactly.
-  /**
-   * The lower end of the range, in outbound minutes, or null for no lower
-   * bound. `cachedReach` takes it from here and does the rest: it divides its
-   * bands across the range rather than the budget, punches the floor contour
-   * out of each one, and measures the area from what is left.
-   */
-  /**
-   * The one clock. Frozen during a throw: a minute boundary crossed mid-reel
-   * would move the cap, which moves the budget, which moves the reach, which
-   * changes the pool the reel is already turning through.
-   */
-  /**
-   * True while a hand is on the dial. Not in `Session`: it is a fact about a
-   * gesture in progress, nothing derives from it, and a reducer that knew about
-   * pointer state would be the wrong shape of thing entirely.
-   */
+  // Cache reads happen per render, unmemoised: the caches are mutable and a
+  // dependency array cannot see them.
   const [scrubbing, setScrubbing] = useState(false);
   const conditions = useConditions(origin, state.spinning || scrubbing);
 
-  /**
-   * The forecast, read straight from module state like `reach` and `route`.
-   *
-   * The refresh is driven by the minute tick rather than by a mount effect, so
-   * a tab left open keeps up without a second timer, and `refreshWeather` is a
-   * no-op in the common case. The hold is what stops a forecast landing
-   * mid-throw from moving the pool under a reel that is already turning.
-   */
   const report = cachedWeather();
   useEffect(() => {
     refreshWeather(bumpWeather);
   }, [conditions.atMs]);
   useEffect(() => {
-    // The release can hand back a report that landed during the throw, and
-    // nothing else is going to announce it.
     if (holdWeather(state.spinning)) bumpWeather();
   }, [state.spinning]);
 
   const weather = deriveWeatherRules(report, {
     nowMs: conditions.atMs,
-    // The walk the reader ASKED for, not the one a cap left them with. Feeding
-    // the capped budget back in is a loop that eats itself: the rain cap
-    // narrows the window, the window no longer contains the onset, the rule
-    // stops firing, the cap lifts, and the whole thing starts again on the next
-    // render. Seen doing exactly that before this line said `requested`.
+    // The requested budget, not the capped one: feeding the cap back in oscillates.
     budgetMinutes: state.requestedBudgetMinutes,
     dialMinimumMinutes: dialMinimum(state.roundTrip),
     weatherAware: state.weatherAware,
   });
 
-  /**
-   * When the pool judges you would get there.
-   *
-   * Quantised to the half hour, which is the entire mechanism keeping the
-   * candidate list still between slot boundaries: `conditions.atMs` advances
-   * every minute, and a pool that moved with it would churn `candidateKey` once
-   * a minute and fire the spin-abort effect for no reason a reader can see.
-   *
-   * The dial's outbound budget rather than a per-place route duration: routes
-   * arrive asynchronously, and a pool that depended on them would shrink and
-   * grow as they landed. The card judges the one walk you actually got, at the
-   * settled duration, and is allowed to disagree - see below.
-   */
+  // Arrival quantised to the half hour, so the pool does not churn every minute.
   const poolArrivalMs = quantiseToSlot(arrivalMs(conditions.atMs, outbound * 60));
   const poolClock = hoursClock(poolArrivalMs);
   const poolSun = solarEvents(poolArrivalMs, origin.lat, origin.lng);
 
   const floorOutbound = outboundFloorMinutes(state);
   const reach = originChosen ? cachedReach(origin, outbound, floorOutbound ?? 0) : null;
-  /**
-   * Their reach at the same budget, and **deliberately with no floor.** This is
-   * the one line in this file whose obvious version is wrong.
-   *
-   * `cachedReach` subtracts the floor contour *around the origin it is given*,
-   * so passing `floorOutbound` here punches a hole around **the other person's
-   * house** — and every place near their start then fails the containment test
-   * and is reported as `out-of-their-reach`, "Outside the other person's
-   * reach.", about the places that are most emphatically in it. A floor is a
-   * preference about the reader's own walk ("make me go at least this far"). It
-   * is a fact about one walker and has no meaning applied to the other. Yours
-   * keeps its floor; theirs never has one.
-   */
+  // No floor on theirs: `cachedReach` punches the floor around the origin it
+  // is given, which would hole the partner's own neighbourhood.
   const partnerReach = partner === null ? null : cachedReach(partner, outbound, 0);
-
-  /**
-   * The floor contour itself, so "too close" can be told apart from "too far".
-   * The bands already carry the floor as a hole, so containment alone cannot
-   * distinguish them. A warm-cache lookup on a rung the prefetch already holds.
-   */
   const floorPolygons =
     floorOutbound === null
       ? null
       : (cachedReach(origin, floorOutbound)?.bands.at(-1)?.polygons ?? null);
 
-  /**
-   * Where siblings plug in. Chunks 3, 6, 7 and 8 each push one `PoolRule` here
-   * rather than adding an argument to a filter function, which is what keeps
-   * seven filters down to one explanation.
-   *
-   * Anything added here owes a `signature` that changes exactly when its
-   * verdicts could and never per render - see `signature.test.ts`.
-   *
-   * Readonly, and built as a literal rather than pushed into: the React
-   * Compiler traces this array through `conditions` to `pool` to `candidates`
-   * to `candidateKey`. A mutable binding along that path is a value the
-   * compiler cannot prove stable.
-   */
-  /**
-   * The climb of the walk to a place, as far as it is known right now.
-   *
-   * Three states, and the difference between the last two is the whole design:
-   * `undefined` means nothing has settled yet, `"unmeasurable"` means something
-   * settled and carried no usable profile. Read from the caches per render with
-   * no memoisation, per the house rule - the caches are mutable and a dependency
-   * array cannot see them.
-   *
-   * Round trip does not enter into it. Doubling ascent and doubling distance
-   * leaves metres per kilometre unchanged, so only the absolute floor would
-   * move; banding on the outbound keeps Easy meaning the same thing with the
-   * switch either way.
-   */
+  // `undefined`: not settled. `"unmeasurable"`: settled with no usable profile.
   const climbOf = (place: Place): ClimbBand | "unmeasurable" | undefined => {
     const cached = cachedRoute(origin, place);
     if (cached === undefined) return routeSettledFailed(origin, place) ? "unmeasurable" : undefined;
     if (cached === null || cached.profile === null) return "unmeasurable";
     return classifyClimb(cached.profile.ascentMeters, cached.distanceMeters);
   };
-
-  /**
-   * How many candidates have a settled answer about their climb.
-   *
-   * Part of the rule's signature, and the reason it is a count rather than a
-   * timestamp: it changes when a route settles and at no other moment, which is
-   * exactly when the rule's verdicts could have moved. A clock here would churn
-   * the memo, and a churning memo makes spinning impossible - see
-   * `signature.test.ts`.
-   */
   const climbSettled = PLACES.filter((place) => climbOf(place) !== undefined).length;
 
-  /**
-   * The budget the map is actually drawn at, when something is capping it.
-   *
-   * Null when nothing binds - including the case where a cap exists but sits
-   * above where the reader left the dial, which is not a trim and must not be
-   * described as one. Every weather sentence names this number and no other, so
-   * a rule whose own cap was not the binding one still says what the reader is
-   * looking at rather than advertising a number that never happened.
-   */
   const cappedTo = dialMaximum(state);
-  /**
-   * The walk the reader is actually on.
-   *
-   * It used to be "the cap, when a cap was binding", because a weather rule's
-   * sentence reported a trim. Weather no longer trims, so the sentence warns
-   * instead - and what it has to warn ABOUT is the walk on the dial, not the
-   * window the rule would once have imposed. Daylight can still move the dial,
-   * and `budgetMinutes` is already the clamped value when it does, so this is
-   * the one number that is true either way.
-   */
   const appliedBudget = state.budgetMinutes;
 
   const weatherPoolRules = toPoolRules(weather, {
@@ -581,13 +285,24 @@ export function App() {
     clear: () => dispatch({ type: "toggleWeatherAware" }),
   });
 
-  /**
-   * The tier filter, as a rule rather than a fifth argument to a filter
-   * function. Its signature is the chip itself: the verdict for a place depends
-   * on nothing else, so it changes exactly when the reader presses one.
-   */
-  const kindRule: readonly PoolRule[] =
-    state.kind === "any"
+  // Every rule's signature changes exactly when its verdicts could, never per render.
+  const rules: readonly PoolRule[] = [
+    ...(state.hideClosed
+      ? [
+          {
+            id: "closed",
+            reason: "closed",
+            active: true,
+            clearLabel: "Include closed places",
+            clear: () => dispatch({ type: "toggleHideClosed" }),
+            signature: `${poolClock.slot}|${poolClock.date}`,
+            // `unknown` is never excluded; most places carry no schedule.
+            excludes: (place: Place) =>
+              !isOpenEnough(evaluateHours(hoursFor(place.id), poolClock, poolSun, HOURS_COVERAGE)),
+          } satisfies PoolRule,
+        ]
+      : []),
+    ...(state.kind === "any"
       ? []
       : [
           {
@@ -597,39 +312,9 @@ export function App() {
             clearLabel: "Any kind of place",
             clear: () => dispatch({ type: "kind", kind: "any" }),
             signature: state.kind,
-            excludes: (place) => !matchesKind(place, state.kind),
-          },
-        ];
-
-  /**
-   * Shut when you would get there.
-   *
-   * The signature is the half-hour slot plus the switch, so it moves twice an
-   * hour rather than every minute - and the pool it feeds is what `candidateKey`
-   * is built from.
-   *
-   * `unknown` is never excluded. Most of the list has no schedule in OSM, so a
-   * rule that filtered on anything but a definite "closed" would silently delete
-   * most of the destinations.
-   */
-  const closedRule: readonly PoolRule[] = state.hideClosed
-    ? [
-        {
-          id: "closed",
-          reason: "closed",
-          active: true,
-          clearLabel: "Include closed places",
-          clear: () => dispatch({ type: "toggleHideClosed" }),
-          signature: `${poolClock.slot}|${poolClock.date}`,
-          excludes: (place) =>
-            !isOpenEnough(evaluateHours(hoursFor(place.id), poolClock, poolSun, HOURS_COVERAGE)),
-        },
-      ]
-    : [];
-
-  const rules: readonly PoolRule[] = [
-    ...closedRule,
-    ...kindRule,
+            excludes: (place: Place) => !matchesKind(place, state.kind),
+          } satisfies PoolRule,
+        ]),
     ...weatherPoolRules,
     ...(state.climb === "any"
       ? []
@@ -641,17 +326,12 @@ export function App() {
             clearLabel: "Any climb",
             clear: () => dispatch({ type: "climb", climb: "any" }),
             signature: `${state.climb}|${climbSettled}`,
-            // Deferred, because it decides on data that arrives per place. A
-            // place it has not measured yet is held out of the pool but stays in
-            // `baseIncluded`, so the "Measuring climb 3/12" denominator does not
-            // count downward while the reader watches it.
+            // Deferred: an unmeasured place passes provisionally so the pool
+            // does not shrink and grow as routes land.
             deferred: true,
-            excludes: (place) => {
+            excludes: (place: Place) => {
               const band = climbOf(place);
-              // Not measured yet passes provisionally: excluding it would make
-              // the pool shrink and grow as routes land.
-              if (band === undefined) return false;
-              return band !== state.climb;
+              return band !== undefined && band !== state.climb;
             },
           } satisfies PoolRule,
         ]),
@@ -670,15 +350,8 @@ export function App() {
   const candidateKey = pool.includedKey;
   const picked = PLACES.find((place) => place.id === state.pickedId) ?? null;
 
-  /**
-   * A dial position the warm-up missed still has to work.
-   *
-   * Held until the warm-up reports done, because on a cold start this effect
-   * and `prefetchLadder` would otherwise race: the ladder is one static
-   * snapshot away, but this would already have asked the engine for the same
-   * contours, which against a stock contour limit is fourteen queries for
-   * something about to arrive for free.
-   */
+  // A dial position the warm-up missed. Held until the warm-up reports done
+  // so a cold start does not race the snapshot with engine queries.
   const missing = reach === null && state.warmed >= 1;
   useEffect(() => {
     if (!missing || failure) return;
@@ -695,32 +368,19 @@ export function App() {
     };
   }, [missing, failure, origin, outbound, floorOutbound]);
 
-  /**
-   * Warm the routes the reel could show *now*, as soon as the current contour
-   * lands. Waiting for the whole ladder would be too late: the widest contour
-   * arrives near the end of the warm-up, and a spin before then would tick
-   * through names with no line on the map. Guarded per origin and candidate set
-   * so a completed route cannot start another wave.
-   */
+  // Warm routes for the current pool as soon as its contour lands.
   const warmedNow = useRef("");
   useEffect(() => {
     const key = `${pointKey(origin)}|${candidateKey}`;
     if (candidateKey === "" || warmedNow.current === key) return;
     warmedNow.current = key;
-    // A Set, built once. The obvious `.includes()` inside the filter is O(n^2),
-    // which at 250 places is ~62,500 string comparisons every time this effect
-    // runs - and it runs on every pool change.
     const wanted = new Set(candidateKey.split(","));
-    const warming = PLACES.filter((place) => wanted.has(place.id));
-    void prefetchRoutes(origin, warming, bumpRoutes);
+    void prefetchRoutes(origin, PLACES.filter((place) => wanted.has(place.id)), bumpRoutes);
   }, [candidateKey, origin]);
 
-  /**
-   * Then widen to every place the dial could ever reach from here, so pushing
-   * the dial outward does not start the route warm-up over.
-   */
-  const widest = cachedReach(origin, MAX_MINUTES);
-  const widestReady = widest !== null;
+  // Then widen to the nearest places inside the 100-minute contour, capped for
+  // the route cache and the rate limiter. A place past the cap loads on pick.
+  const widestReady = cachedReach(origin, MAX_MINUTES) !== null;
   const warmedWide = useRef("");
   useEffect(() => {
     const key = pointKey(origin);
@@ -728,15 +388,6 @@ export function App() {
     warmedWide.current = key;
     const outermost = cachedReach(origin, MAX_MINUTES)?.bands.at(-1);
     if (!outermost) return;
-    // Nearest first, then capped. Uncapped, this wave is one `/route` call per
-    // place inside the 100-minute contour - at 250 places, 250 rate-limit units
-    // per origin change against a route cache that holds 200.
-    //
-    // The cap is about the cache and the limiter, not about correctness: a place
-    // past it simply loads its route when it is picked, through the existing
-    // retry effect. What it costs is honest and worth naming - `CACHE_LIMIT` was
-    // sized so that revisiting a start stays instant for "a few" origins, and a
-    // 90-place wave plus a near wave makes that about two rather than three.
     const reachable = PLACES.filter((place) => contains(outermost.polygons, place))
       .map((place) => ({ place, meters: metersBetween(origin, place) }))
       .toSorted((a, b) => a.meters - b.meters)
@@ -745,48 +396,19 @@ export function App() {
     void prefetchRoutes(origin, reachable, bumpRoutes);
   }, [widestReady, origin]);
 
-  /**
-   * Candidates that already have a line to draw. The reel shows only these, so
-   * every tick puts a real route on the map. The winner is still drawn from the
-   * full candidate list: restricting the draw to whatever loaded first would
-   * quietly bias the result toward nearby places.
-   */
+  // The reel shows only candidates with a drawable route; the winner is still
+  // drawn from the full list so loading order cannot bias it.
   const drawable = candidates.filter((place) => cachedRoute(origin, place));
 
-  /**
-   * The pool before the climb filter measured anything.
-   *
-   * Everything that counts progress keys on this rather than on `candidates`:
-   * `candidates` shrinks as measurements land, so a denominator taken from it
-   * ticks down on both halves at once and the prefetch re-waves on every
-   * settling route.
-   */
+  // Progress counts key on the pool before the climb filter measured anything,
+  // so the denominator does not tick down as measurements land.
   const basePool = pool.baseIncluded;
-
-  /**
-   * A candidate has settled when the question has an answer, whatever it is: a
-   * route, a cached "there is no walking route here", or attempts spent on a
-   * failure. Spin waits for all of them.
-   *
-   * It used to open as soon as one route landed, which meant the reel ticked
-   * through whichever places happened to be back and silently skipped the
-   * rest - so the same origin gave a different set of possible winners
-   * depending on when you pressed it. That is the reel misrepresenting the
-   * pool, which is the one thing this app is built not to do. Waiting costs a
-   * second or two on a cold origin and makes the throw honest.
-   */
   const settledRoutes = basePool.filter(
     (place) => cachedRoute(origin, place) !== undefined || routeSettledFailed(origin, place),
   ).length;
   const routesPending = basePool.length > 0 && settledRoutes < basePool.length;
 
-  /**
-   * Which pool the wait has run out for, rather than a flag that has to be
-   * cleared. A new origin or a new filter set makes its own key, so it starts
-   * its own full wait simply by not matching - nothing has to remember to
-   * reset, and a timer left over from the previous pool cannot open the gate
-   * for this one.
-   */
+  // The grace is keyed per pool, so a new origin or filter set starts its own wait.
   const poolKey = `${pointKey(origin)}|${pool.baseKey}`;
   const [graceOverFor, setGraceOverFor] = useState<string | null>(null);
   useEffect(() => {
@@ -795,31 +417,22 @@ export function App() {
   }, [poolKey]);
   const warmGraceOver = graceOverFor === poolKey;
 
-  /**
-   * With a climb filter on there is no grace: the answer depends on a
-   * measurement, so opening the gate early would offer a pool that is a
-   * different pool a second later. Without one, the existing grace stands.
-   */
+  // With a climb filter on there is no grace: the pool depends on the measurement.
   const routesWarming = routesPending && (state.climb !== "any" || !warmGraceOver);
-  /** The wait ran out with routes still missing, so the reel will be short. */
   const reelIsShort = routesPending && warmGraceOver;
 
   const { showing, run: runSpin, cancel: cancelSpin } = useSpin(
     useCallback((place: Place) => dispatch({ type: "spinEnd", pickedId: place.id }), []),
   );
 
-  // The reel drives the map while it turns, so you watch candidate walks flick
-  // past instead of an empty map that only draws a line once it stops.
   const active = state.spinning ? showing : picked;
   const activeRoute = active ? cachedRoute(origin, active) : null;
   const route = activeRoute ?? null;
   const routeLoading = active !== null && activeRoute === undefined;
 
-  // The warm-up covers every reachable place, but a pick can outrun it.
   const pickedId = picked?.id ?? null;
   const pickedRouteMissing = picked !== null && cachedRoute(origin, picked) === undefined;
   const attempt = state.routeAttempt;
-  /** Attempts spent with nothing to draw. The card says so rather than shimmering. */
   const routeFailed = pickedRouteMissing && attempt >= ROUTE_ATTEMPTS;
 
   useEffect(() => {
@@ -828,13 +441,10 @@ export function App() {
     let timer = 0;
     void fetchWalkingRoute(origin, picked).then(() => {
       if (cancelled) return;
-      if (!routeMissed(origin, picked)) {
+      if (!routeSettledFailed(origin, picked)) {
         bumpRoutes();
         return;
       }
-      // Backed off rather than re-asked at once: a warm-up burst is exactly
-      // when the engine is most likely to be rate limiting, and the attempt
-      // count is the only thing here that can make this effect run again.
       timer = window.setTimeout(
         () => dispatch({ type: "routeAttempt", attempt: attempt + 1 }),
         ROUTE_BACKOFF_MS * (attempt + 1),
@@ -846,32 +456,8 @@ export function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pickedId, pickedRouteMissing, origin, attempt]);
-  /**
-   * Plain function: `candidates` and `drawable` are rebuilt each render from
-   * the caches, so a useCallback would memoise on values the compiler cannot
-   * prove stable.
-   *
-   * The winner is drawn here rather than inside the animation so its route can
-   * start loading immediately. A route takes a few hundred milliseconds and the
-   * reel runs for 1.5 seconds, so the line is drawn by the time it lands.
-   *
-   * The `drawable` guard is here, not only on the button, because Spin again in
-   * the result card calls this directly.
-   */
-  /**
-   * Their walk to the picked place, and **only** to the picked place.
-   *
-   * No partner route prefetch anywhere: their minutes are needed in exactly one
-   * spot, the result card, for the place that won. That is what keeps the felt
-   * cost from doubling and it resolves three hazards at once — `warmedNow` and
-   * `warmedWide` stay keyed on your origin because there is no second wave to
-   * guard, the route LRU is not asked to hold two origins' worth of the pool,
-   * and the Spin gate keeps its meaning and its timer.
-   *
-   * A failure here is swallowed into a dash on the card. Not into `failure` and
-   * not into `partnerFailure` either: a missing route to one destination is one
-   * unknown number, not a broken leg.
-   */
+
+  // Their route to the picked place only. A failure here is a dash on the card.
   useEffect(() => {
     if (partner === null || picked === null) return;
     if (cachedRoute(partner, picked) !== undefined) return;
@@ -908,124 +494,40 @@ export function App() {
     runSpin(winner, drawable, ready, origin);
   };
 
-  // Abort a spin whose pool changed underneath it: landing on a place that is
-  // no longer eligible would contradict the dots on the map.
+  // Abort a spin whose pool changed underneath it.
   const lastKeyRef = useRef(candidateKey);
   useEffect(() => {
     if (lastKeyRef.current === candidateKey) return;
     lastKeyRef.current = candidateKey;
     if (state.spinning) {
       cancelSpin();
-      // `spinCancel` raises `spinAborted`: `spinStart` already cleared the
-      // pick, so without a word in the slot the reel simply vanishes - a press
-      // cue and no landing cue, the one gesture in the app that opens and
-      // never closes.
       dispatch({ type: "spinCancel" });
     }
   }, [candidateKey, state.spinning, cancelSpin]);
 
-  /**
-   * Anything that ends a spin from outside the animation, changing origin or
-   * clicking a place on the map, only flips the session flag. Without this the
-   * frame loop keeps running and later lands its own stale winner on top of
-   * whatever the user actually did.
-   *
-   * Layout effect, not a passive one: passive effects run after paint, and a
-   * frame callback queued before the commit would fire in between and still
-   * get to land.
-   */
+  // Layout effect: a frame callback queued before the commit must not land a stale winner.
   useLayoutEffect(() => {
     if (!state.spinning) cancelSpin();
   }, [state.spinning, cancelSpin]);
 
-  /**
-   * Pin drop had no keyboard exit at all: the marker is aria-hidden and not
-   * focusable, and the only other ways out are a map click or a marker drag.
-   * The reducer's cancel case was written and never dispatched.
-   */
   useEffect(() => {
     if (!state.pickingOrigin) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") dispatch({ type: "cancelPickOrigin" });
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [state.pickingOrigin]);
 
-  const useMyLocation = useCallback(() => {
-    if (!("geolocation" in navigator)) {
-      dispatch({
-        type: "locationNotice",
-        notice: {
-          message: "This browser can't share a location. Drop a pin on the map instead.",
-          tone: "warn",
-          suggest: null,
-        },
-      });
-      return;
-    }
-
-    // A denied permission cannot prompt, so calling would produce nothing at
-    // all - a button that visibly does not work, which is the entire class of
-    // failure this rewrite exists to remove. Say why instead.
-    if (permissionHint === "denied") {
-      dispatch({
-        type: "locationNotice",
-        notice: describeGeolocationError(1, window.isSecureContext),
-      });
-      return;
-    }
-
-    /**
-     * Read before clearing, because it decides whether a cached fix is
-     * acceptable.
-     *
-     * A cached fix carries its *original* accuracy, so a stale 250 m wifi fix is
-     * just as eligible for instant replay as a good one. With a flat
-     * `maximumAge`, somebody pressing again after an accuracy refusal gets the
-     * identical refusal back instantly with no new acquisition attempted. So:
-     * the first press accepts a minute-old fix, free and indistinguishable at
-     * this app's resolution, and any press made while a notice is standing
-     * forces a fresh one.
-     */
-    const retry = state.locationNotice !== null;
-
-    setLocating(true);
-    dispatch({ type: "locationNotice", notice: null });
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false);
-        const outcome = judgeFix({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          accuracyMeters: position.coords.accuracy,
-        });
-        if (outcome.kind === "rejected") {
-          dispatch({ type: "locationNotice", notice: outcome.error });
-          return;
-        }
-        // The origin action clears the notice field, so a caveat dispatched
-        // first would vanish. This order is load-bearing.
-        dispatch({ type: "origin", origin: outcome.origin });
-        if (outcome.caveat !== null) {
-          dispatch({ type: "locationNotice", notice: outcome.caveat });
-        }
-      },
-      (error) => {
-        setLocating(false);
-        dispatch({
-          type: "locationNotice",
-          notice: describeGeolocationError(error.code, window.isSecureContext),
-        });
-      },
-      { enableHighAccuracy: true, timeout: 15_000, maximumAge: retry ? 0 : 60_000 },
-    );
-    // Both are read at call time and both change what the call does, so they
-    // belong in the deps rather than being smuggled in through a ref.
-    // `OriginPicker` is not memoised, so a fresh identity costs nothing.
-  }, [permissionHint, state.locationNotice]);
+  const {
+    locate: useMyLocation,
+    locating,
+    permissionHint,
+  } = useLocate({
+    notice: state.locationNotice,
+    onOrigin: useCallback((next: Origin) => dispatch({ type: "origin", origin: next }), []),
+    onNotice: useCallback((notice) => dispatch({ type: "locationNotice", notice }), []),
+  });
 
   const moveOrigin = useCallback((at: LngLat) => {
     dispatch({ type: "origin", origin: customOrigin(at) });
@@ -1033,44 +535,21 @@ export function App() {
 
   const outer = reach?.bands[reach.bands.length - 1];
   const withinBudget = !picked || !outer || contains(outer.polygons, picked);
-  // A cached contour outranks a failure. One position that exhausted its
-  // retries should not put the whole panel in an error state while the dial is
-  // sitting on a position that is perfectly warm.
+  // A cached contour outranks a failure from another dial position.
   const status: ReachStatus = !originChosen
-    ? // Renders nothing at all rather than a skeleton pair promising a
-      // measurement nobody asked for.
-      "idle"
+    ? "idle"
     : reach
-    ? "ready"
-    : failure
-      ? failure.configured
-        ? "error"
-        : "not-configured"
-      : "loading";
+      ? "ready"
+      : failure
+        ? failure.configured
+          ? "error"
+          : "not-configured"
+        : "loading";
 
-  /**
-   * The one line a screen reader gets, derived rather than queued.
-   *
-   * The reel is aria-hidden and the card is no longer a live region: between
-   * them the winner was read twice and every one of the forty name flips
-   * before it. This stays empty for the length of a throw and fills once the
-   * route settles, so the sentence is complete on first read and a second
-   * throw onto the same place still reads as a new result.
-   *
-   * A skeleton means "still coming"; once the attempts are spent it is a lie,
-   * which is why a failed route composes a line rather than holding this back.
-   */
   const routePending = routeLoading && !routeFailed;
   const pickedVerdict = picked ? (pool.verdicts.get(picked.id) ?? null) : null;
 
-  /**
-   * Does the walk on screen finish before civil dusk?
-   *
-   * Judged only against a *measured* walk: while the route is pending there is
-   * nothing to accuse, and the card is showing skeletons anyway. Note what is
-   * absent - `state.beforeDark`. The warning fires whether or not the mode is
-   * on, because the mode is about clamping and the warning is about truth.
-   */
+  // Judged against the measured walk, whether or not the before-dark mode is on.
   const walkMinutesNow =
     route === null
       ? null
@@ -1080,38 +559,10 @@ export function App() {
       ? true
       : fitsInLight(conditions.light, walkMinutesNow);
 
-  /**
-   * Where the reader is scrubbing the elevation chart, in metres along it.
-   *
-   * Not in `Session`: it is transient pointer state with no bearing on the walk,
-   * and putting it in the reducer would re-run every derivation on every frame
-   * of a drag.
-   */
-  /**
-   * The cap, derived in render and dispatched by a one-value effect.
-   *
-   * A `number | null` in the deps, so it compares by value and the effect runs
-   * only when the cap actually moves - not once a minute. The `spinning` guard
-   * is load-bearing: a cap that moves the budget mid-throw changes the reach,
-   * which changes `candidateKey`, which fires the spin-abort effect. A throw is
-   * a couple of seconds; the minute can wait, and because `state.spinning` is in
-   * the deps the pending cap lands on the falling edge of the reel.
-   */
+  // On the CAP_GRID, not the dial step, so the ceiling does not fall a minute every minute.
   const lightCapMinutes = state.beforeDark
-    ? // CAP_GRID_MINUTES, not the dial's own step. At a step of one the ceiling
-      // fell a minute every minute - a control that fidgets under an idle hand,
-      // and the reason the clamp was described as jerking. `weather-rules`
-      // arrived at the same number for the same reason and says so at length;
-      // the cost is being at most four minutes more conservative about dusk,
-      // which is the safe direction to be wrong in.
-      capFromLight(
-        conditions.light,
-        state.roundTrip,
-        dialMinimum(state.roundTrip),
-        CAP_GRID_MINUTES,
-      )
+    ? capFromLight(conditions.light, state.roundTrip, dialMinimum(state.roundTrip), CAP_GRID_MINUTES)
     : null;
-
   const lightCap: TimeCap | null =
     lightCapMinutes === null || conditions.light.events.civilDuskMs === null
       ? null
@@ -1120,51 +571,26 @@ export function App() {
           reason: "daylight",
           untilMs: conditions.light.events.civilDuskMs,
         };
-
-  // One array, one cap, one clamp. Rain, storm, heat and cold arrive here
-  // rather than through a second clamp path of their own, which is what keeps
-  // the dial answering to one condition at a time instead of two competing
-  // ones. `mergeCaps` takes the earliest deadline; ties go to the shorter walk.
   const timeCap = mergeCaps([lightCap, ...(state.weatherAware ? weatherCaps(weather) : [])]);
 
+  // Not during a throw: a moved cap changes the pool under the reel.
   useEffect(() => {
     if (state.spinning) return;
     dispatch({ type: "timeCap", cap: timeCap });
-    // The cap's own fields are the value; the object is rebuilt every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeCap?.minutes, timeCap?.reason, timeCap?.untilMs, state.spinning]);
 
+  // A scrub belongs to the pick it was made on.
   const [hover, setHover] = useState<{ pickedId: string | null; meters: number | null }>({
     pickedId: null,
     meters: null,
   });
-  // Reset by ownership rather than by an effect: the scrub belongs to the place
-  // it was made on, so a hover recorded against a different pick is simply not
-  // this pick's hover. An effect calling setState here would render twice on
-  // every pick and put a stale dot on the map for one frame.
   const hoverMeters = hover.pickedId === state.pickedId ? hover.meters : null;
   const setHoverMeters = (meters: number | null): void =>
     setHover({ pickedId: state.pickedId, meters });
 
-  /**
-   * The card's shared line block, in the fixed order the plan sets: conditions,
-   * light, hours, handoff, meet. Empty until chunk 4 contributes the first one -
-   * the block renders nothing at all rather than an empty box.
-   */
-  /**
-   * The card's own verdict, and it is allowed to disagree with the pool.
-   *
-   * The pool judges at the dial's outbound budget, quantised to the half hour.
-   * This judges at the settled route duration, unquantised - a different and
-   * better number. So a place can survive "Skip closed places" and still land
-   * showing "Likely closed when you arrive", when the real walk is longer than
-   * the dial's budget or the arrival crosses a closing time inside the same
-   * slot.
-   *
-   * That is not a bug to hide. The filter is a coarse pre-sort over 242 places;
-   * the card is the honest answer about the one walk the reader actually got,
-   * and it must never be silenced to protect the filter's story.
-   */
+  // The card judges hours at the settled route duration, unquantised, and is
+  // allowed to disagree with the pool's half-hour pre-sort.
   const cardArrivalMs = arrivalMs(conditions.atMs, route?.durationSeconds ?? outbound * 60);
   const pickedHours =
     picked === null
@@ -1175,52 +601,29 @@ export function App() {
           solarEvents(cardArrivalMs, origin.lat, origin.lng),
           HOURS_COVERAGE,
         );
+  const closedByPool =
+    pickedVerdict !== null && !pickedVerdict.included && pickedVerdict.reasons.includes("closed");
 
   const resultLines: readonly ResultLine[] = [
     ...(weather.headline === null
       ? []
-      : [
-          {
-            // First in the block's fixed order, and a fact: it is a
-            // measurement somebody else took, reported unchanged.
-            key: "conditions" as const,
-            text: weather.headline,
-            tier: "fact" as const,
-          },
-        ]),
+      : [{ key: "conditions" as const, text: weather.headline, tier: "fact" as const }]),
     ...(route !== null && !routePending
       ? [
           {
-            // The duration repeated from the stat directly above, deliberately.
-            // A stat is a label-over-value pair that is scanned in a grid; a
-            // sentence is read. "sunset in 40" beside a bare "52 min" in a
-            // column is two facts, and "52 min out and back · sunset in 40" is
-            // one comparison - which is the entire point of the line.
             key: "light" as const,
             text: `${formatMinutes(state.roundTrip ? route.durationSeconds * 2 : route.durationSeconds)} ${state.roundTrip ? "out and back" : "on foot"} · ${describeLight(conditions.light)}`,
             tier: "fact" as const,
           },
         ]
       : []),
-    // Suppressed when the pool already threw this place out for being shut:
-    // chunk 2 renders an amber "Shut when you would get there." warning row from
-    // `REASON_COPY`, and a neutral line saying the same thing underneath it is
-    // the card telling the reader twice. What is left for this line is the half
-    // the verdict cannot say - a closing time coming up, the park assumption,
-    // a quoted comment, or data past its window.
-    ...(pickedHours === null ||
-    pickedHours.note === null ||
-    (pickedVerdict !== null &&
-      !pickedVerdict.included &&
-      pickedVerdict.reasons.includes("closed"))
+    // Suppressed when the pool already shows a "closed" warning row for this place.
+    ...(pickedHours === null || pickedHours.note === null || closedByPool
       ? []
       : [
           {
             key: "hours" as const,
             text: pickedHours.note,
-            // An assumption or a caveat renders quieter than a fact. A verdict
-            // read straight off an OSM schedule is a fact; a category fallback
-            // and every unknown are not.
             tier:
               pickedHours.source === "category" || pickedHours.state === "unknown"
                 ? ("assumed" as const)
@@ -1230,12 +633,6 @@ export function App() {
     ...(meetMode
       ? [
           {
-            // The pace, admitted rather than implied. `WALKING_SPEED_KMH` is
-            // pinned in the proxy and stamped into every snapshot; there is no
-            // per-request speed parameter and adding one would put a costing
-            // knob on the one endpoint that costs real graph expansions. So
-            // both walks are measured at the same pace and the app says so.
-            // `assumed`, because it is an assumption about two people.
             key: "meet" as const,
             text: "Both walks are measured at the same pace.",
             tier: "assumed" as const,
@@ -1243,128 +640,54 @@ export function App() {
         ]
       : []),
     {
-      // Neither handoff carries our walk - both send two coordinates and let
-      // the other app recompute with its own graph and its own pedestrian
-      // speed. Their minutes will disagree with ours, and that disagreement is
-      // the whole reason this app exists. Better said here than discovered on
-      // the sidewalk.
-      //
-      // `assumed` rather than `fact`: it is a claim about somebody else's
-      // software. And deliberately not in `describeResult` - a constant caveat
-      // repeated on every landing is noise in a sentence that is already eight
-      // clauses long.
       key: "handoff",
-      text: "Other apps will recalculate — their walk times will differ.",
+      text: "Other apps will recalculate. Their walk times will differ.",
       tier: "assumed",
     },
   ];
 
+  // The one screen-reader line for a result. Empty during a throw, filled once the route settles.
   const announcement = state.spinAborted
     ? "Filters changed, spin again."
     : state.spinning || !picked || routePending
       ? ""
       : describeResult([
-          // How this arrived, first, so the one sr-only line says it.
           state.shared === null ? "" : "Shared walk",
-          // The tier opens the sentence for a detour. The sr-only line is the
-          // only screen-reader surface this card has, so a tier that is
-          // invisible there is invisible.
           picked.detour === undefined
             ? picked.name
             : `${DETOUR_LABELS[picked.detour]}: ${picked.name}`,
           ...walkClauses(route, routeFailed, state.roundTrip),
-          // Sits with the duration facts because it IS one: the two walks to
-          // the same place. Null outside a meet session, so the sentence grows
-          // by a clause only for a reader who has a second person in it.
           split === null ? "" : (describeMeetClause(split, partnerName) ?? ""),
           withinBudget ? "" : "outside your current time budget",
-          // The only path by which the chart's headline fact reaches a screen
-          // reader, since the card is deliberately not a live region.
           route === null
             ? ""
             : route.profile === null
               ? "climb not measured"
-              // The outbound leg, matching the stat and the chart. The card
-              // shows one profile and this says its number.
               : `${formatFeet(route.profile.ascentMeters)} of climb`,
-          // The only way an exclusion reaches a screen reader on a result. The
-          // card shows it as a row; this is the same sentence, lowercased into
-          // the middle of one.
           walkFitsLight ? "" : "does not fit in the light left",
-          // The one sr-only line is the only screen-reader surface this card
-          // has, so a verdict that is invisible there is invisible.
           pickedHours?.note ?? "",
-          // The only path by which the forecast reaches a screen reader on a
-          // result. Deliberately with a result rather than before one: the
-          // pre-spin path is ConditionsLine's own paragraphs, which are
-          // ordinary static text in the panel and need no live region.
-          // Not lowercased, unlike the REASON_COPY clauses `asClause` handles:
-          // this sentence is mostly units and a proper label, and "84°f, feels
-          // 86°. uv 9" is what a screen reader has to say out loud.
           weather.headline ?? "",
           pickedVerdict === null || pickedVerdict.included || pickedVerdict.reasons[0] === undefined
             ? ""
             : `not in the pool: ${asClause(REASON_COPY[pickedVerdict.reasons[0]].sentence)}`,
         ]);
 
-  // Rebuilt each render rather than memoised: it is read during TimeDial's
-  // render, and App already re-renders whenever the contour cache changes.
-  // A rung warm on one side only cannot answer the question the dial is asking.
   const dialWarm = (minutes: number) => {
     const outboundAt = state.roundTrip ? Math.floor(minutes / 2) : minutes;
     return isWarm(origin, outboundAt) && (partner === null || isWarm(partner, outboundAt));
   };
 
-  /**
-   * This spin, as a link would carry it. A plain expression like everything else
-   * here: it is read once per render and never memoised.
-   */
   const shareInput: ShareInput = shareInputFor(state, picked?.id ?? "");
 
-  /**
-   * The two links a meeting can mint, both null until the reader has chosen a
-   * start of their own — see `meetLinks` for why that gate is not optional.
-   */
-  // `conditions.atMs` rather than `Date.now()`: this runs during render, and
-  // the app already has one clock that ticks once a minute. Reading the real
-  // clock here would be an impure render AND would make `d` unstable between
-  // two renders in the same minute.
-  /**
-   * Locking in is a fact about this session, not about the link, so it lives
-   * in React state rather than in `Session`: nothing the reducer does should
-   * silently un-commit somebody, and nothing persists it, because a commitment
-   * that outlived the tab would be a promise the other person could not see
-   * expire.
-   */
+  // Locking in is a fact about this session, not the link, so it is not in Session.
   const [locked, setLocked] = useState(false);
-  const links = meetLinks(
-    state,
-    window.location.origin,
-    picked?.id ?? null,
-    conditions.atMs,
-    locked,
-  );
+  const links = meetLinks(state, window.location.origin, picked?.id ?? null, conditions.atMs, locked);
 
-  /**
-   * Clear the address bar the moment it stops describing the screen.
-   *
-   * The comparison is against the LINK's own fields, not against `shared`
-   * being null - which is the trap this is written to avoid. `shared`
-   * deliberately survives dial and filter changes, because they do not stop this
-   * being the walk that was shared; but they do make `b=34` in the address bar a
-   * lie while the screen says 60. So the URL goes on the next paint and the
-   * arrival notices stay until they are dismissed.
-   *
-   * Ref-guarded, and the app never writes the URL otherwise.
-   */
+  // Clear the address bar once it stops describing the screen. Compared
+  // against the link's own fields, not `shared`, which survives dial changes.
   const urlCleared = useRef(false);
   useEffect(() => {
     if (urlCleared.current) return;
-    // Direction-aware: in a link being MINTED `ma` is the sender's own start,
-    // and in a link being READ it is the partner's. `liveLinkQuery` mirrors a
-    // meet session back into the shape it arrived in, without which this
-    // comparison would differ on every meet arrival and wipe the address bar on
-    // the first paint while it still described the screen.
     const live = liveLinkQuery(state, picked?.id ?? null);
     if (state.shared !== null && live === state.shared.linkQuery) return;
     if (window.location.pathname === SHARE_PATH || window.location.search !== "") {
@@ -1373,7 +696,6 @@ export function App() {
     urlCleared.current = true;
   });
 
-  /** They committed to a budget and this device is showing a different one. */
   const disagreeing =
     state.meet?.partnerLockedMinutes != null &&
     state.meet.partnerLockedMinutes !== state.budgetMinutes;
@@ -1382,33 +704,12 @@ export function App() {
   const collapsed = railCollapsed && !wide;
   const emptyPool = status === "ready" && candidates.length === 0;
 
-  /**
-   * Outbound walking minutes to each place, built only when the pool is empty
-   * and over all of PLACES.
-   *
-   * Deliberately not folded into the sweep that computes `drawable` and
-   * `settledRoutes`: those run over the *included* pool, which is empty at
-   * exactly the moment `suggestFix` needs this. One pass of Map lookups, at the
-   * one moment nothing else is happening.
-   */
-  /**
-   * The one cause `suggestFix` cannot see.
-   *
-   * A weather *cap* is not a `PoolRule` - it empties the pool by shrinking the
-   * contour, not by excluding anything - so the counterfactual that re-runs the
-   * verdict with one rule dropped will never find it, and the reader is offered
-   * a wider budget the cap would immediately clamp back down. So it is measured
-   * here, the same way and to the same standard: re-derive the pool at the
-   * budget the reader actually asked for, with every weather rule dropped
-   * alongside the cap, and count the survivors. No number that was not counted.
-   *
-   * Returns null when the cap is daylight's - that switch is `beforeDark`, and
-   * offering to ignore the weather would not move it.
-   */
+  // A weather cap empties the pool by shrinking the contour, not by excluding,
+  // so `suggestFix` cannot see it. Measured here the same way: re-derive at the
+  // requested budget with the weather rules dropped and count survivors.
   const weatherCapFix = (): PoolFix | null => {
     if (!state.weatherAware || appliedBudget === null) return null;
     if (state.timeCap === null || state.timeCap.reason === "daylight") return null;
-
     const asked = state.requestedBudgetMinutes;
     const uncapped = cachedReach(
       origin,
@@ -1416,14 +717,12 @@ export function App() {
       floorOutbound ?? 0,
     );
     if (uncapped === null) return null;
-
     const recovers = derivePool(PLACES, {
       ...poolConditions,
       reach: uncapped,
       rules: rules.filter((rule) => rule.reason !== "weather"),
     }).included.length;
     if (recovers === 0) return null;
-
     return {
       kind: "drop-cap",
       clearLabel: "Ignore the weather",
@@ -1438,10 +737,6 @@ export function App() {
     ? (weatherCapFix() ??
       suggestFix(PLACES, poolConditions, cachedWalkMinutes(origin), {
         roundTrip: state.roundTrip,
-        // The two ladders and the two warm-up scalars, passed in rather than
-        // read from a cache, so `suggestFix` stays as testable as the rest of
-        // the module. `cachedContour` PEEKS: a scan touches up to 192 rungs and
-        // must not promote or write a single LRU entry while doing it.
         meet:
           partner === null
             ? null
@@ -1457,18 +752,9 @@ export function App() {
       }))
     : NO_FIX;
 
-  /**
-   * What the empty-pool notice's one button does.
-   *
-   * The three chips this app already owns are resolved by reason, because
-   * clearing them is a dispatch and `eligibility.ts` is deliberately free of
-   * the reducer's vocabulary. Anything a sibling contributed brought its own
-   * callback.
-   */
   const applyFix = (): void => {
     switch (fix.kind) {
       case "drop-rule":
-        // `wrong-terrain` is the climb rule now, and it brought its own clear.
         if (fix.reason === "no-matching-vibe") dispatch({ type: "clearVibes" });
         else if (fix.reason === "not-far-edge") dispatch({ type: "toggleEdge" });
         else fix.clear();
@@ -1477,17 +763,11 @@ export function App() {
         fix.clear();
         return;
       case "widen-budget":
+      case "widen-to-meet":
         dispatch({ type: "budget", minutes: fix.budgetMinutes });
         return;
       case "lower-floor":
         dispatch({ type: "floor", minutes: 0 });
-        return;
-      // The button moves the dial; it does not promise the place. `contains`
-      // has no on-edge guarantee and the overlap boundary is exactly where two
-      // generalised contours graze, so the app widens and shows the real state
-      // at the new budget rather than claiming the named place will be there.
-      case "widen-to-meet":
-        dispatch({ type: "budget", minutes: fix.budgetMinutes });
         return;
       case "no-overlap":
         dispatch({ type: "leaveMeet" });
@@ -1499,26 +779,15 @@ export function App() {
         return;
     }
   };
-  // A phone starts with the drawer shut, and a bare "Filters" over a shrunken
-  // count is a cause the reader cannot see.
+
+  // Counts what "Clear filters" clears. Weather and hours are not in it.
   const activeFilters =
     state.vibes.length +
     (state.edgeOnly ? 1 : 0) +
-    // Weather is deliberately not counted, and the reason is the button next to
-    // the number: this counts what **Clear filters** clears, and that button
-    // does not touch the weather switch. A count that cannot be cleared by the
-    // control beside it is worse than no count. The cause of a shrunken pool is
-    // named in prose by ConditionsLine instead, which is always visible in the
-    // panel rather than hidden behind the collapsed drawer.
-    // Weather and hours are both deliberately uncounted, and for the same
-    // reason stated twice: this counts what **Clear filters** clears, and it
-    // clears neither. "Skip closed places" also defaults ON, so counting it
-    // would make the drawer read "Filters (1 active)" from first paint forever,
-    // and counting it only when OFF would announce a widened pool as a
-    // narrowing.
-    rules.filter(
-      (rule) => rule.active && rule.reason !== "weather" && rule.reason !== "closed",
-    ).length;
+    rules.filter((rule) => rule.active && rule.reason !== "weather" && rule.reason !== "closed")
+      .length;
+
+  const isPin = origin.id === "custom" || origin.id === "me";
 
   return (
     <div className={`shell${picking ? " is-picking" : ""}`}>
@@ -1555,7 +824,6 @@ export function App() {
               onClick={() => {
                 const next = !sound;
                 setSoundOn(next);
-                // The only cue that can confirm itself: you cannot hear a mute.
                 if (next) playTap(true);
               }}
             >
@@ -1565,9 +833,6 @@ export function App() {
                 <SpeakerSimpleSlashIcon size={16} aria-hidden="true" />
               )}
             </button>
-            {/* The sheet can cover most of the map, which is the one thing the
-                app exists to show. One control, one cue; the stylesheet does
-                the rest through `.rail.is-collapsed`. */}
             {!wide && (
               <button
                 type="button"
@@ -1579,9 +844,6 @@ export function App() {
                   setRailCollapsed((value) => !value);
                 }}
               >
-                {/* Turned rather than swapped for a second glyph: the caret is
-                    already in the bundle for the origin chip, and a second one
-                    is a kilobyte for a shape we have. */}
                 <CaretDownIcon
                   size={16}
                   weight="bold"
@@ -1608,9 +870,7 @@ export function App() {
             <MeetPanel
               partner={partner}
               partnerName={partnerName}
-              // Derived, never stored: a preset partner resolves to its own
-              // PRESET_ORIGINS entry and keeps its own id, so only a pin is
-              // "partner" - and a pin in a meet link is always coarse.
+              // A pin in a meet link is always coarse; a preset keeps its own id.
               partnerCoarse={partner?.id === "partner"}
               originChosen={originChosen}
               meet={state.meet}
@@ -1640,13 +900,7 @@ export function App() {
               >
                 {state.locationNotice.message}
               </p>
-              {/* Outside the live region on purpose. An assertive region
-                  announces its text on insertion, and a focusable control inside
-                  one is announced inconsistently and gives the listener no
-                  obvious route to it. So the region holds the sentence and
-                  nothing else; the button is the very next element in DOM order,
-                  and `aria-describedby` makes it announce as "Start from Scott's
-                  Addition, button" followed by the sentence that explains why. */}
+              {/* Outside the live region: a control inside an assertive region announces inconsistently. */}
               {state.locationNotice.suggest && (
                 <button
                   type="button"
@@ -1670,18 +924,8 @@ export function App() {
             state.warmed < 1 &&
             status !== "error" &&
             status !== "not-configured" && (
-              /* Information, not a warning: a personal origin has no baked
-                 snapshot, so it pays the full price and the app says so. No
-                 `role` - TimeDial already announces warm-up progress in quarters
-                 through its own status line, and a second region double-speaks.
-
-                 The `id === "me"` half is not redundant with `hasSnapshot`: every
-                 cold origin lacks one, and today the commonest is a dropped pin.
-                 The copy says "your own spot", which is a sentence about a
-                 geolocated fix. */
               <p className="notice" {...inertWhen(picking)}>
-                Your own spot is not pre-baked the way the presets are, so the reachable area is
-                being computed from scratch. The dial fills in as it arrives.
+                Measuring the reachable area from your spot. The dial fills in as it arrives.
               </p>
             )}
 
@@ -1689,16 +933,13 @@ export function App() {
             minutes={state.budgetMinutes}
             floorMinutes={state.floorMinutes}
             minimum={dialMinimum(state.roundTrip)}
-            maximum={dialMaximum(state)}
+            maximum={cappedTo}
             capNote={cappedTo < MAX_MINUTES ? capNote(state.timeCap, cappedTo, conditions.light) : undefined}
             step={budgetStep()}
             outboundMinutes={outbound}
             roundTrip={state.roundTrip}
             isWarm={dialWarm}
             warming={originChosen}
-            // Display only; no gate reads it. In meet mode both legs count,
-            // so the bar tracks the whole wait rather than jumping to full
-            // while the second half is still arriving.
             warmedFraction={meetMode ? (state.warmed + state.partnerWarmed) / 2 : state.warmed}
             disabled={picking}
             onChange={(minutes) => dispatch({ type: "budget", minutes })}
@@ -1717,7 +958,7 @@ export function App() {
           {status === "not-configured" ? (
             <div className="notice is-setup">
               <strong>The routing engine is not answering.</strong>
-              {isDevServer ? (
+              {import.meta.env.DEV ? (
                 <p>
                   Contours and routes come from a Valhalla instance. Set{" "}
                   <code>VALHALLA_URL</code> in <code>.env.local</code>, then restart the dev
@@ -1746,10 +987,6 @@ export function App() {
                   ? {
                       bothCount: pool.included.length,
                       outerMinutes: outbound,
-                      // False until their reach exists, which keeps the area
-                      // line and appends "their side still working": the pool
-                      // is one person's until then, and "you can both reach"
-                      // over a one-sided pool is a claim nothing checked.
                       partnerWarm: partnerReach !== null,
                     }
                   : null
@@ -1757,10 +994,6 @@ export function App() {
             />
           )}
 
-          {/* The last thing read before the decision to press Spin, which is
-              why it is here and not in the drawer: on a phone the drawer is
-              shut, and the cause of a shrunken pool has to be visible. It needs
-              no `inertWhen(picking)` - `.panel` already carries it. */}
           {status === "ready" && (
             <ConditionsLine
               report={report}
@@ -1771,10 +1004,6 @@ export function App() {
               appliedBudget={appliedBudget}
               keptCount={candidates.length}
               describe={describeWeatherRule}
-              // Where the walk on the dial ends, so the graph shows whether it
-              // finishes before the weather does. Not the cap: weather no
-              // longer caps, and daylight's cap is already folded into the
-              // budget by the time it gets here.
               capMinutes={state.budgetMinutes}
             />
           )}
@@ -1785,16 +1014,8 @@ export function App() {
             className="button is-spin"
             onClick={spin}
             aria-describedby={emptyPool ? emptyNoticeId : undefined}
-            // Routes lag the contours by a second or two on a cold origin. The
-            // reel exists to show a real walk per tick, so it waits for the
-            // whole pool rather than turning through whichever routes are back.
             disabled={
-              // Spin joins drawing, warming and sharing in the list of things
-              // that must not happen before the reader has a start of their own.
               !originChosen ||
-              // They named a number; this device has not agreed to it yet.
-              // Spinning now would draw from a pool the other person is not
-              // walking, which is the one thing a shared spin must not do.
               disagreeing ||
               candidates.length === 0 ||
               drawable.length === 0 ||
@@ -1808,34 +1029,31 @@ export function App() {
             {disagreeing
               ? `They said ${state.meet?.partnerLockedMinutes} min`
               : state.spinning
-              ? "Spinning"
-              : status === "ready" && routesWarming
-                ? state.climb === "any"
-                  ? `Loading routes ${settledRoutes}/${basePool.length}`
-                  : `Measuring climb ${settledRoutes}/${basePool.length}`
-                : "Spin"}
+                ? "Spinning"
+                : status === "ready" && routesWarming
+                  ? state.climb === "any"
+                    ? `Loading routes ${settledRoutes}/${basePool.length}`
+                    : `Measuring climb ${settledRoutes}/${basePool.length}`
+                  : "Spin"}
           </button>
 
           {status === "ready" && (
             <InviteButton
               url={links.invite}
-              originName={origin.id === "custom" || origin.id === "me" ? "a dropped pin" : origin.name}
+              originName={isPin ? "a dropped pin" : origin.name}
               minutes={state.budgetMinutes}
               roundTrip={state.roundTrip}
-              pin={origin.id === "custom" || origin.id === "me"}
+              pin={isPin}
             />
           )}
 
           {state.shared !== null &&
             (state.shared.missingPlaceId !== null || state.shared.clampedFromMinutes !== null) && (
-              /* One "about the link you followed" block with one Dismiss. Two
-                 separate dismiss controls on two one-line notices is more chrome
-                 than either sentence is worth. */
               <div className="notice-stack" {...inertWhen(picking)}>
                 {state.shared.missingPlaceId !== null && (
                   <p className="notice is-warn">
                     The place this link points to is no longer on the map. Everything else about
-                    the walk is set up — spin for somewhere new.
+                    the walk is set up. Spin for somewhere new.
                   </p>
                 )}
                 {state.shared.clampedFromMinutes !== null && (
@@ -1858,13 +1076,9 @@ export function App() {
             )}
 
           {reelIsShort && !emptyPool && (
-            /* Said rather than hidden. The reel can only turn through walks it
-               can draw, so with routes still missing it is showing a subset -
-               and a wheel that quietly omits some of its own pool is the same
-               lie as a circle. */
             <div className="notice" {...inertWhen(picking)} role="status">
-              {drawable.length} of {basePool.length} routes are ready. The reel turns
-              through those; the rest are still coming from the engine.
+              {drawable.length} of {basePool.length} routes are ready. The reel turns through
+              those; the rest are still coming from the engine.
             </div>
           )}
 
@@ -1882,9 +1096,6 @@ export function App() {
 
         <div className="spin-slot" {...inertWhen(picking)}>
           {state.spinning && showing && (
-            // A randomising metaphor, not information. It changes name twenty
-            // to forty times a throw, and each flip used to queue its own
-            // announcement, long outlasting the throw itself.
             <p className="spin-reel" aria-hidden="true">
               <span className="field-label">Choosing</span>
               <span className="spin-name">{showing.name}</span>
@@ -1917,9 +1128,7 @@ export function App() {
               onSpinAgain={spin}
               onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
               onDismiss={() => {
-                // The button being pressed is inside the card this unmounts.
-                // Without moving focus first it lands on the body and the next
-                // Tab restarts from the top of the page.
+                // The pressed button is inside the card this unmounts; move focus first.
                 spinRef.current?.focus();
                 dispatch({ type: "clearPick" });
               }}
@@ -1933,9 +1142,7 @@ export function App() {
           onToggle={(event) => setFiltersOpen(event.currentTarget.open)}
           {...inertWhen(picking)}
         >
-          <summary>
-            {activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}
-          </summary>
+          <summary>{activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}</summary>
           <Filters
             climb={state.climb}
             climbAvailable={elevationAvailable() !== false}
@@ -1955,28 +1162,16 @@ export function App() {
           />
         </details>
 
-        {/* This was a bare sr-only <ul> of up to sixty buttons. A sighted
-            keyboard user tabbing off the drawer fell into dozens of invisible
-            stops with the focus ring clipped to a pixel, and a screen reader
-            arrived at an unnamed pile of names with no hint that pressing one
-            draws a route. Closed, a disclosure holds no tab stops at all - and
-            the list is worth having for everyone, not as a parallel UI.
-            Borrowing the origin menu's list vocabulary: same shape, same job.
-
-            Held back until there is a reach to count against: `candidates` is
-            empty while the ladder is warming and empty again on an engine
-            error, and "All places (0)" reads as an answer in both. The app does
-            not know the count yet, so it does not offer one. */}
         {reach !== null && (
-        <details className="drawer" {...inertWhen(picking)}>
-          <summary>All places ({pool.total})</summary>
-          <PoolList
-            pool={pool}
-            places={PLACES}
-            pickedId={state.pickedId}
-            onPick={(id) => dispatch({ type: "pickPlace", pickedId: id })}
-          />
-        </details>
+          <details className="drawer" {...inertWhen(picking)}>
+            <summary>All places ({pool.total})</summary>
+            <PoolList
+              pool={pool}
+              places={PLACES}
+              pickedId={state.pickedId}
+              onPick={(id) => dispatch({ type: "pickPlace", pickedId: id })}
+            />
+          </details>
         )}
 
         {import.meta.env.DEV && <TuningPanel />}
@@ -1989,27 +1184,7 @@ export function App() {
   );
 }
 
-/**
- * Did that request settle without leaving anything to draw?
- *
- * `fetchWalkingRoute` resolves null for two different things: a destination
- * with no walking route at all, which it caches, and a transient failure,
- * which it deliberately does not - so the cache is what tells them apart. Only
- * the second is worth asking again, and `routeFailed` in route.ts is the one
- * that knows which happened.
- */
-function routeMissed(origin: LngLat, destination: Place): boolean {
-  return routeSettledFailed(origin, destination);
-}
-
-/**
- * The dial's cap note, naming the condition that is clamping it.
- *
- * One sentence per reason rather than a shared "Time limit", because the note
- * exists to answer "why is half my dial dead", and "Daylight limit" beside a
- * thunderstorm is the wrong answer confidently given. Every branch names the
- * deadline in the same clock voice `describeDusk` uses.
- */
+/** The dial's cap note, naming the condition that is clamping it. */
 function capNote(cap: TimeCap | null, minutes: number, light: Daylight): string {
   if (cap === null) return `Limit ${minutes} min`;
   switch (cap.reason) {

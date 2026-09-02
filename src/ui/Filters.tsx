@@ -29,8 +29,7 @@ export type FiltersProps = {
 };
 
 export function Filters(props: FiltersProps) {
-  // A disabled button beside an unassociated paragraph tells a screen reader
-  // nothing, so the notice gets an id and every chip points at it.
+  // Disabled climb chips point at the notice explaining why.
   const noticeId = useId();
 
   return (
@@ -54,8 +53,6 @@ export function Filters(props: FiltersProps) {
           label="Far edge only"
           hint="Only places in the outermost contour"
         />
-        {/* A third switch needs no CSS: `.switch-row` is a single-column flex
-            column at every width, so it stacks. */}
         <Switch
           checked={props.hideClosed}
           onChange={() => {
@@ -76,8 +73,6 @@ export function Filters(props: FiltersProps) {
         />
       </div>
 
-      {/* Before Climb, because the tier is the coarser question: what kind of
-          thing am I walking to, then how hard is the walk. */}
       <fieldset className="chips">
         <legend className="field-label">Kind</legend>
         {PLACE_KINDS.map((option) => (
@@ -116,8 +111,6 @@ export function Filters(props: FiltersProps) {
         ))}
       </fieldset>
       {!props.climbAvailable && (
-        /* Said rather than hidden. A control that silently never matches is the
-           failure this release is built to stop making. */
         <p className="notice" id={noticeId}>
           Climb needs elevation data from the routing engine.
         </p>

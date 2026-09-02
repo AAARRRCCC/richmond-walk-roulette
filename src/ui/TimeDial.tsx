@@ -4,18 +4,10 @@ import { MAX_MINUTES } from "../lib/isochrone";
 
 export type TimeDialProps = {
   minutes: number;
-  /**
-   * The range's lower end, in the same units as `minutes`. Equal to `minimum`
-   * means no lower bound: the reach is a disc rather than a band.
-   */
+  /** The range's lower end. Equal to `minimum` means no lower bound. */
   floorMinutes: number;
   minimum: number;
-  /**
-   * The highest budget the two inputs will accept. The *track* still spans
-   * `minimum..MAX_MINUTES` on purpose: the clamp is drawn as a dead zone rather
-   * than as a shorter slider, so a reader can see how much walk the light is
-   * costing them.
-   */
+  /** Highest accepted budget. The track still spans to MAX_MINUTES; the clamp is drawn as a dead zone. */
   maximum: number;
   /** "Daylight limit 62 min · dusk 8:21 pm", when something is clamping. */
   capNote?: string | undefined;
@@ -25,36 +17,16 @@ export type TimeDialProps = {
   roundTrip: boolean;
   /** Whether this dial position's contours are already cached. */
   isWarm: (minutes: number) => boolean;
-  /**
-   * False when nothing is being measured and nothing is going to be.
-   *
-   * The invite state: the reader has not chosen a start, so no ladder is
-   * warming, and a counter reading "loading reach 0%" would promise a
-   * measurement that is not coming. Silence is the honest state - not zero.
-   */
-  warming?: boolean;
-  /** 0 to 1 across the warm-up, for the progress hairline under the track. */
+  /** False when nothing is being measured, so no progress is promised. */
+  warming: boolean;
+  /** 0 to 1 across the warm-up. */
   warmedFraction: number;
-  /** Pin-drop mode owns the map; the dial goes with the rest of the rail. */
   disabled?: boolean;
   onChange: (minutes: number) => void;
   onFloorChange: (minutes: number) => void;
-  /** Fires when a drag or keypress ends, so the map can re-frame exactly once. */
+  /** Fires when a drag or keypress ends, so the map re-frames once. */
   onCommit: () => void;
-  /**
-   * True while a hand is on the control, false the moment it comes off.
-   *
-   * **The ceiling must not move while somebody is dragging toward it.** The cap
-   * is recomputed from the clock, so it used to fall mid-gesture, re-clamp the
-   * budget and yank the thumb backwards while the cursor was still where the
-   * reader had dragged it - they would then drag on from the new position and
-   * be yanked again. A control that argues with the hand on it is the worst
-   * thing a slider can do.
-   *
-   * App freezes the one clock on this, exactly as it already freezes it during
-   * a throw and for the same reason: a limit that moves under an interaction
-   * changes the answer to a question being asked right now.
-   */
+  /** True while a hand is on the control. App freezes the clock on it so the cap cannot move mid-gesture. */
   onScrub: (active: boolean) => void;
 };
 
@@ -65,31 +37,18 @@ export function TimeDial(props: TimeDialProps) {
     { length: Math.floor(span / props.step) + 1 },
     (_, i) => props.minimum + i * props.step,
   );
-  const warming = (props.warming ?? true) && props.warmedFraction < 1;
+  const warming = props.warming && props.warmedFraction < 1;
   const capped = props.maximum < MAX_MINUTES;
   const pct = (minutes: number): number => ((minutes - props.minimum) / span) * 100;
 
-  // SAFETY: React's CSSProperties has no index signature for custom
-  // properties, so a `--cap-percent` key cannot be expressed without an
-  // assertion. The value is a string this component just built from a number
-  // it already had; nothing is widened and nothing is trusted from outside.
+  // SAFETY: CSSProperties has no index signature for custom properties; the value is built here from a number.
   const trackStyle = { "--cap-percent": `${pct(props.maximum)}%` } as CSSProperties;
 
-  /**
-   * A commit re-frames the camera, so it has to mean "the value moved". Four
-   * events end a gesture and an ordinary mouse drag fires two of them; worse,
-   * blurring the dial after panning the map by hand would fly the camera back
-   * to the contour bounds and throw away the view the reader just set.
-   *
-   * Only tracks commits. A budget changed from elsewhere - the round trip
-   * switch re-snapping it - leaves this stale, and the reducer already
-   * re-frames for that itself.
-   */
+  // A commit must mean "the value moved": four events end a gesture and a
+  // blur after panning the map by hand must not fly the camera back.
   const committed = useRef(`${props.floorMinutes}-${props.minutes}`);
   const commit = () => {
-    // Always released, even when the value did not change: the freeze is about
-    // the gesture, not about the outcome, and a press that moved nothing would
-    // otherwise leave the clock stopped for good.
+    // Always release the scrub, even when nothing changed.
     props.onScrub(false);
     const now = `${props.floorMinutes}-${props.minutes}`;
     if (committed.current === now) return;
@@ -99,7 +58,6 @@ export function TimeDial(props: TimeDialProps) {
   const grab = () => props.onScrub(true);
 
   const hasFloor = props.floorMinutes > props.minimum;
-  const asPercent = (value: number) => ((value - props.minimum) / span) * 100;
 
   return (
     <div className="dial">
@@ -124,7 +82,7 @@ export function TimeDial(props: TimeDialProps) {
             <span
               key={tick}
               className={tickClass(tick, props.floorMinutes, props.minutes, props.isWarm(tick))}
-              style={{ left: `${asPercent(tick)}%` }}
+              style={{ left: `${pct(tick)}%` }}
             />
           ))}
         </div>
@@ -139,9 +97,6 @@ export function TimeDial(props: TimeDialProps) {
           disabled={props.disabled === true}
           aria-label="Walking time budget"
           aria-describedby={captionId}
-          // The split, not a restatement of the value: `value`, `min` and `max`
-          // already give a reader "50". What it cannot derive is that in round
-          // trip mode fifty minutes is a twenty-five minute walk out.
           aria-valuetext={
             (props.roundTrip
               ? `${props.minutes} minutes, ${props.outboundMinutes} out and ${props.outboundMinutes} back`
@@ -149,14 +104,10 @@ export function TimeDial(props: TimeDialProps) {
           }
           onChange={(event) => {
             const next = Number(event.target.value);
-            // One detent per step the value actually moved, not per input
-            // event: a fast drag fires many events on the same minute.
+            // One detent per step actually moved, not per input event.
             if (next !== props.minutes) playDetent(next, props.minimum);
             props.onChange(next);
           }}
-          // React maps onChange to `input`, which fires continuously during a
-          // drag. These are the commit edges: the map re-frames on them so the
-          // camera is not restarted on every pixel of the drag.
           onPointerDown={grab}
           onKeyDown={grab}
           onPointerUp={commit}
@@ -165,10 +116,7 @@ export function TimeDial(props: TimeDialProps) {
           onBlur={commit}
         />
 
-        {/* The lower thumb rides the same track. Two inputs rather than one
-            custom control: each keeps its own keyboard behaviour, its own
-            value announcement and its own focus ring, which a div with
-            pointer handlers would have to reimplement and get wrong. */}
+        {/* Second native range on the same track: keeps its own keyboard behaviour and focus ring. */}
         <input
           className="dial-input is-floor"
           type="range"
@@ -209,31 +157,20 @@ export function TimeDial(props: TimeDialProps) {
         <span>{MAX_MINUTES}</span>
       </div>
 
-      {/* The warm-up used to be silent: the counter above sits inside an
-          aria-hidden scale, so a reader met a disabled Spin button and no
-          explanation. Announced in quarters rather than per contour, because
-          the fraction moves ninety-six times and a live region would read
-          every one of them. */}
+      {/* Announced in quarters: the fraction moves ~96 times per warm-up. */}
       <span className="sr-only" role="status">
         {warming
           ? `Loading reachable area, ${Math.round(props.warmedFraction * 4) * 25} percent`
-          : props.warming === false
-            ? ""
-            : "Reachable area ready"}
+          : props.warming
+            ? "Reachable area ready"
+            : ""}
       </span>
     </div>
   );
 }
 
-/**
- * A tick is dim until its contours are cached. That is honest about which
- * positions respond instantly, and it turns the warm-up into something the
- * reader can watch fill in rather than a spinner over the whole panel.
- */
 function tickClass(tick: number, floorMinutes: number, minutes: number, warm: boolean): string {
   const weight = tick % 10 === 0 ? " is-major" : tick % 5 === 0 ? " is-mid" : "";
-  // Reached means inside the range, so a floor darkens the near end again:
-  // those minutes are no longer part of the answer.
   const reached = tick <= minutes && tick >= floorMinutes ? " is-reached" : "";
   return `dial-tick${weight}${reached}${warm ? " is-warm" : ""}`;
 }

@@ -242,7 +242,7 @@ export type Session = {
    * sites and an exhaustive reducer argue about a case that lasts one screen.
    * While it is false **nothing is drawn for the local side, no ladder is
    * warmed, Spin is not pressable, and no link is mintable** - because
-   * `origin` is still DEFAULT_ORIGIN, a house in the Fan that has nothing to do
+   * `origin` is still DEFAULT_ORIGIN, Monroe Park, which has nothing to do
    * with this reader, and answering a stranger's question from it is the same
    * lie as the circle. The first `origin` action of any kind sets it true
    * forever.

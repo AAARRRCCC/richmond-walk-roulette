@@ -10,21 +10,9 @@ import {
 import { playLanding, playPress, playTap } from "../lib/sound";
 import { isJsonObject, isString, parseJson } from "../lib/json";
 
-/**
- * Dev-only feel controls: the reel's timing and the cue level, adjustable
- * while the thing they change is running. Mounted by App behind
- * `import.meta.env.DEV`, so it is stripped from a production build along with
- * this whole module.
- *
- * Toggled with the `~` key, and starts closed - it exists to be reached for,
- * not to sit over the map.
- */
+// Dev-only feel controls, mounted behind `import.meta.env.DEV`. Toggled with `~`.
 
-/**
- * Everything in Tuning a slider can drive. Derived from the value types rather
- * than by listing the switches, so adding a boolean setting cannot leave a
- * checkbox being rendered as a range.
- */
+/** Every numeric Tuning key, derived so a boolean setting cannot render as a range. */
 type NumericTuningKey = {
   [K in keyof Tuning]: Tuning[K] extends number ? K : never;
 }[keyof Tuning];
@@ -40,19 +28,8 @@ const SLIDERS: { key: NumericTuningKey; label: string; hint: string; unit: strin
   { key: "soundVolume", label: "Cue level", hint: "master volume for every sound", unit: "" },
 ];
 
-/**
- * Promotes what is on screen from "what this browser does" to "what the app
- * does", by writing these numbers into `TUNING_DEFAULTS` in the source.
- *
- * The panel saves to localStorage, and a stored value beats a default for
- * good - right while dialling something in, wrong once it is dialled in. The
- * alternative was reading the numbers off the panel and retyping them, which
- * is how a setting ends up one digit away from the one that was chosen.
- *
- * The dev server does the writing; a page cannot touch the filesystem. Vite
- * reloads the module on the change, so `Reset` immediately afterwards returns
- * to the values just baked rather than the old ones.
- */
+// Writes the current numbers into TUNING_DEFAULTS via the dev server, since a
+// stored localStorage value otherwise beats a default for good.
 async function bake(report: (message: string) => void): Promise<void> {
   report("Baking...");
   try {
@@ -103,7 +80,7 @@ export function TuningPanel() {
       <header className="tuner-head">
         <span className="field-label">Feel</span>
         <button type="button" className="icon-button" onClick={toggle} aria-label="Close">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" strokeLinecap="round" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
             <path d="M4 4l8 8M12 4l-8 8" />
           </svg>
         </button>
