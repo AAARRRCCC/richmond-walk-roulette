@@ -406,7 +406,7 @@ Unchanged except for one added top-level key:
 
 ```json
 {
-  "locations": [{ "lat": 37.5388, "lon": -77.4313 }, { "lat": 37.5268, "lon": -77.4174 }],
+  "locations": [{ "lat": 37.53882, "lon": -77.43356 }, { "lat": 37.5268, "lon": -77.4174 }],
   "costing": "pedestrian",
   "costing_options": { "pedestrian": { "walking_speed": 3.69 } },
   "units": "kilometers",

@@ -809,7 +809,7 @@ answer = state.awaitingOrigin || picked === null ? null : shareUrl(siteOrigin,
 ```
 
 **Minting is gated on `awaitingOrigin` for the same reason drawing is.** `shareInput.origin` is
-`state.origin`, which is `DEFAULT_ORIGIN` — Home, downtown — for as long as `awaitingOrigin` is
+`state.origin`, which is `DEFAULT_ORIGIN` — Monroe Park — for as long as `awaitingOrigin` is
 true. Without the gate, a recipient who opens an invite and presses the invite button before
 setting a start mints a link naming somebody else's front door as *their own* start. That is a
 fabricated premise handed to a third person under the reader's name, and it is precisely the class

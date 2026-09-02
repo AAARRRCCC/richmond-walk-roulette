@@ -488,7 +488,7 @@ The non-finite guard is three lines and it is the same honesty argument as the r
 document. `coords` is normally clean, but a `NaN` or `Infinity` falls through `insideRichmond` as
 `false` — every comparison against a NaN is false — and lands in `nearestPreset`, where every score
 is NaN, every comparison is false, and the reduce returns `PRESET_ORIGINS[0]`. A garbage fix would
-produce *"you are outside Richmond, start from Home (downtown)"* with total confidence. Reject it
+produce *"you are outside Richmond, start from the first preset"* with total confidence. Reject it
 by name instead.
 
 Bounds before accuracy, and the order is load-bearing: a wildly inaccurate fix in another state
@@ -684,7 +684,7 @@ New `src/lib/locate.test.ts`:
     `kind: "rejected"` with `suggest === null`. Specifically **not** the out-of-bounds message and
     **not** a preset offer: without the guard, NaN falls through `insideRichmond` as `false` and
     `nearestPreset` reduces to `PRESET_ORIGINS[0]`, so the un-guarded implementation passes an
-    `expect(rejected)` assertion while producing "start from Home (downtown)". Assert the
+    `expect(rejected)` assertion while producing "start from the first preset". Assert the
     absence of the suggestion, which is the part that actually detects the bug.
 12. **the four error codes are four different sentences** — `describeGeolocationError(1, true)`,
     `(1, false)`, `(2, true)`, `(3, true)` produce four distinct non-empty messages, all with

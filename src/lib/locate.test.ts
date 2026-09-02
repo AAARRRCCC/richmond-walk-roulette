@@ -108,7 +108,7 @@ test("locate: a non-finite fix is refused by name", () => {
   // Without the guard, NaN falls through `insideRichmond` as false and
   // `nearestPreset` reduces to the first preset, so an un-guarded
   // implementation still passes an "is rejected" assertion while confidently
-  // saying "you are outside Richmond, start from Home". Asserting the ABSENCE
+  // saying "you are outside Richmond, start from the first preset". Asserting the ABSENCE
   // of the suggestion is the part that detects it.
   for (const fix of [
     { lat: Number.NaN, lng: -77.44, accuracyMeters: 20 },

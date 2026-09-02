@@ -17,7 +17,7 @@ reach:
 | From | 25 min | A circle claims | Overstated by |
 | --- | --- | --- | --- |
 | Monroe Park | 2.93 sq mi | 4.26 sq mi | 1.46× |
-| downtown, by the river | 2.24 sq mi | 4.26 sq mi | 1.91× |
+| Shockoe Slip, by the river | 2.24 sq mi | 4.26 sq mi | 1.91× |
 
 The closer you start to the water, the more a circle lies to you. That is the
 whole argument for the app.

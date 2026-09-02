@@ -125,22 +125,22 @@ test("pointAtMeters: beyond the end clamps rather than returning null", () => {
 });
 
 test("metersBetween is zero for a point and itself", () => {
-  const at = { lat: 37.5388, lng: -77.4336 };
+  const at = { lat: 37.53882, lng: -77.43356 };
   assert.equal(metersBetween(at, at), 0);
 });
 
 test("metersBetween matches a known Richmond pair", () => {
-  // downtown to St. John's Church. The walking route measures 1,085 m, and a
+  // Capitol Square to St. John's Church. The walk is about 1.9 km, and a
   // straight line between them must be shorter than the walk and not by much -
   // which is the only accuracy this function is ever asked for.
-  const home = { lat: 37.5388, lng: -77.4336 };
+  const capitol = { lat: 37.53882, lng: -77.43356 };
   const stJohns = { lat: 37.5306, lng: -77.4197 };
-  const meters = metersBetween(home, stJohns);
-  assert.ok(meters > 1000 && meters < 1120, `${meters} m is not between 1000 and 1120`);
+  const meters = metersBetween(capitol, stJohns);
+  assert.ok(meters > 1480 && meters < 1580, `${meters} m is not between 1480 and 1580`);
 });
 
 test("metersBetween is symmetric", () => {
-  const home = { lat: 37.5388, lng: -77.4336 };
+  const capitol = { lat: 37.53882, lng: -77.43356 };
   const maymont = { lat: 37.535784, lng: -77.477576 };
-  assert.equal(metersBetween(home, maymont), metersBetween(maymont, home));
+  assert.equal(metersBetween(capitol, maymont), metersBetween(maymont, capitol));
 });

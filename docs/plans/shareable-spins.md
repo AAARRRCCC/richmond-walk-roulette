@@ -33,7 +33,7 @@ switched it on would be a lie about what the sender did. `.result-actions` is sh
 
 A good spin is currently unshareable. You get sent to Great Shiplock Park from a 34 minute
 round trip out of Carytown, you want to send that to someone, and the only thing the address
-bar offers is the front door of the app. The other person lands on Home (downtown), 50
+bar offers is the front door of the app. The other person lands on the first preset, 50
 minutes, no filters, no pick — a different question with a different answer. Everything that
 made the spin worth sending lives in a `useReducer` that never touches the URL.
 
@@ -868,7 +868,7 @@ cache entry is one small HTML document. Pin shares are never cached and always r
 ### `src/app/share.test.ts` (new; matches `"src/**/*.test.ts"`)
 
 Fixtures: `CARYTOWN = PRESET_ORIGINS.find(o => o.id === "carytown")!`,
-`PIN = customOrigin({ lat: 37.533701234, lng: -77.431351234 })`,
+`PIN = customOrigin({ lat: 37.538821234, lng: -77.433561234 })`,
 `SHIPLOCK = "shiplock"`.
 
 1. **"a preset spin round-trips through the URL"** — `decodeShare(encodeShare(input))` returns
@@ -882,7 +882,7 @@ Fixtures: `CARYTOWN = PRESET_ORIGINS.find(o => o.id === "carytown")!`,
 4. **"unknown keys are ignored"** — `decodeShare("?o=home&b=30&rt=1&p=capitol&hours=1&x=y")`
    equals the same decode without the extra keys.
 5. **"a dropped pin encodes at five decimals"** — `encodeShare` with `PIN` contains
-   `o=37.53880%2C-77.4336` and decodes back to `{kind:"pin", lat:37.5388, lng:-77.4336}`.
+   `o=37.53882%2C-77.43356` and decodes back to `{kind:"pin", lat:37.53882, lng:-77.43356}`.
 6. **"garbage decodes to all-null rather than throwing"** — `decodeShare("?o=&b=abc&rt=maybe&v=..&t=lava&p=")`
    returns every field null / `vibes: []`, and `isEmptyLink` is true.
 7. **"an over-long query is refused whole"** — a query of `SHARE_QUERY_MAX + 1` characters
@@ -920,7 +920,7 @@ Fixtures: `CARYTOWN = PRESET_ORIGINS.find(o => o.id === "carytown")!`,
 15. **"a one-way walk is described differently from a round trip"** — the `rt=0` description
     does not contain "out and back"; the `rt=1` one does.
 16. **"a dropped pin never leaks coordinates into the preview"** —
-    `shareMeta("?o=37.53880,-77.4336&b=30&rt=1&p=capitol", origin)` produces a title and
+    `shareMeta("?o=37.53882,-77.43356&b=30&rt=1&p=capitol", origin)` produces a title and
     description containing neither `37.5` nor `-77.4`, and containing "a dropped pin".
 17. **"an apostrophe in a place name survives verbatim"** — `p=ancarrows` →
     description contains `Ancarrow's Landing` with no `&#39;`. Escaping is `HTMLRewriter`'s
@@ -935,7 +935,7 @@ Fixtures: `CARYTOWN = PRESET_ORIGINS.find(o => o.id === "carytown")!`,
     place, minutes and `rt` with `t=flat` versus `t=hilly`, and with `v=park` versus no `v`,
     yield different `shareCacheKey`s. This is the test that stops one sender's crawler seeing
     another sender's `og:url`.
-21b. **"a dropped-pin share is never cached"** — `shareCacheKey("?o=37.53880,-77.4336&…")` is
+21b. **"a dropped-pin share is never cached"** — `shareCacheKey("?o=37.53882,-77.43356&…")` is
     `null`, while the same query with `o=carytown` is not.
 22. **"an unusable query has no cache key"** — `shareCacheKey("?x=1")` is `null`.
 22b. **"the pin still unfurls"** — a null cache key does not stop `shareMeta` returning a

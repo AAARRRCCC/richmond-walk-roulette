@@ -1237,8 +1237,8 @@ for `{ ok: false, reason: "lifecycle" }` and "a `Classification`" for
 **`src/lib/geometry.test.ts`** (modified, or new):
 
 24. `metersBetween is zero for identical points`.
-25. `metersBetween matches a known Richmond pair` — downtown
-    (37.5388, -77.4336) to St. John's Church (37.5306, -77.4197): the walking
+25. `metersBetween matches a known Richmond pair` — Shockoe Slip
+    (37.53882, -77.43356) to St. John's Church (37.5306, -77.4197): the walking
     route measures 1,085 m, so the straight line must land between 1,000 and
     1,120 m.
 26. `metersBetween is symmetric`.

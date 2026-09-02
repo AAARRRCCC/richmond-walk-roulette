@@ -117,7 +117,7 @@ test("canonicalQuery round-trips every link the encoder can produce", () => {
     input({ vibes: ["river", "park", "museum", "history", "food", "scenic"] }),
     input({ budgetMinutes: SHARE_BUDGET_MIN }),
     input({ budgetMinutes: SHARE_BUDGET_MAX }),
-    input({ origin: { id: "custom", name: "Dropped pin", lat: 37.53371, lng: -77.4336 } }),
+    input({ origin: { id: "custom", name: "Dropped pin", lat: 37.53881, lng: -77.43356 } }),
   ];
   for (const one of cases) {
     const encoded = encodeShare(one);
@@ -172,9 +172,9 @@ test("a dropped pin is published at about a hundred metres, not at one", () => {
   // door, in a link that gets forwarded. See HUMAN-REVIEW 2.9.
   assert.equal(PIN_PRECISION, 3);
   const encoded = encodeShare(
-    input({ origin: { id: "custom", name: "Dropped pin", lat: 37.533712, lng: -77.431351 } }),
+    input({ origin: { id: "custom", name: "Dropped pin", lat: 37.538812, lng: -77.433561 } }),
   );
-  assert.match(encoded, /^o=37\.534%2C-77\.431&/);
+  assert.match(encoded, /^o=37\.539%2C-77\.434&/);
 
   const origin = decodeShare(encoded).origin;
   assert.equal(origin?.kind, "pin");
@@ -299,9 +299,9 @@ test("the link's own query is stamped on the arrival", () => {
 test("a SharedOrigin is one of exactly two things", () => {
   // A narrow union rather than an open shape, so a third kind cannot be
   // introduced without every consumer noticing.
-  const preset: SharedOrigin = { kind: "preset", id: "home" };
+  const preset: SharedOrigin = { kind: "preset", id: "monroe" };
   const pin: SharedOrigin = { kind: "pin", lat: 37.5, lng: -77.4 };
-  assert.equal(preset.kind === "preset" ? preset.id : null, "home");
+  assert.equal(preset.kind === "preset" ? preset.id : null, "monroe");
   assert.equal(pin.kind === "pin" ? pin.lat : null, 37.5);
 });
 

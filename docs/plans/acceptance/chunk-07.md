@@ -106,7 +106,7 @@ partial credit: a check that is half true is false, and an unrun check is a fail
 - [x] The dial still scrubs without a network request
       - 31 positions from 20 to 80: **zero** `/api/isochrone` entries in the resource timeline, before and after
 - [x] A preset origin still cold-starts from its snapshot rather than the engine
-      - `/reach/37.53880_-77.43360.json?v=3` fetched, zero `/api/isochrone`
+      - `/reach/37.53882_-77.43356.json?v=3` fetched, zero `/api/isochrone`
 
 **Documentation**
 

@@ -13,7 +13,7 @@ measured a mean effective pace of 3.606 km/h, 2.3% *slower* than the pin
 conservatively. That measurement compared the engine to its own literal. It
 could not have detected the error we actually had.
 
-The field test did. One walk, downtown to the Virginia Holocaust Museum:
+The field test did. One walk, Shockoe Slip to the Virginia Holocaust Museum:
 the app said 22 minutes, Google Maps said 18, and it took 15:57. The pin set
 to agree with Google was disagreeing with Google by 22%, and with the ground
 by 38%. The route was effectively straight, so this is a pace error and not
@@ -38,7 +38,7 @@ population average that the walk is consistent with.
   an un-recut file is a cache miss rather than a wrong map.
 - Every ETA, every contour and every candidate pool moved. The README's
   reachable-area figures were re-measured (Monroe Park 2.03 → 2.93 sq mi,
-  downtown 1.48 → 2.24), and the circle they are compared against grew with
+  Shockoe Slip 1.48 → 2.24), and the circle they are compared against grew with
   them, so the app's actual argument — a circle lies most near the water — is
   unchanged in shape.
 - The `verify-engine` speed fixture was re-taken: 1.049 km in 791.0 s.

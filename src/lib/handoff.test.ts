@@ -18,14 +18,14 @@ test("handoff: googleDirectionsUrl emits the exact expected string", () => {
 });
 
 test("handoff: the Google URL is unchanged apart from origin rounding", () => {
-  // The Home preset is already at five decimals, so nothing rounds and the
+  // The origin is already at five decimals, so nothing rounds and the
   // output must be character-for-character what the old inline template
   // produced. Pins that the rounding is a trim, not a reformat.
-  const home = { lat: 37.5388, lng: -77.4336 };
+  const capitol = { lat: 37.53882, lng: -77.43356 };
   assert.equal(
-    googleDirectionsUrl(home, BELLE),
+    googleDirectionsUrl(capitol, BELLE),
     "https://www.google.com/maps/dir/?api=1&travelmode=walking" +
-      "&origin=37.5388,-77.4336&destination=37.529197,-77.452844",
+      "&origin=37.53882,-77.43356&destination=37.529197,-77.452844",
   );
 });
 

@@ -187,7 +187,7 @@ test("compass order sweeps clockwise from north around the origin", () => {
 });
 
 test("compass order keeps every place exactly once", () => {
-  const origin = { lng: -77.4336, lat: 37.5388 };
+  const origin = { lng: -77.43356, lat: 37.53882 };
   const places = Array.from({ length: 25 }, (_, i) => ({
     id: String(i),
     lng: origin.lng + Math.cos(i * 1.7) * 0.01,

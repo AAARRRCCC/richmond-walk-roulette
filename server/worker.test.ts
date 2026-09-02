@@ -416,14 +416,14 @@ test("a failed forecast is not stored", async (t) => {
  */
 const LOCATE_BODY = [
   {
-    input_lat: 37.5388,
-    input_lon: -77.4336,
+    input_lat: 37.53882,
+    input_lon: -77.43356,
     edges: [
       {
         distance: 3.8,
         outbound_reach: 50,
-        correlated_lat: 37.53372,
-        correlated_lon: -77.43141,
+        correlated_lat: 37.53884,
+        correlated_lon: -77.43362,
         edge: {
           access: { pedestrian: true },
           classification: { use: "sidewalk" },
@@ -438,7 +438,7 @@ const LOCATE_BODY = [
 test("an anchor is asked for once, however many runs want it", async (t) => {
   const caches = stubEdgeCache(t);
   const calls = stubFetch(t, () => Response.json(LOCATE_BODY));
-  const at = { point: { latitude: 37.5388, longitude: -77.4336 } };
+  const at = { point: { latitude: 37.53882, longitude: -77.43356 } };
 
   const first = await handleWorkerRequest(post("/api/locate", at), env({}), CTX);
   assert.equal(first.status, 200);
@@ -457,7 +457,7 @@ test("a locate costs the limiter exactly one", async (t) => {
   const anchor = limiter();
 
   await handleWorkerRequest(
-    post("/api/locate", { point: { latitude: 37.5388, longitude: -77.4336 } }),
+    post("/api/locate", { point: { latitude: 37.53882, longitude: -77.43356 } }),
     env({ API_RATE_LIMIT: anchor.binding }),
     CTX,
   );

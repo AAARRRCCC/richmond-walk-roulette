@@ -224,7 +224,7 @@ export const PLACES: Place[] = [
 
   // Campus.
   { id: "vcu-commons", name: "VCU Student Commons", lat: 37.546528, lng: -77.453442, tags: ["scenic"] },
-  // --- Shockoe Slip and the Bottom, added for the downtown origin. All
+  // --- Shockoe Slip and the Bottom, so the river side is covered. All
   // coordinates from OpenStreetMap via Overpass, as above.
   { id: "triple-crossing", name: "Triple Crossing", lat: 37.53196, lng: -77.43139, tags: ["history", "scenic"], osm: "node/4261567908" },
   { id: "first-freedom", name: "First Freedom Center", lat: 37.53482, lng: -77.43252, tags: ["museum", "history"], osm: "node/3500856476" },
@@ -436,7 +436,6 @@ export type Origin = LngLat & {
 
 /** Presets for the origin picker. Any of these is a plausible place to start. */
 export const PRESET_ORIGINS: Origin[] = [
-  { id: "home", name: "Home (downtown)", lat: 37.5388, lng: -77.4336 },
   { id: "monroe", name: "Monroe Park", lat: 37.546961, lng: -77.450237 },
   { id: "siegel", name: "Siegel Center", lat: 37.552875, lng: -77.452827 },
   { id: "vmfa", name: "VMFA", lat: 37.556058, lng: -77.474895 },

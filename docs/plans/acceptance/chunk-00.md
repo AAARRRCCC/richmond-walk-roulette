@@ -94,13 +94,13 @@ partial credit: a check that is half true is false, and an unrun check is a fail
 - [x] Every earlier chunk's acceptance file is still fully ticked
       - there is no earlier chunk
 - [x] Spinning still works, from a cold load, on a preset origin
-      - cold load on Home (downtown), spun to Brown's Island: 45 min out and back, 1.6 mi, route line drawn
+      - cold load on Home (Shockoe Slip), spun to Brown's Island: 45 min out and back, 1.6 mi, route line drawn
 - [x] Spinning still works on a dropped pin
       - nudged the origin marker 12 steps west by keyboard, which became "Dropped pin"; the ladder warmed from the engine (31 places at 75 min) and the spin landed The Valentine, 37 min out and back, 1.4 mi
 - [x] The dial still scrubs without a network request
       - scrubbed 50 to 75 by keyboard, 25 positions. Area and place count tracked every step (1.5 sq mi / 26 places to 3.9 sq mi / 31 places) and the network panel recorded zero `/api/` requests
 - [x] A preset origin still cold-starts from its snapshot rather than the engine
-      - cold load on Home (downtown) fetched `/reach/37.53880_-77.43360.json?v=2` and made zero `/api/isochrone` requests
+      - cold load on Home (Shockoe Slip) fetched `/reach/37.53882_-77.43356.json?v=2` and made zero `/api/isochrone` requests
 
 **Documentation**
 

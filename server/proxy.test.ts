@@ -495,7 +495,7 @@ test("the cache key is canonical, coarse to 5 decimals, and refuses bad requests
 // from a real instance rather than reasoned about.
 // ---------------------------------------------------------------------------
 
-const HOME = { latitude: 37.5388, longitude: -77.4336 };
+const HOME = { latitude: 37.53882, longitude: -77.43356 };
 
 type LocateEdge = {
   distance?: number;
@@ -512,8 +512,8 @@ function locateEdge(over: LocateEdge = {}): Json {
     distance: 3.8,
     outbound_reach: 50,
     inbound_reach: 50,
-    correlated_lat: 37.53372,
-    correlated_lon: -77.43141,
+    correlated_lat: 37.53884,
+    correlated_lon: -77.43362,
     edge: {
       access: { pedestrian: true, bicycle: true, car: false },
       classification: { classification: "service_other", use: "sidewalk", surface: "compacted" },
@@ -557,7 +557,7 @@ test("locate reads the verbose nesting", async (t) => {
   assert.equal(response?.status, 200);
   assert.equal(calls.length, 1);
   const body = await locateReply(response ?? new Response("{}"));
-  assert.deepEqual(body.point, { latitude: 37.53372, longitude: -77.43141 });
+  assert.deepEqual(body.point, { latitude: 37.53884, longitude: -77.43362 });
   assert.equal(body.distanceMeters, 3.8);
   assert.equal(body.use, "sidewalk");
   assert.equal(body.wayId, 1422377342);
@@ -693,14 +693,14 @@ test("locateCacheKey rounds to four decimals and is null on bad input", () => {
   // cells however close it is. That is not a defect - the bound is on the
   // number of cells, not on any pair - and stating it here stops the next
   // reader from "fixing" it.
-  const a = locateCacheKey({ point: { latitude: 37.53368, longitude: -77.43121 } });
-  const b = locateCacheKey({ point: { latitude: 37.53372, longitude: -77.43124 } });
+  const a = locateCacheKey({ point: { latitude: 37.53878, longitude: -77.43352 } });
+  const b = locateCacheKey({ point: { latitude: 37.53884, longitude: -77.43348 } });
   assert.equal(a, b);
   // The pace is part of the key, and read from the constant rather than
   // restated: a locate answer is only true for the speed it was asked at, and a
   // test carrying its own literal would keep passing through the one change it
   // exists to notice.
-  assert.equal(String(a), `/api/locate/v1-${WALKING_SPEED_KMH}/37.5388,-77.4312`);
+  assert.equal(String(a), `/api/locate/v1-${WALKING_SPEED_KMH}/37.5388,-77.4335`);
 
   // Two hundred metres apart is a different anchor and a different key.
   const far = locateCacheKey({ point: { latitude: 37.5355, longitude: -77.43121 } });

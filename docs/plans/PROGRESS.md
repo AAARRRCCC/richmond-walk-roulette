@@ -133,7 +133,7 @@ Non-mechanical boxes, and how each was observed:
   against the frame. Bottom-sheet layout, disclosures collapsed, no horizontal overflow.
 - **Dial scrubs with no request** — 25 positions by keyboard, area and count tracking every step,
   zero `/api/` requests in the network panel.
-- **Snapshot cold start** — one `/reach/37.53880_-77.43360.json?v=2`, zero `/api/isochrone`.
+- **Snapshot cold start** — one `/reach/37.53882_-77.43356.json?v=2`, zero `/api/isochrone`.
 - **Dropped pin** — nudged the marker 12 steps west, ladder warmed from the engine, spun to The
   Valentine.
 - **The one open box** is `prefers-reduced-motion`, which this machine cannot emulate.

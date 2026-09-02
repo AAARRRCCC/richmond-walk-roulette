@@ -366,9 +366,9 @@ const BELLE  = { lat: 37.529197, lng: -77.452844 };  // a real place, six decima
    `googleDirectionsUrl(MONROE, BELLE)` equals the literal in Data and types.
    This is the regression guard the whole extraction exists for.
 2. **The Google URL is unchanged apart from origin rounding.** With an origin
-   already at five decimals — `{ lat: 37.5388, lng: -77.4336 }`, the Home
+   already at five decimals — `{ lat: 37.53882, lng: -77.43356 }`, the Home
    preset — assert the emitted URL is character-for-character what the old
-   inline template produced: `…&origin=37.5388,-77.4336&destination=…`. Pins
+   inline template produced: `…&origin=37.53882,-77.43356&destination=…`. Pins
    that rounding is a trim, not a reformat.
 3. **`appleDirectionsUrl` uses the unified form with walking mode.** Assert the
    exact string, and separately assert `new URL(u).pathname === "/directions"`

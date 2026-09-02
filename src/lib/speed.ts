@@ -7,7 +7,7 @@
  * an average walker, and it replaced a 3.69 that had been calibrated against
  * Google's *isochrone* rather than against anybody walking. That older number
  * survived a 673-route measurement of the engine against itself (HUMAN-REVIEW
- * 2.5) and still failed the only test that counts: a real walk, downtown to
+ * 2.5) and still failed the only test that counts: a real walk, Shockoe Slip to
  * the Virginia Holocaust Museum, which the app called 22 minutes, Google called
  * 18, and a person finished in 15:57. A pin set to agree with Google that
  * disagrees with Google by 22% is measuring something other than walking.

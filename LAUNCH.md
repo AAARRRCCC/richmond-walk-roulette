@@ -83,7 +83,8 @@ pace. Summary here; the history has the full text.
 
 ## Verify against the live engine
 
-Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re-run against your production instance once it exists.
+Done through the dev proxy against FOSSGIS, origins Monroe Park and Capitol
+Square. Re-run against your production instance once it exists.
 
 - [ ] The deployed engine's graph was built **with elevation**
       (`build_elevation=True`, then `REBUILD=1 ./scripts/build-graph.sh`). Without
@@ -138,7 +139,7 @@ Done through the dev proxy against FOSSGIS, origins Monroe Park and downtown. Re
 - [ ] Read the emitted `og:url` from the first curl. If it carries a
       `workers.dev` or internal host rather than the public one, add a
       `SITE_ORIGIN` var and use it - deliberately not added speculatively
-- [ ] `curl -X POST <deployed>/api/locate -d '{"point":{"latitude":37.5388,"longitude":-77.4336}}'`
+- [ ] `curl -X POST <deployed>/api/locate -d '{"point":{"latitude":37.53882,"longitude":-77.43356}}'`
       answers 200 with a `point`, a `distanceMeters` and a `use`. It is a
       build-time endpoint that happens to be public: bounded to Richmond,
       pedestrian-pinned, one rate-limit unit, edge-cached thirty days
