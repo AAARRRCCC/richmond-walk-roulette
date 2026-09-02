@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+.git
+.github
+.claude
+valhalla
+worker
+tools
+design_handoff_walk_roulette
+docs
+*.log
+.env
+.env.*

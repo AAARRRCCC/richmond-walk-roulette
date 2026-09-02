@@ -69,7 +69,11 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
       if (value === undefined) continue;
       headers.set(name, Array.isArray(value) ? value.join(", ") : value);
     }
-    const request = new Request(`http://walk.internal${req.url ?? "/"}`, {
+    // Share heads print absolute og:url/og:image, so the origin has to be the
+    // one the browser used: traefik's forwarded headers, then Host.
+    const proto = headers.get("x-forwarded-proto") ?? "http";
+    const host = headers.get("x-forwarded-host") ?? headers.get("host") ?? "walk.internal";
+    const request = new Request(`${proto}://${host}${req.url ?? "/"}`, {
       method,
       headers,
       body: withBody && body.byteLength > 0 ? new Uint8Array(body) : null,
