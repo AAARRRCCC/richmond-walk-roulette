@@ -5,7 +5,6 @@ dist-ssr
 .github
 .claude
 valhalla
-worker
 tools
 design_handoff_walk_roulette
 docs
