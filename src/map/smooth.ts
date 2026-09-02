@@ -1,23 +1,11 @@
 /**
- * Rounds the raster staircase off a contour, for drawing only.
+ * Chaikin corner cutting on contour rings, for drawing only.
  *
- * Valhalla computes isochrones on a grid and traces the contour along cell
- * edges, so the geometry arrives as ~25 m steps square to the compass: on the
- * shipped data a quarter of all segments sit within three degrees of due
- * north-south or east-west. There is no API parameter for the grid - the
- * isochrone service takes only contours, polygons, denoise and generalize -
- * so the stair-stepping cannot be asked away at the source.
- *
- * It is also not information. Nobody's walking range ends in right angles on
- * a 25 m lattice; the steps are an artefact of how the answer was computed,
- * and drawing them faithfully draws the grid rather than the reach. Corner
- * cutting removes them and moves the boundary by a few metres at most, which
- * is far inside what an isochrone is accurate to anyway.
- *
- * Deliberately confined to the map layer, and deliberately not applied to the
- * geometry the app reasons with: which places are in reach is still decided
- * by `contains` against the engine's own polygon. Smoothing is allowed to
- * change the picture, never the answer.
+ * Valhalla traces isochrones along grid-cell edges, so contours arrive as
+ * ~25 m axis-aligned steps that the API cannot be asked to remove. Cutting
+ * the corners moves the boundary by a few metres, well inside what an
+ * isochrone is accurate to. Reach membership is still decided on the
+ * engine's own geometry.
  */
 
 import type { MultiPolygon, Ring } from "../lib/geometry";
@@ -28,11 +16,8 @@ import type { MultiPolygon, Ring } from "../lib/geometry";
  * Each pass halves the visible step and doubles the vertices.
  */
 function cutCorners(ring: Ring): Ring {
-  // GeoJSON rings repeat their first position as their last, and cutting that
-  // duplicate as if it were a corner is a no-op that leaves the start point
-  // exactly where the engine put it. Three corners of a square round off and
-  // the fourth stays a hard 25 m step - the artefact this module exists to
-  // remove - so open the ring, cut it, and close it again.
+  // Open the ring first: cutting the repeated closing point as a corner
+  // would leave one hard step at the start.
   const open = isClosed(ring) ? ring.slice(0, -1) : ring;
   const out: Ring = [];
   for (let i = 0; i < open.length; i++) {
@@ -46,27 +31,19 @@ function cutCorners(ring: Ring): Ring {
   return out;
 }
 
-/** Tested rather than assumed: an unclosed ring must not lose its last vertex. */
 function isClosed(ring: Ring): boolean {
   const first = ring[0];
   const last = ring[ring.length - 1];
   return first !== undefined && last !== undefined && first[0] === last[0] && first[1] === last[1];
 }
 
-/**
- * Two passes: one still reads as steps, three costs vertices without looking
- * any different at the zooms this map uses.
- */
+/** One pass still reads as steps; three adds vertices for no visible change. */
 const PASSES = 2;
 
 /** Rings shorter than a triangle have no corners worth cutting. */
 const MIN_RING = 4;
 
-/**
- * Keyed on the contour's identity, which the reach cache keeps stable for a
- * given origin and minute, so a dial scrub redraws from this rather than
- * recomputing the same curve every frame.
- */
+/** Keyed on contour identity, which the reach cache keeps stable per origin and minute. */
 const cache = new WeakMap<MultiPolygon, MultiPolygon>();
 
 export function smoothedForDisplay(polygons: MultiPolygon): MultiPolygon {

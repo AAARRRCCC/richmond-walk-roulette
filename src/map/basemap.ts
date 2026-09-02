@@ -1,13 +1,9 @@
 import type { StyleSpecification } from "maplibre-gl";
 
 /**
- * A hand-written dark cartographic style over OpenFreeMap's OpenMapTiles
- * vector source. Written out rather than fetched-and-recoloured: the isochrone
- * bloom is the only saturated thing on screen, and that only works if every
- * basemap colour is deliberately chosen to sit underneath it.
- *
- * OpenFreeMap needs no API key. Attribution is required and is rendered by the
- * map control.
+ * Hand-written dark style over OpenFreeMap's OpenMapTiles vector source, so
+ * every basemap colour sits underneath the amber contours. No API key;
+ * attribution is rendered by the map control.
  */
 
 const TILES = "https://tiles.openfreemap.org/planet";
