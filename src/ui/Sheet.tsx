@@ -97,7 +97,9 @@ export function Sheet(props: SheetProps) {
   useEffect(() => {
     const element = root.current;
     if (!element) return;
+    let startX = 0;
     let startY = 0;
+    let ownsGesture = false;
     let startHeight = 0;
     let lastY = 0;
     let lastT = 0;
@@ -109,6 +111,12 @@ export function Sheet(props: SheetProps) {
       const touch = event.touches[0];
       if (!touch) return;
       range = stops();
+      ownsGesture =
+        event.target instanceof Element &&
+        event.target.closest(
+          'input[type="range"], .dial-track, .profile-figure',
+        ) !== null;
+      startX = touch.clientX;
       startY = lastY = touch.clientY;
       lastT = event.timeStamp;
       startHeight = element.getBoundingClientRect().height;
@@ -120,7 +128,13 @@ export function Sheet(props: SheetProps) {
       if (!touch) return;
       const travel = startY - touch.clientY;
       if (mode === null) {
-        if (Math.abs(travel) < DRAG_SLOP_PX) return;
+        const sideways = Math.abs(touch.clientX - startX);
+        if (Math.abs(travel) < DRAG_SLOP_PX && sideways < DRAG_SLOP_PX) return;
+        // A scrub on a slider, or a mostly sideways move, is not a sheet drag.
+        if (ownsGesture || sideways > Math.abs(travel)) {
+          mode = "scroll";
+          return;
+        }
         const inBody =
           event.target instanceof Node &&
           (body.current?.contains(event.target) ?? false);

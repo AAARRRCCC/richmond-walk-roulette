@@ -1540,20 +1540,68 @@ code {
   .dial-value {
     font-size: 38px;
   }
-  /* Thumb targets. */
+  /* Thumb targets: nothing tappable under 44pt, and the dial thumbs are 28pt wide. */
   .chips {
     gap: 8px;
   }
   .chip {
-    padding: 10px 14px;
+    min-height: 44px;
+    padding: 10px 16px;
   }
   .icon-button {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
+  }
+  .button,
+  .origin-chip,
+  .meet-chip {
+    min-height: 48px;
+  }
+  .link-button {
+    padding: 12px 4px;
+    margin: -12px -4px;
+  }
+  .switch {
+    min-height: 44px;
+    align-items: center;
+  }
+  .switch-track {
+    width: 44px;
+    height: 26px;
+  }
+  .switch-thumb {
+    width: 18px;
+    height: 18px;
+  }
+  .switch input:checked + .switch-track .switch-thumb {
+    transform: translateX(18px);
+  }
+  .segmented button {
+    min-height: 40px;
+    padding: 0 14px;
   }
   .origin-action,
   .origin-option {
-    min-height: 44px;
+    min-height: 48px;
+  }
+  .dial-track {
+    height: 48px;
+  }
+  .dial-marks {
+    inset: 8px 14px 14px;
+  }
+  .dial-input::-webkit-slider-runnable-track {
+    height: 48px;
+  }
+  .dial-input::-webkit-slider-thumb {
+    width: 28px;
+    height: 48px;
+  }
+  .dial-scale {
+    padding: 0 14px;
+  }
+  .profile-chart {
+    height: 96px;
   }
 
   /* The readout is a row of stats; the origin chip needs no label above it. */
