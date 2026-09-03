@@ -12,13 +12,13 @@ export type PageProps = {
 /** A full-height page over the map and sheet, for a drawer's worth of controls on a phone. */
 export function Page(props: PageProps) {
   const titleId = useId();
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const root = useRef<HTMLDivElement>(null);
   const onClose = useRef(props.onClose);
   useEffect(() => {
     onClose.current = props.onClose;
   });
   useEffect(() => {
-    closeRef.current?.focus();
+    root.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose.current();
     };
@@ -28,6 +28,8 @@ export function Page(props: PageProps) {
 
   return (
     <div
+      ref={root}
+      tabIndex={-1}
       className="page"
       role="dialog"
       aria-modal="true"
@@ -38,7 +40,6 @@ export function Page(props: PageProps) {
           {props.title}
         </h2>
         <button
-          ref={closeRef}
           type="button"
           className="icon-button"
           aria-label="Close"

@@ -29,6 +29,14 @@ const FLICK_VELOCITY = 0.45;
  * scroll. Height is written straight to the element during a drag and settles
  * into React state on release.
  */
+/** Past a stop the sheet follows the finger at a quarter of its travel, like a native sheet. */
+const withResistance = (height: number, low: number, high: number): number =>
+  height > high
+    ? high + (height - high) / 4
+    : height < low
+      ? low - (low - height) / 4
+      : height;
+
 export function Sheet(props: SheetProps) {
   const root = useRef<HTMLDivElement>(null);
   const head = useRef<HTMLDivElement>(null);
@@ -134,7 +142,7 @@ export function Sheet(props: SheetProps) {
       velocity = (lastY - touch.clientY) / dt;
       lastY = touch.clientY;
       lastT = event.timeStamp;
-      apply(Math.min(range.full, Math.max(range.peek, startHeight + travel)));
+      apply(withResistance(startHeight + travel, range.peek, range.full));
     };
     const onEnd = () => {
       if (mode !== "sheet") return;

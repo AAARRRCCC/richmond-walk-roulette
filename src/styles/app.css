@@ -1556,6 +1556,46 @@ code {
     min-height: 44px;
   }
 
+  /* The readout is a row of stats; the origin chip needs no label above it. */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 10px;
+    margin: 0;
+  }
+  .stat-row .stat dd {
+    font-size: 15px;
+  }
+  .pool-summary.is-compact {
+    margin-top: -8px;
+    display: block;
+  }
+  .sheet-body .origin > .field-label {
+    display: none;
+  }
+  .origin-page,
+  .meet-page {
+    display: grid;
+    gap: 4px;
+  }
+  .meet-page {
+    gap: 12px;
+  }
+  .meet-page p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .meet-page p:first-child {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .sheet-body > .tuner-tab {
+    border-top: 0;
+  }
+
   /* Drawers become rows that open a full page. */
   .page-links {
     display: flex;

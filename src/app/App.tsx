@@ -12,12 +12,13 @@ import {
   CaretDownIcon,
   CaretRightIcon,
   ShuffleIcon,
+  UsersIcon,
   SpeakerSimpleHighIcon,
   SpeakerSimpleSlashIcon,
 } from "@phosphor-icons/react";
 import { MapCanvas } from "../map/MapCanvas";
 import { DialHead, TimeDial } from "../ui/TimeDial";
-import { OriginPicker } from "../ui/OriginPicker";
+import { OriginMenu, OriginPicker } from "../ui/OriginPicker";
 import { Filters } from "../ui/Filters";
 import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
 import { ResultCard, type ResultLine } from "../ui/ResultCard";
@@ -225,7 +226,9 @@ export function App() {
   const [filtersOpen, setFiltersOpen] = useState(wide);
   const [snap, setSnap] = useState<SheetSnap>("half");
   const [mirrorOpen, setMirrorOpen] = useState(false);
-  const [page, setPage] = useState<"filters" | "places" | null>(null);
+  const [page, setPage] = useState<
+    "filters" | "places" | "origin" | "meet" | null
+  >(null);
   /** Where the map's centre pin sits while a start is being placed on a phone. */
   const [pickCenter, setPickCenter] = useState<LngLat | null>(null);
   const emptyNoticeId = useId();
@@ -1156,6 +1159,19 @@ export function App() {
         <span className="brand-place">Richmond</span>
       </h1>
       <div className="brand-actions">
+        {!wide && roomId === null && status === "ready" && (
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Invite someone to meet"
+            onClick={() => {
+              playTap(true);
+              setPage("meet");
+            }}
+          >
+            <UsersIcon size={16} weight="bold" aria-hidden="true" />
+          </button>
+        )}
         <button
           type="button"
           className="icon-button"
@@ -1245,6 +1261,7 @@ export function App() {
           onCancelPickOnMap={() => dispatch({ type: "cancelPickOrigin" })}
           permissionHint={permissionHint}
           onUseMyLocation={useMyLocation}
+          onOpenPage={wide ? undefined : () => setPage("origin")}
         />
       )}
       {roomId !== null && (
@@ -1354,6 +1371,7 @@ export function App() {
           duskNote={status === "ready" ? describeDusk(conditions.light) : null}
           outerMinutes={outer?.minutes ?? outbound}
           commitKey={state.framingKey}
+          compact={!wide}
           meet={
             meetMode
               ? {
@@ -1405,7 +1423,7 @@ export function App() {
 
       {wide && spinButton}
 
-      {status === "ready" && roomId === null && (
+      {status === "ready" && roomId === null && wide && (
         <RoomPanel
           room={null}
           roomUrl={null}
@@ -1669,6 +1687,51 @@ export function App() {
               onFix={applyFix}
             />
           )}
+        </Page>
+      )}
+      {!wide && page === "origin" && (
+        <Page title="Starting from" onClose={() => setPage(null)}>
+          <div className="origin-page">
+            <OriginMenu
+              origin={origin}
+              locating={locating}
+              permissionHint={permissionHint}
+              onSelect={(next) => dispatch({ type: "origin", origin: next })}
+              onBeginPickOnMap={beginPick}
+              onUseMyLocation={useMyLocation}
+              onDone={() => setPage(null)}
+            />
+          </div>
+        </Page>
+      )}
+      {!wide && page === "meet" && (
+        <Page
+          title="Meet someone"
+          onClose={() => setPage(null)}
+          footer={
+            <button
+              type="button"
+              className="button is-primary"
+              onClick={() => {
+                playPress();
+                setPage(null);
+                startRoom();
+              }}
+            >
+              <UsersIcon size={16} weight="bold" aria-hidden="true" />
+              Start a room
+            </button>
+          }
+        >
+          <div className="meet-page">
+            <p>Find somewhere you can both walk to.</p>
+            <p>
+              You get a link. Whoever opens it sees your start and your settings
+              in that room, for 12 hours, and nowhere else. Their start reaches
+              you only when they choose to share it.
+            </p>
+            <p>Both of you lock in a time budget, then either of you spins.</p>
+          </div>
         </Page>
       )}
       {!wide && page === "places" && reach !== null && (
