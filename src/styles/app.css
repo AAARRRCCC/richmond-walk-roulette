@@ -1558,10 +1558,14 @@ code {
 
   /* The readout is a row of stats; the origin chip needs no label above it. */
   .stat-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
-    gap: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
     margin: 0;
+  }
+  .stat-row .stat dt,
+  .stat-row .stat dd {
+    white-space: nowrap;
   }
   .stat-row .stat dd {
     font-size: 15px;
@@ -1570,7 +1574,7 @@ code {
     margin-top: -8px;
     display: block;
   }
-  .sheet-body .origin > .field-label {
+  .sheet-body .origin:not(.meet) > .field-label {
     display: none;
   }
   .origin-page,
