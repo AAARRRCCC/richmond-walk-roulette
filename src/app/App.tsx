@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   CaretDownIcon,
+  CaretRightIcon,
   ShuffleIcon,
   SpeakerSimpleHighIcon,
   SpeakerSimpleSlashIcon,
@@ -28,6 +29,7 @@ import { RoomPanel } from "../ui/RoomPanel";
 import { PartnerRail } from "../ui/PartnerRail";
 import { TuningPanel } from "../ui/TuningPanel";
 import { Sheet, type SheetSnap } from "../ui/Sheet";
+import { Page } from "../ui/Page";
 import {
   DETOUR_LABELS,
   PLACES,
@@ -223,6 +225,9 @@ export function App() {
   const [filtersOpen, setFiltersOpen] = useState(wide);
   const [snap, setSnap] = useState<SheetSnap>("half");
   const [mirrorOpen, setMirrorOpen] = useState(false);
+  const [page, setPage] = useState<"filters" | "places" | null>(null);
+  /** Where the map's centre pin sits while a start is being placed on a phone. */
+  const [pickCenter, setPickCenter] = useState<LngLat | null>(null);
   const emptyNoticeId = useId();
   const dialHeadId = useId();
   const locationNoticeId = useId();
@@ -1075,6 +1080,7 @@ export function App() {
       originVisible={originChosen}
       onPickPlace={(id) => dispatch({ type: "pickPlace", pickedId: id })}
       onMoveOrigin={moveOrigin}
+      onMoveEnd={setPickCenter}
     />
   );
 
@@ -1513,6 +1519,57 @@ export function App() {
     </div>
   );
 
+  const filtersPanel = (
+    <Filters
+      climb={state.climb}
+      climbAvailable={elevationAvailable() !== false}
+      vibes={state.vibes}
+      roundTrip={state.roundTrip}
+      edgeOnly={state.edgeOnly}
+      weatherAware={state.weatherAware}
+      kind={state.kind}
+      hideClosed={state.hideClosed}
+      onClimb={(climb) => dispatch({ type: "climb", climb })}
+      onKind={(kind) => dispatch({ type: "kind", kind })}
+      onToggleHideClosed={() => dispatch({ type: "toggleHideClosed" })}
+      onToggleVibe={(vibe) => dispatch({ type: "toggleVibe", vibe })}
+      onToggleRoundTrip={() => dispatch({ type: "toggleRoundTrip" })}
+      onToggleEdge={() => dispatch({ type: "toggleEdge" })}
+      onToggleWeatherAware={() => dispatch({ type: "toggleWeatherAware" })}
+    />
+  );
+  const poolList = (
+    <PoolList
+      pool={pool}
+      places={PLACES}
+      pickedId={state.pickedId}
+      onPick={(id) => dispatch({ type: "pickPlace", pickedId: id })}
+    />
+  );
+
+  const pageLinks = (
+    <div className="page-links" {...inertWhen(picking)}>
+      <button
+        type="button"
+        className="page-link"
+        onClick={() => setPage("filters")}
+      >
+        {activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}
+        <CaretRightIcon size={14} weight="bold" aria-hidden="true" />
+      </button>
+      {reach !== null && (
+        <button
+          type="button"
+          className="page-link"
+          onClick={() => setPage("places")}
+        >
+          All places ({pool.total})
+          <CaretRightIcon size={14} weight="bold" aria-hidden="true" />
+        </button>
+      )}
+    </div>
+  );
+
   const drawers = (
     <>
       <details
@@ -1524,34 +1581,13 @@ export function App() {
         <summary>
           {activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}
         </summary>
-        <Filters
-          climb={state.climb}
-          climbAvailable={elevationAvailable() !== false}
-          vibes={state.vibes}
-          roundTrip={state.roundTrip}
-          edgeOnly={state.edgeOnly}
-          weatherAware={state.weatherAware}
-          kind={state.kind}
-          hideClosed={state.hideClosed}
-          onClimb={(climb) => dispatch({ type: "climb", climb })}
-          onKind={(kind) => dispatch({ type: "kind", kind })}
-          onToggleHideClosed={() => dispatch({ type: "toggleHideClosed" })}
-          onToggleVibe={(vibe) => dispatch({ type: "toggleVibe", vibe })}
-          onToggleRoundTrip={() => dispatch({ type: "toggleRoundTrip" })}
-          onToggleEdge={() => dispatch({ type: "toggleEdge" })}
-          onToggleWeatherAware={() => dispatch({ type: "toggleWeatherAware" })}
-        />
+        {filtersPanel}
       </details>
 
       {reach !== null && (
         <details className="drawer" {...inertWhen(picking)}>
           <summary>All places ({pool.total})</summary>
-          <PoolList
-            pool={pool}
-            places={PLACES}
-            pickedId={state.pickedId}
-            onPick={(id) => dispatch({ type: "pickPlace", pickedId: id })}
-          />
+          {poolList}
         </details>
       )}
     </>
@@ -1599,11 +1635,94 @@ export function App() {
             <>
               {panel}
               {spinSlot}
-              {drawers}
+              {pageLinks}
             </>
           )}
           {tail}
         </Sheet>
+      )}
+
+      {!wide && page === "filters" && (
+        <Page
+          title="Filters"
+          onClose={() => setPage(null)}
+          footer={
+            <button
+              type="button"
+              className="button is-primary"
+              onClick={() => {
+                playPress();
+                setPage(null);
+              }}
+            >
+              {emptyPool ? "Done" : `Show ${candidates.length} places`}
+            </button>
+          }
+        >
+          {filtersPanel}
+          {emptyPool && (
+            <EmptyPoolNotice
+              id={`${emptyNoticeId}-page`}
+              fix={fix}
+              outerMinutes={outer?.minutes ?? outbound}
+              inReach={pool.inReach}
+              onFix={applyFix}
+            />
+          )}
+        </Page>
+      )}
+      {!wide && page === "places" && reach !== null && (
+        <Page
+          title={`All places (${pool.total})`}
+          onClose={() => setPage(null)}
+        >
+          <PoolList
+            pool={pool}
+            places={PLACES}
+            pickedId={state.pickedId}
+            onPick={(id) => {
+              dispatch({ type: "pickPlace", pickedId: id });
+              setPage(null);
+            }}
+          />
+        </Page>
+      )}
+      {!wide && picking && (
+        <>
+          <div className="pick-pin" aria-hidden="true" />
+          <div className="pick-bar" role="group" aria-label="Place your start">
+            <p>Move the map until the pin sits on your start.</p>
+            <div className="pick-actions">
+              <button
+                type="button"
+                className="button"
+                onClick={() => {
+                  playTap(false);
+                  dispatch({ type: "cancelPickOrigin" });
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button is-primary"
+                disabled={pickCenter === null}
+                onClick={() => {
+                  playPress();
+                  if (pickCenter !== null)
+                    dispatch({
+                      type: "origin",
+                      origin: customOrigin(pickCenter),
+                    });
+                  dispatch({ type: "cancelPickOrigin" });
+                  setSnap("half");
+                }}
+              >
+                Set start here
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {roomId !== null && (
