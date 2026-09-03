@@ -1447,8 +1447,55 @@ code {
     touch-action: none;
   }
   .brand {
-    padding: 4px max(var(--pad), env(safe-area-inset-right)) 8px
+    padding: 4px max(var(--pad), env(safe-area-inset-right)) 0
       max(var(--pad), env(safe-area-inset-left));
+  }
+  .brand h1 {
+    font-size: 13px;
+  }
+  .brand-place {
+    font-size: 10px;
+  }
+  /* The dial's value row lives in the head, so peek still says what the walk is. */
+  .sheet-dial {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 2px var(--pad) 12px;
+  }
+  .sheet-dial .dial-head {
+    flex-wrap: wrap;
+    margin: 0;
+  }
+  .sheet-dial .dial-caption {
+    flex-basis: 100%;
+    margin-left: 0;
+    text-align: left;
+  }
+  .segmented {
+    display: inline-flex;
+    flex: none;
+    margin-bottom: 4px;
+    padding: 2px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    background: var(--raise);
+  }
+  .segmented button {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: none;
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .segmented button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--accent-ink);
   }
   /* A landing owns the sheet: the card sits at the top of the body, nothing above it. */
   .sheet-body > .spin-slot:first-child {

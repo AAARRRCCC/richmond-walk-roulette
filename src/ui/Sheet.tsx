@@ -175,7 +175,16 @@ export function Sheet(props: SheetProps) {
       ref={root}
       className={`rail sheet is-${props.snap}${props.className ? ` ${props.className}` : ""}`}
     >
-      <div ref={head} className="sheet-head">
+      <div
+        ref={head}
+        className="sheet-head"
+        onClick={(event) => {
+          if (props.snap !== "peek") return;
+          if (event.target instanceof Element && event.target.closest("button"))
+            return;
+          props.onSnap("half");
+        }}
+      >
         <div className="sheet-grip" aria-hidden="true" />
         {props.head}
       </div>

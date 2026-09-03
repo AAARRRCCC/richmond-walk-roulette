@@ -15,7 +15,7 @@ import {
   SpeakerSimpleSlashIcon,
 } from "@phosphor-icons/react";
 import { MapCanvas } from "../map/MapCanvas";
-import { TimeDial } from "../ui/TimeDial";
+import { DialHead, TimeDial } from "../ui/TimeDial";
 import { OriginPicker } from "../ui/OriginPicker";
 import { Filters } from "../ui/Filters";
 import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
@@ -224,6 +224,7 @@ export function App() {
   const [snap, setSnap] = useState<SheetSnap>("half");
   const [mirrorOpen, setMirrorOpen] = useState(false);
   const emptyNoticeId = useId();
+  const dialHeadId = useId();
   const locationNoticeId = useId();
   const spinRef = useRef<HTMLButtonElement>(null);
 
@@ -1077,6 +1078,71 @@ export function App() {
     />
   );
 
+  const dial = (
+    <TimeDial
+      minutes={state.budgetMinutes}
+      floorMinutes={state.floorMinutes}
+      minimum={dialMinimum(state.roundTrip)}
+      maximum={cappedTo}
+      capNote={
+        cappedTo < MAX_MINUTES
+          ? capNote(state.timeCap, cappedTo, conditions.light)
+          : undefined
+      }
+      step={budgetStep()}
+      outboundMinutes={outbound}
+      roundTrip={state.roundTrip}
+      isWarm={dialWarm}
+      warming={originChosen}
+      warmedFraction={
+        meetMode ? (state.warmed + state.partnerWarmed) / 2 : state.warmed
+      }
+      disabled={picking}
+      onChange={(minutes) => dispatch({ type: "budget", minutes })}
+      onFloorChange={(minutes) => dispatch({ type: "floor", minutes })}
+      onScrub={setScrubbing}
+      onCommit={() => dispatch({ type: "frame" })}
+      headId={wide ? undefined : dialHeadId}
+    />
+  );
+
+  const sheetDial = (
+    <div className="sheet-dial" {...inertWhen(picking)}>
+      <DialHead
+        id={dialHeadId}
+        minutes={state.budgetMinutes}
+        floorMinutes={state.floorMinutes}
+        minimum={dialMinimum(state.roundTrip)}
+        outboundMinutes={outbound}
+        roundTrip={state.roundTrip}
+      />
+      <div className="segmented" role="group" aria-label="Trip shape">
+        <button
+          type="button"
+          aria-pressed={state.roundTrip}
+          onClick={() => {
+            if (state.roundTrip) return;
+            playTap(true);
+            dispatch({ type: "toggleRoundTrip" });
+          }}
+        >
+          Round trip
+        </button>
+        <button
+          type="button"
+          aria-pressed={!state.roundTrip}
+          onClick={() => {
+            if (!state.roundTrip) return;
+            playTap(true);
+            dispatch({ type: "toggleRoundTrip" });
+          }}
+        >
+          One way
+        </button>
+      </div>
+    </div>
+  );
+
   const header = (
     <header className="brand" {...inertWhen(picking)}>
       <h1>
@@ -1162,6 +1228,7 @@ export function App() {
 
   const panel = (
     <div className="panel">
+      {!wide && dial}
       {!(roomId !== null && !originChosen && !wide) && (
         <OriginPicker
           origin={origin}
@@ -1242,30 +1309,7 @@ export function App() {
           </p>
         )}
 
-      <TimeDial
-        minutes={state.budgetMinutes}
-        floorMinutes={state.floorMinutes}
-        minimum={dialMinimum(state.roundTrip)}
-        maximum={cappedTo}
-        capNote={
-          cappedTo < MAX_MINUTES
-            ? capNote(state.timeCap, cappedTo, conditions.light)
-            : undefined
-        }
-        step={budgetStep()}
-        outboundMinutes={outbound}
-        roundTrip={state.roundTrip}
-        isWarm={dialWarm}
-        warming={originChosen}
-        warmedFraction={
-          meetMode ? (state.warmed + state.partnerWarmed) / 2 : state.warmed
-        }
-        disabled={picking}
-        onChange={(minutes) => dispatch({ type: "budget", minutes })}
-        onFloorChange={(minutes) => dispatch({ type: "floor", minutes })}
-        onScrub={setScrubbing}
-        onCommit={() => dispatch({ type: "frame" })}
-      />
+      {wide && dial}
 
       <DaylightSwitch
         checked={state.beforeDark}
@@ -1541,7 +1585,12 @@ export function App() {
           snap={snap}
           onSnap={setSnap}
           topInset={roomId === null ? 16 : mirrorOpen ? 220 : 72}
-          head={header}
+          head={
+            <>
+              {header}
+              {sheetDial}
+            </>
+          }
           bar={spinButton}
         >
           {landing ? (
