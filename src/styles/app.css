@@ -1232,6 +1232,9 @@ code {
   align-items: center;
   justify-content: space-between;
 }
+.mirror-body {
+  display: contents;
+}
 .mirror-dot {
   flex: none;
   width: 8px;
@@ -1388,49 +1391,82 @@ code {
 @media (max-width: 899px) {
   :root {
     --pad: 16px;
+    --sheet-h: 50vh;
   }
 
-  /* Bottom sheet. The brand row is the handle; collapsed, it is all that stays. */
+  /* The rail is a bottom sheet with three stops; Sheet.tsx writes its height. */
   .rail {
     top: auto;
     left: 0;
     right: 0;
     bottom: 0;
     width: auto;
-    max-height: 72dvh;
-    padding-bottom: env(safe-area-inset-bottom);
+    height: var(--sheet-h);
+    overflow: hidden;
     border-right: 0;
     border-top: 1px solid var(--line-strong);
     border-radius: 14px 14px 0 0;
+    transition: height 320ms var(--ease), opacity 200ms var(--ease);
   }
-  .rail.is-collapsed {
-    overflow: hidden;
+  .rail.is-dragging {
+    transition: opacity 200ms var(--ease);
   }
-  .rail.is-collapsed > .panel,
-  .rail.is-collapsed > .spin-slot,
-  .rail.is-collapsed > .drawer,
-  .rail.is-collapsed > .tuner,
-  .rail.is-collapsed > .tuner-tab {
+  .rail > * + * {
+    border-top: 0;
+  }
+  .sheet-head {
+    flex: none;
+    touch-action: none;
+  }
+  .sheet-grip {
+    width: 36px;
+    height: 4px;
+    margin: 8px auto 0;
+    border-radius: 2px;
+    background: var(--line-strong);
+  }
+  .sheet-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-top: 1px solid var(--line);
+  }
+  .sheet-body > * + * {
+    border-top: 1px solid var(--line);
+  }
+  .sheet-body > .sr-only {
     display: none;
   }
+  .sheet-bar {
+    flex: none;
+    padding: 10px var(--pad) max(10px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--surface-solid);
+    touch-action: none;
+  }
   .brand {
-    padding: 12px max(var(--pad), env(safe-area-inset-right)) 10px
+    padding: 4px max(var(--pad), env(safe-area-inset-right)) 8px
       max(var(--pad), env(safe-area-inset-left));
   }
+  /* A landing owns the sheet: the card sits at the top of the body, nothing above it. */
+  .sheet-body > .spin-slot:first-child {
+    padding-top: var(--pad);
+  }
 
-  /* The sheet covers the bottom corners, so map credits move to the top. */
+  /* Map chrome rides on the sheet's top edge; zoom buttons go, pinch does it. */
   .maplibregl-ctrl-bottom-right {
-    top: calc(10px + env(safe-area-inset-top));
-    bottom: auto;
+    bottom: calc(var(--sheet-h) + 4px);
   }
   .reach-attribution {
-    top: calc(38px + env(safe-area-inset-top));
-    bottom: auto;
+    right: 8px;
+    bottom: calc(var(--sheet-h) + 30px);
+    font-size: 10px;
   }
   .map-notice {
     left: 8px;
-    top: calc(64px + env(safe-area-inset-top));
-    bottom: auto;
+    right: auto;
+    bottom: calc(var(--sheet-h) + 8px);
   }
   .maplibregl-ctrl-top-right .maplibregl-ctrl-group {
     display: none;
@@ -1438,6 +1474,14 @@ code {
 
   .result-actions {
     grid-template-columns: 1fr;
+  }
+  .result-actions.is-compact {
+    grid-template-columns: 1fr auto;
+  }
+  .result-chooser {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
   .dial-value {
     font-size: 38px;
@@ -1453,14 +1497,63 @@ code {
     width: 40px;
     height: 40px;
   }
-  /* Their side becomes a top sheet; the reader's own rail stays at the bottom. */
+  .origin-action,
+  .origin-option {
+    min-height: 44px;
+  }
+
+  /* Their side is a strip under the status bar that opens on tap. */
   .mirror {
     top: calc(8px + env(safe-area-inset-top));
     left: 12px;
     right: 12px;
     width: auto;
-    max-height: 42dvh;
+    max-height: 38dvh;
     overflow-y: auto;
+    padding: 0;
+  }
+  .mirror-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 0;
+    background: none;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .mirror-strip-name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mirror-strip-value {
+    flex: 1;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .mirror-strip .mirror-lock {
+    margin-left: 0;
+  }
+  .mirror-caret {
+    flex: none;
+    color: var(--ink-3);
+    transition: transform 160ms ease;
+  }
+  .mirror.is-open .mirror-caret {
+    transform: rotate(180deg);
+  }
+  .mirror-body {
+    display: grid;
+    gap: 10px;
+    padding: 4px 14px 14px;
+    border-top: 1px solid var(--line);
   }
 }
 

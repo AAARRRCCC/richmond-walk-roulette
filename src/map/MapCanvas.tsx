@@ -570,8 +570,11 @@ function framePadding(map: MapLibreMap) {
     const left = Math.min(rail.right + 24, canvas.clientWidth - edge - MIN_VISIBLE_PX);
     return { top: edge, right: edge, bottom: edge, left: Math.max(edge, Math.round(left)) };
   }
-  const bottom = Math.min(canvas.clientHeight - rail.top + 16, canvas.clientHeight - edge - MIN_VISIBLE_PX);
-  return { top: edge, right: edge, bottom: Math.max(edge, Math.round(bottom)), left: edge };
+  // The top sheet holds their side; the visible strip sits between the two.
+  const mirror = document.querySelector(".mirror")?.getBoundingClientRect();
+  const top = mirror ? Math.max(edge, Math.round(mirror.bottom + 12)) : edge;
+  const bottom = Math.min(canvas.clientHeight - rail.top + 16, canvas.clientHeight - top - MIN_VISIBLE_PX);
+  return { top, right: 24, bottom: Math.max(edge, Math.round(bottom)), left: 24 };
 }
 
 function syncBands(
