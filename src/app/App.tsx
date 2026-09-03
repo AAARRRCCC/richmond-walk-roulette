@@ -10,13 +10,15 @@ import {
 } from "react";
 import {
   CaretDownIcon,
+  CaretRightIcon,
   ShuffleIcon,
+  UsersIcon,
   SpeakerSimpleHighIcon,
   SpeakerSimpleSlashIcon,
 } from "@phosphor-icons/react";
 import { MapCanvas } from "../map/MapCanvas";
-import { TimeDial } from "../ui/TimeDial";
-import { OriginPicker } from "../ui/OriginPicker";
+import { DialHead, TimeDial } from "../ui/TimeDial";
+import { OriginMenu, OriginPicker } from "../ui/OriginPicker";
 import { Filters } from "../ui/Filters";
 import { ReachReadout, type ReachStatus } from "../ui/ReachReadout";
 import { ResultCard, type ResultLine } from "../ui/ResultCard";
@@ -27,6 +29,8 @@ import { EmptyPoolNotice } from "../ui/EmptyPoolNotice";
 import { RoomPanel } from "../ui/RoomPanel";
 import { PartnerRail } from "../ui/PartnerRail";
 import { TuningPanel } from "../ui/TuningPanel";
+import { Sheet, type SheetSnap } from "../ui/Sheet";
+import { Page } from "../ui/Page";
 import {
   DETOUR_LABELS,
   PLACES,
@@ -220,8 +224,15 @@ export function App() {
   );
   const [wide, setWide] = useState(() => window.matchMedia(WIDE).matches);
   const [filtersOpen, setFiltersOpen] = useState(wide);
-  const [railCollapsed, setRailCollapsed] = useState(false);
+  const [snap, setSnap] = useState<SheetSnap>("half");
+  const [mirrorOpen, setMirrorOpen] = useState(false);
+  const [page, setPage] = useState<
+    "filters" | "places" | "origin" | "meet" | null
+  >(null);
+  /** Where the map's centre pin sits while a start is being placed on a phone. */
+  const [pickCenter, setPickCenter] = useState<LngLat | null>(null);
   const emptyNoticeId = useId();
+  const dialHeadId = useId();
   const locationNoticeId = useId();
   const spinRef = useRef<HTMLButtonElement>(null);
 
@@ -628,6 +639,8 @@ export function App() {
       return winnerRoute;
     });
     dispatch({ type: "spinStart" });
+    // A throw and its landing own the sheet at half.
+    if (!wide) setSnap("half");
     runSpin(winner, drawable, ready, origin);
   };
 
@@ -912,7 +925,15 @@ export function App() {
   useEffect(() => {
     if (roomId === null || room.status !== "open" || scrubbing) return;
     send(setupText);
-  }, [roomId, room.status, room.joins, room.peerConnected, scrubbing, setupText, send]);
+  }, [
+    roomId,
+    room.status,
+    room.joins,
+    room.peerConnected,
+    scrubbing,
+    setupText,
+    send,
+  ]);
 
   // The address bar names the room while there is one, and otherwise clears
   // once it stops describing the screen.
@@ -946,7 +967,15 @@ export function App() {
   };
 
   const picking = state.pickingOrigin;
-  const collapsed = railCollapsed && !wide;
+  // The sheet parks at peek while a pin is being placed.
+  const beginPick = (): void => {
+    if (!wide) setSnap("peek");
+    dispatch({ type: "beginPickOrigin" });
+  };
+  useEffect(() => {
+    dispatch({ type: "frame" });
+  }, [roomId]);
+  const landing = !wide && (state.spinning || picked !== null);
   const emptyPool = status === "ready" && candidates.length === 0;
 
   // A weather cap empties the pool by shrinking the contour, not by excluding,
@@ -1036,461 +1065,728 @@ export function App() {
         rule.active && rule.reason !== "weather" && rule.reason !== "closed",
     ).length;
 
-  return (
-    <div className={`shell${picking ? " is-picking" : ""}`}>
-      <MapCanvas
-        origin={origin}
-        reach={reach}
-        places={PLACES}
-        inReachIds={pool.includedIds}
-        hoverMeters={hoverMeters}
-        pickedId={active?.id ?? null}
-        framingKey={state.framingKey}
-        route={route}
-        pickingOrigin={picking}
-        spinning={state.spinning}
-        partnerOrigin={partner}
-        partnerBand={partnerReach?.bands.at(-1)?.polygons ?? null}
-        partnerName={partnerName}
-        originVisible={originChosen}
-        onPickPlace={(id) => dispatch({ type: "pickPlace", pickedId: id })}
-        onMoveOrigin={moveOrigin}
+  const map = (
+    <MapCanvas
+      origin={origin}
+      reach={reach}
+      places={PLACES}
+      inReachIds={pool.includedIds}
+      hoverMeters={hoverMeters}
+      pickedId={active?.id ?? null}
+      framingKey={state.framingKey}
+      route={route}
+      pickingOrigin={picking}
+      spinning={state.spinning}
+      partnerOrigin={partner}
+      partnerBand={partnerReach?.bands.at(-1)?.polygons ?? null}
+      partnerName={partnerName}
+      originVisible={originChosen}
+      onPickPlace={(id) => dispatch({ type: "pickPlace", pickedId: id })}
+      onMoveOrigin={moveOrigin}
+      onMoveEnd={setPickCenter}
+    />
+  );
+
+  const dial = (
+    <TimeDial
+      minutes={state.budgetMinutes}
+      floorMinutes={state.floorMinutes}
+      minimum={dialMinimum(state.roundTrip)}
+      maximum={cappedTo}
+      capNote={
+        cappedTo < MAX_MINUTES
+          ? capNote(state.timeCap, cappedTo, conditions.light)
+          : undefined
+      }
+      step={budgetStep()}
+      outboundMinutes={outbound}
+      roundTrip={state.roundTrip}
+      isWarm={dialWarm}
+      warming={originChosen}
+      warmedFraction={
+        meetMode ? (state.warmed + state.partnerWarmed) / 2 : state.warmed
+      }
+      disabled={picking}
+      onChange={(minutes) => dispatch({ type: "budget", minutes })}
+      onFloorChange={(minutes) => dispatch({ type: "floor", minutes })}
+      onScrub={setScrubbing}
+      onCommit={() => dispatch({ type: "frame" })}
+      headId={wide ? undefined : dialHeadId}
+    />
+  );
+
+  const sheetDial = (
+    <div className="sheet-dial" {...inertWhen(picking)}>
+      <DialHead
+        id={dialHeadId}
+        minutes={state.budgetMinutes}
+        floorMinutes={state.floorMinutes}
+        minimum={dialMinimum(state.roundTrip)}
+        outboundMinutes={outbound}
+        roundTrip={state.roundTrip}
       />
+      <div className="segmented" role="group" aria-label="Trip shape">
+        <button
+          type="button"
+          aria-pressed={state.roundTrip}
+          onClick={() => {
+            if (state.roundTrip) return;
+            playTap(true);
+            dispatch({ type: "toggleRoundTrip" });
+          }}
+        >
+          Round trip
+        </button>
+        <button
+          type="button"
+          aria-pressed={!state.roundTrip}
+          onClick={() => {
+            if (!state.roundTrip) return;
+            playTap(true);
+            dispatch({ type: "toggleRoundTrip" });
+          }}
+        >
+          One way
+        </button>
+      </div>
+    </div>
+  );
 
-      <div className={`rail${collapsed ? " is-collapsed" : ""}`}>
-        <header className="brand" {...inertWhen(picking)}>
-          <h1>
-            Walk Roulette
-            <span className="brand-place">Richmond</span>
-          </h1>
-          <div className="brand-actions">
-            <button
-              type="button"
-              className="icon-button"
-              aria-label={sound ? "Mute sound cues" : "Unmute sound cues"}
-              onClick={() => {
-                const next = !sound;
-                setSoundOn(next);
-                if (next) playTap(true);
-              }}
-            >
-              {sound ? (
-                <SpeakerSimpleHighIcon size={16} aria-hidden="true" />
-              ) : (
-                <SpeakerSimpleSlashIcon size={16} aria-hidden="true" />
-              )}
-            </button>
-            {!wide && (
-              <button
-                type="button"
-                className="icon-button rail-toggle"
-                aria-expanded={!collapsed}
-                aria-label={collapsed ? "Show controls" : "Hide controls"}
-                onClick={() => {
-                  playPress();
-                  setRailCollapsed((value) => !value);
-                }}
-              >
-                <CaretDownIcon
-                  size={16}
-                  weight="bold"
-                  aria-hidden="true"
-                  style={
-                    collapsed ? { transform: "rotate(180deg)" } : undefined
-                  }
-                />
-              </button>
-            )}
-          </div>
-        </header>
-
-        <div className="panel">
-          <OriginPicker
-            origin={origin}
-            pickingOrigin={picking}
-            locating={locating}
-            onSelect={(next) => dispatch({ type: "origin", origin: next })}
-            onBeginPickOnMap={() => dispatch({ type: "beginPickOrigin" })}
-            onCancelPickOnMap={() => dispatch({ type: "cancelPickOrigin" })}
-            permissionHint={permissionHint}
-            onUseMyLocation={useMyLocation}
-          />
-          {roomId !== null && (
-            <RoomPanel
-              room={room}
-              roomUrl={roomUrl(window.location.origin, roomId)}
-              origin={origin}
-              originChosen={originChosen}
-              consented={consented}
-              partnerFailure={state.partnerFailure}
-              permissionHint={permissionHint}
-              locating={locating}
-              onStartRoom={startRoom}
-              onShareStart={() => setConsented(true)}
-              onUseMyLocation={useMyLocation}
-              onPickOnMap={() => dispatch({ type: "beginPickOrigin" })}
-              onSelectPreset={(next: Origin) =>
-                dispatch({ type: "origin", origin: next })
-              }
-              onLeave={leaveRoom}
-              onNewRoom={() => {
-                leaveRoom();
-                startRoom();
-              }}
-            />
-          )}
-          {state.locationNotice && (
-            <div className="notice-stack" {...inertWhen(picking)}>
-              <p
-                id={locationNoticeId}
-                className={
-                  state.locationNotice.tone === "warn"
-                    ? "notice is-warn"
-                    : "notice"
-                }
-                role={state.locationNotice.tone === "warn" ? "alert" : "status"}
-              >
-                {state.locationNotice.message}
-              </p>
-              {/* Outside the live region: a control inside an assertive region announces inconsistently. */}
-              {state.locationNotice.suggest && (
-                <button
-                  type="button"
-                  className="link-button"
-                  aria-describedby={locationNoticeId}
-                  onClick={() => {
-                    playTap(true);
-                    if (state.locationNotice?.suggest) {
-                      dispatch({
-                        type: "origin",
-                        origin: state.locationNotice.suggest,
-                      });
-                    }
-                  }}
-                >
-                  Start from {state.locationNotice.suggest.name}
-                </button>
-              )}
-            </div>
-          )}
-
-          {origin.id === "me" &&
-            !hasSnapshot(origin) &&
-            state.warmed < 1 &&
-            status !== "error" &&
-            status !== "not-configured" && (
-              <p className="notice" {...inertWhen(picking)}>
-                Measuring the reachable area from your spot. The dial fills in
-                as it arrives.
-              </p>
-            )}
-
-          <TimeDial
-            minutes={state.budgetMinutes}
-            floorMinutes={state.floorMinutes}
-            minimum={dialMinimum(state.roundTrip)}
-            maximum={cappedTo}
-            capNote={
-              cappedTo < MAX_MINUTES
-                ? capNote(state.timeCap, cappedTo, conditions.light)
-                : undefined
-            }
-            step={budgetStep()}
-            outboundMinutes={outbound}
-            roundTrip={state.roundTrip}
-            isWarm={dialWarm}
-            warming={originChosen}
-            warmedFraction={
-              meetMode ? (state.warmed + state.partnerWarmed) / 2 : state.warmed
-            }
-            disabled={picking}
-            onChange={(minutes) => dispatch({ type: "budget", minutes })}
-            onFloorChange={(minutes) => dispatch({ type: "floor", minutes })}
-            onScrub={setScrubbing}
-            onCommit={() => dispatch({ type: "frame" })}
-          />
-
-          <DaylightSwitch
-            checked={state.beforeDark}
-            deadline={describeDeadline(conditions.light, state.roundTrip)}
-            disabled={picking}
-            onToggle={() => dispatch({ type: "toggleBeforeDark" })}
-          />
-
-          {status === "not-configured" ? (
-            <div className="notice is-setup">
-              <strong>The routing engine is not answering.</strong>
-              {import.meta.env.DEV ? (
-                <p>
-                  Contours and routes come from a Valhalla instance. Set{" "}
-                  <code>VALHALLA_URL</code> in <code>.env.local</code>, then
-                  restart the dev server. See <code>valhalla/README.md</code>.
-                  The server said: {failure?.message}
-                </p>
-              ) : (
-                <p>
-                  Reachable areas and routes are unavailable right now. Try
-                  again shortly.
-                </p>
-              )}
-            </div>
-          ) : status === "error" ? (
-            <p className="notice is-warn" role="alert">
-              {failure?.message}
-            </p>
-          ) : (
-            <ReachReadout
-              status={status}
-              areaSqMeters={reach?.areaSqMeters ?? 0}
-              pool={pool}
-              filterKey={conditionsSignature(poolConditions)}
-              duskNote={
-                status === "ready" ? describeDusk(conditions.light) : null
-              }
-              outerMinutes={outer?.minutes ?? outbound}
-              commitKey={state.framingKey}
-              meet={
-                meetMode
-                  ? {
-                      bothCount: pool.included.length,
-                      outerMinutes: outbound,
-                      partnerWarm: partnerReach !== null,
-                    }
-                  : null
-              }
-            />
-          )}
-
-          {status === "ready" && (
-            <ConditionsLine
-              report={report}
-              unavailable={weatherUnavailable()}
-              disabled={!WEATHER_ENABLED}
-              verdict={weather}
-              withdrawn={pool.withdrawn}
-              appliedBudget={appliedBudget}
-              keptCount={candidates.length}
-              describe={describeWeatherRule}
-              capMinutes={state.budgetMinutes}
-            />
-          )}
-
-          {lockGate && (
-            <div className="lock-row" {...inertWhen(picking)}>
-              {locked ? (
-                <p className="meet-hint" role="status">
-                  Locked in at <strong>{state.budgetMinutes} min</strong>.
-                  {theirs?.locked ? "" : " Waiting for them to lock in."}
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  className="button"
-                  disabled={picking || status !== "ready"}
-                  onClick={() => {
-                    playPress();
-                    setLockedMinutes(state.budgetMinutes);
-                  }}
-                >
-                  Lock in {state.budgetMinutes} min
-                </button>
-              )}
-            </div>
-          )}
-
+  const header = (
+    <header className="brand" {...inertWhen(picking)}>
+      <h1>
+        Walk Roulette
+        <span className="brand-place">Richmond</span>
+      </h1>
+      <div className="brand-actions">
+        {!wide && roomId === null && status === "ready" && (
           <button
             type="button"
-            ref={spinRef}
-            className="button is-spin"
-            onClick={spin}
-            aria-describedby={emptyPool ? emptyNoticeId : undefined}
-            disabled={
-              !originChosen ||
-              (lockGate && !bothLocked) ||
-              candidates.length === 0 ||
-              drawable.length === 0 ||
-              routesWarming ||
-              state.spinning ||
-              picking ||
-              status !== "ready"
-            }
+            className="icon-button"
+            aria-label="Invite someone to meet"
+            onClick={() => {
+              playTap(true);
+              setPage("meet");
+            }}
           >
-            <ShuffleIcon size={18} weight="bold" aria-hidden="true" />
-            {lockGate && !bothLocked
-              ? locked
-                ? "Waiting for them"
-                : "Lock in first"
-              : state.spinning
-                ? "Spinning"
-                : status === "ready" && routesWarming
-                  ? state.climb === "any"
-                    ? `Loading routes ${settledRoutes}/${basePool.length}`
-                    : `Measuring climb ${settledRoutes}/${basePool.length}`
-                  : "Spin"}
+            <UsersIcon size={16} weight="bold" aria-hidden="true" />
           </button>
-
-          {status === "ready" && roomId === null && (
-            <RoomPanel
-              room={null}
-              roomUrl={null}
-              origin={origin}
-              originChosen={originChosen}
-              consented={false}
-              partnerFailure={null}
-              permissionHint={permissionHint}
-              locating={locating}
-              onStartRoom={startRoom}
-              onShareStart={() => {}}
-              onUseMyLocation={useMyLocation}
-              onPickOnMap={() => {}}
-              onSelectPreset={() => {}}
-              onLeave={() => {}}
-              onNewRoom={() => {}}
+        )}
+        <button
+          type="button"
+          className="icon-button"
+          aria-label={sound ? "Mute sound cues" : "Unmute sound cues"}
+          onClick={() => {
+            const next = !sound;
+            setSoundOn(next);
+            if (next) playTap(true);
+          }}
+        >
+          {sound ? (
+            <SpeakerSimpleHighIcon size={16} aria-hidden="true" />
+          ) : (
+            <SpeakerSimpleSlashIcon size={16} aria-hidden="true" />
+          )}
+        </button>
+        {!wide && (
+          <button
+            type="button"
+            className="icon-button rail-toggle"
+            aria-expanded={snap !== "peek"}
+            aria-label={snap === "peek" ? "Show controls" : "Hide controls"}
+            onClick={() => {
+              playPress();
+              setSnap(snap === "peek" ? "half" : "peek");
+            }}
+          >
+            <CaretDownIcon
+              size={16}
+              weight="bold"
+              aria-hidden="true"
+              style={
+                snap === "peek" ? { transform: "rotate(180deg)" } : undefined
+              }
             />
-          )}
+          </button>
+        )}
+      </div>
+    </header>
+  );
 
-          {state.shared !== null &&
-            (state.shared.missingPlaceId !== null ||
-              state.shared.clampedFromMinutes !== null) && (
-              <div className="notice-stack" {...inertWhen(picking)}>
-                {state.shared.missingPlaceId !== null && (
-                  <p className="notice is-warn">
-                    The place this link points to is no longer on the map.
-                    Everything else about the walk is set up. Spin for somewhere
-                    new.
-                  </p>
-                )}
-                {state.shared.clampedFromMinutes !== null && (
-                  <p className="notice">
-                    This link asked for {state.shared.clampedFromMinutes}{" "}
-                    minutes; the closest the dial goes is {state.budgetMinutes}.
-                  </p>
-                )}
-                <button
-                  type="button"
-                  className="link-button"
-                  onClick={() => {
-                    playTap(true);
-                    dispatch({ type: "dismissShared" });
-                  }}
-                >
-                  Dismiss
-                </button>
-              </div>
+  const spinButton = (
+    <button
+      type="button"
+      ref={spinRef}
+      className="button is-spin"
+      onClick={spin}
+      aria-describedby={emptyPool ? emptyNoticeId : undefined}
+      disabled={
+        !originChosen ||
+        (lockGate && !bothLocked) ||
+        candidates.length === 0 ||
+        drawable.length === 0 ||
+        routesWarming ||
+        state.spinning ||
+        picking ||
+        status !== "ready"
+      }
+    >
+      <ShuffleIcon size={18} weight="bold" aria-hidden="true" />
+      {lockGate && !bothLocked
+        ? locked
+          ? "Waiting for them"
+          : "Lock in first"
+        : state.spinning
+          ? "Spinning"
+          : status === "ready" && routesWarming
+            ? state.climb === "any"
+              ? `Loading routes ${settledRoutes}/${basePool.length}`
+              : `Measuring climb ${settledRoutes}/${basePool.length}`
+            : picked !== null && !wide
+              ? "Spin again"
+              : "Spin"}
+    </button>
+  );
+
+  const panel = (
+    <div className="panel">
+      {!wide && dial}
+      {!(roomId !== null && !originChosen && !wide) && (
+        <OriginPicker
+          origin={origin}
+          pickingOrigin={picking}
+          locating={locating}
+          onSelect={(next) => dispatch({ type: "origin", origin: next })}
+          onBeginPickOnMap={beginPick}
+          onCancelPickOnMap={() => dispatch({ type: "cancelPickOrigin" })}
+          permissionHint={permissionHint}
+          onUseMyLocation={useMyLocation}
+          onOpenPage={wide ? undefined : () => setPage("origin")}
+        />
+      )}
+      {roomId !== null && (
+        <RoomPanel
+          room={room}
+          roomUrl={roomUrl(window.location.origin, roomId)}
+          origin={origin}
+          originChosen={originChosen}
+          consented={consented}
+          partnerFailure={state.partnerFailure}
+          permissionHint={permissionHint}
+          locating={locating}
+          onStartRoom={startRoom}
+          onShareStart={() => setConsented(true)}
+          onUseMyLocation={useMyLocation}
+          onPickOnMap={beginPick}
+          onSelectPreset={(next: Origin) =>
+            dispatch({ type: "origin", origin: next })
+          }
+          onLeave={leaveRoom}
+          onNewRoom={() => {
+            leaveRoom();
+            startRoom();
+          }}
+        />
+      )}
+      {state.locationNotice && (
+        <div className="notice-stack" {...inertWhen(picking)}>
+          <p
+            id={locationNoticeId}
+            className={
+              state.locationNotice.tone === "warn" ? "notice is-warn" : "notice"
+            }
+            role={state.locationNotice.tone === "warn" ? "alert" : "status"}
+          >
+            {state.locationNotice.message}
+          </p>
+          {/* Outside the live region: a control inside an assertive region announces inconsistently. */}
+          {state.locationNotice.suggest && (
+            <button
+              type="button"
+              className="link-button"
+              aria-describedby={locationNoticeId}
+              onClick={() => {
+                playTap(true);
+                if (state.locationNotice?.suggest) {
+                  dispatch({
+                    type: "origin",
+                    origin: state.locationNotice.suggest,
+                  });
+                }
+              }}
+            >
+              Start from {state.locationNotice.suggest.name}
+            </button>
+          )}
+        </div>
+      )}
+
+      {origin.id === "me" &&
+        !hasSnapshot(origin) &&
+        state.warmed < 1 &&
+        status !== "error" &&
+        status !== "not-configured" && (
+          <p className="notice" {...inertWhen(picking)}>
+            Measuring the reachable area from your spot. The dial fills in as it
+            arrives.
+          </p>
+        )}
+
+      {wide && dial}
+
+      <DaylightSwitch
+        checked={state.beforeDark}
+        deadline={describeDeadline(conditions.light, state.roundTrip)}
+        disabled={picking}
+        onToggle={() => dispatch({ type: "toggleBeforeDark" })}
+      />
+
+      {status === "not-configured" ? (
+        <div className="notice is-setup">
+          <strong>The routing engine is not answering.</strong>
+          {import.meta.env.DEV ? (
+            <p>
+              Contours and routes come from a Valhalla instance. Set{" "}
+              <code>VALHALLA_URL</code> in <code>.env.local</code>, then restart
+              the dev server. See <code>valhalla/README.md</code>. The server
+              said: {failure?.message}
+            </p>
+          ) : (
+            <p>
+              Reachable areas and routes are unavailable right now. Try again
+              shortly.
+            </p>
+          )}
+        </div>
+      ) : status === "error" ? (
+        <p className="notice is-warn" role="alert">
+          {failure?.message}
+        </p>
+      ) : (
+        <ReachReadout
+          status={status}
+          areaSqMeters={reach?.areaSqMeters ?? 0}
+          pool={pool}
+          filterKey={conditionsSignature(poolConditions)}
+          duskNote={status === "ready" ? describeDusk(conditions.light) : null}
+          outerMinutes={outer?.minutes ?? outbound}
+          commitKey={state.framingKey}
+          compact={!wide}
+          meet={
+            meetMode
+              ? {
+                  bothCount: pool.included.length,
+                  outerMinutes: outbound,
+                  partnerWarm: partnerReach !== null,
+                }
+              : null
+          }
+        />
+      )}
+
+      {status === "ready" && (
+        <ConditionsLine
+          report={report}
+          unavailable={weatherUnavailable()}
+          disabled={!WEATHER_ENABLED}
+          verdict={weather}
+          withdrawn={pool.withdrawn}
+          appliedBudget={appliedBudget}
+          keptCount={candidates.length}
+          describe={describeWeatherRule}
+          capMinutes={state.budgetMinutes}
+        />
+      )}
+
+      {lockGate && (
+        <div className="lock-row" {...inertWhen(picking)}>
+          {locked ? (
+            <p className="meet-hint" role="status">
+              Locked in at <strong>{state.budgetMinutes} min</strong>.
+              {theirs?.locked ? "" : " Waiting for them to lock in."}
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="button"
+              disabled={picking || status !== "ready"}
+              onClick={() => {
+                playPress();
+                setLockedMinutes(state.budgetMinutes);
+              }}
+            >
+              Lock in {state.budgetMinutes} min
+            </button>
+          )}
+        </div>
+      )}
+
+      {wide && spinButton}
+
+      {status === "ready" && roomId === null && wide && (
+        <RoomPanel
+          room={null}
+          roomUrl={null}
+          origin={origin}
+          originChosen={originChosen}
+          consented={false}
+          partnerFailure={null}
+          permissionHint={permissionHint}
+          locating={locating}
+          onStartRoom={startRoom}
+          onShareStart={() => {}}
+          onUseMyLocation={useMyLocation}
+          onPickOnMap={() => {}}
+          onSelectPreset={() => {}}
+          onLeave={() => {}}
+          onNewRoom={() => {}}
+        />
+      )}
+
+      {state.shared !== null &&
+        (state.shared.missingPlaceId !== null ||
+          state.shared.clampedFromMinutes !== null) && (
+          <div className="notice-stack" {...inertWhen(picking)}>
+            {state.shared.missingPlaceId !== null && (
+              <p className="notice is-warn">
+                The place this link points to is no longer on the map.
+                Everything else about the walk is set up. Spin for somewhere
+                new.
+              </p>
             )}
+            {state.shared.clampedFromMinutes !== null && (
+              <p className="notice">
+                This link asked for {state.shared.clampedFromMinutes} minutes;
+                the closest the dial goes is {state.budgetMinutes}.
+              </p>
+            )}
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => {
+                playTap(true);
+                dispatch({ type: "dismissShared" });
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
-          {reelIsShort && !emptyPool && (
-            <div className="notice" {...inertWhen(picking)} role="status">
-              {drawable.length} of {basePool.length} routes are ready. The reel
-              turns through those; the rest are still coming from the engine.
-            </div>
+      {reelIsShort && !emptyPool && (
+        <div className="notice" {...inertWhen(picking)} role="status">
+          {drawable.length} of {basePool.length} routes are ready. The reel
+          turns through those; the rest are still coming from the engine.
+        </div>
+      )}
+
+      {emptyPool && (
+        <EmptyPoolNotice
+          id={emptyNoticeId}
+          fix={fix}
+          outerMinutes={outer?.minutes ?? outbound}
+          inReach={pool.inReach}
+          onFix={applyFix}
+          {...inertWhen(picking)}
+        />
+      )}
+    </div>
+  );
+
+  const spinSlot = (
+    <div className="spin-slot" {...inertWhen(picking)}>
+      {state.spinning && showing && (
+        <p className="spin-reel" aria-hidden="true">
+          <span className="field-label">Choosing</span>
+          <span className="spin-name">{showing.name}</span>
+        </p>
+      )}
+      {!state.spinning && !picked && state.spinAborted && (
+        <p className="notice is-warn">Filters changed, spin again.</p>
+      )}
+      {!state.spinning && picked && (
+        <ResultCard
+          origin={origin}
+          place={picked}
+          route={route}
+          routeLoading={routeLoading}
+          routeFailed={routeFailed}
+          roundTrip={state.roundTrip}
+          withinBudget={withinBudget}
+          lines={resultLines}
+          verdict={pickedVerdict}
+          hoverMeters={hoverMeters}
+          onHoverRoute={setHoverMeters}
+          fitsLight={walkFitsLight}
+          shareUrl={shareUrl(window.location.origin, shareInput)}
+          originName={origin.name}
+          budgetMinutes={state.budgetMinutes}
+          sharedArrival={state.shared !== null}
+          split={split}
+          partnerName={partnerName}
+          compact={!wide}
+          onSpinAgain={spin}
+          onRetryRoute={() => dispatch({ type: "routeAttempt", attempt: 0 })}
+          onDismiss={() => {
+            // The pressed button is inside the card this unmounts; move focus first.
+            spinRef.current?.focus();
+            dispatch({ type: "clearPick" });
+          }}
+        />
+      )}
+    </div>
+  );
+
+  const filtersPanel = (
+    <Filters
+      climb={state.climb}
+      climbAvailable={elevationAvailable() !== false}
+      vibes={state.vibes}
+      roundTrip={state.roundTrip}
+      edgeOnly={state.edgeOnly}
+      weatherAware={state.weatherAware}
+      kind={state.kind}
+      hideClosed={state.hideClosed}
+      onClimb={(climb) => dispatch({ type: "climb", climb })}
+      onKind={(kind) => dispatch({ type: "kind", kind })}
+      onToggleHideClosed={() => dispatch({ type: "toggleHideClosed" })}
+      onToggleVibe={(vibe) => dispatch({ type: "toggleVibe", vibe })}
+      onToggleRoundTrip={() => dispatch({ type: "toggleRoundTrip" })}
+      onToggleEdge={() => dispatch({ type: "toggleEdge" })}
+      onToggleWeatherAware={() => dispatch({ type: "toggleWeatherAware" })}
+    />
+  );
+  const poolList = (
+    <PoolList
+      pool={pool}
+      places={PLACES}
+      pickedId={state.pickedId}
+      onPick={(id) => dispatch({ type: "pickPlace", pickedId: id })}
+    />
+  );
+
+  const pageLinks = (
+    <div className="page-links" {...inertWhen(picking)}>
+      <button
+        type="button"
+        className="page-link"
+        onClick={() => setPage("filters")}
+      >
+        {activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}
+        <CaretRightIcon size={14} weight="bold" aria-hidden="true" />
+      </button>
+      {reach !== null && (
+        <button
+          type="button"
+          className="page-link"
+          onClick={() => setPage("places")}
+        >
+          All places ({pool.total})
+          <CaretRightIcon size={14} weight="bold" aria-hidden="true" />
+        </button>
+      )}
+    </div>
+  );
+
+  const drawers = (
+    <>
+      <details
+        className="drawer"
+        open={filtersOpen}
+        onToggle={(event) => setFiltersOpen(event.currentTarget.open)}
+        {...inertWhen(picking)}
+      >
+        <summary>
+          {activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}
+        </summary>
+        {filtersPanel}
+      </details>
+
+      {reach !== null && (
+        <details className="drawer" {...inertWhen(picking)}>
+          <summary>All places ({pool.total})</summary>
+          {poolList}
+        </details>
+      )}
+    </>
+  );
+
+  const tail = (
+    <>
+      {import.meta.env.DEV && <TuningPanel />}
+      <p className="sr-only" role="status">
+        {announcement}
+      </p>
+    </>
+  );
+
+  return (
+    <div
+      className={`shell${picking ? " is-picking" : ""}${!wide && snap === "full" ? " is-covered" : ""}`}
+    >
+      {map}
+
+      {wide ? (
+        <div className="rail">
+          {header}
+          {panel}
+          {spinSlot}
+          {drawers}
+          {tail}
+        </div>
+      ) : (
+        <Sheet
+          snap={snap}
+          onSnap={setSnap}
+          topInset={roomId === null ? 16 : mirrorOpen ? 220 : 72}
+          head={
+            <>
+              {header}
+              {sheetDial}
+            </>
+          }
+          bar={spinButton}
+        >
+          {landing ? (
+            spinSlot
+          ) : (
+            <>
+              {panel}
+              {spinSlot}
+              {pageLinks}
+            </>
           )}
+          {tail}
+        </Sheet>
+      )}
 
+      {!wide && page === "filters" && (
+        <Page
+          title="Filters"
+          onClose={() => setPage(null)}
+          footer={
+            <button
+              type="button"
+              className="button is-primary"
+              onClick={() => {
+                playPress();
+                setPage(null);
+              }}
+            >
+              {emptyPool ? "Done" : `Show ${candidates.length} places`}
+            </button>
+          }
+        >
+          {filtersPanel}
           {emptyPool && (
             <EmptyPoolNotice
-              id={emptyNoticeId}
+              id={`${emptyNoticeId}-page`}
               fix={fix}
               outerMinutes={outer?.minutes ?? outbound}
               inReach={pool.inReach}
               onFix={applyFix}
-              {...inertWhen(picking)}
             />
           )}
-        </div>
-
-        <div className="spin-slot" {...inertWhen(picking)}>
-          {state.spinning && showing && (
-            <p className="spin-reel" aria-hidden="true">
-              <span className="field-label">Choosing</span>
-              <span className="spin-name">{showing.name}</span>
-            </p>
-          )}
-          {!state.spinning && !picked && state.spinAborted && (
-            <p className="notice is-warn">Filters changed, spin again.</p>
-          )}
-          {!state.spinning && picked && (
-            <ResultCard
+        </Page>
+      )}
+      {!wide && page === "origin" && (
+        <Page title="Starting from" onClose={() => setPage(null)}>
+          <div className="origin-page">
+            <OriginMenu
               origin={origin}
-              place={picked}
-              route={route}
-              routeLoading={routeLoading}
-              routeFailed={routeFailed}
-              roundTrip={state.roundTrip}
-              withinBudget={withinBudget}
-              lines={resultLines}
-              verdict={pickedVerdict}
-              hoverMeters={hoverMeters}
-              onHoverRoute={setHoverMeters}
-              fitsLight={walkFitsLight}
-              shareUrl={shareUrl(window.location.origin, shareInput)}
-              originName={origin.name}
-              budgetMinutes={state.budgetMinutes}
-              sharedArrival={state.shared !== null}
-              split={split}
-              partnerName={partnerName}
-              onSpinAgain={spin}
-              onRetryRoute={() =>
-                dispatch({ type: "routeAttempt", attempt: 0 })
-              }
-              onDismiss={() => {
-                // The pressed button is inside the card this unmounts; move focus first.
-                spinRef.current?.focus();
-                dispatch({ type: "clearPick" });
+              locating={locating}
+              permissionHint={permissionHint}
+              onSelect={(next) => dispatch({ type: "origin", origin: next })}
+              onBeginPickOnMap={beginPick}
+              onUseMyLocation={useMyLocation}
+              onDone={() => setPage(null)}
+            />
+          </div>
+        </Page>
+      )}
+      {!wide && page === "meet" && (
+        <Page
+          title="Meet someone"
+          onClose={() => setPage(null)}
+          footer={
+            <button
+              type="button"
+              className="button is-primary"
+              onClick={() => {
+                playPress();
+                setPage(null);
+                startRoom();
               }}
-            />
-          )}
-        </div>
-
-        <details
-          className="drawer"
-          open={filtersOpen}
-          onToggle={(event) => setFiltersOpen(event.currentTarget.open)}
-          {...inertWhen(picking)}
+            >
+              <UsersIcon size={16} weight="bold" aria-hidden="true" />
+              Start a room
+            </button>
+          }
         >
-          <summary>
-            {activeFilters > 0
-              ? `Filters (${activeFilters} active)`
-              : "Filters"}
-          </summary>
-          <Filters
-            climb={state.climb}
-            climbAvailable={elevationAvailable() !== false}
-            vibes={state.vibes}
-            roundTrip={state.roundTrip}
-            edgeOnly={state.edgeOnly}
-            weatherAware={state.weatherAware}
-            kind={state.kind}
-            hideClosed={state.hideClosed}
-            onClimb={(climb) => dispatch({ type: "climb", climb })}
-            onKind={(kind) => dispatch({ type: "kind", kind })}
-            onToggleHideClosed={() => dispatch({ type: "toggleHideClosed" })}
-            onToggleVibe={(vibe) => dispatch({ type: "toggleVibe", vibe })}
-            onToggleRoundTrip={() => dispatch({ type: "toggleRoundTrip" })}
-            onToggleEdge={() => dispatch({ type: "toggleEdge" })}
-            onToggleWeatherAware={() =>
-              dispatch({ type: "toggleWeatherAware" })
-            }
+          <div className="meet-page">
+            <p>Find somewhere you can both walk to.</p>
+            <p>
+              You get a link. Whoever opens it sees your start and your settings
+              in that room, for 12 hours, and nowhere else. Their start reaches
+              you only when they choose to share it.
+            </p>
+            <p>Both of you lock in a time budget, then either of you spins.</p>
+          </div>
+        </Page>
+      )}
+      {!wide && page === "places" && reach !== null && (
+        <Page
+          title={`All places (${pool.total})`}
+          onClose={() => setPage(null)}
+        >
+          <PoolList
+            pool={pool}
+            places={PLACES}
+            pickedId={state.pickedId}
+            onPick={(id) => {
+              dispatch({ type: "pickPlace", pickedId: id });
+              setPage(null);
+            }}
           />
-        </details>
-
-        {reach !== null && (
-          <details className="drawer" {...inertWhen(picking)}>
-            <summary>All places ({pool.total})</summary>
-            <PoolList
-              pool={pool}
-              places={PLACES}
-              pickedId={state.pickedId}
-              onPick={(id) => dispatch({ type: "pickPlace", pickedId: id })}
-            />
-          </details>
-        )}
-
-        {import.meta.env.DEV && <TuningPanel />}
-
-        <p className="sr-only" role="status">
-          {announcement}
-        </p>
-      </div>
+        </Page>
+      )}
+      {!wide && picking && (
+        <>
+          <div className="pick-pin" aria-hidden="true" />
+          <div className="pick-bar" role="group" aria-label="Place your start">
+            <p>Move the map until the pin sits on your start.</p>
+            <div className="pick-actions">
+              <button
+                type="button"
+                className="button"
+                onClick={() => {
+                  playTap(false);
+                  dispatch({ type: "cancelPickOrigin" });
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button is-primary"
+                disabled={pickCenter === null}
+                onClick={() => {
+                  playPress();
+                  if (pickCenter !== null)
+                    dispatch({
+                      type: "origin",
+                      origin: customOrigin(pickCenter),
+                    });
+                  dispatch({ type: "cancelPickOrigin" });
+                  setSnap("half");
+                }}
+              >
+                Set start here
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {roomId !== null && (
         <PartnerRail
@@ -1499,6 +1795,12 @@ export function App() {
           yourMinutes={state.budgetMinutes}
           bothCount={candidates.length}
           nowMs={conditions.atMs}
+          compact={!wide}
+          expanded={mirrorOpen}
+          onToggle={() => {
+            setMirrorOpen((value) => !value);
+            dispatch({ type: "frame" });
+          }}
           onMatch={(minutes) => dispatch({ type: "budget", minutes })}
           onNewRoom={() => {
             leaveRoom();

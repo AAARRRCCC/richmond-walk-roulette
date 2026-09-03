@@ -28,10 +28,40 @@ export type TimeDialProps = {
   onCommit: () => void;
   /** True while a hand is on the control. App freezes the clock on it so the cap cannot move mid-gesture. */
   onScrub: (active: boolean) => void;
+  /** The value row is rendered elsewhere (the phone sheet's head) under this id. */
+  headId?: string | undefined;
 };
 
+export type DialHeadProps = {
+  id: string;
+  minutes: number;
+  floorMinutes: number;
+  minimum: number;
+  outboundMinutes: number;
+  roundTrip: boolean;
+};
+
+/** The big number and its caption. One element, so the track can point at it from either layout. */
+export function DialHead(props: DialHeadProps) {
+  const hasFloor = props.floorMinutes > props.minimum;
+  return (
+    <div className="dial-head">
+      <span className="dial-value">
+        {hasFloor ? `${props.floorMinutes}-${props.minutes}` : props.minutes}
+      </span>
+      <span className="dial-unit">min</span>
+      <span className="dial-caption" id={props.id}>
+        {props.roundTrip
+          ? `${props.outboundMinutes} out, ${props.outboundMinutes} back`
+          : "one way, on foot"}
+      </span>
+    </div>
+  );
+}
+
 export function TimeDial(props: TimeDialProps) {
-  const captionId = useId();
+  const ownId = useId();
+  const captionId = props.headId ?? ownId;
   const span = MAX_MINUTES - props.minimum;
   const ticks = Array.from(
     { length: Math.floor(span / props.step) + 1 },
@@ -39,10 +69,13 @@ export function TimeDial(props: TimeDialProps) {
   );
   const warming = props.warming && props.warmedFraction < 1;
   const capped = props.maximum < MAX_MINUTES;
-  const pct = (minutes: number): number => ((minutes - props.minimum) / span) * 100;
+  const pct = (minutes: number): number =>
+    ((minutes - props.minimum) / span) * 100;
 
   // SAFETY: CSSProperties has no index signature for custom properties; the value is built here from a number.
-  const trackStyle = { "--cap-percent": `${pct(props.maximum)}%` } as CSSProperties;
+  const trackStyle = {
+    "--cap-percent": `${pct(props.maximum)}%`,
+  } as CSSProperties;
 
   // A commit must mean "the value moved": four events end a gesture and a
   // blur after panning the map by hand must not fly the camera back.
@@ -61,17 +94,16 @@ export function TimeDial(props: TimeDialProps) {
 
   return (
     <div className="dial">
-      <div className="dial-head">
-        <span className="dial-value">
-          {hasFloor ? `${props.floorMinutes}-${props.minutes}` : props.minutes}
-        </span>
-        <span className="dial-unit">min</span>
-        <span className="dial-caption" id={captionId}>
-          {props.roundTrip
-            ? `${props.outboundMinutes} out, ${props.outboundMinutes} back`
-            : "one way, on foot"}
-        </span>
-      </div>
+      {props.headId === undefined && (
+        <DialHead
+          id={captionId}
+          minutes={props.minutes}
+          floorMinutes={props.floorMinutes}
+          minimum={props.minimum}
+          outboundMinutes={props.outboundMinutes}
+          roundTrip={props.roundTrip}
+        />
+      )}
 
       <div
         className={`dial-track${hasFloor ? " has-floor" : ""}${capped ? " is-capped" : ""}`}
@@ -81,7 +113,12 @@ export function TimeDial(props: TimeDialProps) {
           {ticks.map((tick) => (
             <span
               key={tick}
-              className={tickClass(tick, props.floorMinutes, props.minutes, props.isWarm(tick))}
+              className={tickClass(
+                tick,
+                props.floorMinutes,
+                props.minutes,
+                props.isWarm(tick),
+              )}
               style={{ left: `${pct(tick)}%` }}
             />
           ))}
@@ -100,7 +137,8 @@ export function TimeDial(props: TimeDialProps) {
           aria-valuetext={
             (props.roundTrip
               ? `${props.minutes} minutes, ${props.outboundMinutes} out and ${props.outboundMinutes} back`
-              : `${props.minutes} minutes, one way`) + (capped ? ", limited by daylight" : "")
+              : `${props.minutes} minutes, one way`) +
+            (capped ? ", limited by daylight" : "")
           }
           onChange={(event) => {
             const next = Number(event.target.value);
@@ -145,7 +183,9 @@ export function TimeDial(props: TimeDialProps) {
         />
       </div>
 
-      {props.capNote !== undefined && <p className="dial-cap-note">{props.capNote}</p>}
+      {props.capNote !== undefined && (
+        <p className="dial-cap-note">{props.capNote}</p>
+      )}
 
       <div className="dial-scale" aria-hidden="true">
         <span>{props.minimum}</span>
@@ -169,8 +209,14 @@ export function TimeDial(props: TimeDialProps) {
   );
 }
 
-function tickClass(tick: number, floorMinutes: number, minutes: number, warm: boolean): string {
-  const weight = tick % 10 === 0 ? " is-major" : tick % 5 === 0 ? " is-mid" : "";
+function tickClass(
+  tick: number,
+  floorMinutes: number,
+  minutes: number,
+  warm: boolean,
+): string {
+  const weight =
+    tick % 10 === 0 ? " is-major" : tick % 5 === 0 ? " is-mid" : "";
   const reached = tick <= minutes && tick >= floorMinutes ? " is-reached" : "";
   return `dial-tick${weight}${reached}${warm ? " is-warm" : ""}`;
 }

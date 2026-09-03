@@ -1,6 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
-import type { FeatureCollection, MultiPolygon as MultiPolygonGeometry } from "geojson";
+import type {
+  FeatureCollection,
+  MultiPolygon as MultiPolygonGeometry,
+} from "geojson";
 import { darkBasemap } from "./basemap";
 import { weighted } from "./weight";
 import { smoothedForDisplay } from "./smooth";
@@ -67,6 +70,8 @@ export type MapCanvasProps = {
   originVisible: boolean;
   onPickPlace: (id: string) => void;
   onMoveOrigin: (at: LngLat) => void;
+  /** The camera came to rest; also fired when a pick begins, so a still map still reports its centre. */
+  onMoveEnd?: (center: LngLat) => void;
 };
 
 export function MapCanvas(props: MapCanvasProps) {
@@ -110,8 +115,18 @@ export function MapCanvas(props: MapCanvasProps) {
     mapRef.current = map;
 
     // The vector source carries the OpenFreeMap/OSM credit; the control collects it.
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(
+      new maplibregl.AttributionControl({ compact: true }),
+      "bottom-right",
+    );
+    map.addControl(
+      new maplibregl.NavigationControl({ showCompass: false }),
+      "top-right",
+    );
+    map.on("moveend", () => {
+      const { lng, lat } = map.getCenter();
+      handlers.current.onMoveEnd?.({ lng, lat });
+    });
     map.touchZoomRotate.disableRotation();
     // No compass, so a shift+arrow rotation would be unrecoverable.
     map.keyboard.disableRotation();
@@ -123,7 +138,11 @@ export function MapCanvas(props: MapCanvasProps) {
       "aria-label",
       "Start of the walk. Drag it, or nudge it with the arrow keys.",
     );
-    const marker = new maplibregl.Marker({ element, draggable: true, anchor: "center" })
+    const marker = new maplibregl.Marker({
+      element,
+      draggable: true,
+      anchor: "center",
+    })
       .setLngLat([handlers.current.origin.lng, handlers.current.origin.lat])
       .addTo(map);
     marker.on("dragend", () => {
@@ -163,7 +182,9 @@ export function MapCanvas(props: MapCanvasProps) {
       const { lng, lat } = marker.getLngLat();
       const meters = NUDGE_METERS * (event.shiftKey ? 8 : 1);
       marker.setLngLat([
-        lng + (step[0] * meters) / (METERS_PER_DEGREE * Math.cos((lat * Math.PI) / 180)),
+        lng +
+          (step[0] * meters) /
+            (METERS_PER_DEGREE * Math.cos((lat * Math.PI) / 180)),
         lat + (step[1] * meters) / METERS_PER_DEGREE,
       ]);
       window.clearTimeout(nudgeTimer);
@@ -238,7 +259,11 @@ export function MapCanvas(props: MapCanvasProps) {
           type: "line",
           source: "route",
           layout: { "line-cap": "round", "line-join": "round" },
-          paint: { "line-color": "#05090e", "line-width": weighted(7), "line-opacity": 0.9 },
+          paint: {
+            "line-color": "#05090e",
+            "line-width": weighted(7),
+            "line-opacity": 0.9,
+          },
         },
         UNDER_LABELS,
       );
@@ -274,9 +299,24 @@ export function MapCanvas(props: MapCanvasProps) {
         filter: ["!=", ["get", "state"], "out"],
         paint: {
           // Destination: filled amber dot. Detour: smaller hollow ring.
-          "circle-radius": weighted(["case", ["!=", ["get", "detour"], ""], 3.5, 4.5]),
-          "circle-color": ["case", ["!=", ["get", "detour"], ""], "#0b1014", ACCENT],
-          "circle-stroke-width": ["case", ["!=", ["get", "detour"], ""], 1.6, 0],
+          "circle-radius": weighted([
+            "case",
+            ["!=", ["get", "detour"], ""],
+            3.5,
+            4.5,
+          ]),
+          "circle-color": [
+            "case",
+            ["!=", ["get", "detour"], ""],
+            "#0b1014",
+            ACCENT,
+          ],
+          "circle-stroke-width": [
+            "case",
+            ["!=", ["get", "detour"], ""],
+            1.6,
+            0,
+          ],
           "circle-stroke-color": ACCENT_SOFT,
         },
       });
@@ -336,7 +376,8 @@ export function MapCanvas(props: MapCanvasProps) {
       setBasemapDown(basemapMissing(map));
     });
     map.on("sourcedata", (event) => {
-      if (event.sourceId === "omt" && event.isSourceLoaded) setBasemapDown(false);
+      if (event.sourceId === "omt" && event.isSourceLoaded)
+        setBasemapDown(false);
     });
 
     map.on("click", PLACE_LAYERS, (event) => {
@@ -348,14 +389,20 @@ export function MapCanvas(props: MapCanvasProps) {
       }
     });
     map.on("mouseenter", PLACE_LAYERS, () => {
-      if (!handlers.current.pickingOrigin) map.getCanvas().style.cursor = "pointer";
+      if (!handlers.current.pickingOrigin)
+        map.getCanvas().style.cursor = "pointer";
     });
     map.on("mouseleave", PLACE_LAYERS, () => {
-      map.getCanvas().style.cursor = handlers.current.pickingOrigin ? "crosshair" : "";
+      map.getCanvas().style.cursor = handlers.current.pickingOrigin
+        ? "crosshair"
+        : "";
     });
     map.on("click", (event) => {
       if (!handlers.current.pickingOrigin || event.defaultPrevented) return;
-      handlers.current.onMoveOrigin({ lng: event.lngLat.lng, lat: event.lngLat.lat });
+      handlers.current.onMoveOrigin({
+        lng: event.lngLat.lng,
+        lat: event.lngLat.lat,
+      });
     });
 
     return () => {
@@ -373,7 +420,9 @@ export function MapCanvas(props: MapCanvasProps) {
   }, [props.origin.lng, props.origin.lat]);
 
   useEffect(() => {
-    markerRef.current?.getElement().classList.toggle("is-hidden", !props.originVisible);
+    markerRef.current
+      ?.getElement()
+      .classList.toggle("is-hidden", !props.originVisible);
   }, [props.originVisible]);
 
   useEffect(() => {
@@ -386,10 +435,15 @@ export function MapCanvas(props: MapCanvasProps) {
 
   // One effect per source, each on its own inputs, so a reel tick (pickedId,
   // route) never re-uploads contours and a dial scrub never re-uploads places.
-  const { reach, places, inReachIds, pickedId, route, partnerBand, spinning } = props;
+  const { reach, places, inReachIds, pickedId, route, partnerBand, spinning } =
+    props;
   useEffect(() => {
     if (!loaded) return;
-    setData(loaded, "partner-band", partnerBand ? multiPolygonCollection(partnerBand) : EMPTY);
+    setData(
+      loaded,
+      "partner-band",
+      partnerBand ? multiPolygonCollection(partnerBand) : EMPTY,
+    );
   }, [loaded, partnerBand]);
 
   useEffect(() => {
@@ -419,11 +473,23 @@ export function MapCanvas(props: MapCanvasProps) {
 
   useEffect(() => {
     if (!loaded) return;
-    loaded.setPaintProperty("picked-place-label", "text-opacity", spinning ? 0 : 1);
+    loaded.setPaintProperty(
+      "picked-place-label",
+      "text-opacity",
+      spinning ? 0 : 1,
+    );
   }, [loaded, spinning]);
 
   useEffect(() => {
-    mapRef.current?.getCanvas().style.setProperty("cursor", props.pickingOrigin ? "crosshair" : "");
+    const map = mapRef.current;
+    if (!map) return;
+    map
+      .getCanvas()
+      .style.setProperty("cursor", props.pickingOrigin ? "crosshair" : "");
+    if (props.pickingOrigin) {
+      const { lng, lat } = map.getCenter();
+      handlers.current.onMoveEnd?.({ lng, lat });
+    }
   }, [props.pickingOrigin]);
 
   // Frame once per commit, not per contour: the dial repaints every input
@@ -465,7 +531,15 @@ export function MapCanvas(props: MapCanvasProps) {
           : `Reachable on foot from ${originName}: ${formatArea(reach.areaSqMeters)} within ` +
             `${outerBand.minutes} minutes, ${pluralize(inReachIds.size, "place")} in reach.`,
     );
-  }, [frameStamp, reach, outerBand, partnerBand, inReachIds, originName, partnerName]);
+  }, [
+    frameStamp,
+    reach,
+    outerBand,
+    partnerBand,
+    inReachIds,
+    originName,
+    partnerName,
+  ]);
 
   // On mobile the rail is a bottom sheet that grows with its contents, so
   // re-frame the current bounds when it resizes.
@@ -477,7 +551,9 @@ export function MapCanvas(props: MapCanvasProps) {
     let lastSize = "";
     const observer = new ResizeObserver((entries) => {
       const box = entries.at(-1)?.contentRect;
-      const size = box ? `${Math.round(box.width)}x${Math.round(box.height)}` : "";
+      const size = box
+        ? `${Math.round(box.width)}x${Math.round(box.height)}`
+        : "";
       if (size === lastSize) return;
       lastSize = size;
 
@@ -547,8 +623,12 @@ function cameraDuration(ms: number): number {
 /** A preset is named; a dropped pin is labelled by its coordinates. */
 function originLabel(origin: LngLat): string {
   const key = pointKey(origin);
-  const preset = PRESET_ORIGINS.find((candidate) => pointKey(candidate) === key);
-  return preset ? preset.name : `${origin.lat.toFixed(4)}, ${origin.lng.toFixed(4)}`;
+  const preset = PRESET_ORIGINS.find(
+    (candidate) => pointKey(candidate) === key,
+  );
+  return preset
+    ? preset.name
+    : `${origin.lat.toFixed(4)}, ${origin.lng.toFixed(4)}`;
 }
 
 /** Smallest strip of map worth framing a contour into. */
@@ -567,11 +647,30 @@ function framePadding(map: MapLibreMap) {
   if (!rail) return { top: edge, right: edge, bottom: edge, left: edge };
 
   if (window.matchMedia("(min-width: 900px)").matches) {
-    const left = Math.min(rail.right + 24, canvas.clientWidth - edge - MIN_VISIBLE_PX);
-    return { top: edge, right: edge, bottom: edge, left: Math.max(edge, Math.round(left)) };
+    const left = Math.min(
+      rail.right + 24,
+      canvas.clientWidth - edge - MIN_VISIBLE_PX,
+    );
+    return {
+      top: edge,
+      right: edge,
+      bottom: edge,
+      left: Math.max(edge, Math.round(left)),
+    };
   }
-  const bottom = Math.min(canvas.clientHeight - rail.top + 16, canvas.clientHeight - edge - MIN_VISIBLE_PX);
-  return { top: edge, right: edge, bottom: Math.max(edge, Math.round(bottom)), left: edge };
+  // The top sheet holds their side; the visible strip sits between the two.
+  const mirror = document.querySelector(".mirror")?.getBoundingClientRect();
+  const top = mirror ? Math.max(edge, Math.round(mirror.bottom + 12)) : edge;
+  const bottom = Math.min(
+    canvas.clientHeight - rail.top + 16,
+    canvas.clientHeight - top - MIN_VISIBLE_PX,
+  );
+  return {
+    top,
+    right: 24,
+    bottom: Math.max(edge, Math.round(bottom)),
+    left: 24,
+  };
 }
 
 function syncBands(
@@ -584,10 +683,17 @@ function syncBands(
   for (const slot of SLOTS) {
     // `bands` runs innermost first; slot 0 must be outermost. In meet mode the
     // inner bands are dropped: the ladder is a one-person instrument.
-    const polygons = meet && slot > 0 ? null : (bands[bands.length - 1 - slot]?.polygons ?? null);
+    const polygons =
+      meet && slot > 0
+        ? null
+        : (bands[bands.length - 1 - slot]?.polygons ?? null);
     if (lastBands[slot] === polygons) continue;
     lastBands[slot] = polygons;
-    setData(map, `band-${slot}`, polygons ? multiPolygonCollection(polygons) : EMPTY);
+    setData(
+      map,
+      `band-${slot}`,
+      polygons ? multiPolygonCollection(polygons) : EMPTY,
+    );
   }
 }
 
@@ -671,7 +777,10 @@ function syncRoute(map: MapLibreMap, route: WalkingRoute | null): void {
               properties: {},
               geometry: {
                 type: "LineString",
-                coordinates: route.coords.map((point) => [point.lng, point.lat]),
+                coordinates: route.coords.map((point) => [
+                  point.lng,
+                  point.lat,
+                ]),
               },
             },
           ],
@@ -695,13 +804,17 @@ function multiPolygonCollection(polygons: MultiPolygon): FeatureCollection {
     type: "MultiPolygon",
     coordinates: smoothedForDisplay(polygons),
   };
-  return { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry }] };
+  return {
+    type: "FeatureCollection",
+    features: [{ type: "Feature", properties: {}, geometry }],
+  };
 }
 
 function boundsOfBand(polygons: MultiPolygon): maplibregl.LngLatBounds | null {
   const bounds = new maplibregl.LngLatBounds();
   for (const rings of polygons) {
-    for (const position of rings[0] ?? []) bounds.extend([position[0], position[1]]);
+    for (const position of rings[0] ?? [])
+      bounds.extend([position[0], position[1]]);
   }
   return bounds.isEmpty() ? null : bounds;
 }

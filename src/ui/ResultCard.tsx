@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ArrowSquareOutIcon,
   ShareNetworkIcon,
@@ -5,7 +6,11 @@ import {
   WarningIcon,
   XIcon,
 } from "@phosphor-icons/react";
-import { REASON_COPY, REASON_ORDER, type PlaceVerdict } from "../app/eligibility";
+import {
+  REASON_COPY,
+  REASON_ORDER,
+  type PlaceVerdict,
+} from "../app/eligibility";
 import { appleDirectionsUrl, googleDirectionsUrl } from "../lib/handoff";
 import { shareNote, useShareAction } from "./useShareAction";
 import { describeBothBy, describeGap, type MeetSplit } from "../app/meet";
@@ -58,6 +63,8 @@ export type ResultCardProps = {
   /** Non-null in meet mode: the card renders one row per side instead of stats. */
   split: MeetSplit | null;
   partnerName: string;
+  /** Phone layout: Spin lives in the sheet's bar, so the card offers directions and share only. */
+  compact?: boolean;
   onSpinAgain: () => void;
   onRetryRoute: () => void;
   onDismiss: () => void;
@@ -67,11 +74,40 @@ export type ResultCardProps = {
 export function ResultCard(props: ResultCardProps) {
   const { place, route, split, verdict } = props;
   const { state: shareState, lastUrl, fallbackRef, share } = useShareAction();
+  const [chooser, setChooser] = useState(false);
 
   const onShare = (): Promise<void> => share({ url: props.shareUrl });
   const pending = props.routeLoading && !props.routeFailed;
   // Always the outbound leg, even on a round trip.
   const shown = route?.profile ?? null;
+
+  // Both links on every platform; each falls back to the browser when the app is absent.
+  const mapsLinks = (
+    <>
+      <a
+        className="button"
+        href={googleDirectionsUrl(props.origin, place)}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`Walking directions to ${place.name} in Google Maps`}
+        onClick={() => playPress()}
+      >
+        <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
+        Google Maps
+      </a>
+      <a
+        className="button"
+        href={appleDirectionsUrl(props.origin, place)}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`Walking directions to ${place.name} in Apple Maps`}
+        onClick={() => playPress()}
+      >
+        <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
+        Apple Maps
+      </a>
+    </>
+  );
 
   const reasons =
     verdict === null || verdict.included
@@ -82,9 +118,16 @@ export function ResultCard(props: ResultCardProps) {
     <section className="result">
       <header className="result-head">
         <p className="field-label">
-          {place.detour === undefined ? "Your walk" : DETOUR_LABELS[place.detour]}
+          {place.detour === undefined
+            ? "Your walk"
+            : DETOUR_LABELS[place.detour]}
         </p>
-        <button type="button" className="icon-button" onClick={props.onDismiss} aria-label="Dismiss result">
+        <button
+          type="button"
+          className="icon-button"
+          onClick={props.onDismiss}
+          aria-label="Dismiss result"
+        >
           <XIcon size={15} weight="bold" aria-hidden="true" />
         </button>
       </header>
@@ -98,17 +141,27 @@ export function ResultCard(props: ResultCardProps) {
             <SplitValue
               minutes={split.yourMinutes}
               pending={pending}
-              meters={route === null ? null : route.distanceMeters * (props.roundTrip ? 2 : 1)}
+              meters={
+                route === null
+                  ? null
+                  : route.distanceMeters * (props.roundTrip ? 2 : 1)
+              }
             />
           </div>
           <div className="result-split-row">
             <span className="result-split-who">{props.partnerName}</span>
-            <SplitValue minutes={split.theirMinutes} pending={split.theirMinutes === null} meters={null} />
+            <SplitValue
+              minutes={split.theirMinutes}
+              pending={split.theirMinutes === null}
+              meters={null}
+            />
           </div>
           {describeBothBy(split) !== null && (
             <p className="result-split-both">{describeBothBy(split)}</p>
           )}
-          {describeGap(split) !== null && <p className="result-split-gap">{describeGap(split)}</p>}
+          {describeGap(split) !== null && (
+            <p className="result-split-gap">{describeGap(split)}</p>
+          )}
         </div>
       ) : (
         <dl className="result-stats">
@@ -118,7 +171,11 @@ export function ResultCard(props: ResultCardProps) {
               pending
                 ? null
                 : route
-                  ? formatMinutes(props.roundTrip ? route.durationSeconds * 2 : route.durationSeconds)
+                  ? formatMinutes(
+                      props.roundTrip
+                        ? route.durationSeconds * 2
+                        : route.durationSeconds,
+                    )
                   : "-"
             }
           />
@@ -128,13 +185,23 @@ export function ResultCard(props: ResultCardProps) {
               pending
                 ? null
                 : route
-                  ? formatMiles(props.roundTrip ? route.distanceMeters * 2 : route.distanceMeters)
+                  ? formatMiles(
+                      props.roundTrip
+                        ? route.distanceMeters * 2
+                        : route.distanceMeters,
+                    )
                   : "-"
             }
           />
           <Stat
             label="Climb"
-            value={pending ? null : shown === null ? "-" : formatFeet(shown.ascentMeters)}
+            value={
+              pending
+                ? null
+                : shown === null
+                  ? "-"
+                  : formatFeet(shown.ascentMeters)
+            }
           />
         </dl>
       )}
@@ -147,9 +214,14 @@ export function ResultCard(props: ResultCardProps) {
           onHover={props.onHoverRoute}
         />
       )}
-      {!pending && route !== null && shown === null && elevationAvailable() === false && (
-        <p className="profile-empty field-label">No elevation data from this engine.</p>
-      )}
+      {!pending &&
+        route !== null &&
+        shown === null &&
+        elevationAvailable() === false && (
+          <p className="profile-empty field-label">
+            No elevation data from this engine.
+          </p>
+        )}
 
       {props.lines.length > 0 && (
         <div className="result-lines">
@@ -166,7 +238,9 @@ export function ResultCard(props: ResultCardProps) {
 
       {/* Geometry reasons are covered by the budget row below. */}
       {reasons
-        .filter((reason) => reason !== "out-of-reach" && reason !== "inside-floor")
+        .filter(
+          (reason) => reason !== "out-of-reach" && reason !== "inside-floor",
+        )
         .map((reason) => (
           <p className="result-warning" key={reason}>
             <WarningIcon size={15} weight="fill" aria-hidden="true" />
@@ -178,7 +252,11 @@ export function ResultCard(props: ResultCardProps) {
         <p className="result-warning">
           <WarningIcon size={15} weight="fill" aria-hidden="true" />
           Could not measure this walk.
-          <button type="button" className="link-button" onClick={props.onRetryRoute}>
+          <button
+            type="button"
+            className="link-button"
+            onClick={props.onRetryRoute}
+          >
             Try again
           </button>
         </p>
@@ -200,39 +278,53 @@ export function ResultCard(props: ResultCardProps) {
         </p>
       )}
 
-      <div className="result-actions">
-        <button type="button" className="button is-primary" onClick={props.onSpinAgain}>
-          <ShuffleIcon size={16} weight="bold" aria-hidden="true" />
-          {props.sharedArrival ? "Spin your own" : "Spin again"}
-        </button>
-        <button type="button" className="button" onClick={() => void onShare()}>
-          <ShareNetworkIcon size={16} weight="bold" aria-hidden="true" />
-          Share
-        </button>
-        {/* Both links on every platform; each falls back to the browser when the app is absent. */}
-        <a
-          className="button"
-          href={googleDirectionsUrl(props.origin, place)}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Walking directions to ${place.name} in Google Maps`}
-          onClick={() => playPress()}
-        >
-          <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
-          Google Maps
-        </a>
-        <a
-          className="button"
-          href={appleDirectionsUrl(props.origin, place)}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Walking directions to ${place.name} in Apple Maps`}
-          onClick={() => playPress()}
-        >
-          <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
-          Apple Maps
-        </a>
-      </div>
+      {props.compact ? (
+        <>
+          <div className="result-actions is-compact">
+            <button
+              type="button"
+              className="button is-primary"
+              aria-expanded={chooser}
+              onClick={() => {
+                playPress();
+                setChooser((value) => !value);
+              }}
+            >
+              <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
+              Directions
+            </button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => void onShare()}
+            >
+              <ShareNetworkIcon size={16} weight="bold" aria-hidden="true" />
+              Share
+            </button>
+          </div>
+          {chooser && <div className="result-chooser">{mapsLinks}</div>}
+        </>
+      ) : (
+        <div className="result-actions">
+          <button
+            type="button"
+            className="button is-primary"
+            onClick={props.onSpinAgain}
+          >
+            <ShuffleIcon size={16} weight="bold" aria-hidden="true" />
+            {props.sharedArrival ? "Spin your own" : "Spin again"}
+          </button>
+          <button
+            type="button"
+            className="button"
+            onClick={() => void onShare()}
+          >
+            <ShareNetworkIcon size={16} weight="bold" aria-hidden="true" />
+            Share
+          </button>
+          {mapsLinks}
+        </div>
+      )}
 
       {/* The one live region here. */}
       <p className="result-share-note" role="status">
@@ -278,7 +370,9 @@ function Stat({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="stat">
       <dt>{label}</dt>
-      <dd>{value ?? <span className="skeleton" style={{ width: "3.2rem" }} />}</dd>
+      <dd>
+        {value ?? <span className="skeleton" style={{ width: "3.2rem" }} />}
+      </dd>
     </div>
   );
 }
