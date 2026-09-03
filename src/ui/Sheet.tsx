@@ -15,6 +15,9 @@ export type SheetProps = {
 };
 
 const HALF_FRACTION = 0.5;
+/** Half always clears the origin chip and the dial, whatever the screen height. */
+const HALF_MIN_BODY_PX = 250;
+const HALF_MAX_FRACTION = 0.68;
 /** Finger travel before a touch is a drag rather than a tap. */
 const DRAG_SLOP_PX = 6;
 /** px/ms; a flick past this goes with the finger, not the nearest stop. */
@@ -56,7 +59,10 @@ export function Sheet(props: SheetProps) {
     );
     return {
       peek,
-      half: Math.max(peek, Math.round(viewport * HALF_FRACTION)),
+      half: Math.min(
+        Math.round(viewport * HALF_MAX_FRACTION),
+        Math.max(peek + HALF_MIN_BODY_PX, Math.round(viewport * HALF_FRACTION)),
+      ),
       full: Math.max(peek, viewport - inset),
     };
   };

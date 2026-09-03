@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { VIBES, type Vibe } from "../data/places";
 import { playTap } from "../lib/sound";
@@ -18,10 +17,11 @@ export type PartnerRailProps = {
   /** Places inside both reaches right now. */
   bothCount: number;
   nowMs: number;
-  /** A strip under the status bar that expands on tap, instead of the desktop panel. */
+  /** A strip under the status bar that opens on tap, instead of the desktop panel. */
   compact?: boolean;
-  /** The strip grew or shrank; the map re-frames around it. */
-  onResize?: () => void;
+  /** Whether the strip is open. Owned by App: the bottom sheet makes room for it. */
+  expanded?: boolean;
+  onToggle?: () => void;
   onMatch: (minutes: number) => void;
   onNewRoom: () => void;
 };
@@ -46,7 +46,7 @@ const STRIP_WORD = {
  */
 export function PartnerRail(props: PartnerRailProps) {
   const { room } = props;
-  const [expanded, setExpanded] = useState(false);
+  const expanded = props.expanded === true;
   const presence = presenceOf(room);
   // Full and replaced are the room panel's to explain; nothing of theirs shows.
   if (presence === "full" || presence === "replaced") return null;
@@ -73,8 +73,7 @@ export function PartnerRail(props: PartnerRailProps) {
           aria-expanded={expanded}
           onClick={() => {
             playTap(!expanded);
-            setExpanded((value) => !value);
-            props.onResize?.();
+            props.onToggle?.();
           }}
         >
           <span className={`mirror-dot is-${presence}`} aria-hidden="true" />

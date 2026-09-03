@@ -222,6 +222,7 @@ export function App() {
   const [wide, setWide] = useState(() => window.matchMedia(WIDE).matches);
   const [filtersOpen, setFiltersOpen] = useState(wide);
   const [snap, setSnap] = useState<SheetSnap>("half");
+  const [mirrorOpen, setMirrorOpen] = useState(false);
   const emptyNoticeId = useId();
   const locationNoticeId = useId();
   const spinRef = useRef<HTMLButtonElement>(null);
@@ -1153,7 +1154,9 @@ export function App() {
             ? state.climb === "any"
               ? `Loading routes ${settledRoutes}/${basePool.length}`
               : `Measuring climb ${settledRoutes}/${basePool.length}`
-            : "Spin"}
+            : picked !== null && !wide
+              ? "Spin again"
+              : "Spin"}
     </button>
   );
 
@@ -1520,7 +1523,9 @@ export function App() {
   );
 
   return (
-    <div className={`shell${picking ? " is-picking" : ""}`}>
+    <div
+      className={`shell${picking ? " is-picking" : ""}${!wide && snap === "full" ? " is-covered" : ""}`}
+    >
       {map}
 
       {wide ? (
@@ -1535,7 +1540,7 @@ export function App() {
         <Sheet
           snap={snap}
           onSnap={setSnap}
-          topInset={16}
+          topInset={roomId === null ? 16 : mirrorOpen ? 220 : 72}
           head={header}
           bar={spinButton}
         >
@@ -1560,7 +1565,11 @@ export function App() {
           bothCount={candidates.length}
           nowMs={conditions.atMs}
           compact={!wide}
-          onResize={() => dispatch({ type: "frame" })}
+          expanded={mirrorOpen}
+          onToggle={() => {
+            setMirrorOpen((value) => !value);
+            dispatch({ type: "frame" });
+          }}
           onMatch={(minutes) => dispatch({ type: "budget", minutes })}
           onNewRoom={() => {
             leaveRoom();

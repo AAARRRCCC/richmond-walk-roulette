@@ -1435,7 +1435,8 @@ code {
   .sheet-body > * + * {
     border-top: 1px solid var(--line);
   }
-  .sheet-body > .sr-only {
+  .sheet-body > .sr-only,
+  .sheet-body > .spin-slot:empty {
     display: none;
   }
   .sheet-bar {
@@ -1460,16 +1461,22 @@ code {
   }
   .reach-attribution {
     right: 8px;
-    bottom: calc(var(--sheet-h) + 30px);
+    bottom: calc(var(--sheet-h) + 32px);
     font-size: 10px;
   }
   .map-notice {
     left: 8px;
     right: auto;
-    bottom: calc(var(--sheet-h) + 8px);
+    bottom: calc(var(--sheet-h) + 32px);
   }
   .maplibregl-ctrl-top-right .maplibregl-ctrl-group {
     display: none;
+  }
+  /* At full the map is a sliver; its chrome would sit on the top strip. */
+  .shell.is-covered .maplibregl-ctrl-bottom-right,
+  .shell.is-covered .reach-attribution,
+  .shell.is-covered .map-notice {
+    visibility: hidden;
   }
 
   .result-actions {
