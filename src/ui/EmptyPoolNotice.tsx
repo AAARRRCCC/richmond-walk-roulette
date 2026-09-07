@@ -36,27 +36,27 @@ function line(props: EmptyPoolNoticeProps): string {
   const { fix } = props;
   switch (fix.kind) {
     case "drop-rule":
-      return `Nothing to spin. ${props.inReach} places are in reach; ${fix.recovers} of them are held back.`;
+      return `nothing to spin. ${props.inReach} in reach, ${fix.recovers} held back by filters.`;
     case "widen-budget":
-      return `Nothing is in reach in ${props.outerMinutes} min. The nearest match is ${fix.nearest}, about ${fix.nearestMinutes} min away.`;
+      return `nothing in reach in ${props.outerMinutes} min. nearest is ${fix.nearest}, about ${fix.nearestMinutes} min.`;
     case "drop-cap":
-      return `Nothing to spin inside ${fix.cappedMinutes} min. The weather trimmed your ${fix.askedMinutes} min, and everything that matches is outside what is left.`;
+      return `nothing inside ${fix.cappedMinutes} min. the weather trimmed ${fix.askedMinutes} min.`;
     case "lower-floor":
-      return "Everything that matches is closer than your range starts.";
+      return "everything is under the lower bound.";
     // The button moves the dial; it does not promise the named place, since
     // `contains` has no on-edge guarantee where two contours graze.
     case "widen-to-meet":
       return fix.hedged
-        ? `Nothing is inside ${props.outerMinutes} min of both of you. The smallest we could measure is ${fix.budgetMinutes} min, where ${fix.nearest} comes into both your reaches.`
-        : `Nothing is inside ${props.outerMinutes} min of both of you. At ${fix.budgetMinutes} min, ${fix.nearest} comes into both your reaches.`;
+        ? `nothing inside ${props.outerMinutes} min of both. ${fix.nearest} is in both reaches at ${fix.budgetMinutes} min or less.`
+        : `nothing inside ${props.outerMinutes} min of both. ${fix.nearest} is in both reaches at ${fix.budgetMinutes} min.`;
     case "no-overlap":
       return fix.hedged
-        ? "Nothing we could measure is inside 100 minutes' walk of both of you."
-        : "Nothing is inside 100 minutes' walk of both of you, the widest the dial goes.";
+        ? "nothing measured is inside 100 min of both."
+        : "nothing is inside 100 min of both.";
     case "meet-warming":
-      return "Waiting on their side.";
+      return "waiting on their side.";
     case "none":
-      return "Nothing matches, at any budget the dial offers.";
+      return "nothing matches at any budget.";
   }
 }
 
@@ -66,18 +66,18 @@ function label(fix: PoolFix): string | null {
     case "drop-rule":
       return `${fix.clearLabel} (${fix.recovers} back)`;
     case "widen-budget":
-      return `Try ${fix.budgetMinutes} min`;
+      return `try ${fix.budgetMinutes} min`;
     case "drop-cap":
       return `${fix.clearLabel} (${fix.recovers} back)`;
     case "lower-floor":
-      return "Drop the lower bound";
+      return "drop the lower bound";
     case "widen-to-meet":
-      return `Widen to ${fix.budgetMinutes} min`;
+      return `widen to ${fix.budgetMinutes} min`;
     case "no-overlap":
-      return "Spin from just your side";
+      return "spin alone";
     case "meet-warming":
       return null;
     case "none":
-      return "Clear filters";
+      return "clear filters";
   }
 }

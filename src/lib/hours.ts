@@ -287,11 +287,11 @@ export function evaluateHours(
   }
 
   if (clock.date < coverage.from || clock.date > coverage.through) {
-    return { ...base, state: "unknown", note: `Hours data is out of date.${staleClause}` };
+    return { ...base, state: "unknown", note: `hours out of date.${staleClause}` };
   }
 
   const segment = entry.segments === undefined ? null : segmentFor(entry.segments, clock.date);
-  if (segment === null) return { ...base, state: "unknown", note: `Hours data is out of date.${staleClause}` };
+  if (segment === null) return { ...base, state: "unknown", note: `hours out of date.${staleClause}` };
 
   const state: Openness = bitAt(segment.mask, clock.slot) ? "open" : "closed";
 
@@ -301,16 +301,16 @@ export function evaluateHours(
     return {
       ...base,
       state: "unknown",
-      note: `Hours say “${entry.comment}”.${staleClause}`,
+      note: `hours say “${entry.comment}”.${staleClause}`,
     };
   }
 
-  if (state === "closed") return { ...base, state, note: `Likely closed when you arrive.${staleClause}` };
+  if (state === "closed") return { ...base, state, note: `likely closed on arrival.${staleClause}` };
 
   const closesAt = nextCloseMinutes(segment.mask, clock.slot);
   const soon = closesAt !== null && closesAt - clock.minutes <= CLOSING_SOON_MINUTES;
-  const clause = soon && closesAt !== null ? ` — closes ${clockOf(clock, closesAt)}` : "";
-  return { ...base, state, note: `Open when you arrive${clause}${staleClause}` };
+  const clause = soon && closesAt !== null ? `, closes ${clockOf(clock, closesAt)}` : "";
+  return { ...base, state, note: `open on arrival${clause}${staleClause}` };
 }
 
 /** A local minutes-since-midnight back into the app's one clock voice. */
@@ -326,9 +326,9 @@ function categoryNote(entry: HoursEntry, state: Openness, staleClause: string): 
   if (entry.source === "category" && entry.category === "public-park") {
     return `${PARK_NOTE}${staleClause}`;
   }
-  if (state === "closed") return `Likely closed when you arrive.${staleClause}`;
+  if (state === "closed") return `likely closed on arrival.${staleClause}`;
   if (state === "unknown") return null;
-  return `Open when you arrive${staleClause}`;
+  return `open on arrival${staleClause}`;
 }
 
 /**
@@ -338,7 +338,7 @@ function categoryNote(entry: HoursEntry, state: Openness, staleClause: string): 
  * category, not a fact about this park. See `PARK_HOURS` in
  * `scripts/build-hours.mjs` and HUMAN-REVIEW 2.7.
  */
-const PARK_NOTE = "City parks open at 5 am and close at dusk — assumed, not from OSM.";
+const PARK_NOTE = "city parks: 5 am to dusk, assumed.";
 
 /**
  * **The one constant Richmond's whole park assumption turns on.**

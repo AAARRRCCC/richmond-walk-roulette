@@ -64,7 +64,7 @@ export function PartnerRail(props: PartnerRailProps) {
   return (
     <aside
       className={`mirror${compact ? " is-compact" : " panel"}${open ? " is-open" : ""}${staleness}`}
-      aria-label="Their side"
+      aria-label="their side"
     >
       {compact ? (
         <button
@@ -78,14 +78,14 @@ export function PartnerRail(props: PartnerRailProps) {
         >
           <span className={`mirror-dot is-${presence}`} aria-hidden="true" />
           <span className="mirror-strip-name">
-            {them === null ? "Their side" : props.partnerName}
+            {them === null ? "their side" : props.partnerName}
           </span>
           <span className="mirror-strip-value">
             {them === null
               ? STRIP_WORD[presence]
               : `${them.budgetMinutes} min${them.roundTrip ? ", round trip" : ""}`}
           </span>
-          {them?.locked && <span className="mirror-lock">locked in</span>}
+          {them?.locked && <span className="mirror-lock">locked</span>}
           <CaretDownIcon
             size={14}
             weight="bold"
@@ -94,8 +94,12 @@ export function PartnerRail(props: PartnerRailProps) {
           />
         </button>
       ) : (
-        <div className="mirror-head">
-          <p className="field-label">Their side</p>
+        <div className="bar">
+          <span className="dots" aria-hidden="true">
+            <i className="dot" />
+            <i className="dot" />
+          </span>
+          <span className="title">their side</span>
           <span className={`mirror-dot is-${presence}`} aria-hidden="true" />
         </div>
       )}
@@ -126,9 +130,7 @@ function MirrorBody(props: PartnerRailProps & { presence: Presence }) {
 
       {presence === "closed" ? (
         <>
-          <p className="meet-hint">
-            Rooms stay open 12 hours. Their settings went with it.
-          </p>
+          <p className="meet-hint">rooms last 12 hours.</p>
           <button
             type="button"
             className="button"
@@ -137,19 +139,14 @@ function MirrorBody(props: PartnerRailProps & { presence: Presence }) {
               props.onNewRoom();
             }}
           >
-            Start a new room
+            new room
           </button>
         </>
       ) : them === null ? (
         <>
-          <p className="meet-hint">
-            {presence === "waiting"
-              ? "Nothing of theirs shows until they do."
-              : "They're here, choosing a start."}
-          </p>
           {!compact && <p className="mirror-ghost">&mdash; min</p>}
           {remaining !== null && (
-            <p className="meet-hint">Room closes in {remaining}.</p>
+            <p className="meet-hint">room closes in {remaining}.</p>
           )}
         </>
       ) : (
@@ -160,7 +157,7 @@ function MirrorBody(props: PartnerRailProps & { presence: Presence }) {
               <span className="mirror-unit">
                 min{them.roundTrip ? ", round trip" : ""}
               </span>
-              {them.locked && <span className="mirror-lock">locked in</span>}
+              {them.locked && <span className="mirror-lock">locked</span>}
             </div>
           )}
           {them.budgetMinutes !== props.yourMinutes && (
@@ -172,26 +169,25 @@ function MirrorBody(props: PartnerRailProps & { presence: Presence }) {
                 props.onMatch(them.budgetMinutes);
               }}
             >
-              Match {them.budgetMinutes} min
+              match {them.budgetMinutes} min
             </button>
           )}
           {them.originOutOfBounds && (
             <p className="notice is-warn">
-              Their start is outside Richmond. This app only measures walks
-              here.
+              their start is outside richmond.
             </p>
           )}
 
-          <p className="field-label">Their filters</p>
+          <p className="field-label">their filters</p>
           <div className="chips">
             {them.edgeOnly && (
-              <span className="chip is-theirs">Far edge only</span>
+              <span className="chip is-theirs">far edge</span>
             )}
             {them.weatherAware && (
-              <span className="chip is-theirs">Mind the weather</span>
+              <span className="chip is-theirs">weather</span>
             )}
             {them.climb !== "any" && (
-              <span className="chip is-theirs">Climb: {them.climb}</span>
+              <span className="chip is-theirs">climb: {them.climb}</span>
             )}
             {them.kind !== "any" && (
               <span className="chip is-theirs">{them.kind}s only</span>
@@ -206,25 +202,12 @@ function MirrorBody(props: PartnerRailProps & { presence: Presence }) {
               them.climb === "any" &&
               them.kind === "any" &&
               them.vibes.length === 0 && (
-                <span className="meet-hint">None.</span>
+                <span className="meet-hint">none.</span>
               )}
           </div>
 
-          {presence === "away" && (
-            <p className="meet-hint">
-              These are their settings from before they left. They may have
-              walked off.
-            </p>
-          )}
-          {presence === "reconnecting" && (
-            <p className="meet-hint">
-              Holding their last settings while the connection comes back.
-            </p>
-          )}
           {them.origin !== null && (
-            <p className="meet-hint">
-              {props.bothCount} places are inside both your reaches.
-            </p>
+            <p className="meet-hint">{props.bothCount} places in both reaches.</p>
           )}
         </>
       )}

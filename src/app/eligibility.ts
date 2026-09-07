@@ -99,51 +99,51 @@ type ReasonCopy = {
 export const REASON_COPY = {
   "out-of-reach": {
     clause: (n: number) => `${n} too far`,
-    sentence: "Further than your budget walks.",
-    heading: "Too far",
+    sentence: "too far for the budget.",
+    heading: "too far",
   },
   "inside-floor": {
     clause: (n: number) => `${n} too close`,
-    sentence: "Closer than the range's lower end.",
-    heading: "Too close",
+    sentence: "under the lower bound.",
+    heading: "too close",
   },
   "out-of-their-reach": {
     clause: (n: number) => `${n} out of their reach`,
-    sentence: "Outside the other person's reach.",
-    heading: "Only in your reach",
+    sentence: "outside their reach.",
+    heading: "only in your reach",
   },
   // Renamed in copy only when the climb filter replaced the terrain chip. One
   // control, one reason code, one clause - a second member would have made the
   // same filter answer to two names.
   "wrong-terrain": {
     clause: (n: number) => `${n} wrong climb`,
-    sentence: "Not the climb you asked for.",
-    heading: "Wrong climb",
+    sentence: "wrong climb.",
+    heading: "wrong climb",
   },
   "no-matching-vibe": {
     clause: (n: number) => `${n} no match`,
-    sentence: "None of the things you are looking for.",
-    heading: "No matching vibe",
+    sentence: "no matching vibe.",
+    heading: "no matching vibe",
   },
   kind: {
     clause: (n: number) => `${n} wrong kind`,
-    sentence: "Not the kind of place you asked for.",
-    heading: "Wrong kind",
+    sentence: "wrong kind.",
+    heading: "wrong kind",
   },
   "not-far-edge": {
     clause: (n: number) => `${n} not on the edge`,
-    sentence: "Not out in the far edge band.",
-    heading: "Not on the far edge",
+    sentence: "not on the far edge.",
+    heading: "not on the far edge",
   },
   closed: {
     clause: (n: number) => `${n} shut`,
-    sentence: "Shut when you would get there.",
-    heading: "Shut on arrival",
+    sentence: "shut when you arrive.",
+    heading: "shut on arrival",
   },
   weather: {
     clause: (n: number) => `${n} rained out`,
-    sentence: "Not a walk for this weather.",
-    heading: "Weather",
+    sentence: "not for this weather.",
+    heading: "weather",
   },
   // `satisfies` rather than an annotation: the record still has to be total
   // over the union - a missing member is a tsc error, which is the whole point -
@@ -679,13 +679,13 @@ export function suggestFix(
   };
 
   if (conditions.vibes.length > 0) {
-    consider("no-matching-vibe", "Clear what you are looking for", byReducer, {
+    consider("no-matching-vibe", "clear vibes", byReducer, {
       ...conditions,
       vibes: [],
     });
   }
   if (conditions.edgeOnly) {
-    consider("not-far-edge", "Include the whole reach", byReducer, {
+    consider("not-far-edge", "include the whole reach", byReducer, {
       ...conditions,
       edgeOnly: false,
     });

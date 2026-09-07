@@ -142,7 +142,7 @@ export function ElevationProfile(props: ElevationProfileProps) {
         />
       </div>
       {props.roundTrip && (
-        <p className="profile-note">The way out. You come back the same way.</p>
+        <p className="profile-note">outbound leg.</p>
       )}
       <figcaption className="profile-readout">
         <span>

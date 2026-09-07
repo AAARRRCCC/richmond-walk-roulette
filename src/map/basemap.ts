@@ -1,28 +1,94 @@
-import type { StyleSpecification } from "maplibre-gl";
+import type { Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
+import type { Theme } from "../app/theme";
 
 /**
- * Hand-written dark style over OpenFreeMap's OpenMapTiles vector source, so
- * every basemap colour sits underneath the amber contours. No API key;
+ * Hand-written style over OpenFreeMap's OpenMapTiles vector source, in the
+ * plvr.net paper palette with a dark counterpart. Contours and routes sit on
+ * top in the site's accent, so the basemap stays quiet. No API key;
  * attribution is rendered by the map control.
  */
 
 const TILES = "https://tiles.openfreemap.org/planet";
 const GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 
-const COLORS = {
-  land: "#0b1014",
-  green: "#0e1715",
-  water: "#05090e",
-  building: "#141c23",
-  roadMinor: "#19222b",
-  roadMajor: "#28343f",
-  path: "#1b2630",
-  boundary: "#243039",
-  label: "#7c8fa0",
-  labelHalo: "#080d12",
-} as const;
+type Palette = {
+  land: string;
+  green: string;
+  water: string;
+  building: string;
+  roadMinor: string;
+  roadMajor: string;
+  path: string;
+  boundary: string;
+  label: string;
+  waterLabel: string;
+  labelHalo: string;
+};
 
-export function darkBasemap(): StyleSpecification {
+const PALETTES = {
+  light: {
+    land: "#f6f1e7",
+    green: "#e3e8d6",
+    water: "#b7d6f1",
+    building: "#e6dcc7",
+    roadMinor: "#ffffff",
+    roadMajor: "#f3e6cf",
+    path: "#d9cfb9",
+    boundary: "#cfc6b4",
+    label: "#6a6f76",
+    waterLabel: "#5c8ea3",
+    labelHalo: "#f6f1e7",
+  },
+  dark: {
+    land: "#232a33",
+    green: "#25332f",
+    water: "#142840",
+    building: "#2c343e",
+    roadMinor: "#343e4a",
+    roadMajor: "#465260",
+    path: "#3a4450",
+    boundary: "#465260",
+    label: "#a7aeb6",
+    waterLabel: "#8fb6c6",
+    labelHalo: "#1c222a",
+  },
+} satisfies Record<Theme, Palette>;
+
+/** The paint properties that change between themes, keyed by layer id. */
+function paints(palette: Palette) {
+  return {
+    background: { "background-color": palette.land },
+    green: { "fill-color": palette.green },
+    landcover: { "fill-color": palette.green },
+    water: { "fill-color": palette.water },
+    building: { "fill-color": palette.building },
+    path: { "line-color": palette.path },
+    "road-minor": { "line-color": palette.roadMinor },
+    "road-secondary": { "line-color": palette.roadMinor },
+    "road-major": { "line-color": palette.roadMajor },
+    boundary: { "line-color": palette.boundary },
+    "water-label": {
+      "text-color": palette.waterLabel,
+      "text-halo-color": palette.labelHalo,
+    },
+    "place-label": {
+      "text-color": palette.label,
+      "text-halo-color": palette.labelHalo,
+    },
+  } satisfies Record<string, Record<string, string>>;
+}
+
+/** Recolors the basemap in place, keeping every source and layer the app added. */
+export function applyBasemapTheme(map: MapLibreMap, theme: Theme): void {
+  for (const [layer, props] of Object.entries(paints(PALETTES[theme]))) {
+    if (map.getLayer(layer) === undefined) continue;
+    for (const [name, value] of Object.entries(props))
+      map.setPaintProperty(layer, name, value);
+  }
+}
+
+export function basemap(theme: Theme): StyleSpecification {
+  const COLORS = PALETTES[theme];
   return {
     version: 8,
     glyphs: GLYPHS,
@@ -137,7 +203,7 @@ export function darkBasemap(): StyleSpecification {
           "text-transform": "uppercase",
         },
         paint: {
-          "text-color": "#4d6070",
+          "text-color": COLORS.waterLabel,
           "text-halo-color": COLORS.labelHalo,
           "text-halo-width": 1,
         },
@@ -161,7 +227,7 @@ export function darkBasemap(): StyleSpecification {
           "text-color": COLORS.label,
           "text-halo-color": COLORS.labelHalo,
           "text-halo-width": 1.2,
-          "text-opacity": 0.55,
+          "text-opacity": 0.7,
         },
       },
     ],

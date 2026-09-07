@@ -71,7 +71,7 @@ export function judgeFix(fix: Fix): LocateOutcome {
     return {
       kind: "rejected",
       error: {
-        message: "Your device reported a position this can't read. Drop a pin on the map instead.",
+        message: "unreadable position. drop a pin instead.",
         tone: "warn",
         suggest: null,
       },
@@ -86,8 +86,7 @@ export function judgeFix(fix: Fix): LocateOutcome {
       kind: "rejected",
       error: {
         message:
-          "That's outside the area this knows. Walk Roulette only has Richmond — its map, its " +
-          "places and its walking times all stop at the city.",
+          "outside richmond. the map, places and walk times stop at the city.",
         tone: "warn",
         suggest: nearestPreset(fix),
       },
@@ -99,20 +98,18 @@ export function judgeFix(fix: Fix): LocateOutcome {
       kind: "rejected",
       error: {
         message:
-          `Your device could only place you to within about ${formatAccuracy(fix.accuracyMeters)}. ` +
-          "A five-minute walk is about 300 m, so a contour drawn from that fix would be mostly " +
-          "guesswork. Drop a pin on the map instead.",
+          `located only to within about ${formatAccuracy(fix.accuracyMeters)}. drop a pin instead.`,
         tone: "warn",
         suggest: null,
       },
     };
   }
 
-  const origin: Origin = { id: "me", name: "My location", lat: fix.lat, lng: fix.lng };
+  const origin: Origin = { id: "me", name: "my location", lat: fix.lat, lng: fix.lng };
   const caveat: LocationNotice | null =
     fix.accuracyMeters > CAVEAT_ACCURACY_METERS
       ? {
-          message: `Located to within about ${formatAccuracy(fix.accuracyMeters)} — the edges are approximate.`,
+          message: `located to within about ${formatAccuracy(fix.accuracyMeters)}.`,
           tone: "info",
           suggest: null,
         }
@@ -172,23 +169,20 @@ const warn = (message: string): LocationNotice => ({ message, tone: "warn", sugg
 export function describeGeolocationError(code: number, secureContext: boolean): LocationNotice {
   if (code === 1 && !secureContext) {
     return warn(
-      "This page isn't on a secure connection, so the browser won't share a location. Drop a pin " +
-        "on the map instead.",
+      "not a secure connection, so the browser will not share a location. drop a pin instead.",
     );
   }
   if (code === 1) {
     return warn(
-      "Location is blocked for this site. You can turn it back on in your browser's site " +
-        "settings — or just drop a pin on the map.",
+      "location is blocked for this site. allow it in the browser, or drop a pin.",
     );
   }
   if (code === 3) {
-    return warn("Locating took too long and gave up. Try again, or drop a pin on the map.");
+    return warn("locating timed out. try again, or drop a pin.");
   }
   // Code 2, and every unknown code: "unavailable" is true of all of them.
   return warn(
-    "Your device couldn't get a fix. That usually means no GPS and no known wifi — try again " +
-      "outdoors, or drop a pin on the map.",
+    "no fix. try again outdoors, or drop a pin.",
   );
 }
 
@@ -203,5 +197,5 @@ export type PermissionHint = "granted" | "denied" | "prompt" | "unknown";
  * state it says what it will actually do.
  */
 export function locateActionLabel(hint: PermissionHint): string {
-  return hint === "denied" ? "Location is blocked" : "Use my location";
+  return hint === "denied" ? "location is blocked" : "use my location";
 }

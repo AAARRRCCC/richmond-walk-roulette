@@ -13,9 +13,10 @@ import {
   CaretRightIcon,
   ShuffleIcon,
   UsersIcon,
-  SpeakerSimpleHighIcon,
-  SpeakerSimpleSlashIcon,
 } from "@phosphor-icons/react";
+import { Corner, SoundButton, ThemeButton } from "../ui/Corner";
+import { Toast } from "../ui/Toast";
+import { useTheme } from "./theme";
 import { MapCanvas } from "../map/MapCanvas";
 import { DialHead, TimeDial } from "../ui/TimeDial";
 import { OriginMenu, OriginPicker } from "../ui/OriginPicker";
@@ -91,7 +92,6 @@ import {
   onSoundChange,
   playPress,
   playTap,
-  setSoundOn,
   soundOn,
 } from "../lib/sound";
 import {
@@ -206,7 +206,7 @@ const describe = (cause: unknown): Failure => ({
   message:
     cause instanceof Error
       ? cause.message
-      : "Could not load the reachable area.",
+      : "could not load the reachable area.",
 });
 
 export function App() {
@@ -259,6 +259,7 @@ export function App() {
   const [, bumpSound] = useReducer((n: number) => n + 1, 0);
   useEffect(() => onSoundChange(bumpSound), []);
   const sound = soundOn();
+  const themeName = useTheme();
 
   const { origin, failure, partner, originChosen } = state;
   const outbound = outboundMinutes(state);
@@ -409,7 +410,7 @@ export function App() {
             id: "closed",
             reason: "closed",
             active: true,
-            clearLabel: "Include closed places",
+            clearLabel: "include closed places",
             clear: () => dispatch({ type: "toggleHideClosed" }),
             signature: `${poolClock.slot}|${poolClock.date}`,
             // `unknown` is never excluded; most places carry no schedule.
@@ -432,7 +433,7 @@ export function App() {
             id: "kind",
             reason: "kind",
             active: true,
-            clearLabel: "Any kind of place",
+            clearLabel: "any kind",
             clear: () => dispatch({ type: "kind", kind: "any" }),
             signature: state.kind,
             excludes: (place: Place) => !matchesKind(place, state.kind),
@@ -446,7 +447,7 @@ export function App() {
             id: "climb",
             reason: "wrong-terrain",
             active: true,
-            clearLabel: "Any climb",
+            clearLabel: "any climb",
             clear: () => dispatch({ type: "climb", climb: "any" }),
             signature: `${state.climb}|${climbSettled}`,
             // Deferred: an unmeasured place passes provisionally so the pool
@@ -630,7 +631,7 @@ export function App() {
         roundTrip: state.roundTrip,
       })
     : null;
-  const partnerName = partner?.name ?? "Their start";
+  const partnerName = partner?.name ?? "their start";
 
   const startReel = (winner: Place, by: "me" | "them") => {
     spinnerRef.current = by;
@@ -852,29 +853,20 @@ export function App() {
                 : ("fact" as const),
           },
         ]),
-    ...(meetMode
-      ? [
-          {
-            key: "meet" as const,
-            text: "Both walks are measured at the same pace.",
-            tier: "assumed" as const,
-          },
-        ]
-      : []),
     {
       key: "handoff",
-      text: "Other apps will recalculate. Their walk times will differ.",
+      text: "other apps measure their own walk time.",
       tier: "assumed",
     },
   ];
 
   // The one screen-reader line for a result. Empty during a throw, filled once the route settles.
   const announcement = state.spinAborted
-    ? "Filters changed, spin again."
+    ? "filters changed, spin again."
     : state.spinning || !picked || routePending
       ? ""
       : describeResult([
-          state.shared === null ? "" : "Shared walk",
+          state.shared === null ? "" : "shared walk",
           picked.detour === undefined
             ? picked.name
             : `${DETOUR_LABELS[picked.detour]}: ${picked.name}`,
@@ -1000,7 +992,7 @@ export function App() {
     if (recovers === 0) return null;
     return {
       kind: "drop-cap",
-      clearLabel: "Ignore the weather",
+      clearLabel: "ignore the weather",
       clear: () => dispatch({ type: "toggleWeatherAware" }),
       recovers,
       askedMinutes: asked,
@@ -1081,6 +1073,7 @@ export function App() {
       partnerBand={partnerReach?.bands.at(-1)?.polygons ?? null}
       partnerName={partnerName}
       originVisible={originChosen}
+      theme={themeName}
       onPickPlace={(id) => dispatch({ type: "pickPlace", pickedId: id })}
       onMoveOrigin={moveOrigin}
       onMoveEnd={setPickCenter}
@@ -1135,7 +1128,7 @@ export function App() {
             dispatch({ type: "toggleRoundTrip" });
           }}
         >
-          Round trip
+          round trip
         </button>
         <button
           type="button"
@@ -1146,54 +1139,42 @@ export function App() {
             dispatch({ type: "toggleRoundTrip" });
           }}
         >
-          One way
+          one way
         </button>
       </div>
     </div>
   );
 
   const header = (
-    <header className="brand" {...inertWhen(picking)}>
-      <h1>
-        Walk Roulette
-        <span className="brand-place">Richmond</span>
-      </h1>
-      <div className="brand-actions">
-        {!wide && roomId === null && status === "ready" && (
-          <button
-            type="button"
-            className="icon-button"
-            aria-label="Invite someone to meet"
-            onClick={() => {
-              playTap(true);
-              setPage("meet");
-            }}
-          >
-            <UsersIcon size={16} weight="bold" aria-hidden="true" />
-          </button>
-        )}
-        <button
-          type="button"
-          className="icon-button"
-          aria-label={sound ? "Mute sound cues" : "Unmute sound cues"}
-          onClick={() => {
-            const next = !sound;
-            setSoundOn(next);
-            if (next) playTap(true);
-          }}
-        >
-          {sound ? (
-            <SpeakerSimpleHighIcon size={16} aria-hidden="true" />
-          ) : (
-            <SpeakerSimpleSlashIcon size={16} aria-hidden="true" />
+    <header className="bar" {...inertWhen(picking)}>
+      <span className="dots" aria-hidden="true">
+        <i className="dot" />
+        <i className="dot" />
+      </span>
+      <h1 className="title">walk roulette</h1>
+      <span className="state">richmond</span>
+      {!wide && (
+        <div className="bar-actions">
+          {roomId === null && status === "ready" && (
+            <button
+              type="button"
+              className="icon-button"
+              aria-label="meet someone"
+              onClick={() => {
+                playTap(true);
+                setPage("meet");
+              }}
+            >
+              <UsersIcon size={16} weight="bold" aria-hidden="true" />
+            </button>
           )}
-        </button>
-        {!wide && (
+          <ThemeButton className="icon-button" />
+          <SoundButton className="icon-button" on={sound} />
           <button
             type="button"
             className="icon-button rail-toggle"
             aria-expanded={snap !== "peek"}
-            aria-label={snap === "peek" ? "Show controls" : "Hide controls"}
+            aria-label={snap === "peek" ? "show controls" : "hide controls"}
             onClick={() => {
               playPress();
               setSnap(snap === "peek" ? "half" : "peek");
@@ -1208,8 +1189,8 @@ export function App() {
               }
             />
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 
@@ -1234,17 +1215,17 @@ export function App() {
       <ShuffleIcon size={18} weight="bold" aria-hidden="true" />
       {lockGate && !bothLocked
         ? locked
-          ? "Waiting for them"
-          : "Lock in first"
+          ? "waiting for them"
+          : "lock in first"
         : state.spinning
-          ? "Spinning"
+          ? "spinning"
           : status === "ready" && routesWarming
             ? state.climb === "any"
-              ? `Loading routes ${settledRoutes}/${basePool.length}`
-              : `Measuring climb ${settledRoutes}/${basePool.length}`
+              ? `loading routes ${settledRoutes}/${basePool.length}`
+              : `measuring climb ${settledRoutes}/${basePool.length}`
             : picked !== null && !wide
-              ? "Spin again"
-              : "Spin"}
+              ? "spin again"
+              : "spin"}
     </button>
   );
 
@@ -1315,7 +1296,7 @@ export function App() {
                 }
               }}
             >
-              Start from {state.locationNotice.suggest.name}
+              start from {state.locationNotice.suggest.name}
             </button>
           )}
         </div>
@@ -1327,8 +1308,7 @@ export function App() {
         status !== "error" &&
         status !== "not-configured" && (
           <p className="notice" {...inertWhen(picking)}>
-            Measuring the reachable area from your spot. The dial fills in as it
-            arrives.
+            measuring reach from your start.
           </p>
         )}
 
@@ -1343,19 +1323,15 @@ export function App() {
 
       {status === "not-configured" ? (
         <div className="notice is-setup">
-          <strong>The routing engine is not answering.</strong>
+          <strong>the routing engine is not answering.</strong>
           {import.meta.env.DEV ? (
             <p>
-              Contours and routes come from a Valhalla instance. Set{" "}
-              <code>VALHALLA_URL</code> in <code>.env.local</code>, then restart
-              the dev server. See <code>valhalla/README.md</code>. The server
-              said: {failure?.message}
+              set <code>VALHALLA_URL</code> in <code>.env.local</code> and
+              restart the dev server. see <code>valhalla/README.md</code>.
+              the server said: {failure?.message}
             </p>
           ) : (
-            <p>
-              Reachable areas and routes are unavailable right now. Try again
-              shortly.
-            </p>
+            <p>reach and routes are down. try again later.</p>
           )}
         </div>
       ) : status === "error" ? (
@@ -1402,8 +1378,8 @@ export function App() {
         <div className="lock-row" {...inertWhen(picking)}>
           {locked ? (
             <p className="meet-hint" role="status">
-              Locked in at <strong>{state.budgetMinutes} min</strong>.
-              {theirs?.locked ? "" : " Waiting for them to lock in."}
+              locked in at <strong>{state.budgetMinutes} min</strong>.
+              {theirs?.locked ? "" : " waiting for them."}
             </p>
           ) : (
             <button
@@ -1415,7 +1391,7 @@ export function App() {
                 setLockedMinutes(state.budgetMinutes);
               }}
             >
-              Lock in {state.budgetMinutes} min
+              lock in {state.budgetMinutes} min
             </button>
           )}
         </div>
@@ -1449,15 +1425,13 @@ export function App() {
           <div className="notice-stack" {...inertWhen(picking)}>
             {state.shared.missingPlaceId !== null && (
               <p className="notice is-warn">
-                The place this link points to is no longer on the map.
-                Everything else about the walk is set up. Spin for somewhere
-                new.
+                this link&rsquo;s place is no longer on the map.
               </p>
             )}
             {state.shared.clampedFromMinutes !== null && (
               <p className="notice">
-                This link asked for {state.shared.clampedFromMinutes} minutes;
-                the closest the dial goes is {state.budgetMinutes}.
+                this link asked for {state.shared.clampedFromMinutes} min; the
+                dial goes to {state.budgetMinutes}.
               </p>
             )}
             <button
@@ -1468,15 +1442,14 @@ export function App() {
                 dispatch({ type: "dismissShared" });
               }}
             >
-              Dismiss
+              dismiss
             </button>
           </div>
         )}
 
       {reelIsShort && !emptyPool && (
         <div className="notice" {...inertWhen(picking)} role="status">
-          {drawable.length} of {basePool.length} routes are ready. The reel
-          turns through those; the rest are still coming from the engine.
+          {drawable.length} of {basePool.length} routes ready.
         </div>
       )}
 
@@ -1497,12 +1470,12 @@ export function App() {
     <div className="spin-slot" {...inertWhen(picking)}>
       {state.spinning && showing && (
         <p className="spin-reel" aria-hidden="true">
-          <span className="field-label">Choosing</span>
+          <span className="field-label">choosing</span>
           <span className="spin-name">{showing.name}</span>
         </p>
       )}
       {!state.spinning && !picked && state.spinAborted && (
-        <p className="notice is-warn">Filters changed, spin again.</p>
+        <p className="notice is-warn">filters changed, spin again.</p>
       )}
       {!state.spinning && picked && (
         <ResultCard
@@ -1572,7 +1545,7 @@ export function App() {
         className="page-link"
         onClick={() => setPage("filters")}
       >
-        {activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}
+        {activeFilters > 0 ? `filters (${activeFilters})` : "filters"}
         <CaretRightIcon size={14} weight="bold" aria-hidden="true" />
       </button>
       {reach !== null && (
@@ -1581,7 +1554,7 @@ export function App() {
           className="page-link"
           onClick={() => setPage("places")}
         >
-          All places ({pool.total})
+          all places ({pool.total})
           <CaretRightIcon size={14} weight="bold" aria-hidden="true" />
         </button>
       )}
@@ -1597,14 +1570,14 @@ export function App() {
         {...inertWhen(picking)}
       >
         <summary>
-          {activeFilters > 0 ? `Filters (${activeFilters} active)` : "Filters"}
+          {activeFilters > 0 ? `filters (${activeFilters})` : "filters"}
         </summary>
         {filtersPanel}
       </details>
 
       {reach !== null && (
         <details className="drawer" {...inertWhen(picking)}>
-          <summary>All places ({pool.total})</summary>
+          <summary>all places ({pool.total})</summary>
           {poolList}
         </details>
       )}
@@ -1625,14 +1598,17 @@ export function App() {
       className={`shell${picking ? " is-picking" : ""}${!wide && snap === "full" ? " is-covered" : ""}`}
     >
       {map}
+      {wide && <Corner sound={sound} />}
 
       {wide ? (
-        <div className="rail">
+        <div className="rail win">
           {header}
-          {panel}
-          {spinSlot}
-          {drawers}
-          {tail}
+          <div className="rail-body">
+            {panel}
+            {spinSlot}
+            {drawers}
+            {tail}
+          </div>
         </div>
       ) : (
         <Sheet
@@ -1662,7 +1638,7 @@ export function App() {
 
       {!wide && page === "filters" && (
         <Page
-          title="Filters"
+          title="filters"
           onClose={() => setPage(null)}
           footer={
             <button
@@ -1673,7 +1649,7 @@ export function App() {
                 setPage(null);
               }}
             >
-              {emptyPool ? "Done" : `Show ${candidates.length} places`}
+              {emptyPool ? "done" : `show ${candidates.length} places`}
             </button>
           }
         >
@@ -1690,7 +1666,7 @@ export function App() {
         </Page>
       )}
       {!wide && page === "origin" && (
-        <Page title="Starting from" onClose={() => setPage(null)}>
+        <Page title="start" onClose={() => setPage(null)}>
           <div className="origin-page">
             <OriginMenu
               origin={origin}
@@ -1706,7 +1682,7 @@ export function App() {
       )}
       {!wide && page === "meet" && (
         <Page
-          title="Meet someone"
+          title="meet"
           onClose={() => setPage(null)}
           footer={
             <button
@@ -1719,24 +1695,23 @@ export function App() {
               }}
             >
               <UsersIcon size={16} weight="bold" aria-hidden="true" />
-              Start a room
+              start a room
             </button>
           }
         >
           <div className="meet-page">
-            <p>Find somewhere you can both walk to.</p>
+            <p>find somewhere you can both walk to.</p>
             <p>
-              You get a link. Whoever opens it sees your start and your settings
-              in that room, for 12 hours, and nowhere else. Their start reaches
-              you only when they choose to share it.
+              the link shows your start and settings to whoever opens it, for
+              12 hours.
             </p>
-            <p>Both of you lock in a time budget, then either of you spins.</p>
+            <p>both lock in a time, then either spins.</p>
           </div>
         </Page>
       )}
       {!wide && page === "places" && reach !== null && (
         <Page
-          title={`All places (${pool.total})`}
+          title={`all places (${pool.total})`}
           onClose={() => setPage(null)}
         >
           <PoolList
@@ -1753,8 +1728,8 @@ export function App() {
       {!wide && picking && (
         <>
           <div className="pick-pin" aria-hidden="true" />
-          <div className="pick-bar" role="group" aria-label="Place your start">
-            <p>Move the map until the pin sits on your start.</p>
+          <div className="pick-bar win" role="group" aria-label="place your start">
+            <p>put the pin on your start.</p>
             <div className="pick-actions">
               <button
                 type="button"
@@ -1764,7 +1739,7 @@ export function App() {
                   dispatch({ type: "cancelPickOrigin" });
                 }}
               >
-                Cancel
+                cancel
               </button>
               <button
                 type="button"
@@ -1781,7 +1756,7 @@ export function App() {
                   setSnap("half");
                 }}
               >
-                Set start here
+                set start
               </button>
             </div>
           </div>
@@ -1808,6 +1783,10 @@ export function App() {
           }}
         />
       )}
+      <div className="copy">
+        © 2026 arc · <a href="https://plvr.net">plvr.net</a>
+      </div>
+      <Toast />
     </div>
   );
 }
@@ -1818,17 +1797,17 @@ function capNote(
   minutes: number,
   light: Daylight,
 ): string {
-  if (cap === null) return `Limit ${minutes} min`;
+  if (cap === null) return `limit ${minutes} min`;
   switch (cap.reason) {
     case "daylight":
-      return `Daylight limit ${minutes} min · ${describeDusk(light)}`;
+      return `daylight limit ${minutes} min · ${describeDusk(light)}`;
     case "rain":
-      return `Rain limit ${minutes} min · rain ${formatClock(cap.untilMs)}`;
+      return `rain limit ${minutes} min · rain ${formatClock(cap.untilMs)}`;
     case "storm":
-      return `Storm limit ${minutes} min · storms ${formatClock(cap.untilMs)}`;
+      return `storm limit ${minutes} min · storms ${formatClock(cap.untilMs)}`;
     case "heat":
-      return `Heat limit ${minutes} min · the heat index is in the danger band`;
+      return `heat limit ${minutes} min`;
     case "cold":
-      return `Cold limit ${minutes} min · it is dangerously cold`;
+      return `cold limit ${minutes} min`;
   }
 }

@@ -48,7 +48,7 @@ export function OriginMenu(props: OriginMenuProps) {
       >
         <CrosshairIcon size={15} aria-hidden="true" />
         {props.locating
-          ? "Locating..."
+          ? "locating…"
           : locateActionLabel(props.permissionHint)}
       </button>
       <button
@@ -60,7 +60,7 @@ export function OriginMenu(props: OriginMenuProps) {
         }}
       >
         <MapPinIcon size={15} aria-hidden="true" />
-        Drop a pin on the map
+        drop a pin
       </button>
 
       <div className="origin-divider" role="separator" />
@@ -129,7 +129,7 @@ export function OriginPicker(props: OriginPickerProps) {
 
   return (
     <div className="origin" ref={rootRef}>
-      <span className="field-label">Starting from</span>
+      <span className="field-label">start</span>
       <button
         type="button"
         ref={triggerRef}
@@ -152,20 +152,20 @@ export function OriginPicker(props: OriginPickerProps) {
       </button>
 
       {open && (
-        <div className="origin-menu" role="group" aria-label="Starting point">
+        <div className="origin-menu" role="group" aria-label="start">
           <OriginMenu {...props} onDone={() => close(true)} />
         </div>
       )}
 
       {props.pickingOrigin && (
         <p className="origin-hint" role="status">
-          Click the map to set your start, or drag the pin. Escape cancels.{" "}
+          click the map or drag the pin. esc cancels.{" "}
           <button
             type="button"
             className="link-button"
             onClick={props.onCancelPickOnMap}
           >
-            Cancel
+            cancel
           </button>
         </p>
       )}

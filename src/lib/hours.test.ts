@@ -199,7 +199,7 @@ test("the park verdict says it is an assumption, in those words", () => {
   const verdict = evaluateHours(PARK, hoursClock(atEDT("2026-06-15T12:00:00")), SUN_JUNE, COVERAGE);
   assert.equal(verdict.source, "category");
   assert.equal(verdict.category, "public-park");
-  assert.equal(verdict.note, "City parks open at 5 am and close at dusk — assumed, not from OSM.");
+  assert.equal(verdict.note, "city parks: 5 am to dusk, assumed.");
   assert.match(String(verdict.note), /assumed/);
 });
 
@@ -233,7 +233,7 @@ test("outside the baked window every mask is unknown, and solar rules still reso
 
   const masked = evaluateHours(MUSEUM, clock, null, narrow);
   assert.equal(masked.state, "unknown");
-  assert.equal(masked.note, "Hours data is out of date.");
+  assert.equal(masked.note, "hours out of date.");
 
   // A rule against the sun is date-independent, so it keeps working after the
   // masks expire. That is why it skips the window check.
@@ -248,10 +248,10 @@ test("a closing time inside two hours is named, and a distant one is not", () =>
   assert.equal(nextCloseMinutes(mask, tuesday1530), 17 * 60);
 
   const near = evaluateHours(MUSEUM, hoursClock(atEDT("2026-06-16T15:30:00")), null, COVERAGE);
-  assert.equal(near.note, "Open when you arrive — closes 5:00 pm");
+  assert.equal(near.note, "open on arrival, closes 5:00 pm");
 
   const far = evaluateHours(MUSEUM, hoursClock(atEDT("2026-06-16T10:30:00")), null, COVERAGE);
-  assert.equal(far.note, "Open when you arrive");
+  assert.equal(far.note, "open on arrival");
 });
 
 test("quantiseToSlot holds still inside a slot and moves at the boundary", () => {

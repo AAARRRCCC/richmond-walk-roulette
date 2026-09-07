@@ -198,7 +198,7 @@ export function composeHeadline(
   peakUv: number | null,
 ): string {
   const parts = [`${formatFahrenheit(now.temperatureF)}, feels ${Math.round(now.feelsLikeF)}°`];
-  if (onsetMinutes !== null) parts.push(`Rain likely ${formatHorizon(onsetMinutes)}`);
+  if (onsetMinutes !== null) parts.push(`rain likely ${formatHorizon(onsetMinutes)}`);
   else if (peakUv !== null && peakUv >= UV_SHELTER) parts.push(formatUv(peakUv));
   return parts.join(". ");
 }
@@ -257,7 +257,7 @@ export function deriveWeatherRules(
   if (onsetMinutes !== null && onsetMinutes < window) {
     rules.push({
       id: "rain-window",
-      detail: `Rain likely ${formatHorizon(onsetMinutes)}`,
+      detail: `rain likely ${formatHorizon(onsetMinutes)}`,
       cap: capAt(
         onsetMinutes - CAP_MARGIN_MINUTES,
         inputs.nowMs + onsetMinutes * 60_000,
@@ -277,7 +277,7 @@ export function deriveWeatherRules(
     if (stormMinutes < window) {
       rules.push({
         id: "storm-window",
-        detail: `Thunderstorms ${formatHorizon(stormMinutes)}`,
+        detail: `thunderstorms ${formatHorizon(stormMinutes)}`,
         cap: capAt(
           stormMinutes - STORM_MARGIN_MINUTES,
           inputs.nowMs + stormMinutes * 60_000,
@@ -297,7 +297,7 @@ export function deriveWeatherRules(
   if (peakFeels >= HEAT_SHELTER_F) {
     rules.push({
       id: "heat-shelter",
-      detail: `Feels ${Math.round(peakFeels)}°F. Steering toward shade, water and doors`,
+      detail: `feels ${Math.round(peakFeels)}°F. shade, water and doors`,
       cap: null,
       preferredTags: ["river", "park", "museum", "food"],
       vetoHilly: false,
@@ -306,7 +306,7 @@ export function deriveWeatherRules(
   if (peakFeels >= HEAT_DANGER_F) {
     rules.push({
       id: "heat-flat",
-      detail: "Heat index in the danger band. Flat routes only",
+      detail: "heat index dangerous. flat routes only",
       cap: capAt(
         SHORT_WALK_MINUTES,
         inputs.nowMs + SHORT_WALK_MINUTES * 60_000,
@@ -321,7 +321,7 @@ export function deriveWeatherRules(
   if (peakUv !== null && peakUv >= UV_SHELTER && usable.some((slot) => slot.isDay)) {
     rules.push({
       id: "uv-shelter",
-      detail: `${formatUv(peakUv)}. Somewhere with a roof or a canopy`,
+      detail: `${formatUv(peakUv)}. roof or canopy`,
       cap: null,
       preferredTags: ["park", "museum", "food"],
       vetoHilly: false,
@@ -332,7 +332,7 @@ export function deriveWeatherRules(
   if (lowFeels <= COLD_CAP_F) {
     rules.push({
       id: "cold-cap",
-      detail: `Feels ${Math.round(lowFeels)}°F. Kept it short`,
+      detail: `feels ${Math.round(lowFeels)}°F. kept short`,
       cap: capAt(
         SHORT_WALK_MINUTES,
         inputs.nowMs + SHORT_WALK_MINUTES * 60_000,
@@ -366,7 +366,7 @@ export function deriveWeatherRules(
 export function describeWeatherRule(rule: WeatherRule, appliedBudget: number | null): string {
   if (rule.cap === null || appliedBudget === null) return rule.detail;
   return appliedBudget > rule.cap.minutes
-    ? `${rule.detail}. A ${appliedBudget} min walk will not be back before it`
+    ? `${rule.detail}. ${appliedBudget} min is not back in time`
     : rule.detail;
 }
 
@@ -435,7 +435,7 @@ export function toPoolRules(
       id: rule.id,
       reason: "weather" as const,
       active: true,
-      clearLabel: "Ignore the weather",
+      clearLabel: "ignore the weather",
       clear: options.clear,
       minSurvivors: MIN_SURVIVORS,
       detail: describeWeatherRule(rule, options.appliedBudget),

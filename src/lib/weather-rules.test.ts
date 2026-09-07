@@ -112,7 +112,7 @@ test("the switch gates rules, never text", () => {
   const off = deriveWeatherRules(report, { ...INPUTS, weatherAware: false });
 
   assert.ok(off.headline !== null);
-  assert.match(off.headline, /Rain likely/);
+  assert.match(off.headline, /rain likely/);
   assert.deepEqual(off.rules, [], "the forecast is stated whatever the switch says");
   assert.deepEqual(mergeCaps(weatherCaps(off)), null);
 });
@@ -178,7 +178,7 @@ test("rain outside the window caps nothing and is not claimed in the headline", 
   assert.deepEqual(ids(verdict), []);
   // The slot is outside the walk, so it is outside the sentence too: a headline
   // naming rain the walk never meets is a reason to shorten a walk for nothing.
-  assert.equal(String(verdict.headline).includes("Rain"), false);
+  assert.equal(String(verdict.headline).includes("rain"), false);
 });
 
 test("a stale report re-ages its own onset", () => {
@@ -197,7 +197,7 @@ test("a stale report re-ages its own onset", () => {
   // sentence warns instead of reporting a trim. A walk INSIDE the window says
   // nothing extra; a walk that overruns it is told so.
   assert.equal(describeWeatherRule(rule, 20), rule.detail);
-  assert.match(describeWeatherRule(rule, 45), /A 45 min walk will not be back before it$/);
+  assert.match(describeWeatherRule(rule, 45), /45 min is not back in time$/);
 });
 
 test("dangerous heat steers toward shade, water and doors without capping", () => {
@@ -290,7 +290,7 @@ test("two caps take the binding one, and every reason names it", () => {
   const sentences = verdict.rules.map((rule) => describeWeatherRule(rule, 60));
   assert.equal(sentences.length, 2);
   for (const sentence of sentences) {
-    assert.match(sentence, /A 60 min walk will not be back before it$/, sentence);
+    assert.match(sentence, /60 min is not back in time$/, sentence);
     assert.equal(sentence.includes("35"), false, `it must not advertise a 35 that never happened: ${sentence}`);
   }
 });

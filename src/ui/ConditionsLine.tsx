@@ -33,7 +33,7 @@ export function ConditionsLine(props: ConditionsLineProps) {
           {verdict.headline}
           <span className="conditions-credit">
             <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">
-              Open-Meteo
+              open-meteo
             </a>
           </span>
         </p>
@@ -41,9 +41,9 @@ export function ConditionsLine(props: ConditionsLineProps) {
 
       {props.report === null &&
         (props.disabled ? (
-          <p className="conditions is-quiet">Forecast is switched off in this build.</p>
+          <p className="conditions is-quiet">forecast off in this build.</p>
         ) : (
-          props.unavailable && <p className="conditions is-quiet">No forecast right now.</p>
+          props.unavailable && <p className="conditions is-quiet">no forecast.</p>
         ))}
 
       {props.report !== null && (
@@ -55,7 +55,7 @@ export function ConditionsLine(props: ConditionsLineProps) {
       )}
 
       {verdict.staleMinutes !== null && (
-        <p className="conditions is-quiet">Forecast is {verdict.staleMinutes} min old.</p>
+        <p className="conditions is-quiet">forecast {verdict.staleMinutes} min old.</p>
       )}
 
       {shown.map((rule) => (
@@ -66,8 +66,7 @@ export function ConditionsLine(props: ConditionsLineProps) {
 
       {withdrewSome && (
         <p className="conditions is-quiet">
-          Kept the {props.keptCount} places that were left. Some weather rules would have emptied
-          the pool.
+          {props.keptCount} kept. some weather rules were set aside.
         </p>
       )}
     </>

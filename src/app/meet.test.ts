@@ -356,7 +356,7 @@ test("describeBothBy uses formatMinutes", () => {
   // Asserted by composition rather than against a literal, so the two cannot
   // drift apart if the app's number voice changes.
   const split = meetSplit({ yourSeconds: 1440, theirSeconds: 1440, roundTrip: false });
-  assert.equal(describeBothBy(split), `You'd both be there by ${formatMinutes(1440)}.`);
+  assert.equal(describeBothBy(split), `both there by ${formatMinutes(1440)}.`);
   assert.equal(describeBothBy(meetSplit({ yourSeconds: null, theirSeconds: 1, roundTrip: false })), null);
 });
 
@@ -366,16 +366,16 @@ test("describeGap is silent below the threshold", () => {
   assert.equal(describeGap(under), null);
 
   const over = meetSplit({ yourSeconds: 60, theirSeconds: 60 + MEET_GAP_MINUTES * 60, roundTrip: false });
-  assert.match(describeGap(over) ?? "", /^You get there /);
+  assert.match(describeGap(over) ?? "", /^you arrive /);
 
   const reversed = meetSplit({ yourSeconds: 60 + 19 * 60, theirSeconds: 60, roundTrip: false });
-  assert.match(describeGap(reversed) ?? "", /^They get there /);
+  assert.match(describeGap(reversed) ?? "", /^they arrive /);
 });
 
 test("describeMeetClause returns null with no split", () => {
   // So the announcement array does not gain an empty clause.
   const half = meetSplit({ yourSeconds: 600, theirSeconds: null, roundTrip: false });
-  assert.equal(describeMeetClause(half, "Their start"), null);
+  assert.equal(describeMeetClause(half, "their start"), null);
   const whole = meetSplit({ yourSeconds: 600, theirSeconds: 900, roundTrip: false });
   assert.match(describeMeetClause(whole, "Carytown") ?? "", /Carytown/);
 });
@@ -388,7 +388,7 @@ test("the words \"their pace\" appear nowhere", () => {
   for (const text of [
     describeBothBy(split) ?? "",
     describeGap(split) ?? "",
-    describeMeetClause(split, "Their start") ?? "",
+    describeMeetClause(split, "their start") ?? "",
   ]) {
     assert.equal(/their pace|her pace|his pace/i.test(text), false, text);
   }

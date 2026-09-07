@@ -41,7 +41,7 @@ export type Reach = {
 
 export class NotConfiguredError extends Error {
   constructor(detail?: string) {
-    super(detail ?? "The routing engine is not configured.");
+    super(detail ?? "the routing engine is not configured.");
     this.name = "NotConfiguredError";
   }
 }
@@ -375,7 +375,7 @@ async function requestContours(
     const polygons = collectPolygons(feature);
     if (polygons.length > 0) byMinute.set(contour, polygons);
   }
-  if (byMinute.size === 0) throw new Error("The engine returned no reachable area.");
+  if (byMinute.size === 0) throw new Error("the engine returned no reachable area.");
   return byMinute;
 }
 

@@ -214,7 +214,7 @@ export function meetSplit(args: {
  */
 export function describeBothBy(split: MeetSplit): string | null {
   if (split.bothByMinutes === null) return null;
-  return `You'd both be there by ${formatMinutes(split.bothByMinutes * 60)}.`;
+  return `both there by ${formatMinutes(split.bothByMinutes * 60)}.`;
 }
 
 /**
@@ -229,8 +229,8 @@ export function describeGap(split: MeetSplit): string | null {
   if (gap === null || gap < MEET_GAP_MINUTES) return null;
   const walk = formatMinutes(gap * 60);
   return (split.yourMinutes ?? 0) < (split.theirMinutes ?? 0)
-    ? `You get there ${walk} before them.`
-    : `They get there ${walk} before you.`;
+    ? `you arrive ${walk} earlier.`
+    : `they arrive ${walk} earlier.`;
 }
 
 /**

@@ -34,7 +34,7 @@ export function PoolList(props: PoolListProps) {
 
   return (
     <div className="pool-list">
-      <p className="field-label">To spin ({props.pool.included.length})</p>
+      <p className="field-label">to spin ({props.pool.included.length})</p>
       <ul className="origin-list">
         {props.pool.included.map((place) => (
           <li key={place.id}>
@@ -84,7 +84,7 @@ export function PoolList(props: PoolListProps) {
                       setExpanded((current) => new Set([...current, reason]))
                     }
                   >
-                    Show {hidden} more
+                    show {hidden} more
                   </button>
                 </li>
               )}
@@ -95,8 +95,7 @@ export function PoolList(props: PoolListProps) {
 
       {props.pool.withdrawn.length > 0 && (
         <p className="pool-withdrawn">
-          Set aside: {props.pool.withdrawn.length === 1 ? "one rule" : `${props.pool.withdrawn.length} rules`} left
-          too few places to spin.
+          {props.pool.withdrawn.length === 1 ? "one weather rule" : `${props.pool.withdrawn.length} weather rules`} set aside.
         </p>
       )}
     </div>

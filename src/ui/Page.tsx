@@ -1,5 +1,4 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
-import { XIcon } from "@phosphor-icons/react";
 import { playTap } from "../lib/sound";
 
 export type PageProps = {
@@ -30,25 +29,29 @@ export function Page(props: PageProps) {
     <div
       ref={root}
       tabIndex={-1}
-      className="page"
+      className="page win"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <header className="page-head">
-        <h2 id={titleId} className="field-label">
+      <header className="bar">
+        <span className="dots" aria-hidden="true">
+          <i className="dot" />
+          <i className="dot" />
+        </span>
+        <h2 id={titleId} className="title">
           {props.title}
         </h2>
         <button
           type="button"
-          className="icon-button"
-          aria-label="Close"
+          className="close"
+          aria-label="close"
           onClick={() => {
             playTap(false);
             props.onClose();
           }}
         >
-          <XIcon size={16} weight="bold" aria-hidden="true" />
+          ×
         </button>
       </header>
       <div className="page-body">{props.children}</div>

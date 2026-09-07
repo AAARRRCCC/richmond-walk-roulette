@@ -12,7 +12,7 @@ import {
   type PlaceVerdict,
 } from "../app/eligibility";
 import { appleDirectionsUrl, googleDirectionsUrl } from "../lib/handoff";
-import { shareNote, useShareAction } from "./useShareAction";
+import { useShareAction } from "./useShareAction";
 import { describeBothBy, describeGap, type MeetSplit } from "../app/meet";
 import { playPress } from "../lib/sound";
 import { elevationAvailable } from "../lib/route";
@@ -89,22 +89,22 @@ export function ResultCard(props: ResultCardProps) {
         href={googleDirectionsUrl(props.origin, place)}
         target="_blank"
         rel="noreferrer"
-        aria-label={`Walking directions to ${place.name} in Google Maps`}
+        aria-label={`walking directions to ${place.name} in google maps`}
         onClick={() => playPress()}
       >
         <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
-        Google Maps
+        google maps
       </a>
       <a
         className="button"
         href={appleDirectionsUrl(props.origin, place)}
         target="_blank"
         rel="noreferrer"
-        aria-label={`Walking directions to ${place.name} in Apple Maps`}
+        aria-label={`walking directions to ${place.name} in apple maps`}
         onClick={() => playPress()}
       >
         <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
-        Apple Maps
+        apple maps
       </a>
     </>
   );
@@ -119,14 +119,14 @@ export function ResultCard(props: ResultCardProps) {
       <header className="result-head">
         <p className="field-label">
           {place.detour === undefined
-            ? "Your walk"
+            ? "your walk"
             : DETOUR_LABELS[place.detour]}
         </p>
         <button
           type="button"
           className="icon-button"
           onClick={props.onDismiss}
-          aria-label="Dismiss result"
+          aria-label="dismiss result"
         >
           <XIcon size={15} weight="bold" aria-hidden="true" />
         </button>
@@ -137,7 +137,7 @@ export function ResultCard(props: ResultCardProps) {
       {split !== null ? (
         <div className="result-split">
           <div className="result-split-row">
-            <span className="result-split-who">Your start</span>
+            <span className="result-split-who">your start</span>
             <SplitValue
               minutes={split.yourMinutes}
               pending={pending}
@@ -166,7 +166,7 @@ export function ResultCard(props: ResultCardProps) {
       ) : (
         <dl className="result-stats">
           <Stat
-            label={props.roundTrip ? "Out and back" : "Walk time"}
+            label={props.roundTrip ? "out and back" : "walk time"}
             value={
               pending
                 ? null
@@ -180,7 +180,7 @@ export function ResultCard(props: ResultCardProps) {
             }
           />
           <Stat
-            label="Distance"
+            label="distance"
             value={
               pending
                 ? null
@@ -194,7 +194,7 @@ export function ResultCard(props: ResultCardProps) {
             }
           />
           <Stat
-            label="Climb"
+            label="climb"
             value={
               pending
                 ? null
@@ -219,7 +219,7 @@ export function ResultCard(props: ResultCardProps) {
         shown === null &&
         elevationAvailable() === false && (
           <p className="profile-empty field-label">
-            No elevation data from this engine.
+            no elevation data.
           </p>
         )}
 
@@ -251,13 +251,13 @@ export function ResultCard(props: ResultCardProps) {
       {props.routeFailed && (
         <p className="result-warning">
           <WarningIcon size={15} weight="fill" aria-hidden="true" />
-          Could not measure this walk.
+          could not measure this walk.
           <button
             type="button"
             className="link-button"
             onClick={props.onRetryRoute}
           >
-            Try again
+            try again
           </button>
         </p>
       )}
@@ -266,15 +266,15 @@ export function ResultCard(props: ResultCardProps) {
         <p className="result-warning">
           <WarningIcon size={15} weight="fill" aria-hidden="true" />
           {reasons.includes("inside-floor")
-            ? "Closer than your range's lower end."
-            : "Outside your current time budget."}
+            ? "under the lower bound."
+            : "outside the time budget."}
         </p>
       )}
 
       {!props.fitsLight && (
         <p className="result-warning">
           <WarningIcon size={15} weight="fill" aria-hidden="true" />
-          This walk does not fit in the light left.
+          not back before dark.
         </p>
       )}
 
@@ -291,7 +291,7 @@ export function ResultCard(props: ResultCardProps) {
               }}
             >
               <ArrowSquareOutIcon size={16} weight="bold" aria-hidden="true" />
-              Directions
+              directions
             </button>
             <button
               type="button"
@@ -299,7 +299,7 @@ export function ResultCard(props: ResultCardProps) {
               onClick={() => void onShare()}
             >
               <ShareNetworkIcon size={16} weight="bold" aria-hidden="true" />
-              Share
+              share
             </button>
           </div>
           {chooser && <div className="result-chooser">{mapsLinks}</div>}
@@ -312,7 +312,7 @@ export function ResultCard(props: ResultCardProps) {
             onClick={props.onSpinAgain}
           >
             <ShuffleIcon size={16} weight="bold" aria-hidden="true" />
-            {props.sharedArrival ? "Spin your own" : "Spin again"}
+            spin again
           </button>
           <button
             type="button"
@@ -320,23 +320,19 @@ export function ResultCard(props: ResultCardProps) {
             onClick={() => void onShare()}
           >
             <ShareNetworkIcon size={16} weight="bold" aria-hidden="true" />
-            Share
+            share
           </button>
           {mapsLinks}
         </div>
       )}
 
-      {/* The one live region here. */}
-      <p className="result-share-note" role="status">
-        {shareNote(shareState) ?? ""}
-      </p>
       {shareState === "manual" && (
         <input
           ref={fallbackRef}
           className="result-share-fallback"
           readOnly
           value={lastUrl}
-          aria-label="Share link"
+          aria-label="share link"
         />
       )}
     </section>

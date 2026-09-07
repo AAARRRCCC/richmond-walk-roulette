@@ -1,12 +1,12 @@
 {
-  "name": "Walk Roulette, Richmond",
-  "short_name": "Walk Roulette",
-  "description": "Pick how long you want to walk in Richmond, see exactly how far you can actually get, and spin for somewhere to go.",
+  "name": "walk roulette",
+  "short_name": "walk roulette",
+  "description": "pick a walking time in richmond, see how far it reaches, spin for a destination.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0b1014",
-  "theme_color": "#0b1014",
+  "background_color": "#f6f1e7",
+  "theme_color": "#f6f1e7",
   "icons": [
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },

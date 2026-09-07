@@ -110,7 +110,7 @@ test("canonicalQuery round-trips every link the encoder can produce", () => {
     input({ vibes: ["river", "park", "museum", "history", "food", "scenic"] }),
     input({ budgetMinutes: SHARE_BUDGET_MIN }),
     input({ budgetMinutes: SHARE_BUDGET_MAX }),
-    input({ origin: { id: "custom", name: "Dropped pin", lat: 37.53881, lng: -77.43356 } }),
+    input({ origin: { id: "custom", name: "dropped pin", lat: 37.53881, lng: -77.43356 } }),
   ];
   for (const one of cases) {
     const encoded = encodeShare(one);
@@ -165,7 +165,7 @@ test("a dropped pin is published at about a hundred metres, not at one", () => {
   // door, in a link that gets forwarded. See HUMAN-REVIEW 2.9.
   assert.equal(PIN_PRECISION, 3);
   const encoded = encodeShare(
-    input({ origin: { id: "custom", name: "Dropped pin", lat: 37.538812, lng: -77.433561 } }),
+    input({ origin: { id: "custom", name: "dropped pin", lat: 37.538812, lng: -77.433561 } }),
   );
   assert.match(encoded, /^o=37\.539%2C-77\.434&/);
 
@@ -190,11 +190,11 @@ test("the shared sentence names the walk both ways round", () => {
   const args = { placeName: "Great Shiplock Park", originName: "Carytown", walkMinutes: 34 };
   assert.equal(
     describeShare({ ...args, roundTrip: true }),
-    "Great Shiplock Park — a 34 min round trip from Carytown.",
+    "Great Shiplock Park, 34 min round trip from Carytown.",
   );
   assert.equal(
     describeShare({ ...args, roundTrip: false }),
-    "Great Shiplock Park — 34 min on foot from Carytown.",
+    "Great Shiplock Park, 34 min on foot from Carytown.",
   );
 });
 

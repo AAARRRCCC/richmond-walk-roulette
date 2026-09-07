@@ -195,7 +195,7 @@ export function Sheet(props: SheetProps) {
   return (
     <div
       ref={root}
-      className={`rail sheet is-${props.snap}${props.className ? ` ${props.className}` : ""}`}
+      className={`rail win sheet is-${props.snap}${props.className ? ` ${props.className}` : ""}`}
     >
       <div
         ref={head}
@@ -207,7 +207,6 @@ export function Sheet(props: SheetProps) {
           props.onSnap("half");
         }}
       >
-        <div className="sheet-grip" aria-hidden="true" />
         {props.head}
       </div>
       <div ref={body} className="sheet-body">

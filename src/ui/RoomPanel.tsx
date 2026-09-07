@@ -5,7 +5,7 @@ import { locateActionLabel, type PermissionHint } from "../lib/locate";
 import { playPress, playTap } from "../lib/sound";
 import { presenceOf, type RoomState } from "../app/room";
 import type { Failure } from "../app/session";
-import { shareNote, useShareAction } from "./useShareAction";
+import { useShareAction } from "./useShareAction";
 
 export type RoomPanelProps = {
   /** Null outside a room: the panel is then only the button that starts one. */
@@ -43,11 +43,10 @@ export function RoomPanel(props: RoomPanelProps) {
           }}
         >
           <UsersIcon size={16} weight="bold" aria-hidden="true" />
-          Invite someone to meet
+          meet someone
         </button>
         <p className="meet-hint">
-          You get a link. Whoever opens it sees your start and your settings in that room, for 12 hours, and
-          nowhere else.
+          the link shows your start and settings to whoever opens it, for 12 hours.
         </p>
       </div>
     );
@@ -62,9 +61,9 @@ export function RoomPanel(props: RoomPanelProps) {
   if (presence === "full") {
     return (
       <section className="origin meet">
-        <p className="notice is-warn">This room already has two walkers.</p>
+        <p className="notice is-warn">room is full.</p>
         <button type="button" className="link-button" onClick={leave}>
-          Spin on your own instead
+          spin alone
         </button>
       </section>
     );
@@ -72,9 +71,9 @@ export function RoomPanel(props: RoomPanelProps) {
   if (presence === "replaced") {
     return (
       <section className="origin meet">
-        <p className="notice">This room is open in another tab.</p>
+        <p className="notice">open in another tab.</p>
         <button type="button" className="link-button" onClick={leave}>
-          Spin on your own here
+          spin alone here
         </button>
       </section>
     );
@@ -82,7 +81,7 @@ export function RoomPanel(props: RoomPanelProps) {
   if (presence === "closed") {
     return (
       <section className="origin meet">
-        <p className="notice">This room has closed. Rooms stay open 12 hours.</p>
+        <p className="notice">room closed. rooms last 12 hours.</p>
         <div className="meet-row">
           <button
             type="button"
@@ -92,10 +91,10 @@ export function RoomPanel(props: RoomPanelProps) {
               props.onNewRoom();
             }}
           >
-            Start a new room
+            new room
           </button>
           <button type="button" className="link-button" onClick={leave}>
-            Spin on your own
+            spin alone
           </button>
         </div>
       </section>
@@ -105,14 +104,11 @@ export function RoomPanel(props: RoomPanelProps) {
   if (!props.originChosen) {
     return (
       <section className="origin meet">
-        <p className="field-label">Both in reach</p>
+        <p className="field-label">both in reach</p>
+        <p className="meet-hint">set your start to see what is in both reaches.</p>
         <p className="meet-hint">
-          Someone wants to find somewhere you can both walk to. Set your start to see what&rsquo;s inside both
-          your reaches.
-        </p>
-        <p className="meet-hint">
-          Your start goes to this app&rsquo;s server to measure your reach. It reaches them only when you press{" "}
-          <em>Share my start</em>.
+          your start goes to the server to measure reach. it reaches them only when you press{" "}
+          <em>share my start</em>.
         </p>
         <div className="meet-actions">
           <button
@@ -125,7 +121,7 @@ export function RoomPanel(props: RoomPanelProps) {
             }}
           >
             <CrosshairIcon size={15} aria-hidden="true" />
-            {props.locating ? "Finding you" : locateActionLabel(props.permissionHint)}
+            {props.locating ? "locating…" : locateActionLabel(props.permissionHint)}
           </button>
           <button
             type="button"
@@ -136,7 +132,7 @@ export function RoomPanel(props: RoomPanelProps) {
             }}
           >
             <MapPinIcon size={15} aria-hidden="true" />
-            Pick on the map
+            pick on the map
           </button>
           {presetsOpen ? (
             <div className="meet-presets">
@@ -163,12 +159,12 @@ export function RoomPanel(props: RoomPanelProps) {
                 setPresetsOpen(true);
               }}
             >
-              or start from a landmark
+              landmarks
             </button>
           )}
         </div>
         <button type="button" className="link-button" onClick={leave}>
-          Spin on your own instead
+          spin alone
         </button>
       </section>
     );
@@ -178,11 +174,11 @@ export function RoomPanel(props: RoomPanelProps) {
     const isPin = props.origin.id === "custom" || props.origin.id === "me";
     return (
       <section className="origin meet">
-        <p className="field-label">Both in reach</p>
+        <p className="field-label">both in reach</p>
         <p className="meet-hint">
           {isPin
-            ? "Sharing sends your exact pin to the other person in this room, and to nobody else. Move it first if that is closer to home than you'd like."
-            : `Sharing tells them you're starting from ${props.origin.name}.`}
+            ? "sharing sends your exact pin to the other person in this room."
+            : `sharing tells them you start from ${props.origin.name}.`}
         </p>
         <button
           type="button"
@@ -192,10 +188,10 @@ export function RoomPanel(props: RoomPanelProps) {
             props.onShareStart();
           }}
         >
-          Share my start
+          share my start
         </button>
         <button type="button" className="link-button" onClick={leave}>
-          Spin on your own instead
+          spin alone
         </button>
       </section>
     );
@@ -204,25 +200,22 @@ export function RoomPanel(props: RoomPanelProps) {
   return (
     <section className="origin meet">
       <div className="meet-row">
-        <p className="field-label">Both in reach</p>
+        <p className="field-label">both in reach</p>
         <button type="button" className="link-button" onClick={leave}>
-          Leave the room
+          leave
         </button>
       </div>
       {props.partnerFailure !== null && (
-        <p className="notice is-warn">Couldn&rsquo;t measure their side. {props.partnerFailure.message}</p>
+        <p className="notice is-warn">could not measure their side. {props.partnerFailure.message}</p>
       )}
       {props.roomUrl !== null && (
         <>
           <button type="button" className="button" onClick={() => void share({ url: props.roomUrl ?? "" })}>
             <LinkIcon size={16} weight="bold" aria-hidden="true" />
-            {presence === "waiting" ? "Copy the link to send" : "Copy the room link"}
+            copy link
           </button>
-          <p className="result-share-note" role="status">
-            {shareNote(state) ?? ""}
-          </p>
           {state === "manual" && (
-            <input ref={fallbackRef} className="result-share-fallback" readOnly value={lastUrl} aria-label="Room link" />
+            <input ref={fallbackRef} className="result-share-fallback" readOnly value={lastUrl} aria-label="room link" />
           )}
         </>
       )}

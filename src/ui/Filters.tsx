@@ -4,9 +4,9 @@ import type { ClimbBand } from "../lib/elevation";
 import { playTap, playThock } from "../lib/sound";
 
 const CLIMBS: { id: ClimbBand | "any"; label: string }[] = [
-  { id: "any", label: "Any" },
-  { id: "easy", label: "Easy" },
-  { id: "hilly", label: "Hilly" },
+  { id: "any", label: "any" },
+  { id: "easy", label: "easy" },
+  { id: "hilly", label: "hilly" },
 ];
 
 export type FiltersProps = {
@@ -41,8 +41,8 @@ export function Filters(props: FiltersProps) {
             playThock(!props.roundTrip);
             props.onToggleRoundTrip();
           }}
-          label="Round trip"
-          hint="Split the budget across both legs"
+          label="round trip"
+          hint="the budget covers both legs"
         />
         <Switch
           checked={props.edgeOnly}
@@ -50,8 +50,8 @@ export function Filters(props: FiltersProps) {
             playThock(!props.edgeOnly);
             props.onToggleEdge();
           }}
-          label="Far edge only"
-          hint="Only places in the outermost contour"
+          label="far edge only"
+          hint="outermost contour only"
         />
         <Switch
           checked={props.hideClosed}
@@ -59,8 +59,8 @@ export function Filters(props: FiltersProps) {
             playThock(!props.hideClosed);
             props.onToggleHideClosed();
           }}
-          label="Skip closed places"
-          hint="Judged by when you'd arrive"
+          label="skip closed places"
+          hint="judged by arrival time"
         />
         <Switch
           checked={props.weatherAware}
@@ -68,13 +68,13 @@ export function Filters(props: FiltersProps) {
             playThock(!props.weatherAware);
             props.onToggleWeatherAware();
           }}
-          label="Mind the weather"
-          hint="Trim the walk for rain, heat and dark"
+          label="mind the weather"
+          hint="trim for rain, heat and dark"
         />
       </div>
 
       <fieldset className="chips">
-        <legend className="field-label">Kind</legend>
+        <legend className="field-label">kind</legend>
         {PLACE_KINDS.map((option) => (
           <button
             key={option.id}
@@ -92,7 +92,7 @@ export function Filters(props: FiltersProps) {
       </fieldset>
 
       <fieldset className="chips">
-        <legend className="field-label">Climb</legend>
+        <legend className="field-label">climb</legend>
         {CLIMBS.map((option) => (
           <button
             key={option.id}
@@ -112,12 +112,12 @@ export function Filters(props: FiltersProps) {
       </fieldset>
       {!props.climbAvailable && (
         <p className="notice" id={noticeId}>
-          Climb needs elevation data from the routing engine.
+          climb needs elevation data from the engine.
         </p>
       )}
 
       <fieldset className="chips">
-        <legend className="field-label">Looking for</legend>
+        <legend className="field-label">vibe</legend>
         {VIBES.map((vibe) => (
           <button
             key={vibe.id}

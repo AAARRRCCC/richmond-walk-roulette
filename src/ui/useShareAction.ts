@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { playPress } from "../lib/sound";
+import { say } from "./Toast";
 
 /** `shared` belonged to the system share sheet, which is no longer opened. */
 export type ShareState = "idle" | "copied" | "shared" | "manual";
@@ -34,23 +35,11 @@ export function useShareAction() {
     try {
       await navigator.clipboard.writeText(args.url);
       setState("copied");
+      say("copied");
     } catch {
       setState("manual");
     }
   };
 
   return { state, lastUrl, fallbackRef, share };
-}
-
-/** The note under a share control, or null when there is nothing to say. */
-export function shareNote(state: ShareState): string | null {
-  switch (state) {
-    case "copied":
-      return "Link copied.";
-    case "manual":
-      return "Could not copy. Here is the link:";
-    case "shared":
-    case "idle":
-      return null;
-  }
 }

@@ -92,7 +92,7 @@ test("a pin crosses at full precision and lands as a literal name", () => {
   assert.ok(frame !== null && frame.t === "setup");
   assert.equal(frame.side.origin?.lat, 37.5407012);
   assert.equal(frame.side.origin?.id, "partner");
-  assert.equal(frame.side.origin?.name, "Their start");
+  assert.equal(frame.side.origin?.name, "their start");
 });
 
 test("an unshared or refused origin never becomes one", () => {
@@ -156,7 +156,7 @@ test("a first join alone is waiting; a partner arriving is here", () => {
 
   const together = reduceRoom(alone, { type: "peer", connected: true, nowMs: T0 + 5 });
   assert.equal(presenceOf(together), "here");
-  assert.equal(describePresence(together, T0 + 5), "They're here.");
+  assert.equal(describePresence(together, T0 + 5), "they're here.");
 });
 
 test("a partner who leaves is away, dated from when they went", () => {
@@ -165,8 +165,8 @@ test("a partner who leaves is away, dated from when they went", () => {
     { type: "peer", connected: false, nowMs: T0 + 60_000 },
   ]);
   assert.equal(presenceOf(state), "away");
-  assert.equal(describePresence(state, T0 + 60_000), "Last seen just now.");
-  assert.equal(describePresence(state, T0 + 5 * 60_000), "Last seen 4 min ago.");
+  assert.equal(describePresence(state, T0 + 60_000), "last seen just now.");
+  assert.equal(describePresence(state, T0 + 5 * 60_000), "last seen 4 min ago.");
 });
 
 test("joining with a partner already there is here, not waiting", () => {

@@ -800,7 +800,7 @@ export function applyShare(
 }
 
 export function customOrigin(at: LngLat): Origin {
-  return { id: "custom", name: "Dropped pin", lat: at.lat, lng: at.lng };
+  return { id: "custom", name: "dropped pin", lat: at.lat, lng: at.lng };
 }
 
 /**

@@ -125,8 +125,8 @@ test("daylight: describeDeadline names arrival for one-way and return for round 
   const back = describeDeadline(light, true);
   const arrive = describeDeadline(light, false);
 
-  assert.match(back, /^Back before civil dusk, /);
-  assert.match(arrive, /^Arrive before civil dusk, /);
+  assert.match(back, /^back by civil dusk, /);
+  assert.match(arrive, /^arrive by civil dusk, /);
   assert.notEqual(back, arrive);
 });
 

@@ -28,7 +28,7 @@ export function DaylightSwitch(props: DaylightSwitchProps) {
           <span className="switch-thumb" />
         </span>
         <span className="switch-text">
-          <span className="switch-label">Get back before dark</span>
+          <span className="switch-label">back before dark</span>
           <span className="switch-hint">{props.deadline}</span>
         </span>
       </label>

@@ -89,7 +89,7 @@ export function wireOrigin(origin: Origin): WireOrigin {
  * other side" a property rather than a habit.
  */
 function partnerOrigin(at: { lat: number; lng: number }): Origin {
-  return { id: "partner", name: "Their start", lat: at.lat, lng: at.lng };
+  return { id: "partner", name: "their start", lat: at.lat, lng: at.lng };
 }
 
 // ------------------------------------------------------------ the frames
@@ -377,19 +377,19 @@ export function formatAgo(ms: number): string {
 export function describePresence(state: RoomState, nowMs: number): string {
   switch (presenceOf(state)) {
     case "here":
-      return "They're here.";
+      return "they're here.";
     case "reconnecting":
-      return "Reconnecting…";
+      return "reconnecting…";
     case "away":
-      return `Last seen ${formatAgo(nowMs - (state.peerLeftAt ?? nowMs))}.`;
+      return `last seen ${formatAgo(nowMs - (state.peerLeftAt ?? nowMs))}.`;
     case "waiting":
-      return "They haven't opened the link yet.";
+      return "not opened yet.";
     case "closed":
-      return "This room has closed.";
+      return "room closed.";
     case "full":
-      return "This room already has two walkers.";
+      return "room is full.";
     case "replaced":
-      return "This room is open in another tab.";
+      return "open in another tab.";
   }
 }
 

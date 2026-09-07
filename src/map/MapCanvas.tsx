@@ -1,10 +1,14 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
+import maplibregl, {
+  type ExpressionSpecification,
+  type Map as MapLibreMap,
+} from "maplibre-gl";
 import type {
   FeatureCollection,
   MultiPolygon as MultiPolygonGeometry,
 } from "geojson";
-import { darkBasemap } from "./basemap";
+import { applyBasemapTheme, basemap } from "./basemap";
+import { theme as currentTheme, type Theme } from "../app/theme";
 import { weighted } from "./weight";
 import { smoothedForDisplay } from "./smooth";
 import {
@@ -28,8 +32,29 @@ const PLACE_LAYERS = ["places", "places-out", "picked-place-dot"];
 const SLOTS = [0, 1, 2] as const;
 const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
 
-const ACCENT = "#ffb043";
-const ACCENT_SOFT = "#ffd7a0";
+const ACCENT = "#e0913a";
+const ACCENT_SOFT = "#f0b46a";
+/** Colours of the app's own layers that follow the theme. */
+const OVERLAY = {
+  light: { ink: "#2c3138", paper: "#fffdf8", muted: "#a9a291" },
+  dark: { ink: "#e9e3d7", paper: "#232a33", muted: "#5d6874" },
+} satisfies Record<Theme, { ink: string; paper: string; muted: string }>;
+
+/** Recolors the route, dots and picked label for the theme. Safe before load: it skips missing layers. */
+function applyOverlayTheme(map: MapLibreMap, theme: Theme): void {
+  const c = OVERLAY[theme];
+  const set = (layer: string, name: string, value: string | ExpressionSpecification) => {
+    if (map.getLayer(layer) !== undefined) map.setPaintProperty(layer, name, value);
+  };
+  set("route-casing", "line-color", c.paper);
+  set("route-line", "line-color", c.ink);
+  set("places-out", "circle-color", c.muted);
+  set("places", "circle-color", ["case", ["!=", ["get", "detour"], ""], c.paper, ACCENT]);
+  set("picked-place-dot", "circle-color", c.paper);
+  set("picked-place-label", "text-color", c.ink);
+  set("picked-place-label", "text-halo-color", c.paper);
+  set("route-hover-dot", "circle-color", c.paper);
+}
 
 // Fills and routes go beneath the basemap labels so the 7px route casing
 // cannot paint out a neighbourhood name. Place dots and the picked label stay on top.
@@ -68,6 +93,7 @@ export type MapCanvasProps = {
   partnerName: string;
   /** False until the reader of an invite has chosen their own start. */
   originVisible: boolean;
+  theme: Theme;
   onPickPlace: (id: string) => void;
   onMoveOrigin: (at: LngLat) => void;
   /** The camera came to rest; also fired when a pick begins, so a still map still reports its centre. */
@@ -104,7 +130,7 @@ export function MapCanvas(props: MapCanvasProps) {
 
     const map = new maplibregl.Map({
       container,
-      style: darkBasemap(),
+      style: basemap(currentTheme()),
       center: [handlers.current.origin.lng, handlers.current.origin.lat],
       zoom: 13.4,
       attributionControl: false,
@@ -260,7 +286,7 @@ export function MapCanvas(props: MapCanvasProps) {
           source: "route",
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
-            "line-color": "#05090e",
+            "line-color": OVERLAY[currentTheme()].paper,
             "line-width": weighted(7),
             "line-opacity": 0.9,
           },
@@ -273,7 +299,7 @@ export function MapCanvas(props: MapCanvasProps) {
           type: "line",
           source: "route",
           layout: { "line-cap": "round", "line-join": "round" },
-          paint: { "line-color": "#ffffff", "line-width": weighted(2.6) },
+          paint: { "line-color": OVERLAY[currentTheme()].ink, "line-width": weighted(2.6) },
         },
         UNDER_LABELS,
       );
@@ -286,7 +312,7 @@ export function MapCanvas(props: MapCanvasProps) {
         filter: ["==", ["get", "state"], "out"],
         paint: {
           "circle-radius": weighted(3),
-          "circle-color": "#4a5c6d",
+          "circle-color": OVERLAY[currentTheme()].muted,
           // Transparent halo to widen the hit target for thumbs.
           "circle-stroke-width": weighted(7),
           "circle-stroke-color": "rgba(0,0,0,0)",
@@ -308,7 +334,7 @@ export function MapCanvas(props: MapCanvasProps) {
           "circle-color": [
             "case",
             ["!=", ["get", "detour"], ""],
-            "#0b1014",
+            OVERLAY[currentTheme()].paper,
             ACCENT,
           ],
           "circle-stroke-width": [
@@ -329,7 +355,7 @@ export function MapCanvas(props: MapCanvasProps) {
         source: "place-picked",
         paint: {
           "circle-radius": weighted(8),
-          "circle-color": "#ffffff",
+          "circle-color": OVERLAY[currentTheme()].paper,
           "circle-stroke-width": weighted(3),
           "circle-stroke-color": ACCENT,
         },
@@ -347,8 +373,8 @@ export function MapCanvas(props: MapCanvasProps) {
           "text-anchor": "top",
         },
         paint: {
-          "text-color": "#ffffff",
-          "text-halo-color": "#05090e",
+          "text-color": OVERLAY[currentTheme()].ink,
+          "text-halo-color": OVERLAY[currentTheme()].paper,
           "text-halo-width": 1.6,
         },
       });
@@ -361,7 +387,7 @@ export function MapCanvas(props: MapCanvasProps) {
         source: "route-hover",
         paint: {
           "circle-radius": weighted(5),
-          "circle-color": "#ffffff",
+          "circle-color": OVERLAY[currentTheme()].paper,
           "circle-stroke-width": weighted(2),
           "circle-stroke-color": ACCENT,
         },
@@ -418,6 +444,12 @@ export function MapCanvas(props: MapCanvasProps) {
   useEffect(() => {
     markerRef.current?.setLngLat([props.origin.lng, props.origin.lat]);
   }, [props.origin.lng, props.origin.lat]);
+
+  useEffect(() => {
+    if (loaded === null) return;
+    applyBasemapTheme(loaded, props.theme);
+    applyOverlayTheme(loaded, props.theme);
+  }, [loaded, props.theme]);
 
   useEffect(() => {
     markerRef.current

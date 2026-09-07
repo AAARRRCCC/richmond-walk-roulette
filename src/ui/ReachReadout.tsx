@@ -65,28 +65,28 @@ export function ReachReadout(props: ReachReadoutProps) {
           {bothLine && meet !== null ? (
             <>
               <Cell
-                label="Both reach"
+                label="both reach"
                 value={ready ? String(meet.bothCount) : null}
               />
               <Cell
-                label="Each"
+                label="each"
                 value={ready ? `${meet.outerMinutes} min` : null}
               />
             </>
           ) : (
             <>
               <Cell
-                label="Reach"
+                label="reach"
                 value={ready ? formatArea(props.areaSqMeters) : null}
               />
               <Cell
-                label="In reach"
+                label="in reach"
                 value={ready ? String(props.pool.inReach) : null}
               />
             </>
           )}
           <Cell
-            label="To spin"
+            label="to spin"
             value={ready ? String(props.pool.included.length) : null}
           />
           {light !== null && (
@@ -179,10 +179,7 @@ function Cell({ label, value }: { label: string; value: string | null }) {
 
 function splitClock(note: string) {
   const match = /^(.*\S)\s+(\d[\d:]*\s*[ap]m)$/i.exec(note);
-  if (match === null) return { label: "Light", value: note };
+  if (match === null) return { label: "light", value: note };
   const words = match[1]!;
-  return {
-    label: words.charAt(0).toUpperCase() + words.slice(1),
-    value: match[2]!,
-  };
+  return { label: words, value: match[2]! };
 }

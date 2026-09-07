@@ -21,7 +21,7 @@ test("locate: a good downtown fix is accepted with no caveat", () => {
   assert.equal(outcome.kind, "accepted");
   if (outcome.kind !== "accepted") return;
   assert.equal(outcome.origin.id, "me");
-  assert.equal(outcome.origin.name, "My location");
+  assert.equal(outcome.origin.name, "my location");
   assert.equal(outcome.origin.lat, DOWNTOWN.lat, "coordinates are preserved exactly");
   assert.equal(outcome.origin.lng, DOWNTOWN.lng);
   assert.equal(outcome.caveat, null);
@@ -78,7 +78,7 @@ test("locate: bounds beat accuracy", () => {
 
   assert.equal(outcome.kind, "rejected");
   if (outcome.kind !== "rejected") return;
-  assert.ok(outcome.error.message.includes("only has Richmond"), outcome.error.message);
+  assert.ok(outcome.error.message.includes("outside richmond"), outcome.error.message);
   assert.notEqual(outcome.error.suggest, null);
 });
 
@@ -118,7 +118,7 @@ test("locate: a non-finite fix is refused by name", () => {
     assert.equal(outcome.kind, "rejected");
     if (outcome.kind !== "rejected") continue;
     assert.equal(outcome.error.suggest, null, "not a preset offer");
-    assert.ok(!outcome.error.message.includes("only has Richmond"), "not the out-of-bounds sentence");
+    assert.ok(!outcome.error.message.includes("outside richmond"), "not the out-of-bounds sentence");
   }
 });
 

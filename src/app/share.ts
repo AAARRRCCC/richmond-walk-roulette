@@ -356,8 +356,8 @@ export function describeShare(args: {
 }): string {
   const walk = formatMinutes(args.walkMinutes * 60);
   return args.roundTrip
-    ? `${args.placeName} — a ${walk} round trip from ${args.originName}.`
-    : `${args.placeName} — ${walk} on foot from ${args.originName}.`;
+    ? `${args.placeName}, ${walk} round trip from ${args.originName}.`
+    : `${args.placeName}, ${walk} on foot from ${args.originName}.`;
 }
 
 /**
@@ -368,8 +368,8 @@ export function describeShare(args: {
  * preview is rendered by a third-party crawler and cached on its servers, and
  * having nothing to leak into it is the whole point of the room shape.
  */
-export const ROOM_LINK_TITLE = "Somewhere we can both walk to";
+export const ROOM_LINK_TITLE = "somewhere we can both walk to";
 
 export function describeRoom(): string {
-  return "Open this and say where you're starting from. The room stays open for 12 hours.";
+  return "open this and set your start. the room lasts 12 hours.";
 }

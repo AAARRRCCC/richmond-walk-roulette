@@ -54,9 +54,9 @@ export type PlaceKind = "any" | "destination" | "detour";
 
 /** Segments for the Kind control, in render order. */
 export const PLACE_KINDS: { id: PlaceKind; label: string }[] = [
-  { id: "any", label: "Any" },
-  { id: "destination", label: "Places" },
-  { id: "detour", label: "Detours" },
+  { id: "any", label: "any" },
+  { id: "destination", label: "places" },
+  { id: "detour", label: "detours" },
 ];
 
 /**
@@ -64,13 +64,13 @@ export const PLACE_KINDS: { id: PlaceKind; label: string }[] = [
  * "Your walk".
  */
 export const DETOUR_LABELS = {
-  mural: "Mural",
-  art: "Public art",
-  overlook: "Overlook",
-  stairs: "Stairs",
-  marker: "Marker",
-  bridge: "Bridge",
-  street: "Street",
+  mural: "mural",
+  art: "public art",
+  overlook: "overlook",
+  stairs: "stairs",
+  marker: "marker",
+  bridge: "bridge",
+  street: "street",
   // `satisfies` rather than an annotation, the same way `REASON_COPY` is
   // written: the record still has to be total over the union - a missing tier
   // is a tsc error, which is the point - but the inferred type keeps each
@@ -451,10 +451,10 @@ export const PRESET_ORIGINS: Origin[] = [
 export const DEFAULT_ORIGIN = PRESET_ORIGINS[0]!;
 
 export const VIBES: { id: Vibe; label: string }[] = [
-  { id: "river", label: "River" },
-  { id: "park", label: "Park" },
-  { id: "museum", label: "Museum" },
-  { id: "history", label: "History" },
-  { id: "food", label: "Food" },
-  { id: "scenic", label: "Scenic" },
+  { id: "river", label: "river" },
+  { id: "park", label: "park" },
+  { id: "museum", label: "museum" },
+  { id: "history", label: "history" },
+  { id: "food", label: "food" },
+  { id: "scenic", label: "scenic" },
 ];

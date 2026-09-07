@@ -248,10 +248,10 @@ export function describeDeadline(light: Daylight, roundTrip: boolean): string {
 function deadlinePhrase(light: Daylight, roundTrip: boolean): string {
   if (light.phase === "night") {
     return light.nextDawnMs === null
-      ? "Daylight is not available for this location."
-      : `It is dark. Civil dawn is ${formatClock(light.nextDawnMs)}.`;
+      ? "daylight unknown here."
+      : `dark. civil dawn ${formatClock(light.nextDawnMs)}.`;
   }
-  if (light.events.civilDuskMs === null) return "Daylight is not available for this location.";
+  if (light.events.civilDuskMs === null) return "daylight unknown here.";
   const at = formatClock(light.events.civilDuskMs);
-  return roundTrip ? `Back before civil dusk, ${at}` : `Arrive before civil dusk, ${at}`;
+  return roundTrip ? `back by civil dusk, ${at}` : `arrive by civil dusk, ${at}`;
 }
