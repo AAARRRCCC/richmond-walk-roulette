@@ -99,6 +99,8 @@ export const TUNING_RANGE = {
 } satisfies Record<keyof Tuning, { min: number; max: number; step: number }>;
 
 const STORAGE_KEY = "walk-roulette:tuning";
+/** The sound switch every plvr.net site shares. "off" or "on"; unset means untouched. */
+const PLVR_SOUND_KEY = "plvr.sound";
 
 /**
  * The defaults as this browser should first meet them. Only sound differs:
@@ -157,7 +159,19 @@ function restore(): Tuning {
  * and a value that only reached them on the next commit would make the panel
  * feel a beat behind the thing it is tuning.
  */
-export const tuning: Tuning = restore();
+/** The shared plvr.net mute, when it has been set anywhere on plvr.net, beats this app's own. */
+function withSharedMute(next: Tuning): Tuning {
+  try {
+    const shared = window.localStorage.getItem(PLVR_SOUND_KEY);
+    if (shared === "off") return { ...next, soundEnabled: false };
+    if (shared === "on") return { ...next, soundEnabled: true };
+  } catch {
+    // Storage blocked: the app's own value stands.
+  }
+  return next;
+}
+
+export const tuning: Tuning = withSharedMute(restore());
 
 const listeners = new Set<() => void>();
 
@@ -165,6 +179,7 @@ export function setTuning<K extends keyof Tuning>(key: K, value: Tuning[K]): voi
   tuning[key] = value;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tuning));
+    if (key === "soundEnabled") window.localStorage.setItem(PLVR_SOUND_KEY, value ? "on" : "off");
   } catch {
     // Private mode or a full quota: the value still applies for this session.
   }

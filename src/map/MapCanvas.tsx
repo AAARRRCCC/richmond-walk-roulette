@@ -634,7 +634,7 @@ export function MapCanvas(props: MapCanvasProps) {
       )}
       {/* ODbL credit for the contours. The basemap credit is the map's own control. */}
       <p className="reach-attribution">
-        <span className="reach-source">Reachable area</span>
+        <span className="reach-source">reach</span>
         <span className="reach-brand">Valhalla / OpenStreetMap</span>
       </p>
     </div>
