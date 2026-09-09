@@ -9,7 +9,7 @@ makes the dial instant. The 2026-07-28 cutover removed every Google
 dependency. Contours and routes now come from a Valhalla instance you run, the
 data is OpenStreetMap under ODbL, and the only obligation is attribution. The
 map overlay carries it ("Valhalla / OpenStreetMap") next to the basemap's own
-credit. Prefetching and caching your own engine's output is nobody's clause.
+credit. No licence term restricts prefetching and caching your own engine's output.
 
 What replaced it is operational, not legal.
 
@@ -38,7 +38,7 @@ shows the not-configured panel. Dropped pins and every route need the engine.
 
 ## Abuse and cost
 
-The proxy is the only thing between a public URL and your box's CPU. Confirm
+The proxy is the only thing between a public URL and your server's CPU. Confirm
 each:
 
 - [ ] `server/proxy.ts` rejects origins outside the Richmond bounding box and
@@ -53,7 +53,7 @@ each:
       itself needs checking here.
 - [ ] Spot-check a bad request. It should return a status and a short reason,
       never the engine's raw error body.
-- [ ] Confirm an outage says nothing about your infrastructure. Point
+- [ ] Confirm an outage response reveals nothing about your infrastructure. Point
       `VALHALLA_URL` at a dead host and read the response body: it must say
       the engine is not answering and must not name it. The address belongs
       in `wrangler tail`, which is also where the one structured line per
@@ -72,7 +72,7 @@ pace. Summary here; the history has the full text.
   north-bank destination at any fidelity, while Google's own Routes API put
   Canal Walk 28 minutes away across the bridge. Google contradicted Google.
   Valhalla's contour crossed where Valhalla's router did.
-- **A known Valhalla wobble.** It was over-generous once: Battery Park inside
+- **A known Valhalla inaccuracy.** It was over-generous once: Battery Park inside
   45 minutes where routing says 47. Two origins in one city is not a survey.
   Spot-check contours against `/api/route` times when something looks off.
 - The 3.69 km/h pinned at the time of this comparison is what made the areas
@@ -96,11 +96,12 @@ Square. Re-run against your production instance once it exists.
       It probes capability rather than availability: `/status` answering is
       not the same claim as elevation being real, and an instance can
       advertise `height` while returning `null` for every point of it. Run
-      this before anything below, and before believing a green `/api/health`.
+      this before anything below, and before trusting a passing `/api/health`.
 - [ ] `node scripts/verify-drift.mjs` is clean against the deployed engine,
       or the snapshots in `public/reach/` were regenerated against it and
-      `SNAPSHOT_VERSION` was bumped. A snapshot cut from different tiles is
-      the app drawing a city that is not there, and nothing else detects it.
+      `SNAPSHOT_VERSION` was bumped. A snapshot cut from different tiles makes
+      the app draw contours that do not match the engine's data, and nothing
+      else detects it.
 - [x] Contours return and follow streets. The reachable edge traces the river
       bank and crosses only at bridges.
 - [x] Routes return polyline6 with pedestrian costing. Monroe Park to VMFA
@@ -115,8 +116,8 @@ Square. Re-run against your production instance once it exists.
         **404** means the Worker never saw the path
       - `curl -I <deployed>/site.webmanifest` still returns the manifest with
         `content-type: application/manifest+json`. This is why the pattern is
-        `/s` exactly and never `/s*` - the glob swallows the manifest with no
-        error anywhere
+        `/s` exactly and never `/s*` - the glob would route the manifest to the
+        Worker too, with no error anywhere
       - `POST <deployed>/api/isochrone` still works, which is the check that
         `/api/*` was not dropped from `run_worker_first` when `/s` joined it
 - [ ] **The room-link check, deployed.**
@@ -134,13 +135,13 @@ Square. Re-run against your production instance once it exists.
       `hours`, and `curl '<deployed>/api/weather?latitude=48.85'` answers 400
       **with a warm cache entry already present** — that second one is the
       guarantee that the endpoint is not a worldwide weather service, and the
-      edge is what actually decides it
+      edge cache is what enforces it
 - [ ] A weather outage shows `{"at":"weather",...}` in `wrangler tail` and never
       `{"at":"valhalla",...}`. Grepping a weather-only outage for `valhalla`
-      must return nothing; reading one as an engine outage is the most
-      expensive wrong diagnosis this system can produce
+      must return nothing; misreading one as an engine outage would be the
+      most costly misdiagnosis this system can produce
 - [ ] Two loads from different networks inside fifteen minutes produce **one**
-      `at: "weather"` line, not two — the edge really is storing an entry keyed
+      `at: "weather"` line, not two — confirming the edge stores an entry keyed
       from a GET (HUMAN-REVIEW 5.7)
 - [ ] `curl <deployed>/api/health` answers `{"ok":true,...}` with a version
       and a tileset date. That is the whole reachability check in one
@@ -150,20 +151,21 @@ Square. Re-run against your production instance once it exists.
 - [x] Spin end to end: reel, route line, result card with walk time and
       distance.
 - [ ] Contours nest and the James notches the polygon on the production
-      instance's own tiles. Eyeball 100 minutes from a river-adjacent origin.
+      instance's own tiles. Check 100 minutes from a river-adjacent origin
+      visually.
 - [ ] Mobile framing at 390x844 against real contours.
 
 ## Ship
 
 - [x] `npm run build` clean, `npm run typecheck` clean, `npm run lint` clean
       (eslint, oxlint, knip), `npm test` green. CI runs all four on every
-      push (`.github/workflows/ci.yml`), so this is a green check rather
-      than a thing to remember.
+      push (`.github/workflows/ci.yml`), so this is checked automatically
+      rather than remembered.
 - [ ] `npx wrangler deploy`.
 - [ ] Hit the deployed URL once with `VALHALLA_URL` unset, to confirm the
       not-configured panel appears rather than a blank map.
 - [ ] A real phone, not a resized desktop window. The bottom sheet, the dial
-      drag and the map pan all need thumbs. While you have one: scrub the
+      drag and the map pan all need testing with a thumb. While you have one: scrub the
       elevation chart, and check the result card's three-item profile readout
       does not wrap badly at 320px.
 - [ ] **The Apple Maps link, opened for real**, from (a) an iPhone with Apple
@@ -197,15 +199,15 @@ Square. Re-run against your production instance once it exists.
   gzipped per origin fetched. That is the cost of ungeneralised contours plus
   a 96-rung ladder. Git keeps every version, so regenerating them re-commits
   all of it.
-- **Custom origins pay full price.** Only the 11 presets have snapshots. A
+- **Custom origins have no snapshot.** Only the 11 presets have snapshots. A
   dropped pin still warms the whole ladder from the engine, which against a
   stock-limit instance is 24 sequential queries. The Worker caches the answer
   at the edge for a day, keyed on the origin rounded to 5 decimals, so the
-  second person to drop a pin on the same block pays nothing - but the first
-  one pays in full.
+  second person to drop a pin on the same block triggers no engine calls, but
+  the first one triggers all of them.
 - **The warm-up progress bar is binary.** The ladder arrives as one response,
   so it jumps 0 to 100 rather than filling. Cosmetic. Revisit if a slow engine
-  makes the wait feel dead.
+  makes the wait feel unresponsive.
 - **The contour raster is visible up close.** Valhalla grids isochrones at
   about 25 m and its API exposes no resolution setting, so the reachable edge
   is a staircase. `src/map/smooth.ts` rounds it off when drawing, which does

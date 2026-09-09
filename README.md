@@ -3,11 +3,10 @@
 Pick how long you want to walk. See how far you can actually get. Spin for
 somewhere to go.
 
-A circle drawn around your front door knows nothing about the James, which you
-can only cross at a bridge. It knows nothing about the interstate, or about
-which streets have a pavement. So it offers you places you cannot walk to.
-This app asks the [Valhalla](https://github.com/valhalla/valhalla) routing
-engine for the area you can really reach, and draws it as nested time
+A circle drawn around your front door ignores the James, which you can only
+cross at a bridge. It ignores the interstate, and which streets have a
+pavement. So it includes places you cannot walk to. This app asks the
+[Valhalla](https://github.com/valhalla/valhalla) routing engine for the area you can really reach, and draws it as nested time
 contours.
 
 The gap is worth measuring rather than asserting. At the 4.5 km/h this app
@@ -19,8 +18,8 @@ reach:
 | Monroe Park | 2.93 sq mi | 4.26 sq mi | 1.46× |
 | Shockoe Slip, by the river | 2.24 sq mi | 4.26 sq mi | 1.91× |
 
-The closer you start to the water, the more a circle lies to you. That is the
-whole argument for the app.
+The closer you start to the water, the more a circle overstates. That is the
+reason the app exists.
 
 ## How it works
 
@@ -46,10 +45,10 @@ whole argument for the app.
   one's real walking route. Only places whose route is already cached go on the
   reel. The winner is still drawn from the full candidate list, because picking
   from the warmed subset would favour whatever loaded first.
-- **The reel arrives at its answer.** It slows onto the winner one slot at a
-  time and rests there before the result card replaces it. If a route is still
-  loading it keeps turning rather than parking on a name. A wheel that has
-  stopped has already decided, and it should not have.
+- **The reel stops on the winner.** It slows onto the winner one slot at a
+  time and pauses there before the result card replaces it. If a route is still
+  loading it keeps turning rather than stopping on a name, because a stopped
+  reel reads as a decision, and none has been made yet.
 - **Far edge only** narrows the pool to places between the last two contours.
 - **Daylight is computed locally**, from NOAA's algorithm - no API, no key, no
   request. The deadline is civil dusk, not sunset: sunset is when it starts to
@@ -61,14 +60,13 @@ whole argument for the app.
 - **The panel always says how many places are in reach, and why the rest are
   not.** Every place gets a verdict rather than a yes-or-no, so the line under
   the readout reads "6 to spin - 12 shut - 20 wrong terrain" instead of leaving
-  you to guess which of the things you touched did it. When nothing is left it
-  names the single change that recovers the most places and puts the button
-  right there, with the number it measured written on it.
-  Go as far as the time allows.
+  you to guess which setting excluded them. When nothing is left it names the
+  single change that recovers the most places and offers a button for it,
+  labelled with the measured count.
 
 ## Sound
 
-Every control answers with a short cue, built by code at the moment it plays.
+Every control plays a short cue, synthesised at the moment it plays.
 Oscillators and filtered noise. Nothing is loaded and nothing is fetched.
 
 The dial's detents are pitched to the value, so scrubbing is audibly
@@ -77,8 +75,8 @@ whose pitch falls as the throw slows. One low thump is kept for the landing.
 Everything sits at whisper level. Under `prefers-reduced-motion` the reel is
 skipped and only the landing plays.
 
-It is closer to haptics than to a soundtrack. One gesture, one cue. Only the
-throw earns a run of them.
+The sound works like haptic feedback, not a soundtrack. One gesture, one cue.
+Only the spin plays a sequence.
 
 ## What it costs
 
@@ -88,8 +86,8 @@ You pay for whatever box runs it (`valhalla/README.md`).
 The walking speed is pinned server-side at 4.5 km/h, roughly an average
 walker's pace. It replaced a 3.69 that had been calibrated to make Valhalla's
 25 minute area from Monroe Park match the Google Isochrones the app used to
-ship with — a pin fitted to a contour rather than to anybody walking, and one
-that a real walk found slow by about a quarter. `docs/adr/0002` records the
+ship with. That value was fitted to a contour rather than to measured walking,
+and a real walk found it slow by about a quarter. `docs/adr/0002` records the
 walk and the choice. Changing the speed is a product decision. It rescales
 every figure above and makes every precomputed snapshot wrong.
 
@@ -105,7 +103,7 @@ every figure above and makes every precomputed snapshot wrong.
   `node scripts/verify-bundle.mjs` rather than remembered; the line used to claim
   64 KB and 276 KB and had been wrong for some number of commits
 
-## The engine never faces the browser
+## The browser never calls the engine directly
 
 Both endpoints live in `server/proxy.ts`, which the dev server and the Worker
 each mount at `/api/isochrone` and `/api/route`. `VALHALLA_URL` names the
@@ -113,8 +111,8 @@ instance. There is no `VITE_` prefix, so Vite will not inline it.
 
 ## Where the places come from
 
-Sixty-two of them were typed by hand and win every conflict. The rest came out
-of OpenStreetMap through three commands, in this order:
+Sixty-two of them were typed by hand and take precedence in every conflict.
+The rest came out of OpenStreetMap through three commands, in this order:
 
     npm run harvest:osm      # the only thing here that talks to Overpass
     npm run propose:places   # reads only data/osm/, writes a review page
@@ -122,32 +120,31 @@ of OpenStreetMap through three commands, in this order:
 
 Nothing in that chain runs in CI or at build time. The harvest is committed to
 `data/osm/` and everything downstream reads those files, for the same reason
-`build-reach.mjs` reads a committed snapshot: a build whose output depends on
-the day it ran is not a build, and a mid-air OSM edit should not be able to
-change the destination list without review.
+`build-reach.mjs` reads a committed snapshot: a build's output should not
+depend on the day it ran, and an OSM edit made between builds should not be
+able to change the destination list without review.
 
-**The human gate is real.** `propose` stops at
+**Review is a required step.** `propose` stops at
 `data/proposals/review.html` — one self-contained page, no network — and a
-person writes ids into `accepted.txt`. A script that can rewrite the
-destination list unattended is a script that can ship a marker standing in a
-highway median.
+person writes ids into `accepted.txt`. A script that could rewrite the
+destination list unattended could ship a marker placed in a highway median.
 
 Generated rows are an append-only suffix below a boundary comment in
 `places.ts`, and `HAND_CURATED_COUNT` is where the hand-written ones stop. The
-proposer refuses to emit a row within 90 m of an existing one, so a hand-picked
-coordinate — chosen by somebody who has stood there — is never overwritten by a
+proposer does not emit a row within 90 m of an existing one, so a hand-picked
+coordinate — chosen by somebody who has stood there — is never replaced by a
 centroid.
 
 **Map data © OpenStreetMap contributors, ODbL.**
 <https://www.openstreetmap.org/copyright>
 
-## The weather never faces the browser either
+## The browser never calls the weather upstream either
 
-`GET /api/weather` is the same idea against a different upstream. It takes **no
-parameters** — Richmond's coordinates are pinned in the proxy next to the
-walking speed — so a scraped endpoint is not a worldwide weather service with
-this app's name on it. Any query string is a 400 and anything but `GET` is a
-405, both before the request costs anybody anything. The Worker edge-caches it
+`GET /api/weather` follows the same pattern against a different upstream. It
+takes **no parameters** — Richmond's coordinates are pinned in the proxy next
+to the walking speed — so the endpoint cannot be used as a worldwide weather
+service. Any query string is a 400 and anything but `GET` is a 405, both
+returned before any upstream call. The Worker edge-caches it
 for 900 seconds under one constant key, which matches the `current.interval`
 the upstream reports for itself, so one call serves every visitor to a colo per
 refresh.
@@ -157,30 +154,30 @@ forwarding it, so switching vendors is one module. `WEATHER_URL` names the
 upstream and defaults to Open-Meteo.
 
 **Attribution and licence.** Weather data by Open-Meteo, CC-BY 4.0, credited on
-screen beside the reading. Their free API tier is sold as **non-commercial use
-only** — their boundary is "private or non-profit websites or apps that do not
-have subscriptions or advertising". Walk Roulette is free and ad-free, so it is
-inside that line and the feature is on. It is gated by one constant,
+screen beside the reading. Their free API tier is offered for **non-commercial
+use only** — their definition is "private or non-profit websites or apps that do
+not have subscriptions or advertising". Walk Roulette is free and ad-free, so it
+qualifies and the feature is on. It is gated by one constant,
 `WEATHER_ENABLED` in `src/lib/weather.ts`, with a test asserting its value, so
 **if this app ever carries a subscription or an advert that constant goes back
-to false the same day.** `docs/plans/HUMAN-REVIEW.md` §2.4 has the terms quoted
-and the two paid routes onward.
+to false the same day.** `docs/plans/HUMAN-REVIEW.md` §2.4 quotes the terms
+and lists the two paid alternatives.
 
-**Operationally, the thing to know:** an unreachable forecast degrades to a
+**Operational note:** an unreachable forecast degrades to a
 missing line and never blocks a spin — not the Spin button, not the route
 warm-up, not the reel — and it logs `at: "weather"`, never `at: "valhalla"`.
 A forecast blip must not be diagnosed as an engine outage.
 
 The proxy forces pedestrian costing, pins the walking speed, clamps the
-duration, and rejects origins outside a Richmond-area bounding box. A scraped
-endpoint therefore cannot be turned into a free worldwide routing service that
-saturates your box. The Worker adds a per-IP rate limit on top.
+duration, and rejects origins outside a Richmond-area bounding box. The
+endpoint therefore cannot be used as a free worldwide routing service that
+overloads your server. The Worker adds a per-IP rate limit on top.
 
 `npm test` runs 24 tests. Some cover the proxy's protocol with `fetch` stubbed:
 contour fan-out against the instance's limit, costing pinned server-side, and
 failure statuses mapped onto the classes the client's retry logic keys on. The
-rest cover the spin reel's timing, which is a pure function precisely so the
-way it feels can be asserted instead of eyeballed.
+rest cover the spin reel's timing, which is a pure function so that its
+behaviour can be asserted in tests instead of checked by eye.
 
 ## Develop
 
@@ -198,7 +195,7 @@ a vendored [anti-slop](tools/oxlint/anti-slop) plugin, which rejects unparsed
 `unknown` at boundaries and type assertions with no stated reason. Knip for
 dead exports. All three should be clean.
 
-`.env.local` decides which engine the proxy talks to. Three options, best
+`.env.local` sets which engine the proxy uses. Three options, best
 first:
 
 1. **Self-hosted.** Follow `valhalla/README.md`, then set
@@ -209,19 +206,19 @@ first:
    infrastructure for evaluation. It caps pedestrian isochrones at 100
    minutes, its stock contour limit turns each warm-up into 24 sequential
    queries, and it rate-limits to about one call a second. Fine for looking at
-   real shapes. It must never sit under a deployed URL.
+   real shapes. Never use it behind a deployed URL.
 3. **No engine at all.** `node valhalla/stub.mjs` serves synthetic contours on
    port 8003 for offline UI work. The shapes are invented. Never judge
    reachability with it.
 
 With none of them the app still runs. The map, the dial and the filters work,
-the presets still draw from their snapshots, and the panel says what is
+the presets still draw from their snapshots, and the panel reports what is
 missing instead of failing silently.
 
 ### Feel controls
 
-In development only, `` ` `` or the **TUNE** tab opens a panel for the things
-you judge by ear and eye: spin length, the flip interval at each end, the
+In development only, `` ` `` or the **TUNE** tab opens a panel for the settings
+judged by ear and eye: spin length, the flip interval at each end, the
 slowdown curve, how long the reel rests on the winner, and the cue level.
 Changes take effect mid-throw and are saved per browser. Production builds
 strip the panel and everything it touches.
@@ -258,8 +255,8 @@ src/
 │   ├── App.tsx            composition, data fetching, derived state
 │   ├── session.ts         one reducer for the whole session
 │   ├── useSpin.ts         the reel's animation loop
-│   ├── reel.ts            where the reel is at each moment: a pure phase
-│   │                      machine, so "it lands on the winner" is testable
+│   ├── reel.ts            the reel's position at each moment: a pure phase
+│   │                      machine, so landing on the winner is testable
 │   ├── reel.test.ts       its tests
 │   └── tuning.ts          live-adjustable feel settings
 ├── lib/
@@ -302,29 +299,28 @@ is the one such case.
 
 For large features like parks and cemeteries, the point is a public entrance
 or a recognisable spot inside, not the middle of the polygon. That way a
-walking route ends somewhere a person can actually stand.
+walking route ends somewhere a person can stand.
 
 A place carries a name and any number of tags from a fixed six: river, park,
-museum, history, food, scenic. It carries no description and no terrain — the
-name is the whole offer, the walk is the point, and hilliness is a property of
-a route rather than of a dot. A second tier, `detour`, marks the things that
-are a reason to walk a particular way rather than somewhere to spend an
-afternoon.
+museum, history, food, scenic. It carries no description and no terrain: the
+name is all the app shows, the walk is the purpose, and hilliness is a property
+of a route rather than of a point. A second tier, `detour`, marks places that
+justify a particular route rather than a destination in themselves.
 
 ## Sharing a spin
 
-A good spin used to be unshareable: the address bar offered the front door of
-the app, so the other person landed on a different question with a different
-answer.
+A good spin used to be unshareable: the address bar held only the app's root
+URL, so the other person opened a fresh session with different settings and a
+different result.
 
     /s?o=carytown&b=34&rt=1&p=shiplock
 
 A readable query string, not a token. It costs no codec in the byte budget,
 ignores keys it does not understand, falls back to defaults for keys that are
 absent, and therefore never needs a version or a migration. Opening one restores
-the session and shows the card — it never re-runs the reel, because a replayed
-reel is either predetermined theatre or a genuine second draw, and both break
-the promise the link makes.
+the session and shows the card. It never re-runs the reel, because a replayed
+reel is either a fake animation with a known outcome or a genuine second draw,
+and either would misrepresent what was shared.
 
 **A preset origin shares as an id. A dropped pin shares as a coordinate rounded
 to three decimals**, about 110 m — enough to say "start around here", not enough
@@ -333,9 +329,9 @@ to say which door. That is a privacy decision and it is one constant,
 
 **The link does not carry the condition switches.** Get back before dark, Mind
 the weather and Skip closed places are about the recipient's here-and-now, not
-about the walk that was sent: a link that switched off somebody's daylight guard
-would be a trap, and one that switched it on would be a lie about what the
-sender did.
+about the walk that was sent. A link that switched off the recipient's daylight
+guard could send them out too late, and one that switched it on would
+misrepresent the sender's settings.
 
 The shared destination is always shown, even when the recipient's conditions
 exclude it, with the reason beside it. A link never silently substitutes a
@@ -344,8 +340,8 @@ different place.
 The Worker rewrites the page's own `<title>` and Open Graph tags for the spin,
 so a link unfurls as the place and the walk rather than as the site's generic
 card. The picture is the same for every share — runtime image rendering does not
-fit the Workers Free plan's 10 ms of CPU per request, and that is a decision
-rather than an oversight.
+fit the Workers Free plan's 10 ms of CPU per request. That is a deliberate
+decision.
 
 ## Both in reach
 
@@ -364,16 +360,16 @@ messages and never computes a pool or picks a winner. A room lives twelve hours 
 memory, then reads "room closed"; a third device opening the link is told the room already
 has two walkers. See `docs/adr/0001` for why the earlier link-only shape was retired.
 
-It is not called "meet in the middle", which is the phrase every competitor uses and is a
-lie in this app's own terms. **There is no middle.** There is an overlap, and the midpoint
-of two people on opposite banks of the James is in the river — the same refusal as refusing
-the circle. Nothing here computes an intersection polygon or prints an overlap area: the
-two contours are drawn and where they cross the region simply looks denser, which is
-compositing rather than a measurement, and the app never names it. What it names instead is
-a count, because the thing two people want to know is how many options they have.
+It is not called "meet in the middle", the phrase every competitor uses, because that
+phrase is inaccurate here. **There is no middle.** There is an overlap, and the midpoint of
+two people on opposite banks of the James is in the river, for the same reason a circle is
+the wrong shape. Nothing here computes an intersection polygon or prints an overlap area:
+the two contours are drawn and where they cross the region looks denser, which is a
+rendering effect rather than a measurement, and the app does not label it. What it reports
+is a count, because two people want to know how many options they have.
 
-**Most pairs share nothing at a normal budget, and that is the feature's opening move
-rather than its failure.** When the overlap is empty the app scans both cached ladders and
+**Most pairs share nothing at a normal budget, and that is the expected first state
+rather than a failure.** When the overlap is empty the app scans both cached ladders and
 says the smallest budget at which something *is* shared — *"At 42 minutes, Byrd Park comes
 into both your reaches"* — with a button that moves the dial there.
 
@@ -389,19 +385,19 @@ Spin stays disabled until both sides have locked in a budget, and the mirror rai
 *Match N min* when the budgets differ.
 
 **Both walks are measured at the same pace**, and the card says so. There is one pinned
-walking speed in this app and no per-person one; two people who walk differently will find
-the app wrong for both of them by the same amount in opposite directions. That is an
-assumption, stated, rather than a fact implied.
+walking speed in this app and no per-person one; two people who walk at different speeds
+will find the app wrong for both of them by the same amount in opposite directions. The
+card states that assumption rather than implying accuracy.
 
-## Hours, and what the app will not claim
+## Hours, and the limits of what the app claims
 
 The app says whether a place is likely to be open **when you would get there** —
 at the arrival time the route already knows, not at now — and keeps closed
 places out of the spin by default.
 
-Coverage is thin and stated rather than hidden: **118 of 242 places**, of which
+Coverage is limited and stated on screen: **118 of 242 places**, of which
 25 come from OpenStreetMap's own `opening_hours` and 93 from a single category
-assumption. Everything else says nothing at all, which is the honest answer and
+assumption. Everything else reports nothing, which is the accurate answer and
 is why `unknown` is never rendered as "open".
 
 The one assumption is Richmond's park ordinance — open at 5 a.m., closed at
@@ -412,9 +408,9 @@ dusk — and it always says the word "assumed" on screen. It is one constant,
 `opening_hours` string is a fact about one place, and a museum that shuts at
 five is a museum the app will not send you to. The park rule is a regulation
 applied to a category of 93 places, none individually checked, and most Richmond
-parks have no gate to close — so removing them after dusk would be the app being
-confidently wrong about a whole class of place on the strength of a rule nobody
-enforces. The card says the hours; the walker decides.
+parks have no gate to close — so removing them after dusk would make the app
+wrong about a whole class of place on the strength of a rule nobody enforces.
+The card shows the hours; the walker decides.
 
 No opening-hours parser ships to the browser. `opening_hours` is 108 KB
 gzipped and LGPL-3.0-only; it is a devDependency that runs once, at build time,
@@ -426,18 +422,18 @@ one bit test.
     npm run check:hours     # fails 60 days before the window runs out
 
 The masks cover a calendar window — currently 2026-01-01 to 2027-12-31 — and
-outside it every verdict degrades to `unknown` rather than quietly reading last
-year's Thanksgiving. Rebuild annually; `check:hours` is what remembers.
+outside it every verdict degrades to `unknown` rather than reusing last year's
+holiday dates. Rebuild annually; `check:hours` enforces the deadline.
 
-Businesses are deliberately thin on the ground. A pass that tried to add
-several found one that had closed and two that had moved, all still listed in
-OSM, so the list leans on neighbourhoods and institutions instead.
+Few businesses are listed, deliberately. A pass that tried to add several
+found one that had closed and two that had moved, all still listed in OSM, so
+the list consists mostly of neighbourhoods and institutions instead.
 
 ## History
 
 The app has changed contour provider once. Google's Isochrones API (Preview)
-drew the reachable area before Valhalla did. What settled it was Google
-contradicting itself: from Manchester, its 60 minute contour held no
+drew the reachable area before Valhalla did. The deciding problem was that
+Google contradicted itself: from Manchester, its 60 minute contour held no
 north-bank destination at any fidelity, while its own Routes API put Canal
 Walk 28 minutes away across the bridge. Valhalla's contour crossed where
 Valhalla's router did. The full comparison is in [`LAUNCH.md`](./LAUNCH.md).

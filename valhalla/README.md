@@ -29,7 +29,7 @@ container image. That means Docker Engine, which is what a Linux server runs -
 Docker Desktop is a Windows and macOS product and is not involved. Everything
 else the scripts need (`osmium-tool`, `curl`, `python3`) is in the archives.
 
-`clip-extract.sh` is why this is quick. The Virginia extract is about 900 MB
+`clip-extract.sh` is what makes this quick. The Virginia extract is about 900 MB
 and nearly none of it is within walking distance of Richmond; clipped to a box
 reaching roughly 15 km from downtown it is a fraction of that, and the graph
 builds in about a minute instead of fifteen. The dial tops out at a 100 minute
@@ -40,7 +40,7 @@ rather than `./data`: the engine builds from every `.osm.pbf` in the directory
 it is given, so leaving it beside the clipped one would build the whole state.
 
 `build-graph.sh` also corrects the setting that is easiest to get wrong and
-silent when it is: the image ships isochrone limits far below what this app's
+that produces no error when wrong: the image ships isochrone limits far below what this app's
 ladder asks for - 96 contours in one query, the longest 100 minutes - and
 below them the warm-up is rejected outright rather than answered slowly. The
 only symptom in the app is a dial that never warms.
@@ -50,7 +50,7 @@ Then point the app at it:
 - dev: in `.env.local`, `VALHALLA_URL=http://127.0.0.1:8002` and
   `VALHALLA_MAX_CONTOURS=100`. The literal address rather than `localhost`:
   some clients try `::1` first and wait out a connection that nothing
-  answers, which reads as the engine being slow when it is not.
+  answers, which looks like a slow engine when it is not.
 - prod: the same two values in `wrangler.toml` `[vars]`, with the URL of
   wherever this runs
 
@@ -66,14 +66,13 @@ rebuilt:
 REBUILD=1 ./scripts/build-graph.sh
 ```
 
-**Why this matters more than it sounds like it does.** An engine built without
-elevation does not refuse the question. It answers `/height` with `null` for
-every point and `/route` with `-500.0` for every sample - Valhalla's
-`kNoElevationData` sentinel - and it goes on serving routes and contours
-perfectly happily while it does. Nothing in the stack notices. The app would
-draw a confident flat line five hundred metres below sea level and label it
+**Why this matters.** An engine built without elevation does not return an
+error. It answers `/height` with `null` for every point and `/route` with
+`-500.0` for every sample - Valhalla's `kNoElevationData` sentinel - and keeps
+serving routes and contours normally. Nothing in the stack detects this. The
+app would draw a flat line five hundred metres below sea level and label it
 terrain. That is why `build-graph.sh` now ends by asking for a route *with*
-`elevation_interval` and failing loudly on a sentinel, and why
+`elevation_interval` and failing with an error on a sentinel, and why
 `node scripts/verify-engine.mjs` probes capability rather than availability.
 
 **Measured, on this machine, 2026-08-21:**
@@ -83,18 +82,18 @@ terrain. That is why `build-graph.sh` now ends by asking for a route *with*
 | Tiles fetched | one, `N37W078` - the clipped bbox in `richmond.env` sits wholly inside it |
 | Disk, `data/elevation_data` | 25 MB |
 | Rebuild | a single pass. The image fetched the tiles *before* the build that needed them, so no second run was required |
-| Tileset timestamp | moved, as it must; the old graph is not reused |
+| Tileset timestamp | changed, as expected; the old graph is not reused |
 
 That last row settles an open question in `docs/plans/elevation-profile.md`,
 which could not tell from the image's documentation whether "covering the
 routing graph" meant the tiles were fetched after a graph already existed. They
-are not: one `REBUILD=1` is enough. The smoke check is what makes it safe to
-have been unsure.
+are not: one `REBUILD=1` is enough. The smoke check would have caught the
+other case.
 
-**Two things move with the rebuild, and both are expected.**
+**Two things change with the rebuild, and both are expected.**
 
 *Walking times change.* Pedestrian costing's `use_hills` defaults to 0.5, and
-over a graph that now carries grades the engine rightly makes downhill quicker
+over a graph that now carries grades the engine correctly makes downhill quicker
 and uphill slower. The fixture in `scripts/verify-engine.mjs` moved from 1025.7 s
 to 963.5 s on a route whose length did not change by a metre. Every ETA in the
 app moved with it.
@@ -109,15 +108,15 @@ node scripts/build-reach.mjs           # recut all eleven
 # then bump SNAPSHOT_VERSION in src/lib/isochrone.ts and commit public/reach/
 ```
 
-**You are offline while it builds.** `REBUILD=1` discards the existing graph
+**The engine is down while it builds.** `REBUILD=1` discards the existing graph
 before starting, so the engine answers nothing for the couple of minutes the
 build takes. Do not do it on a box serving traffic without something in front.
 
 ## On Windows
 
 Valhalla's HTTP service does not build natively on Windows. Run these scripts
-in WSL2 instead - they are the same scripts the server runs, so nothing here
-is a Windows-only detour.
+in WSL2 instead - they are the same scripts the server runs, so there is no
+Windows-specific setup.
 
 ```powershell
 wsl --install -d Ubuntu
@@ -140,8 +139,8 @@ argument. That is why WSL rather than a native build.
 No systemd unit here on purpose. The compose file says
 `restart: unless-stopped` and `install-engine.sh` enables `docker` at boot, so
 the engine comes back after a crash or a reboot on its own. A unit wrapping
-`docker compose up` would only be a second thing to keep in sync with the
-first.
+`docker compose up` would only be a second configuration to keep in sync with
+the first.
 
 If the engine ever does run as a bare binary rather than a container, that is
 when it needs a unit - and the config the scripts write already carries the
@@ -151,7 +150,7 @@ listen address and tile paths it would need.
 
 - **A small VPS:** the whole stack fits comfortably in 1-2 GB of RAM once
   built. The Cloudflare Worker needs to reach it, so give it a hostname and
-  front it with TLS (Caddy is the least ceremony), and firewall it so only
+  front it with TLS (Caddy needs the least configuration), and firewall it so only
   the Worker's traffic gets through - the engine itself enforces no bounds;
   the app's proxy does.
 - **Stadia Maps** runs hosted Valhalla with the same API, if operating a box
@@ -168,7 +167,7 @@ there so the map works before any of the above exists. It is shared
 infrastructure run by volunteers. Its stock `max_contours` of 4 means one
 origin warm-up costs 24 sequential isochrone calls, plus a route per reachable
 place, and it rate-limits to about one call a second. It also caps pedestrian
-isochrones at 100 minutes, which is where this app's dial ceiling comes from:
+isochrones at 100 minutes, which is the source of this app's dial maximum:
 ask for more and it answers `Exceeded max time: 100`. Their policy asks apps
 to identify themselves, so the proxy sends `X-Client-Id: walk-roulette`. Do
 not leave it configured under a deployed URL.
@@ -189,7 +188,7 @@ does at least empty the edge cache on its own.
 
 `node valhalla/stub.mjs` serves a fake Valhalla on port 8003: concentric,
 lightly irregular contours and near-straight routes, instantly. Its routes are
-a straight line from A to B with a small sway, and its contours are noise
+a straight line from A to B with a small offset, and its contours are noise
 around a circle. It speaks
 just enough of the API for the app (POST /isochrone, /route, /status). Point
 `.env.local` at it (`VALHALLA_URL=http://localhost:8003`,
