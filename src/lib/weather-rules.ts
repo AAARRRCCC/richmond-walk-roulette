@@ -297,7 +297,7 @@ export function deriveWeatherRules(
   if (peakFeels >= HEAT_SHELTER_F) {
     rules.push({
       id: "heat-shelter",
-      detail: `feels ${Math.round(peakFeels)}°F. shade, water and doors`,
+      detail: `feels up to ${Math.round(peakFeels)}°F during your walk`,
       cap: null,
       preferredTags: ["river", "park", "museum", "food"],
       vetoHilly: false,
