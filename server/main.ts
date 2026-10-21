@@ -24,8 +24,18 @@ const app = await createApp({
     VALHALLA_MAX_CONTOURS: process.env["VALHALLA_MAX_CONTOURS"],
     WEATHER_URL: process.env["WEATHER_URL"],
     WALK_TAG: process.env["WALK_TAG"],
+    SITE_ORIGIN: process.env["SITE_ORIGIN"],
   },
 });
+
+function toHeaders(raw: IncomingMessage["headers"]): Headers {
+  const headers = new Headers();
+  for (const [name, value] of Object.entries(raw)) {
+    if (value === undefined) continue;
+    headers.set(name, Array.isArray(value) ? value.join(", ") : value);
+  }
+  return headers;
+}
 
 function readBody(req: IncomingMessage): Promise<Buffer | null> {
   return new Promise((resolve) => {
@@ -64,18 +74,11 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
       return;
     }
 
-    const headers = new Headers();
-    for (const [name, value] of Object.entries(req.headers)) {
-      if (value === undefined) continue;
-      headers.set(name, Array.isArray(value) ? value.join(", ") : value);
-    }
-    // Share heads print absolute og:url/og:image, so the origin has to be the
-    // one the browser used: traefik's forwarded headers, then Host.
-    const proto = headers.get("x-forwarded-proto") ?? "http";
-    const host = headers.get("x-forwarded-host") ?? headers.get("host") ?? "walk.internal";
-    const request = new Request(`${proto}://${host}${req.url ?? "/"}`, {
+    // The host is a placeholder nothing reads: share heads print the
+    // configured SITE_ORIGIN, never Host or X-Forwarded-Host.
+    const request = new Request(`http://walk.internal${req.url ?? "/"}`, {
       method,
-      headers,
+      headers: toHeaders(req.headers),
       body: withBody && body.byteLength > 0 ? new Uint8Array(body) : null,
     });
 
@@ -104,10 +107,8 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
 const relay = attachRelay(server, {
   rooms: createRooms(),
   // The join path is covered by the same limiter as /api (#14).
-  charge: (req) => {
-    const forwarded = req.headers["x-forwarded-for"];
-    return app.charge(clientIp(Array.isArray(forwarded) ? forwarded[0] : forwarded));
-  },
+  charge: (req) =>
+    app.charge(clientIp(toHeaders(req.headers), req.socket.remoteAddress)),
   otherPaths: "destroy",
 });
 

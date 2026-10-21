@@ -12,9 +12,8 @@
  * drifted document fails the deploy instead of silently un-unfurling shares.
  *
  * Two #7 corrections live in this file rather than in any manifest: the
- * limiter keys on `X-Forwarded-For` (LAN-only means no Cloudflare in the
- * path, so `CF-Connecting-IP` is absent and every client would hash to the
- * same empty key), and `/health` reports the running image tag, which is
+ * limiter keys on the address `clientIp` trusts rather than on any header a
+ * client can write, and `/health` reports the running image tag, which is
  * what the probes and the "which tag is actually live" check both read.
  */
 import { readFile } from "node:fs/promises";
@@ -87,7 +86,17 @@ const CONTENT_TYPES = new Map([
 type AppEnv = ProxyEnv & {
   /** The image tag this process was built from; `/health` reports it. */
   WALK_TAG?: string | undefined;
+  /**
+   * The public origin share heads print in og:url, og:image and the
+   * canonical link. Configured rather than read off the request: Host and
+   * `X-Forwarded-Host` are whatever the client sent, and a share head is
+   * cached for an hour, so one forged request would hand every later
+   * crawler a link to somewhere else. Unset means the production site.
+   */
+  SITE_ORIGIN?: string | undefined;
 };
+
+const DEFAULT_SITE_ORIGIN = "https://walk.plvr.net";
 
 export type AppOptions = {
   /** The built site: `dist/` from `npm run build`. */
@@ -113,16 +122,23 @@ export type App = {
 };
 
 /**
- * The client's address, from the first hop of `X-Forwarded-For` — which on
- * this cluster is written by traefik and is trustworthy exactly because the
- * service reaches traefik with `externalTrafficPolicy: Local` (#11's deploy
- * note). "unknown" collapses the clients of a misconfigured ingress into
- * one shared budget, which fails toward protecting the engine.
+ * The client's address, in the order this cluster can vouch for it.
+ * `CF-Connecting-IP` first: every public request arrives through the
+ * Cloudflare tunnel, and Cloudflare overwrites that header with the address
+ * it accepted the connection from. Then the last `X-Forwarded-For` hop,
+ * which on the LAN path is the one traefik appended itself; every earlier
+ * hop is whatever the client sent, and Cloudflare appends to a forged list
+ * rather than replacing it. Then the socket, for a request that reached the
+ * pod with no proxy in front. "unknown" collapses the clients of a
+ * misconfigured ingress into one shared budget, which fails toward
+ * protecting the engine.
  */
-export function clientIp(forwarded: string | null | undefined): string {
-  if (forwarded === null || forwarded === undefined) return "unknown";
-  const first = forwarded.split(",", 1)[0]?.trim() ?? "";
-  return first === "" ? "unknown" : first;
+export function clientIp(headers: Headers, socket?: string): string {
+  const connecting = headers.get("cf-connecting-ip")?.trim() ?? "";
+  if (connecting !== "") return connecting;
+  const last = headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ?? "";
+  if (last !== "") return last;
+  return socket === undefined || socket === "" ? "unknown" : socket;
 }
 
 function jsonResponse(status: number, body: string): Response {
@@ -237,6 +253,8 @@ export async function createApp(options: AppOptions): Promise<App> {
   const distDir = normalize(options.distDir);
   const env = options.env;
   const tag = env.WALK_TAG ?? "dev";
+  // `||` for the same reason as WEATHER_URL: a present-but-blank key is "".
+  const siteOrigin = env.SITE_ORIGIN || DEFAULT_SITE_ORIGIN;
 
   const indexHtml = await readFile(join(distDir, "index.html"), "utf8");
   const missing = missingAnchors(indexHtml);
@@ -261,7 +279,7 @@ export async function createApp(options: AppOptions): Promise<App> {
 
   function shareResponse(request: Request): Response {
     const url = new URL(request.url);
-    const meta = shareMeta(url.search, url.origin);
+    const meta = shareMeta(url.search, siteOrigin);
     const headers = {
       "content-type": "text/html; charset=utf-8",
       "cache-control": `public, max-age=${SHARE_CLIENT_CACHE_SECONDS}`,
@@ -334,7 +352,7 @@ export async function createApp(options: AppOptions): Promise<App> {
 
     const cost = cache?.hit ? 1 : isIsochrone ? isochroneQueryCost(payload, env) : 1;
     try {
-      await limiter.consume(clientIp(request.headers.get("x-forwarded-for")), cost);
+      await limiter.consume(clientIp(request.headers), cost);
     } catch {
       // rate-limiter-flexible rejects with its own result object, not an
       // Error; either way the answer to the client is the same 429.

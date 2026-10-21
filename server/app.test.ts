@@ -55,6 +55,19 @@ const post = (path: string, body: Json, ip = "203.0.113.7"): Request =>
     body: JSON.stringify(body),
   });
 
+/** A request naming another host in every header that could carry one. */
+const forgedHost = (path: string): Request =>
+  new Request(`http://evil.example${path}`, {
+    headers: { "x-forwarded-host": "evil.example", "x-forwarded-proto": "https" },
+  });
+
+/** Through the tunnel: Cloudflare appends the real address to a forged list. */
+const forgedHop = (forged: string): Request =>
+  new Request("http://app.local/api/weather/here", {
+    method: "POST",
+    headers: { "cf-connecting-ip": "198.51.100.1", "x-forwarded-for": `${forged}, 198.51.100.1` },
+  });
+
 const MONROE = { latitude: 37.5464, longitude: -77.4517 };
 const SPIN = "?o=carytown&b=34&rt=1&p=shiplock";
 
@@ -89,10 +102,21 @@ test("a share link is rewritten with a place-specific head", async (t) => {
   // The multi-line description tag was replaced, not left beside a new one.
   assert.doesNotMatch(html, /content="generic"/);
   // Absolute, both of them, because a crawler has no base to resolve against.
-  assert.match(html, /og:url" content="http:\/\/app\.local\/s\?o=carytown/);
-  assert.match(html, /rel="canonical" href="http:\/\/app\.local\/s\?o=carytown/);
+  assert.match(html, /og:url" content="https:\/\/walk\.plvr\.net\/s\?o=carytown/);
+  assert.match(html, /rel="canonical" href="https:\/\/walk\.plvr\.net\/s\?o=carytown/);
   // The neighbours the anchors must not swallow are untouched.
   assert.match(html, /og:image:width" content="1200"/);
+});
+
+test("a share head prints the configured origin, whatever host the request names", async (t) => {
+  const production = await app(t);
+  const html = await (await production.handle(forgedHost(`/s${SPIN}`))).text();
+  assert.doesNotMatch(html, /evil\.example/);
+  assert.match(html, /og:image" content="https:\/\/walk\.plvr\.net\/og\.png"/);
+
+  const configured = await app(t, { env: { ...ENV, SITE_ORIGIN: "http://walk.test" } });
+  const local = await (await configured.handle(forgedHost(`/s${SPIN}`))).text();
+  assert.match(local, /og:url" content="http:\/\/walk\.test\/s\?o=carytown/);
 });
 
 test("a share link that names nothing serves the document untouched", async (t) => {
@@ -188,9 +212,21 @@ test("the ws join path draws from the same budget", async (t) => {
   assert.equal(await server.charge("198.51.100.10"), true, "a different client is not caught");
 });
 
-test("clientIp takes the first hop and folds absence into one bucket", () => {
-  assert.equal(clientIp("198.51.100.7"), "198.51.100.7");
-  assert.equal(clientIp("198.51.100.7, 10.0.0.2"), "198.51.100.7");
-  assert.equal(clientIp(null), "unknown");
-  assert.equal(clientIp("  "), "unknown");
+test("a forged X-Forwarded-For hop does not buy a fresh budget", async (t) => {
+  stubConsoleError(t);
+  stubFetch(t, (call) => contourResponse(call.body));
+  const server = await app(t, { limit: { points: 1, duration: 60 } });
+  assert.notEqual((await server.handle(forgedHop("192.0.2.1"))).status, 429);
+  assert.equal((await server.handle(forgedHop("192.0.2.2"))).status, 429);
+});
+
+test("clientIp trusts Cloudflare, then traefik's own hop, then the socket", () => {
+  const tunnel = { "cf-connecting-ip": "198.51.100.7", "x-forwarded-for": "192.0.2.9, 10.42.0.5" };
+  assert.equal(clientIp(new Headers(tunnel)), "198.51.100.7");
+  const lan = { "x-forwarded-for": "192.0.2.9, 192.168.8.20" };
+  assert.equal(clientIp(new Headers(lan)), "192.168.8.20");
+  assert.equal(clientIp(new Headers({ "x-forwarded-for": "192.168.8.20" })), "192.168.8.20");
+  assert.equal(clientIp(new Headers({ "cf-connecting-ip": " " }), "10.42.1.4"), "10.42.1.4");
+  assert.equal(clientIp(new Headers({})), "unknown");
+  assert.equal(clientIp(new Headers({ "x-forwarded-for": "  " })), "unknown");
 });
